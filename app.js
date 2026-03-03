@@ -48,17 +48,21 @@
         "<td data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
         "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
         "<td class=\"col-surah-arabic\" data-label=\"Surah # & Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
-        "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>";
+        "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
+        "<td class=\"action-cell\" data-label=\"Action\"></td>";
 
       var audioCell = tr.querySelector(".audio-cell");
+      var actionCell = tr.querySelector(".action-cell");
       if (audioSrc) {
-        buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
+        buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass, actionCell, globalIndex);
       } else {
         var span = document.createElement("span");
         span.className = "no-recording";
         span.textContent = "No recording";
         audioCell.appendChild(span);
       }
+
+      buildUploadButton(actionCell, row, globalIndex);
 
       var pathText = (row.audioUrl && row.audioUrl.trim()) ? row.audioUrl : "(No recording)";
       tr.addEventListener("mouseenter", function (e) {
@@ -81,7 +85,7 @@
     pathTooltip.style.transform = "translateY(-100%)";
   }
 
-  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn) {
+  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn, actionCell, globalIndex) {
     var audio = document.createElement("audio");
     audio.preload = "metadata";
     audio.src = src;
@@ -277,6 +281,124 @@
   pathTooltip.className = "ruku-path-tooltip";
   pathTooltip.setAttribute("aria-hidden", "true");
   document.body.appendChild(pathTooltip);
+
+  // GitHub API config
+  var GITHUB_OWNER = "mohsingdp-ai";
+  var GITHUB_REPO = "marifatul-quran";
+  var GITHUB_BRANCH = "main";
+
+  function getGitHubToken() {
+    return localStorage.getItem("gh_token") || "";
+  }
+
+  function setGitHubToken(token) {
+    if (token) localStorage.setItem("gh_token", token);
+    else localStorage.removeItem("gh_token");
+  }
+
+  // GitHub settings button
+  document.getElementById("github-settings-btn").addEventListener("click", function () {
+    var current = getGitHubToken();
+    var masked = current ? "••••" + current.slice(-4) : "(not set)";
+    var input = prompt("GitHub Personal Access Token\nCurrent: " + masked + "\n\nPaste token (or clear to remove):", "");
+    if (input === null) return; // cancelled
+    setGitHubToken(input.trim());
+    alert(input.trim() ? "Token saved." : "Token removed.");
+  });
+
+  function fileToBase64(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        resolve(reader.result.split(",")[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function getExistingFileSha(path) {
+    var token = getGitHubToken();
+    var encodedPath = path.split("/").map(encodeURIComponent).join("/");
+    var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encodedPath + "?ref=" + GITHUB_BRANCH;
+    return fetch(url, {
+      headers: token ? { Authorization: "token " + token } : {}
+    }).then(function (res) {
+      if (res.status === 200) return res.json().then(function (d) { return d.sha; });
+      return null;
+    }).catch(function () { return null; });
+  }
+
+  function uploadToGitHub(filePath, base64Content, commitMessage) {
+    var token = getGitHubToken();
+    if (!token) return Promise.reject(new Error("No GitHub token set. Click ⚙ GitHub Token to configure."));
+
+    return getExistingFileSha(filePath).then(function (sha) {
+      var body = {
+        message: commitMessage,
+        content: base64Content,
+        branch: GITHUB_BRANCH
+      };
+      if (sha) body.sha = sha;
+
+      var encodedPath = filePath.split("/").map(encodeURIComponent).join("/");
+      return fetch("https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encodedPath, {
+        method: "PUT",
+        headers: {
+          Authorization: "token " + token,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+    }).then(function (res) {
+      if (!res.ok) return res.json().then(function (d) { throw new Error(d.message || "Upload failed"); });
+      return res.json();
+    });
+  }
+
+  function buildUploadButton(actionCell, row, globalIndex) {
+    var fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "audio/*";
+    fileInput.style.display = "none";
+
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-sm btn-primary";
+    btn.textContent = "⬆ Upload";
+    btn.addEventListener("click", function () { fileInput.click(); });
+
+    fileInput.addEventListener("change", function () {
+      if (!this.files || !this.files[0]) return;
+      var file = this.files[0];
+      var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ".ogg";
+      var filePath = "audio/" + targetName;
+
+      // Immediate playback via blob
+      if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
+      var blobUrl = URL.createObjectURL(file);
+      sessionBlobUrls[globalIndex] = blobUrl;
+      row.audioUrl = filePath;
+
+      btn.disabled = true;
+      btn.textContent = "Uploading…";
+
+      fileToBase64(file).then(function (b64) {
+        return uploadToGitHub(filePath, b64, "Add " + targetName);
+      }).then(function () {
+        btn.textContent = "✓ Done";
+        btn.className = "btn btn-sm btn-primary";
+        renderTable();
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = "⬆ Upload";
+        alert("Upload failed: " + err.message);
+      });
+    });
+
+    actionCell.appendChild(fileInput);
+    actionCell.appendChild(btn);
+  }
 
   renderTable();
 })();

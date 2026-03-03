@@ -572,6 +572,11 @@ body {
   height: 12px;
 }
 
+.action-cell {
+  text-align: center;
+  min-width: 80px;
+}
+
 .audio-cell .no-recording {
   display: inline-block;
   padding: 0.25rem 0.5rem;
