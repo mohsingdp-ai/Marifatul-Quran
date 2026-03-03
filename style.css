@@ -1,0 +1,804 @@
+/* Marifatul Quran - Ruku Player - Islamic-themed teal design */
+
+:root {
+  --teal-dark: #0d4f4f;
+  --teal-header: #0d5c5c;
+  --teal-accent: #0f7a7a;
+  --row-white: #ffffff;
+  --row-gray: #f0f4f4;
+  --text-primary: #1a1a1a;
+  --text-muted: #555;
+  --verse-link: #0a6b6b;
+  --arabic-gold: #8b6914;
+  --playing-bg: #e8f5f5;
+  --border: #d0d8d8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: linear-gradient(180deg, #f5fafa 0%, #e8f0f0 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.header {
+  background: var(--teal-dark);
+  color: white;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+.header .subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.main {
+  width: 100%;
+  max-width: 1000px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+.controls {
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.controls label {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.controls select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--row-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.controls select:focus {
+  outline: none;
+  border-color: var(--teal-accent);
+  box-shadow: 0 0 0 2px rgba(15, 122, 122, 0.2);
+}
+
+.toolbar {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.controls-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--teal-accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--teal-header);
+}
+
+.btn-secondary {
+  background: var(--teal-header);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--teal-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--teal-accent);
+  border-color: var(--teal-accent);
+}
+
+.btn-outline:hover {
+  background: rgba(15, 122, 122, 0.1);
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.2s, opacity 0.2s;
+}
+
+.modal.is-open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 440px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.modal-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.row-form .form-row {
+  margin-bottom: 0.75rem;
+}
+
+.row-form label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.row-form input[type="text"],
+.row-form input[type="number"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.row-form input[type="file"] {
+  width: 100%;
+  font-size: 0.85rem;
+}
+
+/* Audio drop zone (click or drag & drop) */
+.audio-drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+
+.audio-drop-zone:hover,
+.audio-drop-zone.dragover {
+  border-color: var(--teal-accent);
+  background: rgba(15, 122, 122, 0.06);
+}
+
+.audio-drop-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.audio-drop-zone-icon {
+  display: block;
+  font-size: 1.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.audio-drop-zone-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.audio-file-info {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--row-gray);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.audio-file-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.audio-file-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.form-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--teal-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  color: var(--teal-header);
+}
+
+.modal-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  background: var(--row-white);
+  min-width: 0;
+}
+
+.ruku-table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  table-layout: auto;
+}
+
+.ruku-table thead {
+  background: var(--teal-header);
+  color: white;
+}
+
+.ruku-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+
+.ruku-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.ruku-table tbody tr:nth-child(even) {
+  background: var(--row-gray);
+}
+
+.ruku-table tbody tr:nth-child(odd) {
+  background: var(--row-white);
+}
+
+.ruku-table tbody tr:hover {
+  background: #e5eeee;
+}
+
+.ruku-table tbody tr.playing {
+  background: var(--playing-bg);
+}
+
+.ruku-table td {
+  padding: 0.65rem 1rem;
+  vertical-align: middle;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Ruku # column: one line, left-aligned */
+.ruku-table td:first-child {
+  min-width: 8rem;
+}
+
+/* Surah name: one line */
+.ruku-table td:nth-child(2) {
+  min-width: 7rem;
+}
+
+/* Verses: one line */
+.ruku-table td:nth-child(3) {
+  min-width: 4rem;
+}
+
+/* Surah # & Arabic: one line */
+.ruku-table td:nth-child(4) {
+  min-width: 6rem;
+}
+
+.ruku-table .col-verses {
+  color: var(--verse-link);
+  font-weight: 500;
+}
+
+.ruku-table .col-surah-arabic {
+  text-align: right;
+  direction: rtl;
+  font-family: "Traditional Arabic", "Scheherazade New", serif;
+  color: var(--arabic-gold);
+  font-size: 1.1rem;
+}
+
+.ruku-table .col-audio {
+  text-align: left;
+  min-width: 280px;
+}
+
+.audio-cell audio {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  width: 100%;
+  min-width: 240px;
+  max-width: 360px;
+}
+
+.audio-play-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--teal-accent);
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  touch-action: manipulation;
+}
+
+.audio-play-btn:hover {
+  background: var(--teal-header);
+}
+
+.audio-play-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(15, 122, 122, 0.4);
+}
+
+.audio-time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  min-width: 2.5rem;
+}
+
+.audio-progress-wrap {
+  flex: 1;
+  min-width: 100px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.audio-progress-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.audio-hover-time {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  background: var(--teal-dark);
+  color: white;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease, transform 0.1s ease;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.audio-hover-time::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--teal-dark);
+}
+
+.audio-hover-time.is-visible {
+  opacity: 1;
+}
+
+.audio-progress {
+  --progress: 0%;
+  width: 100%;
+  height: 10px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, var(--teal-accent) 0%, var(--teal-accent) var(--progress), #d0d8d8 var(--progress), #d0d8d8 100%);
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.audio-progress-wrap:hover .audio-progress {
+  height: 12px;
+}
+
+.audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.audio-progress-wrap:hover .audio-progress::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.audio-progress::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.audio-progress-wrap:hover .audio-progress::-moz-range-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.audio-progress::-webkit-slider-runnable-track {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.audio-progress-wrap:hover .audio-progress::-webkit-slider-runnable-track {
+  height: 12px;
+}
+
+.audio-progress::-moz-range-track {
+  height: 10px;
+  border-radius: 5px;
+  background: transparent;
+}
+
+.audio-progress-wrap:hover .audio-progress::-moz-range-track {
+  height: 12px;
+}
+
+.audio-cell .no-recording {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: #e8e8e8;
+  border-radius: 4px;
+}
+
+.audio-cell .path-not-found {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  color: #8b4513;
+  background: #fef3e0;
+  border-radius: 4px;
+}
+
+/* Hover tooltip: audio path */
+.ruku-path-tooltip {
+  position: fixed;
+  z-index: 999;
+  max-width: 420px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-family: ui-monospace, monospace;
+  color: var(--text-primary);
+  background: var(--row-white);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  word-break: break-all;
+}
+
+.ruku-path-tooltip.is-visible {
+  opacity: 1;
+}
+
+/* Mobile and small screens */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 1rem;
+  }
+
+  .header h1 {
+    font-size: 1.4rem;
+  }
+
+  .header .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .main {
+    padding: 0.75rem 1rem;
+  }
+
+  .controls {
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .controls label {
+    font-size: 0.9rem;
+  }
+
+  .controls select {
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    font-size: 1rem;
+    min-height: 44px;
+  }
+}
+
+/* Mobile: transpose table into stacked cards */
+@media (max-width: 640px) {
+  .main {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .table-wrapper {
+    overflow-x: visible;
+  }
+
+  .ruku-table {
+    font-size: 0.9rem;
+    min-width: 0;
+    display: block;
+  }
+
+  .ruku-table thead {
+    display: none;
+  }
+
+  .ruku-table tbody {
+    display: block;
+  }
+
+  .ruku-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--row-white);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  }
+
+  .ruku-table tbody tr:nth-child(even) {
+    background: var(--row-gray);
+  }
+
+  .ruku-table tbody tr:nth-child(odd) {
+    background: var(--row-white);
+  }
+
+  .ruku-table tbody tr.playing {
+    background: var(--playing-bg);
+    border-color: var(--teal-accent);
+  }
+
+  .ruku-table tbody td {
+    display: block;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    white-space: normal;
+    min-width: 0;
+  }
+
+  .ruku-table tbody td:last-child {
+    border-bottom: none;
+    padding-top: 0.75rem;
+  }
+
+  .ruku-table tbody td::before {
+    content: attr(data-label);
+    display: block;
+    font-weight: 600;
+    color: var(--teal-header);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.25rem;
+  }
+
+  .ruku-table .col-surah-arabic {
+    text-align: right;
+    direction: rtl;
+  }
+
+  .ruku-table .col-audio::before {
+    margin-bottom: 0.5rem;
+  }
+
+  .ruku-table .col-audio .audio-controls {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+  }
+
+  .audio-controls {
+    min-width: 0;
+    gap: 0.4rem;
+  }
+
+  .audio-play-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .audio-time {
+    font-size: 0.85rem;
+    min-width: 2.25rem;
+  }
+
+  .audio-progress-wrap {
+    min-width: 60px;
+    min-height: 32px;
+  }
+
+  .audio-progress {
+    height: 12px;
+  }
+
+  .audio-progress-wrap:hover .audio-progress {
+    height: 12px;
+  }
+
+  .audio-progress::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .audio-progress::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ruku-table .col-surah-arabic {
+    font-size: 1rem;
+  }
+
+  .modal-content {
+    margin: 0.5rem;
+    max-height: 85vh;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .header h1 {
+    font-size: 1.2rem;
+  }
+
+  .ruku-table tbody tr {
+    padding: 0.75rem;
+  }
+
+  .ruku-table tbody td {
+    padding: 0.4rem 0;
+  }
+
+  .ruku-table {
+    font-size: 0.85rem;
+  }
+}
