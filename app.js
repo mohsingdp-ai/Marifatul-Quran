@@ -317,12 +317,22 @@
     });
   }
 
-  function getExistingFileSha(path) {
+  function authHeader() {
     var token = getGitHubToken();
-    var encodedPath = path.split("/").map(encodeURIComponent).join("/");
-    var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encodedPath + "?ref=" + GITHUB_BRANCH;
-    return fetch(url, {
-      headers: token ? { Authorization: "token " + token } : {}
+    if (!token) return {};
+    // Fine-grained tokens start with github_pat_, classic with ghp_
+    var prefix = token.startsWith("github_pat_") ? "Bearer" : "token";
+    return { Authorization: prefix + " " + token };
+  }
+
+  function apiUrl(filePath) {
+    var encoded = filePath.split("/").map(encodeURIComponent).join("/");
+    return "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encoded;
+  }
+
+  function getExistingFileSha(path) {
+    return fetch(apiUrl(path) + "?ref=" + GITHUB_BRANCH, {
+      headers: authHeader()
     }).then(function (res) {
       if (res.status === 200) return res.json().then(function (d) { return d.sha; });
       return null;
@@ -341,17 +351,16 @@
       };
       if (sha) body.sha = sha;
 
-      var encodedPath = filePath.split("/").map(encodeURIComponent).join("/");
-      return fetch("https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encodedPath, {
+      var headers = authHeader();
+      headers["Content-Type"] = "application/json";
+
+      return fetch(apiUrl(filePath), {
         method: "PUT",
-        headers: {
-          Authorization: "token " + token,
-          "Content-Type": "application/json"
-        },
+        headers: headers,
         body: JSON.stringify(body)
       });
     }).then(function (res) {
-      if (!res.ok) return res.json().then(function (d) { throw new Error(d.message || "Upload failed"); });
+      if (!res.ok) return res.json().then(function (d) { throw new Error((d.message || "Upload failed") + " (HTTP " + res.status + ")"); });
       return res.json();
     });
   }
