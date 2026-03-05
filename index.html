@@ -61,7 +61,7 @@
       </select>
       </div>
       <div class="controls-right">
-        <button type="button" class="btn btn-sm btn-install" id="install-btn" style="display:none">⬇ Install App</button>
+        <button type="button" class="btn btn-sm btn-install" id="install-btn">⬇ Install App</button>
         <button type="button" class="btn btn-sm btn-secondary" id="github-settings-btn">⚙ GitHub Token</button>
       </div>
     </div>
@@ -97,42 +97,45 @@
   <script>
     (function () {
       var btn = document.getElementById("install-btn");
+      var deferred = null;
 
-      // Already running as installed PWA — no button needed
+      // Hide button if already running as installed PWA
       if (window.matchMedia("(display-mode: standalone)").matches ||
-          window.navigator.standalone === true) return;
-
-      // iOS: no beforeinstallprompt — show manual instructions
-      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIOS) {
-        btn.textContent = "⬇ Install App";
-        btn.style.display = "";
-        btn.addEventListener("click", function () {
-          alert("To install on iOS:\n\n1. Tap the Share button (the box with an arrow) in Safari\n2. Tap \"Add to Home Screen\"\n3. Tap \"Add\"");
-        });
+          window.navigator.standalone === true) {
+        btn.style.display = "none";
         return;
       }
 
-      // Android / Desktop Chrome: use the install prompt
-      var deferred = null;
+      // Capture native install prompt when browser fires it
       window.addEventListener("beforeinstallprompt", function (e) {
         e.preventDefault();
         deferred = e;
-        btn.style.display = "";
-      });
-
-      btn.addEventListener("click", function () {
-        if (!deferred) return;
-        deferred.prompt();
-        deferred.userChoice.then(function () {
-          deferred = null;
-          btn.style.display = "none";
-        });
       });
 
       window.addEventListener("appinstalled", function () {
         btn.style.display = "none";
         deferred = null;
+      });
+
+      btn.addEventListener("click", function () {
+        if (deferred) {
+          // Native prompt available — use it
+          deferred.prompt();
+          deferred.userChoice.then(function () {
+            deferred = null;
+          });
+          return;
+        }
+
+        // iOS Safari
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          alert("To install on iOS:\n\n1. Tap the Share button \u{1F4E4} at the bottom of Safari\n2. Tap \u201CAdd to Home Screen\u201D\n3. Tap \u201CAdd\u201D");
+          return;
+        }
+
+        // Other browsers — generic guidance
+        alert("To install:\n\nIn Chrome: tap the menu (\u22EE) then \u201CAdd to Home Screen\u201D or \u201CInstall app\u201D\nIn Edge: tap the menu then \u201CApps \u2192 Install this site as an app\u201D");
       });
     })();
   </script>
