@@ -50,8 +50,13 @@
     });
   }
 
+  function normalizeAudioPath(value) {
+    if (typeof value !== "string") return "";
+    return value.trim();
+  }
+
   function getAudioSrc(row, globalIndex) {
-    return sessionBlobUrls[globalIndex] || row.audioUrl || "";
+    return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
   }
 
   function renderTable() {
@@ -70,6 +75,7 @@
       var rukuLabel = row.rukuInPara + " (Para " + row.para + ")";
       var surahArabicCell = row.surahNumber + " " + row.surahArabic;
       var audioSrc = getAudioSrc(row, globalIndex);
+      var savedPath = normalizeAudioPath(row.audioUrl);
 
       tr.innerHTML =
         "<td data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
@@ -94,7 +100,7 @@
         buildUploadButton(actionCell, row, globalIndex);
       }
 
-      tr.dataset.pathText = (row.audioUrl && row.audioUrl.trim()) ? row.audioUrl : "(No recording)";
+      tr.dataset.pathText = savedPath || "(No recording)";
 
       fragment.appendChild(tr);
     });
@@ -111,10 +117,17 @@
 
   function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn) {
     var audio = document.createElement("audio");
-    // Keep metadata preload so missing files are detected and marked early.
-    audio.preload = "metadata";
-    audio.src = src;
+    // Lazy load: only fetch audio when user interacts with this row.
+    audio.preload = "none";
     audio.controls = false;
+    var hasLoadedSource = false;
+
+    function ensureAudioSource() {
+      if (hasLoadedSource) return;
+      audio.src = src;
+      audio.load();
+      hasLoadedSource = true;
+    }
 
     var wrap = document.createElement("div");
     wrap.className = "audio-controls";
@@ -160,6 +173,7 @@
     wrap.appendChild(timeDuration);
 
     playBtn.addEventListener("click", function () {
+      ensureAudioSource();
       if (audio.paused) {
         if (currentPlayingAudio && currentPlayingAudio !== audio) {
           currentPlayingAudio.pause();
@@ -224,6 +238,7 @@
       return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
     }
     function seekToPct(pct) {
+      ensureAudioSource();
       progress.value = pct;
       progress.style.setProperty("--progress", pct + "%");
       if (audio.duration && isFinite(audio.duration)) {
