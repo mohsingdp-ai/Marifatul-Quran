@@ -9,14 +9,28 @@
   // Data from QURAN_DATA (no persistence, no editing)
   var data = JSON.parse(JSON.stringify(QURAN_DATA));
   var sessionBlobUrls = {};
+  var escapeNode = document.createElement("div");
+  var indexedData = buildParaIndex(data);
+
+  // Hover tooltip: show audio path
+  var pathTooltip = document.createElement("div");
+  pathTooltip.className = "ruku-path-tooltip";
+  pathTooltip.setAttribute("aria-hidden", "true");
+  document.body.appendChild(pathTooltip);
+  var activeTooltipRow = null;
+
+  function buildParaIndex(rows) {
+    var index = {};
+    rows.forEach(function (row, globalIndex) {
+      if (!index[row.para]) index[row.para] = [];
+      index[row.para].push({ row: row, globalIndex: globalIndex });
+    });
+    return index;
+  }
 
   function getFilteredData() {
     var para = parseInt(paraSelect.value, 10);
-    var out = [];
-    data.forEach(function (row, globalIndex) {
-      if (row.para === para) out.push({ row: row, globalIndex: globalIndex });
-    });
-    return out;
+    return indexedData[para] || [];
   }
 
   function clearPlayingClass() {
@@ -31,7 +45,8 @@
 
   function renderTable() {
     var filtered = getFilteredData();
-    tbody.innerHTML = "";
+    var fragment = document.createDocumentFragment();
+    tbody.textContent = "";
 
     filtered.forEach(function (item) {
       var row = item.row;
@@ -54,7 +69,7 @@
       var audioCell = tr.querySelector(".audio-cell");
       var actionCell = tr.querySelector(".action-cell");
       if (audioSrc) {
-        buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass, actionCell, globalIndex);
+        buildAudioPlayer(tr, audioCell, audioSrc, clearPlayingClass);
       } else {
         var span = document.createElement("span");
         span.className = "no-recording";
@@ -64,18 +79,12 @@
 
       buildUploadButton(actionCell, row, globalIndex);
 
-      var pathText = (row.audioUrl && row.audioUrl.trim()) ? row.audioUrl : "(No recording)";
-      tr.addEventListener("mouseenter", function (e) {
-        pathTooltip.textContent = pathText;
-        pathTooltip.classList.add("is-visible");
-        positionPathTooltip(tr);
-      });
-      tr.addEventListener("mouseleave", function () {
-        pathTooltip.classList.remove("is-visible");
-      });
+      tr.dataset.pathText = (row.audioUrl && row.audioUrl.trim()) ? row.audioUrl : "(No recording)";
 
-      tbody.appendChild(tr);
+      fragment.appendChild(tr);
     });
+
+    tbody.appendChild(fragment);
   }
 
   function positionPathTooltip(tr) {
@@ -85,8 +94,9 @@
     pathTooltip.style.transform = "translateY(-100%)";
   }
 
-  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn, actionCell, globalIndex) {
+  function buildAudioPlayer(tr, audioCell, src, clearPlayingFn) {
     var audio = document.createElement("audio");
+    // Keep metadata preload so missing files are detected and marked early.
     audio.preload = "metadata";
     audio.src = src;
     audio.controls = false;
@@ -215,15 +225,16 @@
       e.preventDefault();
       seeking = true;
       seekToPct(pctFromEvent(e));
+      window.addEventListener("mouseup", stopSeeking, { once: true });
     });
     progressOverlay.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       seekToPct(pctFromEvent(e));
     });
-    document.addEventListener("mouseup", function () {
+    function stopSeeking() {
       seeking = false;
-    });
+    }
 
     /* Touch support for progress bar (mobile) */
     progressOverlay.addEventListener("touchstart", function (e) {
@@ -269,18 +280,33 @@
   }
 
   function escapeHtml(text) {
-    var div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    escapeNode.textContent = text;
+    return escapeNode.innerHTML;
   }
 
   paraSelect.addEventListener("change", renderTable);
 
-  // Hover tooltip: show audio path
-  var pathTooltip = document.createElement("div");
-  pathTooltip.className = "ruku-path-tooltip";
-  pathTooltip.setAttribute("aria-hidden", "true");
-  document.body.appendChild(pathTooltip);
+  tbody.addEventListener("mouseover", function (e) {
+    var tr = e.target.closest("tr");
+    if (!tr || !tbody.contains(tr) || tr === activeTooltipRow) return;
+    activeTooltipRow = tr;
+    pathTooltip.textContent = tr.dataset.pathText || "(No recording)";
+    pathTooltip.classList.add("is-visible");
+    positionPathTooltip(tr);
+  });
+
+  tbody.addEventListener("mouseout", function (e) {
+    var tr = e.target.closest("tr");
+    if (!tr || tr !== activeTooltipRow) return;
+    var related = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest("tr") : null;
+    if (related === tr) return;
+    activeTooltipRow = null;
+    pathTooltip.classList.remove("is-visible");
+  });
+
+  tbody.addEventListener("mousemove", function () {
+    if (activeTooltipRow) positionPathTooltip(activeTooltipRow);
+  });
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";

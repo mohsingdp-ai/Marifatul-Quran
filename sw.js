@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v1";
+const CACHE = "mq-v2";
 const STATIC = [
   "./",
   "./index.html",
