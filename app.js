@@ -791,6 +791,42 @@
     actionCell.appendChild(label);
   }
 
+  document.addEventListener("keydown", function (e) {
+    // Don't intercept when typing in inputs
+    var tag = document.activeElement && document.activeElement.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (!currentPlayingAudio) return;
+      e.preventDefault();
+      var offset = 5;
+      if (e.key === "ArrowLeft") {
+        currentPlayingAudio.currentTime = Math.max(0, currentPlayingAudio.currentTime - offset);
+      } else {
+        currentPlayingAudio.currentTime = Math.min(
+          currentPlayingAudio.duration || currentPlayingAudio.currentTime,
+          currentPlayingAudio.currentTime + offset
+        );
+      }
+    }
+
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();
+      var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
+      if (!playBtns.length) return;
+      var playingTr = tbody.querySelector("tr.playing");
+      var currentBtn = playingTr ? playingTr.querySelector(".audio-play-btn") : null;
+      var idx = currentBtn ? playBtns.indexOf(currentBtn) : -1;
+      var nextIdx = e.key === "ArrowDown"
+        ? Math.min(playBtns.length - 1, idx + 1)
+        : Math.max(0, idx - 1);
+      if (nextIdx !== idx) {
+        playBtns[nextIdx].click();
+        playBtns[nextIdx].closest("tr").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  });
+
   renderTable();
 })();
 
