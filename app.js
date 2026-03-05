@@ -3,6 +3,7 @@
 
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
+  const actionHeader = document.querySelector("#ruku-table thead th:last-child");
 
   if (!tbody || typeof QURAN_DATA === "undefined") return;
 
@@ -34,6 +35,15 @@
     return indexedData[para] || [];
   }
 
+  function hasGitHubToken() {
+    return !!getGitHubToken().trim();
+  }
+
+  function setActionColumnVisibility(show) {
+    if (!actionHeader) return;
+    actionHeader.style.display = show ? "" : "none";
+  }
+
   function clearPlayingClass() {
     tbody.querySelectorAll("tr.playing").forEach(function (tr) {
       tr.classList.remove("playing");
@@ -46,8 +56,10 @@
 
   function renderTable() {
     var filtered = getFilteredData();
+    var canUpload = hasGitHubToken();
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
+    setActionColumnVisibility(canUpload);
 
     filtered.forEach(function (item) {
       var row = item.row;
@@ -65,10 +77,10 @@
         "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
         "<td class=\"col-surah-arabic\" data-label=\"Surah # & Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
         "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
-        "<td class=\"action-cell\" data-label=\"Action\"></td>";
+        (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
       var audioCell = tr.querySelector(".audio-cell");
-      var actionCell = tr.querySelector(".action-cell");
+      var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
       if (audioSrc) {
         buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
       } else {
@@ -78,7 +90,9 @@
         audioCell.appendChild(span);
       }
 
-      buildUploadButton(actionCell, row, globalIndex);
+      if (canUpload && actionCell) {
+        buildUploadButton(actionCell, row, globalIndex);
+      }
 
       tr.dataset.pathText = (row.audioUrl && row.audioUrl.trim()) ? row.audioUrl : "(No recording)";
 
