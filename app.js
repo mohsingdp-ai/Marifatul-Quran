@@ -99,12 +99,13 @@
   // Set of existing audio filenames — fetched once from GitHub API
   var audioFileSet = null;
   var audioFileSetPromise = null;
+  var allParaOptions = null; // cached for iOS option.hidden fix
 
   function fetchAudioFileList() {
     if (audioFileSetPromise) return audioFileSetPromise;
     var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
               "/contents/audio?ref=" + GITHUB_BRANCH;
-    audioFileSetPromise = fetch(url)
+    audioFileSetPromise = fetch(url, { headers: authHeader() })
       .then(function (res) { return res.ok ? res.json() : []; })
       .then(function (files) {
         var set = {};
@@ -175,34 +176,37 @@
 
   function updateParaSelect() {
     var filterPara = getShowOnlyRecordedPara();
-    var options = paraSelect.options;
 
-    for (var i = 0; i < options.length; i++) {
-      var para = parseInt(options[i].value, 10);
-      if (filterPara && audioFileSet) {
-        var items = indexedData[para] || [];
-        var hasAny = items.some(hasRecording);
-        options[i].hidden = !hasAny;
-        options[i].disabled = !hasAny;
-      } else {
-        options[i].hidden = false;
-        options[i].disabled = false;
-      }
+    // Cache all options once (iOS Safari doesn't support option.hidden, so we remove/re-add from DOM)
+    if (!allParaOptions) {
+      allParaOptions = Array.from(paraSelect.options);
     }
 
-    // If current selection is now hidden, jump to first visible
-    if (filterPara && paraSelect.selectedOptions[0] && paraSelect.selectedOptions[0].hidden) {
-      for (var j = 0; j < options.length; j++) {
-        if (!options[j].hidden) {
-          paraSelect.value = options[j].value;
-          break;
-        }
+    var currentValue = paraSelect.value;
+
+    // Remove all options from select
+    while (paraSelect.options.length > 0) paraSelect.remove(0);
+
+    // Re-add only the ones that should be visible
+    allParaOptions.forEach(function (opt) {
+      var show = true;
+      if (filterPara && audioFileSet) {
+        var para = parseInt(opt.value, 10);
+        var items = indexedData[para] || [];
+        show = items.some(hasRecording);
       }
+      if (show) paraSelect.appendChild(opt);
+    });
+
+    // Restore previous selection if still present, else pick first
+    if (paraSelect.querySelector('option[value="' + currentValue + '"]')) {
+      paraSelect.value = currentValue;
+    } else if (paraSelect.options.length > 0) {
+      paraSelect.value = paraSelect.options[0].value;
     }
   }
 
   function renderTable() {
-    var filtered = getFilteredData();
     var canUpload = hasGitHubToken();
     var filterRuku = getShowOnlyRecordedRuku();
 
@@ -215,7 +219,10 @@
       return;
     }
 
+    // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
+
+    var filtered = getFilteredData();
 
     if (filterRuku) {
       filtered = filtered.filter(hasRecording);
