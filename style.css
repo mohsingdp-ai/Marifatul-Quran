@@ -823,3 +823,84 @@ body {
     font-size: 0.85rem;
   }
 }
+
+/* Settings modal */
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.settings-row label {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.settings-role-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.settings-role-btn {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--border);
+  background: var(--row-white);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.settings-role-btn:hover {
+  border-color: var(--teal-accent);
+}
+
+.settings-role-btn.active {
+  background: var(--teal-accent);
+  color: white;
+  border-color: var(--teal-accent);
+}
+
+.settings-role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--row-gray);
+  color: var(--text-muted);
+  align-self: flex-start;
+}
+
+.settings-role-badge.admin {
+  background: #e8f5f5;
+  color: var(--teal-accent);
+}
+
+.settings-admin-section input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.settings-admin-section input[type="password"]:focus {
+  outline: none;
+  border-color: var(--teal-accent);
+  box-shadow: 0 0 0 2px rgba(15, 122, 122, 0.2);
+}
+
+.settings-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+}

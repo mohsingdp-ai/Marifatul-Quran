@@ -62,7 +62,7 @@
       </div>
       <div class="controls-right">
         <button type="button" class="btn btn-sm btn-install" id="install-btn">⬇ Install App</button>
-        <button type="button" class="btn btn-sm btn-secondary" id="github-settings-btn">⚙ GitHub Token</button>
+        <button type="button" class="btn btn-sm btn-secondary" id="settings-btn">⚙ Settings</button>
       </div>
     </div>
 
@@ -84,6 +84,31 @@
       </table>
     </div>
   </main>
+
+  <!-- Settings Modal -->
+  <div class="modal" id="settings-modal">
+    <div class="modal-backdrop" id="settings-modal-backdrop"></div>
+    <div class="modal-content">
+      <h2 class="modal-title">⚙ Settings</h2>
+      <div class="settings-form">
+        <div class="settings-row">
+          <label>Role</label>
+          <div class="settings-role-group">
+            <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn">👤 User</button>
+            <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn">🔐 Admin</button>
+          </div>
+          <span class="settings-role-badge" id="role-badge">User</span>
+        </div>
+        <div class="settings-row settings-admin-section" id="admin-section" style="display:none">
+          <label for="gh-token-input">GitHub Personal Access Token</label>
+          <input type="password" id="gh-token-input" placeholder="Paste token here…" autocomplete="off">
+        </div>
+      </div>
+      <div class="settings-actions">
+        <button type="button" class="btn btn-sm btn-secondary" id="settings-close-btn">Close</button>
+      </div>
+    </div>
+  </div>
 
   <script src="data.js"></script>
   <script src="app.js"></script>

@@ -35,8 +35,22 @@
     return indexedData[para] || [];
   }
 
+  var ADMIN_PASSWORD = "484215";
+
+  function getRole() {
+    return localStorage.getItem("app_role") || "user";
+  }
+
+  function setRole(role) {
+    localStorage.setItem("app_role", role);
+  }
+
+  function isAdmin() {
+    return getRole() === "admin";
+  }
+
   function hasGitHubToken() {
-    return !!getGitHubToken().trim();
+    return isAdmin() && !!getGitHubToken().trim();
   }
 
   function setActionColumnVisibility(show) {
@@ -455,15 +469,64 @@
     else localStorage.removeItem("gh_token");
   }
 
-  // GitHub settings button
-  document.getElementById("github-settings-btn").addEventListener("click", function () {
-    var current = getGitHubToken();
-    var masked = current ? "••••" + current.slice(-4) : "(not set)";
-    var input = prompt("GitHub Personal Access Token\nCurrent: " + masked + "\n\nPaste token (or clear to remove):", "");
-    if (input === null) return; // cancelled
-    setGitHubToken(input.trim());
+  // Settings modal
+  var settingsModal = document.getElementById("settings-modal");
+  var settingsBtn = document.getElementById("settings-btn");
+  var settingsCloseBtn = document.getElementById("settings-close-btn");
+  var settingsBackdrop = document.getElementById("settings-modal-backdrop");
+  var roleUserBtn = document.getElementById("role-user-btn");
+  var roleAdminBtn = document.getElementById("role-admin-btn");
+  var roleBadge = document.getElementById("role-badge");
+  var adminSection = document.getElementById("admin-section");
+  var ghTokenInput = document.getElementById("gh-token-input");
+
+  function openSettings() {
+    syncSettingsUI();
+    settingsModal.classList.add("is-open");
+  }
+
+  function closeSettings() {
+    settingsModal.classList.remove("is-open");
+    // Save token if admin
+    if (isAdmin() && ghTokenInput) {
+      var val = ghTokenInput.value.trim();
+      setGitHubToken(val);
+    }
     renderTable();
-    alert(input.trim() ? "Token saved." : "Token removed.");
+  }
+
+  function syncSettingsUI() {
+    var admin = isAdmin();
+    roleUserBtn.classList.toggle("active", !admin);
+    roleAdminBtn.classList.toggle("active", admin);
+    roleBadge.textContent = admin ? "Admin" : "User";
+    roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
+    adminSection.style.display = admin ? "" : "none";
+    if (admin && ghTokenInput) {
+      ghTokenInput.value = getGitHubToken();
+    }
+  }
+
+  settingsBtn.addEventListener("click", openSettings);
+  settingsCloseBtn.addEventListener("click", closeSettings);
+  settingsBackdrop.addEventListener("click", closeSettings);
+
+  roleUserBtn.addEventListener("click", function () {
+    setRole("user");
+    syncSettingsUI();
+  });
+
+  roleAdminBtn.addEventListener("click", function () {
+    if (!isAdmin()) {
+      var pw = prompt("Enter admin password:");
+      if (pw === null) return;
+      if (pw !== ADMIN_PASSWORD) {
+        alert("Incorrect password.");
+        return;
+      }
+    }
+    setRole("admin");
+    syncSettingsUI();
   });
 
   function fileToBase64(file) {
