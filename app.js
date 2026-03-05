@@ -54,6 +54,24 @@
     return getRole() === "admin";
   }
 
+  function getShowOnlyRecordedPara() {
+    var v = localStorage.getItem("show_only_recorded_para");
+    return v === null ? true : v === "true";
+  }
+
+  function setShowOnlyRecordedPara(val) {
+    localStorage.setItem("show_only_recorded_para", val ? "true" : "false");
+  }
+
+  function getShowOnlyRecordedRuku() {
+    var v = localStorage.getItem("show_only_recorded_ruku");
+    return v === null ? true : v === "true";
+  }
+
+  function setShowOnlyRecordedRuku(val) {
+    localStorage.setItem("show_only_recorded_ruku", val ? "true" : "false");
+  }
+
   function hasGitHubToken() {
     return isAdmin() && !!getGitHubToken().trim();
   }
@@ -150,9 +168,43 @@
     return tr;
   }
 
+  function hasRecording(item) {
+    var audioSrc = getAudioSrc(item.row, item.globalIndex);
+    return audioSrc && (sessionBlobUrls[item.globalIndex] || audioFileExists(audioSrc));
+  }
+
+  function updateParaSelect() {
+    var filterPara = getShowOnlyRecordedPara();
+    var options = paraSelect.options;
+
+    for (var i = 0; i < options.length; i++) {
+      var para = parseInt(options[i].value, 10);
+      if (filterPara && audioFileSet) {
+        var items = indexedData[para] || [];
+        var hasAny = items.some(hasRecording);
+        options[i].hidden = !hasAny;
+        options[i].disabled = !hasAny;
+      } else {
+        options[i].hidden = false;
+        options[i].disabled = false;
+      }
+    }
+
+    // If current selection is now hidden, jump to first visible
+    if (filterPara && paraSelect.selectedOptions[0] && paraSelect.selectedOptions[0].hidden) {
+      for (var j = 0; j < options.length; j++) {
+        if (!options[j].hidden) {
+          paraSelect.value = options[j].value;
+          break;
+        }
+      }
+    }
+  }
+
   function renderTable() {
     var filtered = getFilteredData();
     var canUpload = hasGitHubToken();
+    var filterRuku = getShowOnlyRecordedRuku();
 
     if (!audioFileSet) {
       tbody.textContent = "";
@@ -163,6 +215,12 @@
       return;
     }
 
+    updateParaSelect();
+
+    if (filterRuku) {
+      filtered = filtered.filter(hasRecording);
+    }
+
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
     setActionColumnVisibility(canUpload);
@@ -170,6 +228,12 @@
     filtered.forEach(function (item) {
       fragment.appendChild(buildRow(item, canUpload));
     });
+
+    if (filtered.length === 0) {
+      var emptyTr = document.createElement("tr");
+      emptyTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;color:#555;\">No recordings in this Para</td>";
+      fragment.appendChild(emptyTr);
+    }
 
     tbody.appendChild(fragment);
   }
@@ -512,6 +576,8 @@
   var roleBadge = document.getElementById("role-badge");
   var adminSection = document.getElementById("admin-section");
   var ghTokenInput = document.getElementById("gh-token-input");
+  var togglePara = document.getElementById("show-only-recorded-para");
+  var toggleRuku = document.getElementById("show-only-recorded-ruku");
 
   function openSettings() {
     syncSettingsUI();
@@ -538,7 +604,19 @@
     if (admin && ghTokenInput) {
       ghTokenInput.value = getGitHubToken();
     }
+    togglePara.checked = getShowOnlyRecordedPara();
+    toggleRuku.checked = getShowOnlyRecordedRuku();
   }
+
+  togglePara.addEventListener("change", function () {
+    setShowOnlyRecordedPara(this.checked);
+    renderTable();
+  });
+
+  toggleRuku.addEventListener("change", function () {
+    setShowOnlyRecordedRuku(this.checked);
+    renderTable();
+  });
 
   settingsBtn.addEventListener("click", openSettings);
   settingsCloseBtn.addEventListener("click", closeSettings);
