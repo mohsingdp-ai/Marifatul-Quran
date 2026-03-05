@@ -11,6 +11,7 @@
   var sessionBlobUrls = {};
   var escapeNode = document.createElement("div");
   var indexedData = buildParaIndex(data);
+  var currentPlayingAudio = null;
 
   // Hover tooltip: show audio path
   var pathTooltip = document.createElement("div");
@@ -69,7 +70,7 @@
       var audioCell = tr.querySelector(".audio-cell");
       var actionCell = tr.querySelector(".action-cell");
       if (audioSrc) {
-        buildAudioPlayer(tr, audioCell, audioSrc, clearPlayingClass);
+        buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
       } else {
         var span = document.createElement("span");
         span.className = "no-recording";
@@ -94,7 +95,7 @@
     pathTooltip.style.transform = "translateY(-100%)";
   }
 
-  function buildAudioPlayer(tr, audioCell, src, clearPlayingFn) {
+  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn) {
     var audio = document.createElement("audio");
     // Keep metadata preload so missing files are detected and marked early.
     audio.preload = "metadata";
@@ -146,9 +147,13 @@
 
     playBtn.addEventListener("click", function () {
       if (audio.paused) {
+        if (currentPlayingAudio && currentPlayingAudio !== audio) {
+          currentPlayingAudio.pause();
+        }
         audio.play();
         clearPlayingFn();
         tr.classList.add("playing");
+        currentPlayingAudio = audio;
       } else {
         audio.pause();
       }
@@ -156,11 +161,15 @@
     audio.addEventListener("play", function () {
       playBtn.textContent = "❚❚";
       playBtn.setAttribute("aria-label", "Pause");
+      setNowPlayingMetadata(row, audio);
+      setMediaPlaybackState("playing");
     });
     audio.addEventListener("pause", function () {
       playBtn.textContent = "▶";
       playBtn.setAttribute("aria-label", "Play");
       if (audio.currentTime < (audio.duration || 0) - 0.1) tr.classList.remove("playing");
+      if (currentPlayingAudio === audio) currentPlayingAudio = null;
+      setMediaPlaybackState("paused");
     });
     audio.addEventListener("ended", function () {
       playBtn.textContent = "▶";
@@ -168,6 +177,8 @@
       tr.classList.remove("playing");
       progress.value = 0;
       timeCurrent.textContent = "0:00";
+      if (currentPlayingAudio === audio) currentPlayingAudio = null;
+      setMediaPlaybackState("none");
     });
     audio.addEventListener("error", function () {
       var msg = document.createElement("span");
@@ -282,6 +293,51 @@
   function escapeHtml(text) {
     escapeNode.textContent = text;
     return escapeNode.innerHTML;
+  }
+
+  function setMediaPlaybackState(state) {
+    if (!("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = state;
+    } catch (e) {
+      // Ignore unsupported playback state assignment.
+    }
+  }
+
+  function setNowPlayingMetadata(row, audio) {
+    if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
+
+    var title = "Para " + row.para + " - " + row.rukuInPara;
+    var artist = row.surah + " | " + row.verses;
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: artist,
+        album: "Marifatul Quran",
+        artwork: [
+          { src: "./icon-192.png", sizes: "192x192", type: "image/png" },
+          { src: "./icon-512.png", sizes: "512x512", type: "image/png" }
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler("play", function () { audio.play(); });
+      navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); });
+      navigator.mediaSession.setActionHandler("seekbackward", function (details) {
+        var offset = (details && details.seekOffset) ? details.seekOffset : 10;
+        audio.currentTime = Math.max(0, audio.currentTime - offset);
+      });
+      navigator.mediaSession.setActionHandler("seekforward", function (details) {
+        var offset = (details && details.seekOffset) ? details.seekOffset : 10;
+        audio.currentTime = Math.min(audio.duration || audio.currentTime, audio.currentTime + offset);
+      });
+      navigator.mediaSession.setActionHandler("seekto", function (details) {
+        if (!details || typeof details.seekTime !== "number") return;
+        audio.currentTime = details.seekTime;
+      });
+    } catch (e) {
+      // Ignore unsupported Media Session handlers on some browsers.
+    }
   }
 
   paraSelect.addEventListener("change", renderTable);
@@ -437,3 +493,5 @@
 
   renderTable();
 })();
+
+
