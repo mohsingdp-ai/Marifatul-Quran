@@ -61,6 +61,7 @@
       </select>
       </div>
       <div class="controls-right">
+        <button type="button" class="btn btn-sm btn-install" id="install-btn" style="display:none">⬇ Install App</button>
         <button type="button" class="btn btn-sm btn-secondary" id="github-settings-btn">⚙ GitHub Token</button>
       </div>
     </div>
@@ -92,6 +93,48 @@
         navigator.serviceWorker.register("./sw.js");
       });
     }
+  </script>
+  <script>
+    (function () {
+      var btn = document.getElementById("install-btn");
+
+      // Already running as installed PWA — no button needed
+      if (window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true) return;
+
+      // iOS: no beforeinstallprompt — show manual instructions
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        btn.textContent = "⬇ Install App";
+        btn.style.display = "";
+        btn.addEventListener("click", function () {
+          alert("To install on iOS:\n\n1. Tap the Share button (the box with an arrow) in Safari\n2. Tap \"Add to Home Screen\"\n3. Tap \"Add\"");
+        });
+        return;
+      }
+
+      // Android / Desktop Chrome: use the install prompt
+      var deferred = null;
+      window.addEventListener("beforeinstallprompt", function (e) {
+        e.preventDefault();
+        deferred = e;
+        btn.style.display = "";
+      });
+
+      btn.addEventListener("click", function () {
+        if (!deferred) return;
+        deferred.prompt();
+        deferred.userChoice.then(function () {
+          deferred = null;
+          btn.style.display = "none";
+        });
+      });
+
+      window.addEventListener("appinstalled", function () {
+        btn.style.display = "none";
+        deferred = null;
+      });
+    })();
   </script>
 </body>
 </html>

@@ -133,6 +133,15 @@ body {
   background: var(--teal-dark);
 }
 
+.btn-install {
+  background: #8b6914;
+  color: white;
+}
+
+.btn-install:hover {
+  background: #a67c18;
+}
+
 .btn-outline {
   background: transparent;
   color: var(--teal-accent);
