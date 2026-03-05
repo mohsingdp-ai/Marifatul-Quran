@@ -114,11 +114,14 @@
         </div>
         <div class="settings-row">
           <span class="settings-section-title">Playback</span>
-          <label class="settings-toggle-label">
-            <input type="checkbox" id="default-loop" />
-            <span class="settings-toggle-switch"></span>
-            Loop by default
-          </label>
+          <div class="settings-playback-row">
+            <label>After ruku ends</label>
+            <div class="settings-role-group" id="playback-mode-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-mode="none">⏹ None</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="loop">🔁 Loop</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="next">⏭ Next</button>
+            </div>
+          </div>
           <div class="settings-speed-row">
             <label for="default-speed-select">Default speed</label>
             <select id="default-speed-select" class="settings-speed-select">

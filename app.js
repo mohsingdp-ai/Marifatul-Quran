@@ -54,11 +54,12 @@
     return getRole() === "admin";
   }
 
-  function getDefaultLoop() {
-    return localStorage.getItem("default_loop") === "true";
+  function getPlaybackMode() {
+    var v = localStorage.getItem("playback_mode");
+    return (v === "loop" || v === "next") ? v : "none";
   }
-  function setDefaultLoop(val) {
-    localStorage.setItem("default_loop", val ? "true" : "false");
+  function setPlaybackMode(val) {
+    localStorage.setItem("playback_mode", val);
   }
   function getDefaultSpeed() {
     var v = parseFloat(localStorage.getItem("default_speed"));
@@ -305,6 +306,12 @@
         setMediaPlaybackState("paused");
       });
       audio.addEventListener("ended", function () {
+        var pbMode = getPlaybackMode();
+        if (pbMode === "loop") {
+          audio.currentTime = 0;
+          audio.play();
+          return;
+        }
         playBtn.textContent = "▶";
         playBtn.setAttribute("aria-label", "Play");
         tr.classList.remove("playing");
@@ -312,6 +319,14 @@
         timeCurrent.textContent = "0:00";
         if (currentPlayingAudio === audio) currentPlayingAudio = null;
         setMediaPlaybackState("none");
+        if (pbMode === "next") {
+          var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
+          var idx = playBtns.indexOf(playBtn);
+          if (idx !== -1 && idx + 1 < playBtns.length) {
+            playBtns[idx + 1].click();
+            playBtns[idx + 1].closest("tr").scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
       });
       audio.addEventListener("error", function () {
         var msg = document.createElement("span");
@@ -401,7 +416,7 @@
     playBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
       a.playbackRate = speeds[currentSpeedIndex];
-      a.loop = getDefaultLoop();
+      a.loop = false;
       if (a.paused) {
         if (currentPlayingAudio && currentPlayingAudio !== a) {
           currentPlayingAudio.pause();
@@ -603,7 +618,7 @@
   var ghTokenInput = document.getElementById("gh-token-input");
   var togglePara = document.getElementById("show-only-recorded-para");
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
-  var toggleLoop = document.getElementById("default-loop");
+  var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
 
   function openSettings() {
@@ -633,7 +648,10 @@
     }
     togglePara.checked = getShowOnlyRecordedPara();
     toggleRuku.checked = getShowOnlyRecordedRuku();
-    toggleLoop.checked = getDefaultLoop();
+    var mode = getPlaybackMode();
+    playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
     speedSelect.value = String(getDefaultSpeed());
   }
 
@@ -647,8 +665,13 @@
     renderTable();
   });
 
-  toggleLoop.addEventListener("change", function () {
-    setDefaultLoop(this.checked);
+  playbackModeGroup.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-mode]");
+    if (!btn) return;
+    setPlaybackMode(btn.dataset.mode);
+    playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (b) {
+      b.classList.toggle("active", b === btn);
+    });
   });
 
   speedSelect.addEventListener("change", function () {

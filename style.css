@@ -1076,6 +1076,14 @@ tr.playing .audio-play-btn {
   transform: translateX(18px);
 }
 
+.settings-playback-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
 .settings-speed-row {
   display: flex;
   align-items: center;
