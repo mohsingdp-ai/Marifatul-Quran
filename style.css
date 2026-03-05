@@ -1076,6 +1076,21 @@ tr.playing .audio-play-btn {
   transform: translateX(18px);
 }
 
+.settings-speed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.settings-speed-select {
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
 .settings-actions {
   margin-top: 1.25rem;
   display: flex;

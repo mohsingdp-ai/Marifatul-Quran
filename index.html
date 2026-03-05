@@ -112,6 +112,25 @@
             Ruku
           </label>
         </div>
+        <div class="settings-row">
+          <span class="settings-section-title">Playback</span>
+          <label class="settings-toggle-label">
+            <input type="checkbox" id="default-loop" />
+            <span class="settings-toggle-switch"></span>
+            Loop by default
+          </label>
+          <div class="settings-speed-row">
+            <label for="default-speed-select">Default speed</label>
+            <select id="default-speed-select" class="settings-speed-select">
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="1.75">1.75x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+        </div>
         <div class="settings-row settings-admin-section" id="admin-section" style="display:none">
           <label for="gh-token-input">GitHub Personal Access Token</label>
           <input type="password" id="gh-token-input" placeholder="Paste token here…" autocomplete="off">

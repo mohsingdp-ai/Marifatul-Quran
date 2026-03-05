@@ -54,6 +54,20 @@
     return getRole() === "admin";
   }
 
+  function getDefaultLoop() {
+    return localStorage.getItem("default_loop") === "true";
+  }
+  function setDefaultLoop(val) {
+    localStorage.setItem("default_loop", val ? "true" : "false");
+  }
+  function getDefaultSpeed() {
+    var v = parseFloat(localStorage.getItem("default_speed"));
+    return isNaN(v) ? 1 : v;
+  }
+  function setDefaultSpeed(val) {
+    localStorage.setItem("default_speed", String(val));
+  }
+
   function getShowOnlyRecordedPara() {
     var v = localStorage.getItem("show_only_recorded_para");
     return v === null ? true : v === "true";
@@ -358,12 +372,14 @@
     timeDuration.textContent = "0:00";
 
     var speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
-    var currentSpeedIndex = 1; // default 1x
+    var defaultSpeed = getDefaultSpeed();
+    var currentSpeedIndex = speeds.indexOf(defaultSpeed);
+    if (currentSpeedIndex === -1) currentSpeedIndex = 1;
 
     var speedBtn = document.createElement("button");
     speedBtn.type = "button";
     speedBtn.className = "audio-speed-btn";
-    speedBtn.textContent = "1x";
+    speedBtn.textContent = speeds[currentSpeedIndex] + "x";
     speedBtn.setAttribute("aria-label", "Playback speed");
 
     speedBtn.addEventListener("click", function () {
@@ -371,17 +387,6 @@
       var speed = speeds[currentSpeedIndex];
       speedBtn.textContent = speed + "x";
       if (audio) audio.playbackRate = speed;
-    });
-
-    var loopBtn = document.createElement("button");
-    loopBtn.type = "button";
-    loopBtn.className = "audio-loop-btn";
-    loopBtn.textContent = "🔁";
-    loopBtn.setAttribute("aria-label", "Loop");
-
-    loopBtn.addEventListener("click", function () {
-      loopBtn.classList.toggle("active");
-      if (audio) audio.loop = loopBtn.classList.contains("active");
     });
 
     wrap.appendChild(playBtn);
@@ -392,12 +397,11 @@
     wrap.appendChild(progressWrap);
     wrap.appendChild(timeDuration);
     wrap.appendChild(speedBtn);
-    wrap.appendChild(loopBtn);
 
     playBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
       a.playbackRate = speeds[currentSpeedIndex];
-      a.loop = loopBtn.classList.contains("active");
+      a.loop = getDefaultLoop();
       if (a.paused) {
         if (currentPlayingAudio && currentPlayingAudio !== a) {
           currentPlayingAudio.pause();
@@ -599,6 +603,8 @@
   var ghTokenInput = document.getElementById("gh-token-input");
   var togglePara = document.getElementById("show-only-recorded-para");
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
+  var toggleLoop = document.getElementById("default-loop");
+  var speedSelect = document.getElementById("default-speed-select");
 
   function openSettings() {
     syncSettingsUI();
@@ -627,6 +633,8 @@
     }
     togglePara.checked = getShowOnlyRecordedPara();
     toggleRuku.checked = getShowOnlyRecordedRuku();
+    toggleLoop.checked = getDefaultLoop();
+    speedSelect.value = String(getDefaultSpeed());
   }
 
   togglePara.addEventListener("change", function () {
@@ -637,6 +645,14 @@
   toggleRuku.addEventListener("change", function () {
     setShowOnlyRecordedRuku(this.checked);
     renderTable();
+  });
+
+  toggleLoop.addEventListener("change", function () {
+    setDefaultLoop(this.checked);
+  });
+
+  speedSelect.addEventListener("change", function () {
+    setDefaultSpeed(parseFloat(this.value));
   });
 
   settingsBtn.addEventListener("click", openSettings);
