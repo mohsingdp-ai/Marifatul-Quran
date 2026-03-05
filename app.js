@@ -14,6 +14,11 @@
   var indexedData = buildParaIndex(data);
   var currentPlayingAudio = null;
 
+  // GitHub API config
+  var GITHUB_OWNER = "mohsingdp-ai";
+  var GITHUB_REPO = "Marifatul-Quran";
+  var GITHUB_BRANCH = "v4";
+
   // Hover tooltip: show audio path
   var pathTooltip = document.createElement("div");
   pathTooltip.className = "ruku-path-tooltip";
@@ -73,26 +78,33 @@
     return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
   }
 
-  // Cache for audio file existence checks (path -> true/false)
-  var audioExistsCache = {};
+  // Set of existing audio filenames — fetched once from GitHub API
+  var audioFileSet = null;
+  var audioFileSetPromise = null;
 
-  function checkAudioExists(src) {
-    if (audioExistsCache.hasOwnProperty(src)) {
-      return Promise.resolve(audioExistsCache[src]);
-    }
-    return new Promise(function (resolve) {
-      var testAudio = new Audio();
-      testAudio.preload = "metadata";
-      function done(exists) {
-        audioExistsCache[src] = exists;
-        testAudio.src = "";
-        testAudio = null;
-        resolve(exists);
-      }
-      testAudio.addEventListener("loadedmetadata", function () { done(true); });
-      testAudio.addEventListener("error", function () { done(false); });
-      testAudio.src = src;
-    });
+  function fetchAudioFileList() {
+    if (audioFileSetPromise) return audioFileSetPromise;
+    var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
+              "/contents/audio?ref=" + GITHUB_BRANCH;
+    audioFileSetPromise = fetch(url)
+      .then(function (res) { return res.ok ? res.json() : []; })
+      .then(function (files) {
+        var set = {};
+        files.forEach(function (f) { set[f.name] = true; });
+        audioFileSet = set;
+        return set;
+      })
+      .catch(function () {
+        audioFileSet = {};
+        return audioFileSet;
+      });
+    return audioFileSetPromise;
+  }
+
+  function audioFileExists(audioPath) {
+    if (!audioPath) return false;
+    var name = audioPath.replace(/^audio\//, "");
+    return audioFileSet ? !!audioFileSet[name] : false;
   }
 
   function showNoRecording(audioCell) {
@@ -102,68 +114,61 @@
     audioCell.appendChild(span);
   }
 
+  function buildRow(item, canUpload) {
+    var row = item.row;
+    var globalIndex = item.globalIndex;
+    var tr = document.createElement("tr");
+    tr.dataset.globalIndex = globalIndex;
+
+    var rukuLabel = row.rukuInPara + " (Para " + row.para + ")";
+    var surahArabicCell = row.surahNumber + " " + row.surahArabic;
+    var audioSrc = getAudioSrc(row, globalIndex);
+    var savedPath = normalizeAudioPath(row.audioUrl);
+
+    tr.innerHTML =
+      "<td data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
+      "<td data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
+      "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
+      "<td class=\"col-surah-arabic\" data-label=\"Surah # & Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
+      "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
+      (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
+
+    var audioCell = tr.querySelector(".audio-cell");
+    var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
+
+    if (audioSrc && (sessionBlobUrls[globalIndex] || audioFileExists(audioSrc))) {
+      buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
+    } else {
+      showNoRecording(audioCell);
+    }
+
+    if (canUpload && actionCell) {
+      buildUploadButton(actionCell, row, globalIndex);
+    }
+
+    tr.dataset.pathText = savedPath || "(No recording)";
+    return tr;
+  }
+
   function renderTable() {
     var filtered = getFilteredData();
     var canUpload = hasGitHubToken();
+
+    if (!audioFileSet) {
+      tbody.textContent = "";
+      var loadingTr = document.createElement("tr");
+      loadingTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;\">Loading…</td>";
+      tbody.appendChild(loadingTr);
+      fetchAudioFileList().then(function () { renderTable(); });
+      return;
+    }
+
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
     setActionColumnVisibility(canUpload);
 
     filtered.forEach(function (item) {
-      var row = item.row;
-      var globalIndex = item.globalIndex;
-      var tr = document.createElement("tr");
-      tr.dataset.globalIndex = globalIndex;
-
-      var rukuLabel = row.rukuInPara + " (Para " + row.para + ")";
-      var surahArabicCell = row.surahNumber + " " + row.surahArabic;
-      var audioSrc = getAudioSrc(row, globalIndex);
-      var savedPath = normalizeAudioPath(row.audioUrl);
-
-      tr.innerHTML =
-        "<td data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
-        "<td data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
-        "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
-        "<td class=\"col-surah-arabic\" data-label=\"Surah # & Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
-        "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
-        (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
-
-      var audioCell = tr.querySelector(".audio-cell");
-      var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
-
-      if (audioSrc) {
-        // For blob URLs (just uploaded), show player immediately
-        if (sessionBlobUrls[globalIndex]) {
-          buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
-        } else {
-          // Show loading indicator, then check if file exists
-          var loadingSpan = document.createElement("span");
-          loadingSpan.className = "no-recording";
-          loadingSpan.textContent = "Checking…";
-          audioCell.appendChild(loadingSpan);
-
-          (function (cell, trRef, rowRef, src) {
-            checkAudioExists(src).then(function (exists) {
-              cell.textContent = "";
-              if (exists) {
-                buildAudioPlayer(trRef, cell, rowRef, src, clearPlayingClass);
-              } else {
-                showNoRecording(cell);
-              }
-            });
-          })(audioCell, tr, row, audioSrc);
-        }
-      } else {
-        showNoRecording(audioCell);
-      }
-
-      if (canUpload && actionCell) {
-        buildUploadButton(actionCell, row, globalIndex);
-      }
-
-      tr.dataset.pathText = savedPath || "(No recording)";
-
-      fragment.appendChild(tr);
+      fragment.appendChild(buildRow(item, canUpload));
     });
 
     tbody.appendChild(fragment);
@@ -455,10 +460,7 @@
     if (activeTooltipRow) positionPathTooltip(activeTooltipRow);
   });
 
-  // GitHub API config
-  var GITHUB_OWNER = "mohsingdp-ai";
-  var GITHUB_REPO = "Marifatul-Quran";
-  var GITHUB_BRANCH = "v4";
+  // GitHub API config (also used by fetchAudioFileList above)
 
   function getGitHubToken() {
     return localStorage.getItem("gh_token") || "";
@@ -621,6 +623,8 @@
       }).then(function () {
         btn.textContent = "✓ Done";
         btn.className = "btn btn-sm btn-primary";
+        // Add to file set so player shows without re-fetching
+        if (audioFileSet) audioFileSet[targetName] = true;
         renderTable();
       }).catch(function (err) {
         btn.disabled = false;
