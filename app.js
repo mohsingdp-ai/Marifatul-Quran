@@ -72,6 +72,19 @@
     localStorage.setItem("show_only_recorded_ruku", val ? "true" : "false");
   }
 
+  function getValidatedRukus() {
+    try { return JSON.parse(localStorage.getItem("validated_rukus") || "{}"); }
+    catch (e) { return {}; }
+  }
+  function isRukuValidated(globalIndex) {
+    return !!getValidatedRukus()[globalIndex];
+  }
+  function setRukuValidated(globalIndex, val) {
+    var v = getValidatedRukus();
+    if (val) v[globalIndex] = true; else delete v[globalIndex];
+    localStorage.setItem("validated_rukus", JSON.stringify(v));
+  }
+
   function hasGitHubToken() {
     return isAdmin() && !!getGitHubToken().trim();
   }
@@ -163,6 +176,7 @@
 
     if (canUpload && actionCell) {
       buildUploadButton(actionCell, row, globalIndex);
+      buildValidateControl(actionCell, globalIndex);
     }
 
     tr.dataset.pathText = savedPath || "(No recording)";
@@ -751,6 +765,30 @@
 
     actionCell.appendChild(fileInput);
     actionCell.appendChild(btn);
+  }
+
+  function buildValidateControl(actionCell, globalIndex) {
+    var label = document.createElement("label");
+    label.className = "validate-label" + (isRukuValidated(globalIndex) ? " validated" : "");
+    label.title = "Mark recording as validated";
+
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "validate-check";
+    cb.checked = isRukuValidated(globalIndex);
+
+    var span = document.createElement("span");
+    span.textContent = cb.checked ? "✓ Validated" : "✓ Validate";
+
+    cb.addEventListener("change", function () {
+      setRukuValidated(globalIndex, this.checked);
+      label.classList.toggle("validated", this.checked);
+      span.textContent = this.checked ? "✓ Validated" : "✓ Validate";
+    });
+
+    label.appendChild(cb);
+    label.appendChild(span);
+    actionCell.appendChild(label);
   }
 
   renderTable();

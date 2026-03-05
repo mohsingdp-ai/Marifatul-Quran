@@ -53,7 +53,7 @@ body {
 
 .main {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px;
   padding: 1.5rem;
   overflow-x: auto;
   box-sizing: border-box;
@@ -418,7 +418,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   width: 100%;
   min-width: 240px;
   max-width: 360px;
@@ -661,7 +661,50 @@ tr.playing .audio-play-btn {
 
 .action-cell {
   text-align: center;
-  min-width: 80px;
+  min-width: 110px;
+}
+
+@media (min-width: 768px) {
+  .action-cell {
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .validate-label {
+    margin-top: 0;
+  }
+}
+
+.validate-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.validate-label .validate-check {
+  display: none;
+}
+.validate-label span {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 12px;
+  border: 1.5px solid #ccc;
+  background: #f5f5f5;
+  color: #888;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.validate-label.validated span {
+  border-color: #2e7d32;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
 .audio-cell .no-recording {
