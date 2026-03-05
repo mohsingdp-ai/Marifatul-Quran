@@ -627,6 +627,13 @@ body {
   opacity: 1;
 }
 
+/* Hide row path tooltip on touch/mobile devices */
+@media (hover: none), (pointer: coarse) {
+  .ruku-path-tooltip {
+    display: none !important;
+  }
+}
+
 /* Mobile and small screens */
 @media (max-width: 768px) {
   .header {
