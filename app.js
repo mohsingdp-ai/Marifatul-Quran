@@ -59,6 +59,35 @@
     return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
   }
 
+  // Cache for audio file existence checks (path -> true/false)
+  var audioExistsCache = {};
+
+  function checkAudioExists(src) {
+    if (audioExistsCache.hasOwnProperty(src)) {
+      return Promise.resolve(audioExistsCache[src]);
+    }
+    return new Promise(function (resolve) {
+      var testAudio = new Audio();
+      testAudio.preload = "metadata";
+      function done(exists) {
+        audioExistsCache[src] = exists;
+        testAudio.src = "";
+        testAudio = null;
+        resolve(exists);
+      }
+      testAudio.addEventListener("loadedmetadata", function () { done(true); });
+      testAudio.addEventListener("error", function () { done(false); });
+      testAudio.src = src;
+    });
+  }
+
+  function showNoRecording(audioCell) {
+    var span = document.createElement("span");
+    span.className = "no-recording";
+    span.textContent = "No recording";
+    audioCell.appendChild(span);
+  }
+
   function renderTable() {
     var filtered = getFilteredData();
     var canUpload = hasGitHubToken();
@@ -87,13 +116,31 @@
 
       var audioCell = tr.querySelector(".audio-cell");
       var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
+
       if (audioSrc) {
-        buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
+        // For blob URLs (just uploaded), show player immediately
+        if (sessionBlobUrls[globalIndex]) {
+          buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
+        } else {
+          // Show loading indicator, then check if file exists
+          var loadingSpan = document.createElement("span");
+          loadingSpan.className = "no-recording";
+          loadingSpan.textContent = "Checking…";
+          audioCell.appendChild(loadingSpan);
+
+          (function (cell, trRef, rowRef, src) {
+            checkAudioExists(src).then(function (exists) {
+              cell.textContent = "";
+              if (exists) {
+                buildAudioPlayer(trRef, cell, rowRef, src, clearPlayingClass);
+              } else {
+                showNoRecording(cell);
+              }
+            });
+          })(audioCell, tr, row, audioSrc);
+        }
       } else {
-        var span = document.createElement("span");
-        span.className = "no-recording";
-        span.textContent = "No recording";
-        audioCell.appendChild(span);
+        showNoRecording(audioCell);
       }
 
       if (canUpload && actionCell) {
@@ -116,17 +163,59 @@
   }
 
   function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn) {
-    var audio = document.createElement("audio");
-    // Lazy load: only fetch audio when user interacts with this row.
-    audio.preload = "none";
-    audio.controls = false;
-    var hasLoadedSource = false;
+    var audio = null;
 
-    function ensureAudioSource() {
-      if (hasLoadedSource) return;
+    function ensureAudioElement() {
+      if (audio) return audio;
+      audio = document.createElement("audio");
+      audio.preload = "none";
+      audio.controls = false;
       audio.src = src;
       audio.load();
-      hasLoadedSource = true;
+
+      audio.addEventListener("play", function () {
+        playBtn.textContent = "❚❚";
+        playBtn.setAttribute("aria-label", "Pause");
+        setNowPlayingMetadata(row, audio);
+        setMediaPlaybackState("playing");
+      });
+      audio.addEventListener("pause", function () {
+        playBtn.textContent = "▶";
+        playBtn.setAttribute("aria-label", "Play");
+        if (audio.currentTime < (audio.duration || 0) - 0.1) tr.classList.remove("playing");
+        if (currentPlayingAudio === audio) currentPlayingAudio = null;
+        setMediaPlaybackState("paused");
+      });
+      audio.addEventListener("ended", function () {
+        playBtn.textContent = "▶";
+        playBtn.setAttribute("aria-label", "Play");
+        tr.classList.remove("playing");
+        progress.value = 0;
+        timeCurrent.textContent = "0:00";
+        if (currentPlayingAudio === audio) currentPlayingAudio = null;
+        setMediaPlaybackState("none");
+      });
+      audio.addEventListener("error", function () {
+        var msg = document.createElement("span");
+        msg.className = "path-not-found";
+        msg.textContent = "Path Not found";
+        audioCell.innerHTML = "";
+        audioCell.appendChild(msg);
+      });
+      audio.addEventListener("loadedmetadata", function () {
+        timeDuration.textContent = formatTime(audio.duration);
+      });
+      audio.addEventListener("timeupdate", function () {
+        if (audio.duration && isFinite(audio.duration)) {
+          var pct = (audio.currentTime / audio.duration) * 100;
+          progress.value = pct;
+          progress.style.setProperty("--progress", pct + "%");
+          timeCurrent.textContent = formatTime(audio.currentTime);
+        }
+      });
+
+      audioCell.appendChild(audio);
+      return audio;
     }
 
     var wrap = document.createElement("div");
@@ -173,57 +262,17 @@
     wrap.appendChild(timeDuration);
 
     playBtn.addEventListener("click", function () {
-      ensureAudioSource();
-      if (audio.paused) {
-        if (currentPlayingAudio && currentPlayingAudio !== audio) {
+      var a = ensureAudioElement();
+      if (a.paused) {
+        if (currentPlayingAudio && currentPlayingAudio !== a) {
           currentPlayingAudio.pause();
         }
-        audio.play();
+        a.play();
         clearPlayingFn();
         tr.classList.add("playing");
-        currentPlayingAudio = audio;
+        currentPlayingAudio = a;
       } else {
-        audio.pause();
-      }
-    });
-    audio.addEventListener("play", function () {
-      playBtn.textContent = "❚❚";
-      playBtn.setAttribute("aria-label", "Pause");
-      setNowPlayingMetadata(row, audio);
-      setMediaPlaybackState("playing");
-    });
-    audio.addEventListener("pause", function () {
-      playBtn.textContent = "▶";
-      playBtn.setAttribute("aria-label", "Play");
-      if (audio.currentTime < (audio.duration || 0) - 0.1) tr.classList.remove("playing");
-      if (currentPlayingAudio === audio) currentPlayingAudio = null;
-      setMediaPlaybackState("paused");
-    });
-    audio.addEventListener("ended", function () {
-      playBtn.textContent = "▶";
-      playBtn.setAttribute("aria-label", "Play");
-      tr.classList.remove("playing");
-      progress.value = 0;
-      timeCurrent.textContent = "0:00";
-      if (currentPlayingAudio === audio) currentPlayingAudio = null;
-      setMediaPlaybackState("none");
-    });
-    audio.addEventListener("error", function () {
-      var msg = document.createElement("span");
-      msg.className = "path-not-found";
-      msg.textContent = "Path Not found";
-      audioCell.innerHTML = "";
-      audioCell.appendChild(msg);
-    });
-    audio.addEventListener("loadedmetadata", function () {
-      timeDuration.textContent = formatTime(audio.duration);
-    });
-    audio.addEventListener("timeupdate", function () {
-      if (audio.duration && isFinite(audio.duration)) {
-        var pct = (audio.currentTime / audio.duration) * 100;
-        progress.value = pct;
-        progress.style.setProperty("--progress", pct + "%");
-        timeCurrent.textContent = formatTime(audio.currentTime);
+        a.pause();
       }
     });
 
@@ -238,18 +287,18 @@
       return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
     }
     function seekToPct(pct) {
-      ensureAudioSource();
+      var a = ensureAudioElement();
       progress.value = pct;
       progress.style.setProperty("--progress", pct + "%");
-      if (audio.duration && isFinite(audio.duration)) {
-        audio.currentTime = (pct / 100) * audio.duration;
+      if (a.duration && isFinite(a.duration)) {
+        a.currentTime = (pct / 100) * a.duration;
       }
     }
 
     var seeking = false;
     progressOverlay.addEventListener("mousemove", function (e) {
       var pct = pctFromEvent(e);
-      if (audio.duration && isFinite(audio.duration)) {
+      if (audio && audio.duration && isFinite(audio.duration)) {
         var sec = (pct / 100) * audio.duration;
         hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
         hoverTime.style.left = pct + "%";
@@ -282,7 +331,7 @@
       seeking = true;
       var pct = pctFromEvent(e);
       seekToPct(pct);
-      if (audio.duration && isFinite(audio.duration)) {
+      if (audio && audio.duration && isFinite(audio.duration)) {
         var sec = (pct / 100) * audio.duration;
         hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
         hoverTime.style.left = pct + "%";
@@ -293,7 +342,7 @@
       if (seeking && e.cancelable) e.preventDefault();
       var pct = pctFromEvent(e);
       seekToPct(pct);
-      if (audio.duration && isFinite(audio.duration)) {
+      if (audio && audio.duration && isFinite(audio.duration)) {
         var sec = (pct / 100) * audio.duration;
         hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
         hoverTime.style.left = pct + "%";
@@ -308,7 +357,6 @@
       hoverTime.classList.remove("is-visible");
     });
 
-    audioCell.appendChild(audio);
     audioCell.appendChild(wrap);
   }
 
