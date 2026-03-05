@@ -272,6 +272,33 @@
     timeDuration.className = "audio-time audio-time-duration";
     timeDuration.textContent = "0:00";
 
+    var speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
+    var currentSpeedIndex = 1; // default 1x
+
+    var speedBtn = document.createElement("button");
+    speedBtn.type = "button";
+    speedBtn.className = "audio-speed-btn";
+    speedBtn.textContent = "1x";
+    speedBtn.setAttribute("aria-label", "Playback speed");
+
+    speedBtn.addEventListener("click", function () {
+      currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+      var speed = speeds[currentSpeedIndex];
+      speedBtn.textContent = speed + "x";
+      if (audio) audio.playbackRate = speed;
+    });
+
+    var loopBtn = document.createElement("button");
+    loopBtn.type = "button";
+    loopBtn.className = "audio-loop-btn";
+    loopBtn.textContent = "🔁";
+    loopBtn.setAttribute("aria-label", "Loop");
+
+    loopBtn.addEventListener("click", function () {
+      loopBtn.classList.toggle("active");
+      if (audio) audio.loop = loopBtn.classList.contains("active");
+    });
+
     wrap.appendChild(playBtn);
     wrap.appendChild(timeCurrent);
     progressWrap.appendChild(progress);
@@ -279,9 +306,13 @@
     progressWrap.appendChild(hoverTime);
     wrap.appendChild(progressWrap);
     wrap.appendChild(timeDuration);
+    wrap.appendChild(speedBtn);
+    wrap.appendChild(loopBtn);
 
     playBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
+      a.playbackRate = speeds[currentSpeedIndex];
+      a.loop = loopBtn.classList.contains("active");
       if (a.paused) {
         if (currentPlayingAudio && currentPlayingAudio !== a) {
           currentPlayingAudio.pause();
