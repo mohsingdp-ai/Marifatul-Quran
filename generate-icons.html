@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generate Icons — Marifatul Quran</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f0f4f4; }
+    canvas { display: none; }
+    .btn { display: inline-block; margin: 0.5rem; padding: 0.6rem 1.2rem;
+           background: #0d4f4f; color: #fff; border: none; border-radius: 6px;
+           cursor: pointer; font-size: 1rem; text-decoration: none; }
+    .btn:hover { background: #0f7a7a; }
+    p { color: #333; }
+  </style>
+</head>
+<body>
+  <h2>Generate PWA Icons</h2>
+  <p>Click each button to download the icon. Then place the downloaded files in the project root next to <code>index.html</code>.</p>
+  <button class="btn" onclick="download(192)">Download icon-192.png</button>
+  <button class="btn" onclick="download(512)">Download icon-512.png</button>
+  <canvas id="c"></canvas>
+
+  <script>
+    function draw(size) {
+      var canvas = document.getElementById("c");
+      canvas.width = size;
+      canvas.height = size;
+      var ctx = canvas.getContext("2d");
+
+      // Background
+      ctx.fillStyle = "#0d4f4f";
+      ctx.fillRect(0, 0, size, size);
+
+      // Soft inner circle
+      var cx = size / 2, cy = size / 2, r = size * 0.38;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fill();
+
+      // Arabic letter Qaf (ق) — simplified crescent-like design
+      ctx.fillStyle = "#f0c040";
+      ctx.font = "bold " + Math.round(size * 0.38) + "px serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("\u0642", cx, cy - size * 0.02);
+
+      // Bottom label
+      ctx.fillStyle = "rgba(255,255,255,0.75)";
+      ctx.font = "bold " + Math.round(size * 0.1) + "px sans-serif";
+      ctx.fillText("Marifatul Quran", cx, cy + size * 0.38);
+    }
+
+    function download(size) {
+      draw(size);
+      var canvas = document.getElementById("c");
+      var a = document.createElement("a");
+      a.download = "icon-" + size + ".png";
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    }
+  </script>
+</body>
+</html>
