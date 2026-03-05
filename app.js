@@ -385,6 +385,7 @@
     var input = prompt("GitHub Personal Access Token\nCurrent: " + masked + "\n\nPaste token (or clear to remove):", "");
     if (input === null) return; // cancelled
     setGitHubToken(input.trim());
+    renderTable();
     alert(input.trim() ? "Token saved." : "Token removed.");
   });
 
@@ -448,6 +449,7 @@
   }
 
   function buildUploadButton(actionCell, row, globalIndex) {
+    if (!getGitHubToken()) return;
     var fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.accept = "audio/*";
