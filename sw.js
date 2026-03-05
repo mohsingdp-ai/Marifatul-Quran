@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v3";
+const CACHE = "mq-v4";
 const STATIC = [
   "./",
   "./index.html",
@@ -39,28 +39,14 @@ self.addEventListener("fetch", function (e) {
   // Never intercept GitHub API calls
   if (url.includes("api.github.com")) return;
 
-  // Audio files: network first, fall back to cache
-  if (url.includes("/audio/")) {
-    e.respondWith(
-      fetch(e.request).then(function (res) {
-        var clone = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, clone); });
-        return res;
-      }).catch(function () {
-        return caches.match(e.request);
-      })
-    );
-    return;
-  }
-
-  // Static assets: cache first, fall back to network
+  // All requests: network first, fall back to cache (works offline, always fresh online)
   e.respondWith(
-    caches.match(e.request).then(function (cached) {
-      return cached || fetch(e.request).then(function (res) {
-        var clone = res.clone();
-        caches.open(CACHE).then(function (c) { c.put(e.request, clone); });
-        return res;
-      });
+    fetch(e.request).then(function (res) {
+      var clone = res.clone();
+      caches.open(CACHE).then(function (c) { c.put(e.request, clone); });
+      return res;
+    }).catch(function () {
+      return caches.match(e.request);
     })
   );
 });
