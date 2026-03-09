@@ -905,6 +905,8 @@ tr.playing .audio-play-btn {
   .audio-controls {
     min-width: 0;
     gap: 0.4rem;
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .audio-play-btn {
@@ -913,6 +915,7 @@ tr.playing .audio-play-btn {
     font-size: 1rem;
     min-width: 44px;
     min-height: 44px;
+    order: 1;
   }
 
   .audio-seek-btn {
@@ -925,14 +928,35 @@ tr.playing .audio-play-btn {
     min-height: 38px;
   }
 
-  .audio-time {
+  .audio-seek-back-btn {
+    order: 0;
+  }
+
+  .audio-seek-fwd-btn {
+    order: 2;
+  }
+
+  .audio-speed-btn {
+    order: 3;
+  }
+
+  .audio-time-current {
+    order: 10;
     font-size: 0.85rem;
     min-width: 2.25rem;
   }
 
   .audio-progress-wrap {
-    min-width: 60px;
+    order: 11;
+    flex: 1;
+    min-width: 80px;
     min-height: 32px;
+  }
+
+  .audio-time-duration {
+    order: 12;
+    font-size: 0.85rem;
+    min-width: 2.25rem;
   }
 
   .audio-progress {
