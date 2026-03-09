@@ -631,6 +631,33 @@ tr.playing .audio-play-btn {
   color: var(--teal-accent);
 }
 
+.audio-seek-btn {
+  display: none;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1.5px solid var(--teal-mid);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--teal-mid);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.audio-seek-btn:hover {
+  border-color: var(--teal-accent);
+  color: var(--teal-accent);
+}
+
+.audio-seek-btn:active {
+  background: var(--teal-light);
+  transform: scale(0.93);
+}
+
 .audio-loop-btn {
   flex-shrink: 0;
   width: 28px;
@@ -888,6 +915,16 @@ tr.playing .audio-play-btn {
     min-height: 44px;
   }
 
+  .audio-seek-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    min-height: 38px;
+  }
+
   .audio-time {
     font-size: 0.85rem;
     min-width: 2.25rem;
@@ -1103,4 +1140,11 @@ tr.playing .audio-play-btn {
   margin-top: 1.25rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.settings-actions .btn {
+  min-height: 44px;
+  min-width: 80px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }

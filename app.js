@@ -404,7 +404,31 @@
       if (audio) audio.playbackRate = speed;
     });
 
+    var seekBackBtn = document.createElement("button");
+    seekBackBtn.type = "button";
+    seekBackBtn.className = "audio-seek-btn audio-seek-back-btn";
+    seekBackBtn.textContent = "-5";
+    seekBackBtn.setAttribute("aria-label", "Seek back 5 seconds");
+
+    seekBackBtn.addEventListener("click", function () {
+      var a = ensureAudioElement();
+      a.currentTime = Math.max(0, a.currentTime - 5);
+    });
+
+    var seekFwdBtn = document.createElement("button");
+    seekFwdBtn.type = "button";
+    seekFwdBtn.className = "audio-seek-btn audio-seek-fwd-btn";
+    seekFwdBtn.textContent = "+5";
+    seekFwdBtn.setAttribute("aria-label", "Seek forward 5 seconds");
+
+    seekFwdBtn.addEventListener("click", function () {
+      var a = ensureAudioElement();
+      a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
+    });
+
+    wrap.appendChild(seekBackBtn);
     wrap.appendChild(playBtn);
+    wrap.appendChild(seekFwdBtn);
     wrap.appendChild(timeCurrent);
     progressWrap.appendChild(progress);
     progressWrap.appendChild(progressOverlay);
