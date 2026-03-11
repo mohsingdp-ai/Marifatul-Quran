@@ -127,6 +127,7 @@
   // Set of existing audio filenames — fetched once from GitHub API
   var audioFileSet = null;
   var audioFileSetPromise = null;
+  var audioFetchFailed = false;
   var allParaOptions = null; // cached for iOS option.hidden fix
 
   function fetchAudioFileList() {
@@ -157,11 +158,15 @@
           }
         });
         return Promise.all(dirPromises).then(function () {
+          if (Object.keys(set).length === 0 && dirPromises.length > 0) {
+            audioFetchFailed = true;
+          }
           audioFileSet = set;
           return set;
         });
       })
       .catch(function () {
+        audioFetchFailed = true;
         audioFileSet = {};
         return audioFileSet;
       });
@@ -239,7 +244,7 @@
     // Re-add only the ones that should be visible
     allParaOptions.forEach(function (opt) {
       var show = true;
-      if (filterPara && audioFileSet) {
+      if (filterPara && audioFileSet && !audioFetchFailed) {
         var para = parseInt(opt.value, 10);
         var items = indexedData[para] || [];
         show = items.some(hasRecording);
@@ -273,7 +278,7 @@
 
     var filtered = getFilteredData();
 
-    if (filterRuku) {
+    if (filterRuku && !audioFetchFailed) {
       filtered = filtered.filter(hasRecording);
     }
 
