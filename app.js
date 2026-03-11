@@ -131,15 +131,35 @@
 
   function fetchAudioFileList() {
     if (audioFileSetPromise) return audioFileSetPromise;
-    var url = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
-              "/contents/audio?ref=" + GITHUB_BRANCH;
-    audioFileSetPromise = fetch(url, { headers: authHeader() })
+    var baseUrl = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
+                  "/contents/audio?ref=" + GITHUB_BRANCH;
+    audioFileSetPromise = fetch(baseUrl, { headers: authHeader() })
       .then(function (res) { return res.ok ? res.json() : []; })
-      .then(function (files) {
+      .then(function (items) {
         var set = {};
-        files.forEach(function (f) { set[f.name] = true; });
-        audioFileSet = set;
-        return set;
+        // Support both flat (files in audio/) and para-wise (files in audio/1/, audio/2/, ...)
+        var dirPromises = [];
+        items.forEach(function (f) {
+          if (f.type === "file") {
+            set[f.name] = true;
+          } else if (f.type === "dir") {
+            var dirUrl = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
+                         "/contents/audio/" + encodeURIComponent(f.name) + "?ref=" + GITHUB_BRANCH;
+            dirPromises.push(
+              fetch(dirUrl, { headers: authHeader() })
+                .then(function (res) { return res.ok ? res.json() : []; })
+                .then(function (subFiles) {
+                  subFiles.forEach(function (sf) {
+                    if (sf.type === "file") set[f.name + "/" + sf.name] = true;
+                  });
+                })
+            );
+          }
+        });
+        return Promise.all(dirPromises).then(function () {
+          audioFileSet = set;
+          return set;
+        });
       })
       .catch(function () {
         audioFileSet = {};
@@ -800,7 +820,8 @@
       if (!this.files || !this.files[0]) return;
       var file = this.files[0];
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ".ogg";
-      var filePath = "audio/" + targetName;
+      var filePath = "audio/" + row.para + "/" + targetName;
+      var setKey = row.para + "/" + targetName;
 
       // Immediate playback via blob
       if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
@@ -817,7 +838,7 @@
         btn.textContent = "✓ Done";
         btn.className = "btn btn-sm btn-primary";
         // Add to file set so player shows without re-fetching
-        if (audioFileSet) audioFileSet[targetName] = true;
+        if (audioFileSet) audioFileSet[setKey] = true;
         renderTable();
       }).catch(function (err) {
         btn.disabled = false;
