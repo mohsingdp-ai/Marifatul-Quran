@@ -66,7 +66,7 @@ const QURAN_DATA = [
   { para: 4, rukuInPara: "R12", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "1–10", audioUrl: "audio/4/4__R12__An-Nisa.opus" },
   { para: 4, rukuInPara: "R13", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "11–14", audioUrl: "audio/4/4__R13__An-Nisa.opus" },
   { para: 4, rukuInPara: "R14", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "15–22", audioUrl: "audio/4/4__R14__An-Nisa.opus" },
-  { para: 4, rukuInPara: "R15", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "23–23", audioUrl: "audio/4/4__R15__An-Nisa.opus" },
+  { para: 4, rukuInPara: "R14+", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "23–23", audioUrl: "audio/4/4__R15__An-Nisa.opus" },
   { para: 5, rukuInPara: "R1", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "24–25", audioUrl: "audio/5/5__R1__An-Nisa.ogg" },
   { para: 5, rukuInPara: "R2", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "26–33", audioUrl: "audio/5/5__R2__An-Nisa.ogg" },
   { para: 5, rukuInPara: "R3", surah: "An-Nisa", surahNumber: 4, surahArabic: "النساء", verses: "34–42", audioUrl: "audio/5/5__R3__An-Nisa.ogg" },
