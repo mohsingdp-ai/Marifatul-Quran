@@ -173,8 +173,16 @@
     return audioFileSetPromise;
   }
 
+  function isLocalRun() {
+    return window.location.protocol === "file:" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+  }
+
   function audioFileExists(audioPath) {
     if (!audioPath) return false;
+    // When running locally (file:// or localhost), treat relative audio paths as present so the player is shown
+    if (isLocalRun() && (audioPath.indexOf("audio/") === 0 || audioPath.indexOf("./audio/") === 0)) return true;
     var name = audioPath.replace(/^audio\//, "");
     return audioFileSet ? !!audioFileSet[name] : false;
   }
