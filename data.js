@@ -1,25 +1,25 @@
 /**
  * Quran Ruku data for Marifatul Quran OGG Player.
  * Generated from [Bookmark]001_marifatul-quran.xml - all 30 Paras, 573 Rukus.
- * To add audio: place .ogg in audio/<para>/ (e.g. audio/1/, audio/2/) and set audioUrl for the row.
+ * To add audio: place .ogg or .opus in audio/<para>/ (e.g. audio/1/, audio/2/) and set audioUrl for the row.
  */
 const QURAN_DATA = [
-  { para: 1, rukuInPara: "R1", surah: "Al-Fatihah", surahNumber: 1, surahArabic: "الفاتحة", verses: "1–7", audioUrl: "audio/1/1__R1__Al-Fatihah.ogg" },
-  { para: 1, rukuInPara: "R2", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "1–7", audioUrl: "audio/1/1__R2__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R3", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "8–20", audioUrl: "audio/1/1__R3__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R4", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "21–29", audioUrl: "audio/1/1__R4__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R5", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "30–39", audioUrl: "audio/1/1__R5__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R6", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "40–46", audioUrl: "audio/1/1__R6__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R7", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "47–59", audioUrl: "audio/1/1__R7__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R8", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "60–61", audioUrl: "audio/1/1__R8__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R9", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "62–71", audioUrl: "audio/1/1__R9__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R10", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "72–82", audioUrl: "audio/1/1__R10__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R11", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "83–86", audioUrl: "audio/1/1__R11__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R12", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "87–96", audioUrl: "audio/1/1__R12__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R13", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "97–103", audioUrl: "audio/1/1__R13__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R14", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "104–112", audioUrl: "audio/1/1__R14__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R15", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "113–121", audioUrl: "audio/1/1__R15__Al-Baqarah.ogg" },
-  { para: 1, rukuInPara: "R16", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "122–129", audioUrl: "audio/1/1__R16__Al-Baqarah.ogg" },
+  { para: 1, rukuInPara: "R1", surah: "Al-Fatihah", surahNumber: 1, surahArabic: "الفاتحة", verses: "1–7", audioUrl: "audio/1/1__R1__Al-Fatihah.opus" },
+  { para: 1, rukuInPara: "R2", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "1–7", audioUrl: "audio/1/1__R2__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R3", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "8–20", audioUrl: "audio/1/1__R3__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R4", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "21–29", audioUrl: "audio/1/1__R4__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R5", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "30–39", audioUrl: "audio/1/1__R5__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R6", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "40–46", audioUrl: "audio/1/1__R6__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R7", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "47–59", audioUrl: "audio/1/1__R7__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R8", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "60–61", audioUrl: "audio/1/1__R8__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R9", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "62–71", audioUrl: "audio/1/1__R9__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R10", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "72–82", audioUrl: "audio/1/1__R10__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R11", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "83–86", audioUrl: "audio/1/1__R11__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R12", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "87–96", audioUrl: "audio/1/1__R12__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R13", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "97–103", audioUrl: "audio/1/1__R13__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R14", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "104–112", audioUrl: "audio/1/1__R14__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R15", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "113–121", audioUrl: "audio/1/1__R15__Al-Baqarah.opus" },
+  { para: 1, rukuInPara: "R16", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "122–129", audioUrl: "audio/1/1__R16__Al-Baqarah.opus" },
   { para: 1, rukuInPara: "R17", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "130–141", audioUrl: "audio/1/1__R17__Al-Baqarah.ogg" },
   { para: 2, rukuInPara: "R1", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "142–147", audioUrl: "audio/2/2__R1__Al-Baqarah.ogg" },
   { para: 2, rukuInPara: "R2", surah: "Al-Baqarah", surahNumber: 2, surahArabic: "البقرة", verses: "148–152", audioUrl: "audio/2/2__R2__Al-Baqarah.ogg" },

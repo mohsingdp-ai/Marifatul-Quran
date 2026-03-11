@@ -187,7 +187,7 @@ const linesOut = [
   "/**",
   " * Quran Ruku data for Marifatul Quran OGG Player.",
   " * Generated from [Bookmark]001_marifatul-quran.xml - all 30 Paras, 573 Rukus.",
-  " * To add audio: place .ogg in audio/ and set audioUrl for the row.",
+  " * To add audio: place .ogg or .opus in audio/<para>/ and set audioUrl for the row.",
   " */",
   "const QURAN_DATA = ["
 ];

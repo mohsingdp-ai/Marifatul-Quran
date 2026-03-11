@@ -812,7 +812,7 @@
     if (!getGitHubToken()) return;
     var fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = "audio/*";
+    fileInput.accept = "audio/ogg,audio/opus,audio/*";
     fileInput.style.display = "none";
 
     var btn = document.createElement("button");
@@ -824,7 +824,11 @@
     fileInput.addEventListener("change", function () {
       if (!this.files || !this.files[0]) return;
       var file = this.files[0];
-      var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ".ogg";
+      var ext = (file.name && file.name.indexOf(".") >= 0)
+        ? "." + file.name.split(".").pop().toLowerCase()
+        : ".ogg";
+      if (ext !== ".ogg" && ext !== ".opus") ext = ".ogg";
+      var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
       var setKey = row.para + "/" + targetName;
 
