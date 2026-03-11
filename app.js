@@ -130,6 +130,11 @@
   var audioFetchFailed = false;
   var allParaOptions = null; // cached for iOS option.hidden fix
 
+  // Local run: which paras have at least one local file (probed by loading first file per para)
+  var localParaHasAudio = {};
+  var localParaProbeDone = false;
+  var localParaProbePromise = null;
+
   function fetchAudioFileList() {
     if (audioFileSetPromise) return audioFileSetPromise;
     var baseUrl = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
@@ -177,6 +182,54 @@
     return window.location.protocol === "file:" ||
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1";
+  }
+
+  function probeLocalParas() {
+    if (localParaProbePromise) return localParaProbePromise;
+    var paras = [];
+    var p;
+    for (p = 1; p <= 30; p++) {
+      if (indexedData[p] && indexedData[p].length > 0) paras.push(p);
+    }
+    localParaProbePromise = Promise.all(paras.map(function (para) {
+      var first = indexedData[para][0];
+      var url = normalizeAudioPath(first.row.audioUrl);
+      if (!url || (url.indexOf("audio/") !== 0 && url.indexOf("./audio/") !== 0)) {
+        localParaHasAudio[para] = false;
+        return Promise.resolve();
+      }
+      return new Promise(function (resolve) {
+        var a = new Audio();
+        var resolved = false;
+        function finish() {
+          if (resolved) return;
+          resolved = true;
+          a.removeEventListener("canplay", onOk);
+          a.removeEventListener("error", onErr);
+          resolve();
+        }
+        function onOk() {
+          localParaHasAudio[para] = true;
+          finish();
+        }
+        function onErr() {
+          localParaHasAudio[para] = false;
+          finish();
+        }
+        a.addEventListener("canplay", onOk);
+        a.addEventListener("error", onErr);
+        a.src = url;
+        a.load();
+        setTimeout(function () {
+          if (localParaHasAudio[para] === undefined) localParaHasAudio[para] = false;
+          finish();
+        }, 3000);
+      });
+    })).then(function () {
+      localParaProbeDone = true;
+      return localParaHasAudio;
+    });
+    return localParaProbePromise;
   }
 
   function audioFileExists(audioPath) {
@@ -232,8 +285,10 @@
   }
 
   function hasRecording(item) {
+    if (sessionBlobUrls[item.globalIndex]) return true;
+    if (isLocalRun() && localParaProbeDone) return localParaHasAudio[item.row.para] === true;
     var audioSrc = getAudioSrc(item.row, item.globalIndex);
-    return audioSrc && (sessionBlobUrls[item.globalIndex] || audioFileExists(audioSrc));
+    return audioSrc && audioFileExists(audioSrc);
   }
 
   function updateParaSelect() {
@@ -252,10 +307,14 @@
     // Re-add only the ones that should be visible
     allParaOptions.forEach(function (opt) {
       var show = true;
-      if (filterPara && audioFileSet && !audioFetchFailed) {
-        var para = parseInt(opt.value, 10);
-        var items = indexedData[para] || [];
-        show = items.some(hasRecording);
+      var para = parseInt(opt.value, 10);
+      if (filterPara) {
+        if (isLocalRun()) {
+          show = localParaProbeDone && localParaHasAudio[para] === true;
+        } else if (audioFileSet && !audioFetchFailed) {
+          var items = indexedData[para] || [];
+          show = items.some(hasRecording);
+        }
       }
       if (show) paraSelect.appendChild(opt);
     });
@@ -272,7 +331,7 @@
     var canUpload = hasGitHubToken();
     var filterRuku = getShowOnlyRecordedRuku();
 
-    if (!audioFileSet) {
+    if (!audioFileSet && !isLocalRun()) {
       tbody.textContent = "";
       var loadingTr = document.createElement("tr");
       loadingTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;\">Loading…</td>";
@@ -281,12 +340,24 @@
       return;
     }
 
+    if (isLocalRun() && !localParaProbeDone) {
+      if (!localParaProbePromise) localParaProbePromise = probeLocalParas();
+      tbody.textContent = "";
+      var probeTr = document.createElement("tr");
+      probeTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;\">Checking local files…</td>";
+      tbody.appendChild(probeTr);
+      localParaProbePromise.then(function () {
+        renderTable();
+      });
+      return;
+    }
+
     // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
 
     var filtered = getFilteredData();
 
-    if (filterRuku && !audioFetchFailed) {
+    if (filterRuku && (isLocalRun() ? localParaProbeDone : !audioFetchFailed)) {
       filtered = filtered.filter(hasRecording);
     }
 
