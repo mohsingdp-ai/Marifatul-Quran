@@ -788,7 +788,7 @@
     if (!getGitHubToken()) return;
     var fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.accept = "audio/ogg,audio/opus,audio/*";
+    fileInput.accept = "audio/ogg,audio/opus,audio/wav,audio/wave,audio/*";
     fileInput.style.display = "none";
 
     var btn = document.createElement("button");
@@ -803,7 +803,7 @@
       var ext = (file.name && file.name.indexOf(".") >= 0)
         ? "." + file.name.split(".").pop().toLowerCase()
         : ".ogg";
-      if (ext !== ".ogg" && ext !== ".opus") ext = ".ogg";
+      if (ext !== ".ogg" && ext !== ".opus" && ext !== ".wav") ext = ".ogg";
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
 
