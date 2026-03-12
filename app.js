@@ -319,6 +319,11 @@
       if (show) paraSelect.appendChild(opt);
     });
 
+    // When fetch failed or filter removed every option (e.g. on mobile), show all paras so the app is usable
+    if (paraSelect.options.length === 0 && allParaOptions.length) {
+      allParaOptions.forEach(function (opt) { paraSelect.appendChild(opt); });
+    }
+
     // Restore previous selection if still present, else pick first
     if (paraSelect.querySelector('option[value="' + currentValue + '"]')) {
       paraSelect.value = currentValue;
