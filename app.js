@@ -124,120 +124,10 @@
     return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
   }
 
-  // Set of existing audio filenames — fetched once from GitHub API
-  var audioFileSet = null;
-  var audioFileSetPromise = null;
-  var audioFetchFailed = false;
   var allParaOptions = null; // cached for iOS option.hidden fix
 
-  // Local run: which paras have at least one local file (probed by loading first file per para)
-  var localParaHasAudio = {};
-  var localParaProbeDone = false;
-  var localParaProbePromise = null;
-
-  function fetchAudioFileList() {
-    if (audioFileSetPromise) return audioFileSetPromise;
-    var baseUrl = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
-                  "/contents/audio?ref=" + GITHUB_BRANCH;
-    audioFileSetPromise = fetch(baseUrl, { headers: authHeader() })
-      .then(function (res) { return res.ok ? res.json() : []; })
-      .then(function (items) {
-        var set = {};
-        // Support both flat (files in audio/) and para-wise (files in audio/1/, audio/2/, ...)
-        var dirPromises = [];
-        items.forEach(function (f) {
-          if (f.type === "file") {
-            set[f.name] = true;
-          } else if (f.type === "dir") {
-            var dirUrl = "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO +
-                         "/contents/audio/" + encodeURIComponent(f.name) + "?ref=" + GITHUB_BRANCH;
-            dirPromises.push(
-              fetch(dirUrl, { headers: authHeader() })
-                .then(function (res) { return res.ok ? res.json() : []; })
-                .then(function (subFiles) {
-                  subFiles.forEach(function (sf) {
-                    if (sf.type === "file") set[f.name + "/" + sf.name] = true;
-                  });
-                })
-            );
-          }
-        });
-        return Promise.all(dirPromises).then(function () {
-          if (Object.keys(set).length === 0 && dirPromises.length > 0) {
-            audioFetchFailed = true;
-          }
-          audioFileSet = set;
-          return set;
-        });
-      })
-      .catch(function () {
-        audioFetchFailed = true;
-        audioFileSet = {};
-        return audioFileSet;
-      });
-    return audioFileSetPromise;
-  }
-
-  function isLocalRun() {
-    return window.location.protocol === "file:" ||
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
-  }
-
-  function probeLocalParas() {
-    if (localParaProbePromise) return localParaProbePromise;
-    var paras = [];
-    var p;
-    for (p = 1; p <= 30; p++) {
-      if (indexedData[p] && indexedData[p].length > 0) paras.push(p);
-    }
-    localParaProbePromise = Promise.all(paras.map(function (para) {
-      var first = indexedData[para][0];
-      var url = normalizeAudioPath(first.row.audioUrl);
-      if (!url || (url.indexOf("audio/") !== 0 && url.indexOf("./audio/") !== 0)) {
-        localParaHasAudio[para] = false;
-        return Promise.resolve();
-      }
-      return new Promise(function (resolve) {
-        var a = new Audio();
-        var resolved = false;
-        function finish() {
-          if (resolved) return;
-          resolved = true;
-          a.removeEventListener("canplay", onOk);
-          a.removeEventListener("error", onErr);
-          resolve();
-        }
-        function onOk() {
-          localParaHasAudio[para] = true;
-          finish();
-        }
-        function onErr() {
-          localParaHasAudio[para] = false;
-          finish();
-        }
-        a.addEventListener("canplay", onOk);
-        a.addEventListener("error", onErr);
-        a.src = url;
-        a.load();
-        setTimeout(function () {
-          if (localParaHasAudio[para] === undefined) localParaHasAudio[para] = false;
-          finish();
-        }, 3000);
-      });
-    })).then(function () {
-      localParaProbeDone = true;
-      return localParaHasAudio;
-    });
-    return localParaProbePromise;
-  }
-
   function audioFileExists(audioPath) {
-    if (!audioPath) return false;
-    // When running locally (file:// or localhost), treat relative audio paths as present so the player is shown
-    if (isLocalRun() && (audioPath.indexOf("audio/") === 0 || audioPath.indexOf("./audio/") === 0)) return true;
-    var name = audioPath.replace(/^audio\//, "");
-    return audioFileSet ? !!audioFileSet[name] : false;
+    return !!audioPath;
   }
 
   function showNoRecording(audioCell) {
@@ -286,7 +176,6 @@
 
   function hasRecording(item) {
     if (sessionBlobUrls[item.globalIndex]) return true;
-    if (isLocalRun() && localParaProbeDone) return localParaHasAudio[item.row.para] === true;
     var audioSrc = getAudioSrc(item.row, item.globalIndex);
     return audioSrc && audioFileExists(audioSrc);
   }
@@ -309,12 +198,8 @@
       var show = true;
       var para = parseInt(opt.value, 10);
       if (filterPara) {
-        if (isLocalRun()) {
-          show = localParaProbeDone && localParaHasAudio[para] === true;
-        } else if (audioFileSet && !audioFetchFailed) {
-          var items = indexedData[para] || [];
-          show = items.some(hasRecording);
-        }
+        var items = indexedData[para] || [];
+        show = items.some(hasRecording);
       }
       if (show) paraSelect.appendChild(opt);
     });
@@ -336,33 +221,12 @@
     var canUpload = hasGitHubToken();
     var filterRuku = getShowOnlyRecordedRuku();
 
-    if (!audioFileSet && !isLocalRun()) {
-      tbody.textContent = "";
-      var loadingTr = document.createElement("tr");
-      loadingTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;\">Loading…</td>";
-      tbody.appendChild(loadingTr);
-      fetchAudioFileList().then(function () { renderTable(); });
-      return;
-    }
-
-    if (isLocalRun() && !localParaProbeDone) {
-      if (!localParaProbePromise) localParaProbePromise = probeLocalParas();
-      tbody.textContent = "";
-      var probeTr = document.createElement("tr");
-      probeTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;\">Checking local files…</td>";
-      tbody.appendChild(probeTr);
-      localParaProbePromise.then(function () {
-        renderTable();
-      });
-      return;
-    }
-
     // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
 
     var filtered = getFilteredData();
 
-    if (filterRuku && (isLocalRun() ? localParaProbeDone : !audioFetchFailed)) {
+    if (filterRuku) {
       filtered = filtered.filter(hasRecording);
     }
 
@@ -756,7 +620,7 @@
     if (activeTooltipRow) positionPathTooltip(activeTooltipRow);
   });
 
-  // GitHub API config (also used by fetchAudioFileList above)
+  // GitHub API config (used for file upload)
 
   function getGitHubToken() {
     return localStorage.getItem("gh_token") || "";
@@ -942,7 +806,6 @@
       if (ext !== ".ogg" && ext !== ".opus") ext = ".ogg";
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
-      var setKey = row.para + "/" + targetName;
 
       // Immediate playback via blob
       if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
@@ -958,8 +821,6 @@
       }).then(function () {
         btn.textContent = "✓ Done";
         btn.className = "btn btn-sm btn-primary";
-        // Add to file set so player shows without re-fetching
-        if (audioFileSet) audioFileSet[setKey] = true;
         renderTable();
       }).catch(function (err) {
         btn.disabled = false;
