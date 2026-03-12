@@ -963,7 +963,7 @@ tr.playing .audio-play-btn {
     flex: 1 1 100%;
     width: 100%;
     min-width: 0;
-    min-height: 32px;
+    min-height: 44px;
   }
 
   .audio-time-duration {
@@ -973,21 +973,31 @@ tr.playing .audio-play-btn {
   }
 
   .audio-progress {
-    height: 12px;
+    height: 16px;
   }
 
   .audio-progress-wrap:hover .audio-progress {
-    height: 12px;
+    height: 16px;
+  }
+
+  .audio-progress::-webkit-slider-runnable-track {
+    height: 16px;
+    border-radius: 8px;
+  }
+
+  .audio-progress::-moz-range-track {
+    height: 16px;
+    border-radius: 8px;
   }
 
   .audio-progress::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .audio-progress::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 
   .ruku-table .col-surah-arabic {
