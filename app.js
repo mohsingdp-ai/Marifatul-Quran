@@ -404,6 +404,12 @@
       audio.addEventListener("play", function () {
         playBtn.textContent = "❚❚";
         playBtn.setAttribute("aria-label", "Pause");
+        if (currentPlayingAudio && currentPlayingAudio !== audio) {
+          currentPlayingAudio.pause();
+        }
+        currentPlayingAudio = audio;
+        clearPlayingFn();
+        tr.classList.add("playing");
         setNowPlayingMetadata(row, audio);
         setMediaPlaybackState("playing");
       });
@@ -453,6 +459,15 @@
           progress.value = pct;
           progress.style.setProperty("--progress", pct + "%");
           timeCurrent.textContent = formatTime(audio.currentTime);
+          if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
+            try {
+              navigator.mediaSession.setPositionState({
+                duration: audio.duration,
+                playbackRate: audio.playbackRate || 1,
+                position: audio.currentTime
+              });
+            } catch (e) { /* ignore */ }
+          }
         }
       });
 
@@ -687,6 +702,10 @@
 
       navigator.mediaSession.setActionHandler("play", function () { audio.play(); });
       navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); });
+      navigator.mediaSession.setActionHandler("stop", function () {
+        audio.pause();
+        audio.currentTime = 0;
+      });
       navigator.mediaSession.setActionHandler("seekbackward", function (details) {
         var offset = (details && details.seekOffset) ? details.seekOffset : 10;
         audio.currentTime = Math.max(0, audio.currentTime - offset);
@@ -699,6 +718,15 @@
         if (!details || typeof details.seekTime !== "number") return;
         audio.currentTime = details.seekTime;
       });
+      if (audio.duration && isFinite(audio.duration)) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: audio.duration,
+            playbackRate: audio.playbackRate || 1,
+            position: audio.currentTime
+          });
+        } catch (e) { /* ignore */ }
+      }
     } catch (e) {
       // Ignore unsupported Media Session handlers on some browsers.
     }
