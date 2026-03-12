@@ -784,6 +784,18 @@ tr.playing .audio-play-btn {
 
 /* Mobile and small screens */
 @media (max-width: 768px) {
+
+  .table-wrapper{
+    box-shadow: none;
+    background: transparent;
+  }
+
+  
+.ruku-table tbody tr {
+  background: var(--row-white) !important;
+}
+
+
   .header {
     padding: 1rem 1rem;
   }
