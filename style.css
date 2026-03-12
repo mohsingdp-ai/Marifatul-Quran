@@ -790,6 +790,10 @@ tr.playing .audio-play-btn {
     background: transparent;
   }
 
+  tr.playing {
+    background: var(--playing-bg) !important;
+    border: 2px solid var(--teal-accent) !important;
+  }
   
 .ruku-table tbody tr {
   background: var(--row-white) !important;
