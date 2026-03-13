@@ -133,6 +133,15 @@ body {
   background: var(--teal-dark);
 }
 
+.btn-danger {
+  background: #c62828;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #b71c1c;
+}
+
 .btn-install {
   background: #8b6914;
   color: white;
@@ -1233,7 +1242,8 @@ tr.playing .audio-play-btn {
 .settings-actions {
   margin-top: 1.25rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .settings-actions .btn {

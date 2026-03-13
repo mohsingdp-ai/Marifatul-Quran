@@ -607,6 +607,10 @@
         return;
       }
 
+      if (btn.classList.contains("is-saved")) {
+        if (!confirm("Already saved offline. Re-download fresh copy?")) return;
+      }
+
       btn.classList.add("is-saving");
       btn.innerHTML = DOWNLOAD_SVG;
       btn.title = "Saving…";
@@ -814,6 +818,21 @@
   settingsBtn.addEventListener("click", openSettings);
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsBackdrop.addEventListener("click", closeSettings);
+
+  document.getElementById("clear-cache-btn").addEventListener("click", function () {
+    if (!confirm("This will clear all cached data (including saved offline audio) and reload the app. Continue?")) return;
+    caches.keys().then(function (keys) {
+      return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+    }).then(function () {
+      if ("serviceWorker" in navigator) {
+        return navigator.serviceWorker.getRegistrations().then(function (regs) {
+          return Promise.all(regs.map(function (r) { return r.unregister(); }));
+        });
+      }
+    }).then(function () {
+      location.reload(true);
+    });
+  });
 
   roleUserBtn.addEventListener("click", function () {
     setRole("user");
