@@ -61,6 +61,7 @@
       </select>
       </div>
       <div class="controls-right">
+        <button type="button" class="btn btn-sm btn-offline-para" id="download-para-btn">📥 Download Para</button>
         <button type="button" class="btn btn-sm btn-install" id="install-btn">⬇ Install App</button>
         <button type="button" class="btn btn-sm btn-secondary" id="settings-btn">⚙ Settings</button>
       </div>
@@ -133,6 +134,13 @@
               <option value="2">2x</option>
               <option value="5">5x</option>
             </select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-section-title">Offline Downloads</span>
+          <div class="settings-download-row">
+            <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn">📥 Download All Paras</button>
+            <span class="download-all-status" id="download-all-status"></span>
           </div>
         </div>
         <div class="settings-row settings-admin-section" id="admin-section" style="display:none">

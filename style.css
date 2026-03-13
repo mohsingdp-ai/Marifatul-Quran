@@ -142,6 +142,20 @@ body {
   background: #b71c1c;
 }
 
+.btn-offline-para {
+  background: var(--teal-accent);
+  color: white;
+}
+
+.btn-offline-para:hover {
+  background: var(--teal-dark);
+}
+
+.btn-offline-para:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .btn-install {
   background: #8b6914;
   color: white;
@@ -1237,6 +1251,19 @@ tr.playing .audio-play-btn {
   border: 1px solid #ccc;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.settings-download-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.download-all-status {
+  font-size: 0.85rem;
+  color: var(--teal-accent);
+  font-weight: 600;
 }
 
 .settings-actions {

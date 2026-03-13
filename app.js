@@ -1067,6 +1067,92 @@
     }
   });
 
+  // Bulk download helpers
+  function getAudioUrlsForPara(para) {
+    var items = indexedData[para] || [];
+    var urls = [];
+    items.forEach(function (item) {
+      var src = getAudioSrc(item.row, item.globalIndex);
+      if (src && audioFileExists(src)) urls.push(src);
+    });
+    return urls;
+  }
+
+  function downloadBatch(urls, onProgress) {
+    var done = 0;
+    var total = urls.length;
+    if (!total) return Promise.resolve();
+
+    return urls.reduce(function (chain, url) {
+      return chain.then(function () {
+        return cacheAudioFile(url).then(function () {
+          done++;
+          if (onProgress) onProgress(done, total);
+        }).catch(function () {
+          var alts = getAudioUrlAlternates(url);
+          function tryAlt(i) {
+            if (i >= alts.length) { done++; if (onProgress) onProgress(done, total); return; }
+            return cacheAudioFile(alts[i]).then(function () {
+              done++;
+              if (onProgress) onProgress(done, total);
+            }).catch(function () { return tryAlt(i + 1); });
+          }
+          return tryAlt(0);
+        });
+      });
+    }, Promise.resolve());
+  }
+
+  // Download current Para button
+  var downloadParaBtn = document.getElementById("download-para-btn");
+  downloadParaBtn.addEventListener("click", function () {
+    if (!navigator.onLine) { alert("No internet connection."); return; }
+    var para = parseInt(paraSelect.value, 10);
+    var urls = getAudioUrlsForPara(para);
+    if (!urls.length) { alert("No recordings in Para " + para + "."); return; }
+
+    downloadParaBtn.disabled = true;
+    downloadParaBtn.textContent = "⏳ 0/" + urls.length;
+
+    downloadBatch(urls, function (done, total) {
+      downloadParaBtn.textContent = "⏳ " + done + "/" + total;
+    }).then(function () {
+      downloadParaBtn.textContent = "✓ Para " + para + " saved";
+      downloadParaBtn.disabled = false;
+      renderTable();
+      setTimeout(function () { downloadParaBtn.textContent = "📥 Download Para"; }, 3000);
+    });
+  });
+
+  // Download All Paras button (in settings)
+  var downloadAllBtn = document.getElementById("download-all-btn");
+  var downloadAllStatus = document.getElementById("download-all-status");
+
+  downloadAllBtn.addEventListener("click", function () {
+    if (!navigator.onLine) { alert("No internet connection."); return; }
+
+    var allUrls = [];
+    for (var p = 1; p <= 30; p++) {
+      allUrls = allUrls.concat(getAudioUrlsForPara(p));
+    }
+    if (!allUrls.length) { alert("No recordings found."); return; }
+    if (!confirm("Download " + allUrls.length + " audio files for offline use?")) return;
+
+    downloadAllBtn.disabled = true;
+    downloadAllBtn.textContent = "⏳ Downloading…";
+    downloadAllStatus.textContent = "0/" + allUrls.length;
+
+    downloadBatch(allUrls, function (done, total) {
+      downloadAllStatus.textContent = done + "/" + total;
+    }).then(function () {
+      downloadAllBtn.textContent = "✓ All saved";
+      downloadAllStatus.textContent = "";
+      downloadAllBtn.disabled = false;
+      renderTable();
+      setTimeout(function () { downloadAllBtn.textContent = "📥 Download All Paras"; }, 3000);
+    });
+  });
+
   renderTable();
 })();
 
