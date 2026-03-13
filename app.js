@@ -609,10 +609,13 @@
 
   function cacheAudioFile(url) {
     var abs = resolveUrl(url);
-    return fetch(abs).then(function (resp) {
-      if (!resp.ok) throw new Error("HTTP " + resp.status);
-      return caches.open(AUDIO_CACHE).then(function (cache) {
-        return cache.put(abs, resp);
+    return caches.open(AUDIO_CACHE).then(function (cache) {
+      return cache.match(abs).then(function (existing) {
+        if (existing) return; // already cached, skip download
+        return fetch(abs).then(function (resp) {
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          return cache.put(abs, resp);
+        });
       });
     });
   }
@@ -1109,7 +1112,7 @@
     var total = urls.length;
     if (!total) return Promise.resolve();
 
-    var CONCURRENCY = 6;
+    var CONCURRENCY = 10;
     var index = 0;
 
     function downloadOne(url) {
