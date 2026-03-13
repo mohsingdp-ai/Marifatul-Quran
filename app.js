@@ -120,6 +120,15 @@
     return value.trim();
   }
 
+  /** Return alternate audio URLs (same path, .wav then .ogg) to try when the primary URL fails. */
+  function getAudioUrlAlternates(src) {
+    if (typeof src !== "string" || !src.trim()) return [];
+    var base = src.replace(/\.(opus|ogg|wav)$/i, "");
+    var ext = (src.match(/\.(opus|ogg|wav)$/i) || [])[1] || "";
+    var others = ["wav", "ogg", "opus"].filter(function (e) { return e.toLowerCase() !== ext.toLowerCase(); });
+    return others.map(function (e) { return base + "." + e; });
+  }
+
   function getAudioSrc(row, globalIndex) {
     return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
   }
@@ -262,6 +271,8 @@
       audio = document.createElement("audio");
       audio.preload = "none";
       audio.controls = false;
+      audio._alternateUrls = getAudioUrlAlternates(src);
+      audio._alternateIndex = 0;
       audio.src = src;
       audio.load();
 
@@ -308,6 +319,18 @@
         }
       });
       audio.addEventListener("error", function () {
+        var alternates = audio._alternateUrls || [];
+        var idx = audio._alternateIndex || 0;
+        if (alternates.length && idx < alternates.length) {
+          audio._alternateIndex = idx + 1;
+          audio.src = alternates[idx];
+          audio.load();
+          audio.addEventListener("canplay", function onAlternateReady() {
+            audio.removeEventListener("canplay", onAlternateReady);
+            audio.play();
+          }, { once: true });
+          return;
+        }
         var msg = document.createElement("span");
         msg.className = "path-not-found";
         msg.textContent = "Path Not found";
