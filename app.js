@@ -273,8 +273,27 @@
       audio.controls = false;
       audio._alternateUrls = getAudioUrlAlternates(src);
       audio._alternateIndex = 0;
-      audio.src = src;
-      audio.load();
+
+      audio._ready = new Promise(function (resolve) {
+        var allUrls = [src].concat(audio._alternateUrls);
+        (function tryLoadFromCache(i) {
+          if (i >= allUrls.length) {
+            audio.src = src;
+            audio.load();
+            resolve();
+            return;
+          }
+          getCachedAudioBlob(allUrls[i]).then(function (blobUrl) {
+            if (blobUrl) {
+              audio.src = blobUrl;
+              audio.load();
+              resolve();
+            } else {
+              tryLoadFromCache(i + 1);
+            }
+          });
+        })(0);
+      });
 
       audio.addEventListener("play", function () {
         playBtn.textContent = "❚❚";
@@ -423,7 +442,9 @@
 
     seekBackBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
-      a.currentTime = Math.max(0, a.currentTime - 5);
+      a._ready.then(function () {
+        a.currentTime = Math.max(0, a.currentTime - 5);
+      });
     });
 
     var seekFwdBtn = document.createElement("button");
@@ -434,7 +455,9 @@
 
     seekFwdBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
-      a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
+      a._ready.then(function () {
+        a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
+      });
     });
 
     wrap.appendChild(seekBackBtn);
@@ -450,19 +473,21 @@
 
     playBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
-      a.playbackRate = speeds[currentSpeedIndex];
-      a.loop = false;
-      if (a.paused) {
-        if (currentPlayingAudio && currentPlayingAudio !== a) {
-          currentPlayingAudio.pause();
+      a._ready.then(function () {
+        a.playbackRate = speeds[currentSpeedIndex];
+        a.loop = false;
+        if (a.paused) {
+          if (currentPlayingAudio && currentPlayingAudio !== a) {
+            currentPlayingAudio.pause();
+          }
+          a.play();
+          clearPlayingFn();
+          tr.classList.add("playing");
+          currentPlayingAudio = a;
+        } else {
+          a.pause();
         }
-        a.play();
-        clearPlayingFn();
-        tr.classList.add("playing");
-        currentPlayingAudio = a;
-      } else {
-        a.pause();
-      }
+      });
     });
 
     function getClientX(e) {
@@ -479,9 +504,11 @@
       var a = ensureAudioElement();
       progress.value = pct;
       progress.style.setProperty("--progress", pct + "%");
-      if (a.duration && isFinite(a.duration)) {
-        a.currentTime = (pct / 100) * a.duration;
-      }
+      a._ready.then(function () {
+        if (a.duration && isFinite(a.duration)) {
+          a.currentTime = (pct / 100) * a.duration;
+        }
+      });
     }
 
     var seeking = false;
@@ -555,17 +582,37 @@
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
 
+  function resolveUrl(url) {
+    var a = document.createElement("a");
+    a.href = url;
+    return a.href;
+  }
+
   function isAudioCached(url) {
+    var abs = resolveUrl(url);
     return caches.open(AUDIO_CACHE).then(function (cache) {
-      return cache.match(url).then(function (resp) { return !!resp; });
+      return cache.match(abs).then(function (resp) { return !!resp; });
     }).catch(function () { return false; });
   }
 
+  function getCachedAudioBlob(url) {
+    var abs = resolveUrl(url);
+    return caches.open(AUDIO_CACHE).then(function (cache) {
+      return cache.match(abs);
+    }).then(function (resp) {
+      if (!resp) return null;
+      return resp.blob().then(function (blob) {
+        return URL.createObjectURL(blob);
+      });
+    }).catch(function () { return null; });
+  }
+
   function cacheAudioFile(url) {
-    return fetch(url).then(function (resp) {
+    var abs = resolveUrl(url);
+    return fetch(abs).then(function (resp) {
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       return caches.open(AUDIO_CACHE).then(function (cache) {
-        return cache.put(url, resp);
+        return cache.put(abs, resp);
       });
     });
   }
