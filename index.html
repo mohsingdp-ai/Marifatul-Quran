@@ -149,7 +149,7 @@
         </div>
       </div>
       <div class="settings-actions">
-        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">🗑 Clear Cache &amp; Reload</button>
+        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">🔄 Reinstall App</button>
         <button type="button" class="btn btn-sm btn-secondary" id="settings-close-btn">Close</button>
       </div>
     </div>
@@ -168,10 +168,17 @@
     (function () {
       var btn = document.getElementById("install-btn");
       var deferred = null;
+      var isReinstall = location.search.indexOf("reinstall=") !== -1;
+      var isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+                         window.navigator.standalone === true;
 
-      // Hide button if already running as installed PWA
-      if (window.matchMedia("(display-mode: standalone)").matches ||
-          window.navigator.standalone === true) {
+      // Clean the reinstall param from URL history
+      if (isReinstall) {
+        history.replaceState(null, "", location.pathname);
+      }
+
+      // Hide install button when running as installed PWA (unless reinstalling)
+      if (isStandalone && !isReinstall) {
         btn.style.display = "none";
         return;
       }
@@ -180,6 +187,12 @@
       window.addEventListener("beforeinstallprompt", function (e) {
         e.preventDefault();
         deferred = e;
+        // If this is a reinstall flow, auto-trigger the prompt immediately
+        if (isReinstall) {
+          isReinstall = false;
+          e.prompt();
+          e.userChoice.then(function () { deferred = null; });
+        }
       });
 
       window.addEventListener("appinstalled", function () {
@@ -187,24 +200,32 @@
         deferred = null;
       });
 
+      // If reinstalling from standalone app, browser won't fire beforeinstallprompt
+      // (it's already installed). Show instructions to complete the reinstall manually.
+      if (isReinstall && isStandalone) {
+        setTimeout(function () {
+          var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          if (isIOS) {
+            alert("App data cleared! To complete reinstallation:\n\n1. Go to your Home Screen and delete this app\n2. Open Safari and visit this page again\n3. Tap Share \u{1F4E4} \u2192 \u201CAdd to Home Screen\u201D");
+          } else {
+            alert("App data cleared! To complete reinstallation:\n\n1. Remove this app from your Home Screen / App drawer\n2. Open Chrome and visit this page again\n3. Tap Install App");
+          }
+        }, 500);
+      }
+
       btn.addEventListener("click", function () {
         if (deferred) {
-          // Native prompt available — use it
           deferred.prompt();
-          deferred.userChoice.then(function () {
-            deferred = null;
-          });
+          deferred.userChoice.then(function () { deferred = null; });
           return;
         }
 
-        // iOS Safari
         var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         if (isIOS) {
           alert("To install on iOS:\n\n1. Tap the Share button \u{1F4E4} at the bottom of Safari\n2. Tap \u201CAdd to Home Screen\u201D\n3. Tap \u201CAdd\u201D");
           return;
         }
 
-        // Other browsers — generic guidance
         alert("To install:\n\nIn Chrome: tap the menu (\u22EE) then \u201CAdd to Home Screen\u201D or \u201CInstall app\u201D\nIn Edge: tap the menu then \u201CApps \u2192 Install this site as an app\u201D");
       });
     })();

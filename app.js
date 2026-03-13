@@ -867,17 +867,43 @@
   settingsBackdrop.addEventListener("click", closeSettings);
 
   document.getElementById("clear-cache-btn").addEventListener("click", function () {
-    if (!confirm("This will clear all cached data (including saved offline audio) and reload the app. Continue?")) return;
-    caches.keys().then(function (keys) {
+    if (!confirm("This will reinstall the app with the latest version. All offline audio will need to be re-downloaded. Continue?")) return;
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = "🔄 Reinstalling…";
+
+    // 1. Clear all SW caches
+    var clearCaches = caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (k) { return caches.delete(k); }));
-    }).then(function () {
-      if ("serviceWorker" in navigator) {
-        return navigator.serviceWorker.getRegistrations().then(function (regs) {
+    });
+
+    // 2. Unregister all service workers
+    var clearSW = ("serviceWorker" in navigator)
+      ? navigator.serviceWorker.getRegistrations().then(function (regs) {
           return Promise.all(regs.map(function (r) { return r.unregister(); }));
-        });
-      }
-    }).then(function () {
-      location.reload(true);
+        })
+      : Promise.resolve();
+
+    // 3. Clear localStorage and sessionStorage
+    try { localStorage.clear(); } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+
+    // 4. Clear IndexedDB databases
+    var clearIDB = ("indexedDB" in window && indexedDB.databases)
+      ? indexedDB.databases().then(function (dbs) {
+          return Promise.all(dbs.map(function (db) {
+            return new Promise(function (resolve) {
+              var req = indexedDB.deleteDatabase(db.name);
+              req.onsuccess = req.onerror = req.onblocked = resolve;
+            });
+          }));
+        })
+      : Promise.resolve();
+
+    Promise.all([clearCaches, clearSW, clearIDB]).then(function () {
+      // Redirect fresh; ?reinstall signals the install flow on next load
+      var url = location.origin + location.pathname + "?reinstall=" + Date.now();
+      location.replace(url);
     });
   });
 
