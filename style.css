@@ -1353,3 +1353,11 @@ tr.playing .audio-play-btn {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+@keyframes highlight-flash {
+  0%   { background-color: var(--accent, #0d8f8f); }
+  100% { background-color: transparent; }
+}
+tr.highlight-flash {
+  animation: highlight-flash 1.5s ease-out forwards;
+}

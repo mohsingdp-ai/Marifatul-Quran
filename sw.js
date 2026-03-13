@@ -34,6 +34,29 @@ self.addEventListener("activate", function (e) {
   self.clients.claim();
 });
 
+self.addEventListener("notificationclick", function (e) {
+  e.notification.close();
+  var data = e.notification.data || {};
+  var para = data.para;
+  var globalIndex = data.globalIndex;
+  var url = "./";
+  if (para !== undefined) {
+    url += "?para=" + para;
+    if (globalIndex !== undefined) url += "&ruku=" + globalIndex;
+  }
+  e.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (cs) {
+      for (var i = 0; i < cs.length; i++) {
+        if ("focus" in cs[i]) {
+          cs[i].postMessage({ type: "navigate", para: para, globalIndex: globalIndex });
+          return cs[i].focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
 self.addEventListener("fetch", function (e) {
   var url = e.request.url;
 

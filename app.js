@@ -1164,6 +1164,10 @@
       downloadParaBtn.disabled = false;
       renderTable();
       setTimeout(function () { downloadParaBtn.textContent = "📥 Download Para"; }, 3000);
+      var firstItem = (indexedData[para] || []).find(hasRecording);
+      if (firstItem) {
+        showRukuNotification(para, firstItem.globalIndex, "Para " + para + " downloaded", "Tap to go to Para " + para);
+      }
     });
   });
 
@@ -1195,6 +1199,74 @@
       setTimeout(function () { downloadAllBtn.textContent = "📥 Download All Paras"; }, 3000);
     });
   });
+
+  // Navigate to a specific para and scroll to the ruku row
+  function scrollToRuku(para, globalIndex) {
+    // Switch para select if needed
+    var paraOpt = paraSelect.querySelector('option[value="' + para + '"]');
+    if (!paraOpt) {
+      // If "show only recorded" filter hides this para, temporarily disable it
+      setShowOnlyRecordedPara(false);
+      updateParaSelect();
+    }
+    paraSelect.value = String(para);
+    renderTable();
+    // After render, find and scroll to the row
+    var targetRow = tbody.querySelector('tr[data-global-index="' + globalIndex + '"]');
+    if (targetRow) {
+      setTimeout(function () {
+        targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+        targetRow.classList.add("highlight-flash");
+        setTimeout(function () { targetRow.classList.remove("highlight-flash"); }, 1500);
+      }, 80);
+    }
+  }
+
+  // Show a browser notification linked to a para/ruku
+  function showRukuNotification(para, globalIndex, title, body) {
+    if (!("Notification" in window)) return;
+    function send() {
+      if (Notification.permission !== "granted") return;
+      navigator.serviceWorker.ready.then(function (reg) {
+        reg.showNotification(title, {
+          body: body,
+          icon: "./icon-192.png",
+          data: { para: para, globalIndex: globalIndex }
+        });
+      }).catch(function () {
+        // Fallback: plain Notification (no SW)
+        var n = new Notification(title, { body: body, icon: "./icon-192.png" });
+        n.addEventListener("click", function () { scrollToRuku(para, globalIndex); n.close(); });
+      });
+    }
+    if (Notification.permission === "granted") {
+      send();
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(function (perm) { if (perm === "granted") send(); });
+    }
+  }
+
+  // Handle navigation from notification click (via SW postMessage or URL params)
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", function (e) {
+      if (e.data && e.data.type === "navigate") {
+        scrollToRuku(e.data.para, e.data.globalIndex);
+      }
+    });
+  }
+
+  // Handle ?para=X&ruku=Y from notification click when app was closed
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var para = parseInt(params.get("para"), 10);
+    var ruku = params.get("ruku");
+    if (para && ruku !== null) {
+      var globalIndex = parseInt(ruku, 10);
+      history.replaceState(null, "", location.pathname);
+      // Wait for initial render then scroll
+      setTimeout(function () { scrollToRuku(para, globalIndex); }, 200);
+    }
+  })();
 
   renderTable();
 })();
