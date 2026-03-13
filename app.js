@@ -161,7 +161,7 @@
       "<td data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
       "<td data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
-      "<td class=\"col-surah-arabic\" data-label=\"Surah # & Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
+      "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
       (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
@@ -296,7 +296,7 @@
       });
 
       audio.addEventListener("play", function () {
-        playBtn.textContent = "❚❚";
+        playBtn.innerHTML = PAUSE_SVG;
         playBtn.setAttribute("aria-label", "Pause");
         if (currentPlayingAudio && currentPlayingAudio !== audio) {
           currentPlayingAudio.pause();
@@ -308,7 +308,7 @@
         setMediaPlaybackState("playing");
       });
       audio.addEventListener("pause", function () {
-        playBtn.textContent = "▶";
+        playBtn.innerHTML = PLAY_SVG;
         playBtn.setAttribute("aria-label", "Play");
         if (audio.currentTime < (audio.duration || 0) - 0.1) tr.classList.remove("playing");
         if (currentPlayingAudio === audio) currentPlayingAudio = null;
@@ -321,7 +321,7 @@
           audio.play();
           return;
         }
-        playBtn.textContent = "▶";
+        playBtn.innerHTML = PLAY_SVG;
         playBtn.setAttribute("aria-label", "Play");
         tr.classList.remove("playing");
         progress.value = 0;
@@ -388,7 +388,7 @@
     playBtn.type = "button";
     playBtn.className = "audio-play-btn";
     playBtn.setAttribute("aria-label", "Play");
-    playBtn.innerHTML = "▶";
+    playBtn.innerHTML = PLAY_SVG;
 
     var timeCurrent = document.createElement("span");
     timeCurrent.className = "audio-time audio-time-current";
@@ -437,7 +437,7 @@
     var seekBackBtn = document.createElement("button");
     seekBackBtn.type = "button";
     seekBackBtn.className = "audio-seek-btn audio-seek-back-btn";
-    seekBackBtn.textContent = "-5";
+    seekBackBtn.innerHTML = SEEK_BACK_SVG;
     seekBackBtn.setAttribute("aria-label", "Seek back 5 seconds");
 
     seekBackBtn.addEventListener("click", function () {
@@ -450,7 +450,7 @@
     var seekFwdBtn = document.createElement("button");
     seekFwdBtn.type = "button";
     seekFwdBtn.className = "audio-seek-btn audio-seek-fwd-btn";
-    seekFwdBtn.textContent = "+5";
+    seekFwdBtn.innerHTML = SEEK_FWD_SVG;
     seekFwdBtn.setAttribute("aria-label", "Seek forward 5 seconds");
 
     seekFwdBtn.addEventListener("click", function () {
@@ -581,6 +581,10 @@
 
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
+  var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
+  var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
+  var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path fill="currentColor" d="M11.99 5V1l-5 5l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6s-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8s-3.58-8-8-8"/><text x="12" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" font-family="sans-serif">5</text></svg>';
+  var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path fill="currentColor" d="M12.01 5V1l5 5l-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6s6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8s3.58-8 8-8"/><text x="12" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" font-family="sans-serif">5</text></svg>';
 
   function resolveUrl(url) {
     var a = document.createElement("a");
