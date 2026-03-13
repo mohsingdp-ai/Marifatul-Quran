@@ -1109,24 +1109,34 @@
     var total = urls.length;
     if (!total) return Promise.resolve();
 
-    return urls.reduce(function (chain, url) {
-      return chain.then(function () {
-        return cacheAudioFile(url).then(function () {
-          done++;
-          if (onProgress) onProgress(done, total);
-        }).catch(function () {
-          var alts = getAudioUrlAlternates(url);
-          function tryAlt(i) {
-            if (i >= alts.length) { done++; if (onProgress) onProgress(done, total); return; }
-            return cacheAudioFile(alts[i]).then(function () {
-              done++;
-              if (onProgress) onProgress(done, total);
-            }).catch(function () { return tryAlt(i + 1); });
-          }
-          return tryAlt(0);
-        });
+    var CONCURRENCY = 6;
+    var index = 0;
+
+    function downloadOne(url) {
+      return cacheAudioFile(url).catch(function () {
+        var alts = getAudioUrlAlternates(url);
+        function tryAlt(i) {
+          if (i >= alts.length) return Promise.resolve();
+          return cacheAudioFile(alts[i]).catch(function () { return tryAlt(i + 1); });
+        }
+        return tryAlt(0);
+      }).then(function () {
+        done++;
+        if (onProgress) onProgress(done, total);
       });
-    }, Promise.resolve());
+    }
+
+    function worker() {
+      if (index >= urls.length) return Promise.resolve();
+      var url = urls[index++];
+      return downloadOne(url).then(worker);
+    }
+
+    var workers = [];
+    for (var i = 0; i < Math.min(CONCURRENCY, urls.length); i++) {
+      workers.push(worker());
+    }
+    return Promise.all(workers);
   }
 
   // Download current Para button
