@@ -546,7 +546,92 @@
       hoverTime.classList.remove("is-visible");
     });
 
+    var offlineBtn = buildOfflineBtn(src);
+    wrap.appendChild(offlineBtn);
+
     audioCell.appendChild(wrap);
+  }
+
+  var AUDIO_CACHE = "mq-audio";
+  var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
+
+  function isAudioCached(url) {
+    return caches.open(AUDIO_CACHE).then(function (cache) {
+      return cache.match(url).then(function (resp) { return !!resp; });
+    }).catch(function () { return false; });
+  }
+
+  function cacheAudioFile(url) {
+    return fetch(url).then(function (resp) {
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return caches.open(AUDIO_CACHE).then(function (cache) {
+        return cache.put(url, resp);
+      });
+    });
+  }
+
+  function markSaved(btn) {
+    btn.classList.remove("is-saving");
+    btn.classList.add("is-saved");
+    btn.innerHTML = DOWNLOAD_SVG;
+    btn.title = "Saved offline (tap to refresh)";
+    btn.setAttribute("aria-label", "Saved offline (tap to refresh)");
+  }
+
+  function markUnsaved(btn) {
+    btn.classList.remove("is-saving", "is-saved");
+    btn.innerHTML = DOWNLOAD_SVG;
+    btn.title = "Save for offline";
+    btn.setAttribute("aria-label", "Save offline");
+  }
+
+  function buildOfflineBtn(src) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "audio-offline-btn";
+    btn.innerHTML = DOWNLOAD_SVG;
+    btn.setAttribute("aria-label", "Save offline");
+    btn.title = "Save for offline";
+
+    isAudioCached(src).then(function (cached) {
+      if (cached) markSaved(btn);
+    });
+
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (btn.classList.contains("is-saving")) return;
+
+      if (!navigator.onLine) {
+        if (btn.classList.contains("is-saved")) return;
+        alert("No internet connection. Cannot save for offline.");
+        return;
+      }
+
+      btn.classList.add("is-saving");
+      btn.innerHTML = DOWNLOAD_SVG;
+      btn.title = "Saving…";
+
+      var urls = [src].concat(getAudioUrlAlternates(src));
+      var saved = false;
+
+      (function tryNext(i) {
+        if (i >= urls.length) {
+          if (!saved) {
+            markUnsaved(btn);
+            alert("Could not save audio for offline use.");
+          }
+          return;
+        }
+        cacheAudioFile(urls[i]).then(function () {
+          saved = true;
+          markSaved(btn);
+        }).catch(function () {
+          tryNext(i + 1);
+        });
+      })(0);
+    });
+
+    return btn;
   }
 
   function formatTime(seconds) {
