@@ -675,6 +675,31 @@
     return "audio/ogg";
   }
 
+  function recordingShareCaption(row) {
+    return [
+      "Marifatul Quran — recording",
+      "Para " + row.para + ", Ruku " + row.rukuInPara,
+      row.surah + " — " + row.verses
+    ].join("\n");
+  }
+
+  function showShareCaptionToast(message) {
+    var el = document.getElementById("share-caption-toast");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "share-caption-toast";
+      el.className = "share-caption-toast";
+      el.setAttribute("role", "status");
+      document.body.appendChild(el);
+    }
+    el.textContent = message;
+    el.classList.add("is-visible");
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(function () {
+      el.classList.remove("is-visible");
+    }, 6500);
+  }
+
   function markSaved(btn) {
     btn.classList.remove("is-saving");
     btn.classList.add("is-saved");
@@ -755,16 +780,7 @@
       e.stopPropagation();
       if (btn.disabled) return;
 
-      var caption = [
-        "Marifatul Quran — recording",
-        "Para " + row.para + ", Ruku " + row.rukuInPara,
-        row.surah + " — " + row.verses
-      ].join("\n");
-
-      function openWhatsAppText(msg) {
-        var wa = "https://wa.me/?text=" + encodeURIComponent(msg);
-        window.open(wa, "_blank", "noopener,noreferrer");
-      }
+      var caption = recordingShareCaption(row);
 
       function tryDownloadFileFallback(blob) {
         var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
@@ -792,24 +808,65 @@
         var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
         var file = new File([blob], recordingShareFilename(row, src), { type: mime });
 
-        var canFileShare = typeof navigator.share === "function" &&
+        var shareData = {
+          text: caption,
+          title: "Marifatul Quran",
+          files: [file]
+        };
+
+        var canShareFiles = typeof navigator.share === "function" &&
           typeof navigator.canShare === "function" &&
           navigator.canShare({ files: [file] });
 
-        if (canFileShare) {
-          return navigator.share({
-            text: caption,
-            files: [file],
-            title: "Marifatul Quran"
-          }).catch(function (err) {
+        function copyCaptionThenShare(payload) {
+          var clip = navigator.clipboard && navigator.clipboard.writeText
+            ? navigator.clipboard.writeText(caption)
+            : Promise.reject(new Error("no clipboard"));
+          return clip.then(
+            function () {
+              showShareCaptionToast(
+                "Caption copied. In WhatsApp, paste after sending the file if the message line is blank."
+              );
+            },
+            function () {
+              showShareCaptionToast(
+                "Share the file, then type or paste the caption in WhatsApp if it did not appear automatically."
+              );
+            }
+          ).then(function () {
+            return navigator.share(payload);
+          });
+        }
+
+        if (canShareFiles) {
+          return copyCaptionThenShare(shareData).catch(function (err) {
             if (err && err.name === "AbortError") return;
-            tryDownloadFileFallback(blob);
-            alert("Could not open share. The recording was downloaded—attach it in WhatsApp.");
+            /* Some agents only accept files without text in the share payload. */
+            return copyCaptionThenShare({ files: [file], title: "Marifatul Quran" }).catch(function (err2) {
+              if (err2 && err2.name === "AbortError") return;
+              tryDownloadFileFallback(blob);
+              alert("Could not open share. The recording was downloaded—attach it in WhatsApp.");
+            });
           });
         }
 
         tryDownloadFileFallback(blob);
-        alert("The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(caption).then(
+            function () {
+              showShareCaptionToast("File downloaded and caption copied. Attach the file in WhatsApp, then paste the message.");
+            },
+            function () {
+              alert(
+                "The recording was downloaded. Attach it in WhatsApp from Downloads / Files.\n\nCaption to add:\n\n" + caption
+              );
+            }
+          );
+        } else {
+          alert(
+            "The recording was downloaded. Attach it in WhatsApp from Downloads / Files.\n\nCaption to add:\n\n" + caption
+          );
+        }
       }).catch(function () {
         alert("Could not share this file. Try Save offline, then share from your device.");
       }).then(function () {
