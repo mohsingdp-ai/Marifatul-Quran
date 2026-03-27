@@ -675,6 +675,42 @@
     return "audio/ogg";
   }
 
+  function legacyCopyText(text) {
+    var textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.top = "-1000px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    var copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } catch (err) {
+      copied = false;
+    }
+
+    document.body.removeChild(textarea);
+    return copied;
+  }
+
+  function copyShareCaption(text) {
+    if (!text) return Promise.resolve(false);
+
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function" && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(function () {
+        return true;
+      }).catch(function () {
+        return legacyCopyText(text);
+      });
+    }
+
+    return Promise.resolve(legacyCopyText(text));
+  }
+
   function markSaved(btn) {
     btn.classList.remove("is-saving");
     btn.classList.add("is-saved");
@@ -749,7 +785,7 @@
     btn.className = "audio-share-wa-btn";
     btn.innerHTML = WHATSAPP_SVG;
     btn.setAttribute("aria-label", "Share recording as file");
-    btn.title = "Share recording (audio file)";
+    btn.title = "Share recording with caption";
 
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -781,6 +817,11 @@
       }
 
       btn.disabled = true;
+      var captionCopied = false;
+      var captionCopyPromise = copyShareCaption(caption).then(function (copied) {
+        captionCopied = copied;
+        return copied;
+      });
 
       fetchAudioBlobForShare(src).then(function (blob) {
         if (!blob || !blob.size) {
@@ -797,21 +838,36 @@
           navigator.canShare({ files: [file] });
 
         if (canFileShare) {
-          return navigator.share({
-            text: caption,
-            files: [file],
-            title: "Marifatul Quran"
+          return captionCopyPromise.then(function () {
+            return navigator.share({
+              text: caption,
+              files: [file]
+            });
+          }).then(function () {
+            if (captionCopied) {
+              alert("Audio shared. If WhatsApp sends only the file, paste the copied caption in the chat.");
+            }
           }).catch(function (err) {
             if (err && err.name === "AbortError") return;
             tryDownloadFileFallback(blob);
-            alert("Could not open share. The recording was downloaded—attach it in WhatsApp.");
+            alert(captionCopied
+              ? "Could not open share. The recording was downloaded. Attach it in WhatsApp and paste the copied caption."
+              : "Could not open share. The recording was downloaded—attach it in WhatsApp.");
           });
         }
 
         tryDownloadFileFallback(blob);
-        alert("The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).");
+        return captionCopyPromise.then(function () {
+          alert(captionCopied
+            ? "The recording was downloaded. Send it in WhatsApp as an attachment, then paste the copied caption."
+            : "The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).");
+        });
       }).catch(function () {
-        alert("Could not share this file. Try Save offline, then share from your device.");
+        captionCopyPromise.then(function () {
+          alert(captionCopied
+            ? "Could not share this file. Try Save offline, then share from your device and paste the copied caption."
+            : "Could not share this file. Try Save offline, then share from your device.");
+        });
       }).then(function () {
         btn.disabled = false;
       });
