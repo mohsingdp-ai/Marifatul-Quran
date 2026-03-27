@@ -575,12 +575,14 @@
 
     var offlineBtn = buildOfflineBtn(src);
     wrap.appendChild(offlineBtn);
+    wrap.appendChild(buildWhatsAppShareBtn(row, src));
 
     audioCell.appendChild(wrap);
   }
 
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
+  var WHATSAPP_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2.005c-5.52 0-10 4.48-10 10.002 0 1.76.46 3.47 1.34 4.98L2.05 22l5.08-1.34c1.46.8 3.12 1.23 4.91 1.23 5.52 0 10-4.48 10-10.002 0-2.67-1.04-5.18-2.93-7.07a9.95 9.95 0 0 0-7.07-2.893zm.03 17.92c-1.5 0-2.97-.4-4.25-1.15l-.3-.18-3.18.84.85-3.11-.2-.31a7.764 7.764 0 0 1-1.2-4.12c0-4.28 3.47-7.75 7.75-7.75 2.07 0 4.02.81 5.48 2.28a7.684 7.684 0 0 1 2.25 5.47c-.01 4.28-3.48 7.76-7.75 7.76zm4.26-4.51c-.24-.12-1.43-.7-1.66-.78-.22-.08-.39-.12-.56.12-.17.24-.64.78-.79.94-.15.16-.3.18-.54.06-.24-.12-1.02-.37-1.95-1.2-.72-.64-1.2-1.43-1.34-1.67-.15-.24-.02-.37.11-.49.12-.12.24-.27.37-.4.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.53-1.26-.73-1.73-.19-.46-.39-.39-.53-.41h-.45c-.15 0-.4.06-.61.3-.21.24-.81.79-.81 1.92s.83 2.23.94 2.39c.12.16 1.62 2.48 3.93 3.48.55.23.98.37 1.31.47.55.18 1.05.16 1.44.09.44-.07 1.42-.58 1.62-1.14.21-.56.21-1.03.15-1.13-.06-.1-.22-.16-.46-.28z"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
   var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"><path fill="currentColor" d="M11.99 5V1l-5 5l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6s-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8s-3.58-8-8-8"/><text x="12" y="16" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" font-family="sans-serif">5</text></svg>';
@@ -622,6 +624,55 @@
         });
       });
     });
+  }
+
+  /** Load raw audio bytes for sharing (offline cache first, then network). */
+  function fetchAudioBlobForShare(src) {
+    if (!src || typeof src !== "string") return Promise.resolve(null);
+
+    function getBlob(url) {
+      return fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.blob();
+      });
+    }
+
+    if (src.indexOf("blob:") === 0) {
+      return getBlob(src).catch(function () { return null; });
+    }
+
+    var urls = [src].concat(getAudioUrlAlternates(src)).map(resolveUrl);
+
+    function tryIndex(i) {
+      if (i >= urls.length) return Promise.resolve(null);
+      var abs = urls[i];
+      return caches.open(AUDIO_CACHE)
+        .then(function (cache) { return cache.match(abs); })
+        .then(function (resp) {
+          if (resp) return resp.blob();
+          return getBlob(abs);
+        })
+        .then(function (blob) {
+          if (blob && blob.size) return blob;
+          return tryIndex(i + 1);
+        })
+        .catch(function () { return tryIndex(i + 1); });
+    }
+
+    return tryIndex(0);
+  }
+
+  function recordingShareFilename(row, src) {
+    var m = typeof src === "string" ? src.match(/\.(opus|ogg|wav)$/i) : null;
+    var ext = m ? "." + m[1].toLowerCase() : ".ogg";
+    return row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
+  }
+
+  function audioMimeForShare(src) {
+    var lower = (src || "").toLowerCase();
+    if (lower.indexOf(".wav") >= 0) return "audio/wav";
+    if (lower.indexOf(".opus") >= 0) return "audio/opus";
+    return "audio/ogg";
   }
 
   function markSaved(btn) {
@@ -687,6 +738,83 @@
           tryNext(i + 1);
         });
       })(0);
+    });
+
+    return btn;
+  }
+
+  function buildWhatsAppShareBtn(row, src) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "audio-share-wa-btn";
+    btn.innerHTML = WHATSAPP_SVG;
+    btn.setAttribute("aria-label", "Share recording as file");
+    btn.title = "Share recording (audio file)";
+
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (btn.disabled) return;
+
+      var caption = [
+        "Marifatul Quran — recording",
+        "Para " + row.para + ", Ruku " + row.rukuInPara,
+        row.surah + " — " + row.verses
+      ].join("\n");
+
+      function openWhatsAppText(msg) {
+        var wa = "https://wa.me/?text=" + encodeURIComponent(msg);
+        window.open(wa, "_blank", "noopener,noreferrer");
+      }
+
+      function tryDownloadFileFallback(blob) {
+        var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
+        var name = recordingShareFilename(row, src);
+        var objectUrl = URL.createObjectURL(new Blob([blob], { type: mime }));
+        var a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = name;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 60000);
+      }
+
+      btn.disabled = true;
+
+      fetchAudioBlobForShare(src).then(function (blob) {
+        if (!blob || !blob.size) {
+          btn.disabled = false;
+          alert("Could not load the recording to share. Check your connection or save it offline first.");
+          return;
+        }
+
+        var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
+        var file = new File([blob], recordingShareFilename(row, src), { type: mime });
+
+        var canFileShare = typeof navigator.share === "function" &&
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] });
+
+        if (canFileShare) {
+          return navigator.share({
+            text: caption,
+            files: [file],
+            title: "Marifatul Quran"
+          }).catch(function (err) {
+            if (err && err.name === "AbortError") return;
+            tryDownloadFileFallback(blob);
+            alert("Could not open share. The recording was downloaded—attach it in WhatsApp.");
+          });
+        }
+
+        tryDownloadFileFallback(blob);
+        alert("The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).");
+      }).catch(function () {
+        alert("Could not share this file. Try Save offline, then share from your device.");
+      }).then(function () {
+        btn.disabled = false;
+      });
     });
 
     return btn;
