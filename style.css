@@ -1394,29 +1394,3 @@ tr.playing .audio-play-btn {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-
-/* Share hint: caption + file (WhatsApp often omits text when attaching files) */
-.share-caption-toast {
-  position: fixed;
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  left: 50%;
-  z-index: 10050;
-  max-width: min(26rem, calc(100vw - 2rem));
-  padding: 0.75rem 1rem;
-  background: var(--teal-dark);
-  color: #fff;
-  border-radius: 12px;
-  font-size: 0.875rem;
-  line-height: 1.4;
-  text-align: center;
-  box-shadow: var(--shadow-md);
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, 120%);
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-
-.share-caption-toast.is-visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
