@@ -1364,6 +1364,125 @@ tr.playing .audio-play-btn {
   cursor: pointer;
 }
 
+.toolbar-volume-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.toolbar-volume-icon {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.85;
+  user-select: none;
+}
+
+.toolbar-volume-range {
+  width: 5.5rem;
+  max-width: 28vw;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #dde4e4;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.toolbar-volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 4px rgba(13, 79, 79, 0.3);
+  cursor: pointer;
+}
+
+.toolbar-volume-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 4px rgba(13, 79, 79, 0.3);
+  cursor: pointer;
+}
+
+.toolbar-volume-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 3px;
+  background: #dde4e4;
+}
+
+.toolbar-volume-range::-moz-range-track {
+  height: 4px;
+  border-radius: 3px;
+  background: #dde4e4;
+}
+
+.settings-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.settings-volume-range {
+  flex: 1;
+  min-width: 140px;
+  max-width: 260px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #dde4e4;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.settings-volume-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
+}
+
+.settings-volume-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  border: 2px solid var(--teal-accent);
+  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
+}
+
+.settings-volume-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #dde4e4;
+}
+
+.settings-volume-range::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: #dde4e4;
+}
+
+.settings-volume-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--teal-accent);
+  min-width: 2.75rem;
+}
+
 .settings-download-row {
   display: flex;
   align-items: center;

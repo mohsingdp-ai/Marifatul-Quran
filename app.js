@@ -69,6 +69,26 @@
     localStorage.setItem("default_speed", String(val));
   }
 
+  function getAudioVolume() {
+    var v = parseFloat(localStorage.getItem("audio_volume"));
+    if (isNaN(v) || v < 0) return 1;
+    return Math.min(1, v);
+  }
+
+  function setAudioVolume(val) {
+    var n = typeof val === "number" ? val : parseFloat(val);
+    if (isNaN(n)) n = 1;
+    n = Math.max(0, Math.min(1, n));
+    localStorage.setItem("audio_volume", String(n));
+  }
+
+  function applyVolumeToAllAudioElements() {
+    var vol = getAudioVolume();
+    tbody.querySelectorAll("audio").forEach(function (a) {
+      a.volume = vol;
+    });
+  }
+
   function getShowOnlyRecordedPara() {
     var v = localStorage.getItem("show_only_recorded_para");
     return v === null ? true : v === "true";
@@ -271,6 +291,7 @@
       audio = document.createElement("audio");
       audio.preload = "none";
       audio.controls = false;
+      audio.volume = getAudioVolume();
       audio._alternateUrls = getAudioUrlAlternates(src);
       audio._alternateIndex = 0;
 
@@ -995,6 +1016,28 @@
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
+  var toolbarVolume = document.getElementById("toolbar-volume");
+  var settingsVolumeRange = document.getElementById("settings-volume-range");
+  var settingsVolumeValue = document.getElementById("settings-volume-value");
+
+  function syncVolumeUI() {
+    var pct = Math.round(getAudioVolume() * 100);
+    if (toolbarVolume) toolbarVolume.value = String(pct);
+    if (settingsVolumeRange) {
+      settingsVolumeRange.value = String(pct);
+      settingsVolumeRange.setAttribute("aria-valuenow", String(pct));
+    }
+    if (settingsVolumeValue) settingsVolumeValue.textContent = pct + "%";
+  }
+
+  function onGlobalVolumeInput(pct) {
+    var n = parseInt(pct, 10);
+    if (isNaN(n)) n = 100;
+    n = Math.max(0, Math.min(100, n));
+    setAudioVolume(n / 100);
+    applyVolumeToAllAudioElements();
+    syncVolumeUI();
+  }
 
   function openSettings() {
     syncSettingsUI();
@@ -1028,7 +1071,21 @@
       btn.classList.toggle("active", btn.dataset.mode === mode);
     });
     speedSelect.value = String(getDefaultSpeed());
+    syncVolumeUI();
   }
+
+  if (toolbarVolume) {
+    toolbarVolume.addEventListener("input", function () {
+      onGlobalVolumeInput(this.value);
+    });
+  }
+  if (settingsVolumeRange) {
+    settingsVolumeRange.addEventListener("input", function () {
+      onGlobalVolumeInput(this.value);
+    });
+  }
+
+  syncVolumeUI();
 
   togglePara.addEventListener("change", function () {
     setShowOnlyRecordedPara(this.checked);

@@ -59,6 +59,10 @@
         <option value="29">Para 29</option>
         <option value="30">Para 30</option>
       </select>
+        <div class="toolbar-volume-wrap">
+          <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
+          <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
+        </div>
       </div>
       <div class="controls-right">
         <button type="button" class="btn btn-sm btn-offline-para" id="download-para-btn">📥 Download Para</button>
@@ -133,6 +137,11 @@
               <option value="1.75">1.75x</option>
               <option value="2">2x</option>
             </select>
+          </div>
+          <div class="settings-volume-row">
+            <label for="settings-volume-range">Volume</label>
+            <input type="range" id="settings-volume-range" class="settings-volume-range" min="0" max="100" step="1" value="100" aria-valuemin="0" aria-valuemax="100" />
+            <span class="settings-volume-value" id="settings-volume-value">100%</span>
           </div>
         </div>
         <div class="settings-row">
