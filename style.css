@@ -1429,6 +1429,7 @@ tr.playing .audio-progress::-moz-range-thumb {
   .table-wrapper{
     box-shadow: none;
     background: transparent;
+    border: none;
   }
 
   tr.playing {
