@@ -137,11 +137,10 @@ body {
 
 .header .subtitle {
   margin: 0.3rem 0 0;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
   opacity: 0.8;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-size: 0.8rem;
 }
 
 .main {
@@ -231,7 +230,7 @@ body {
 
 .toolbar-now-playing {
   flex: 1;
-  min-width: min(100%, 220px);
+  min-width: 0;
   max-width: 32rem;
   display: flex;
   align-items: center;
@@ -240,6 +239,7 @@ body {
   border-radius: 10px;
   background: var(--row-gray);
   border: 1px solid var(--border);
+  overflow: hidden;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -1371,8 +1371,12 @@ tr.playing .audio-progress::-moz-range-thumb {
   }
 
   .toolbar-btn-group .btn-toolbar {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
+  }
+
+  .toolbar-btn-group {
+    width: 100%;
   }
 }
 
@@ -1560,6 +1564,28 @@ tr.playing .audio-progress::-moz-range-thumb {
 @media (max-width: 380px) {
   .header h1 {
     font-size: 1.2rem;
+  }
+
+  .toolbar-top,
+  .toolbar-bottom {
+    padding: 0.6rem 0.65rem;
+  }
+
+  .toolbar-btn-group {
+    gap: 0.35rem;
+  }
+
+  .toolbar-btn-group .btn-toolbar {
+    padding: 0 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .toolbar-volume-wrap {
+    display: none;
+  }
+
+  .btn-toolbar-locate {
+    display: none;
   }
 
   .ruku-table tbody tr {

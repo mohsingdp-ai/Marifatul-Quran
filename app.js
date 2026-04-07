@@ -50,6 +50,7 @@
     alternateIndex: 0
   };
   var persistPlaybackTimer = null;
+  var mediaSessionKeepaliveTimer = null;
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";
@@ -501,6 +502,7 @@
       if (keepsContext && data[gi]) {
         syncToolbarNowPlaying(data[gi], a.paused ? "paused" : "playing");
         syncToolbarTransport();
+        updatePersistentMediaNotification();
       } else {
         syncToolbarNowPlaying(null, "idle");
         syncToolbarTransport();
@@ -783,6 +785,7 @@
                 });
               } catch (e) { /* ignore */ }
             }
+            startPausedMediaSessionKeepalive();
           }
           stickyPlaybackResume = null;
           syncToolbarTransport();
@@ -1111,6 +1114,7 @@
 
     if (state === "idle" || !row) {
       clearPlaybackPersist();
+      closePersistentMediaNotification();
       if (badge) {
         badge.hidden = true;
         badge.textContent = "";
@@ -1127,7 +1131,7 @@
     titleEl.textContent = "Para " + row.para + " · Ruku " + row.rukuInPara;
     metaEl.textContent = row.surah + " · " + row.verses;
     if (parseInt(paraSelect.value, 10) !== row.para) {
-      metaEl.textContent += " · Open Para " + row.para + " to see this row.";
+      metaEl.textContent += " · Para " + row.para;
     }
     gotoBtn.disabled = false;
 
@@ -1179,6 +1183,7 @@
     var a = mqPlayback.el;
 
     a.addEventListener("play", function () {
+      stopMediaSessionKeepalive();
       currentPlayingAudio = a;
       clearPlayingClass();
       var gi = mqPlayback.activeGlobalIndex;
@@ -1197,6 +1202,7 @@
       }
       setMediaPlaybackState("playing");
       savePlaybackPersist();
+      updatePersistentMediaNotification();
     });
 
     a.addEventListener("pause", function () {
@@ -1208,9 +1214,14 @@
         els.tr.classList.add("audio-paused");
         if (!els.tr.classList.contains("playing")) els.tr.classList.add("playing");
       }
-      if (gi != null && data[gi]) syncToolbarNowPlaying(data[gi], "paused");
+      if (gi != null && data[gi]) {
+        setNowPlayingMetadata(data[gi], a);
+        syncToolbarNowPlaying(data[gi], "paused");
+      }
       setMediaPlaybackState("paused");
       savePlaybackPersist();
+      startPausedMediaSessionKeepalive();
+      updatePersistentMediaNotification();
     });
 
     a.addEventListener("ended", function () {
@@ -1220,6 +1231,7 @@
         a.play();
         return;
       }
+      stopMediaSessionKeepalive();
       var gi = mqPlayback.activeGlobalIndex;
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els) {
@@ -1266,6 +1278,7 @@
       if (els && a.duration && isFinite(a.duration)) {
         els.timeDuration.textContent = formatTime(a.duration);
       }
+      if (gi != null && a.paused) pulseMediaSessionIfActive();
     });
 
     a.addEventListener("error", function () {
@@ -1282,6 +1295,7 @@
         return;
       }
       var gi = mqPlayback.activeGlobalIndex;
+      stopMediaSessionKeepalive();
       currentPlayingAudio = null;
       mqPlayback.activeGlobalIndex = null;
       clearPlaybackPersist();
@@ -1318,6 +1332,7 @@
     getMqAudioEl();
     var a = mqPlayback.el;
     if (mqPlayback.activeGlobalIndex === globalIndex) {
+      updatePersistentMediaNotification();
       return Promise.resolve(a);
     }
     tbody.querySelectorAll(".audio-play-btn").forEach(function (btn) {
@@ -1335,6 +1350,7 @@
         if (!options.skipStoredPosition) {
           applyStoredMapPosition(globalIndex, a);
         }
+        updatePersistentMediaNotification();
         resolve(a);
       }
       if (a.readyState >= 1 && a.duration && isFinite(a.duration) && a.duration > 0) {
@@ -1450,8 +1466,116 @@
     }
   }
 
+  function stopMediaSessionKeepalive() {
+    if (mediaSessionKeepaliveTimer != null) {
+      clearInterval(mediaSessionKeepaliveTimer);
+      mediaSessionKeepaliveTimer = null;
+    }
+  }
+
+  /**
+   * Mobile OS often drops lock-screen / notification media controls while paused.
+   * Re-apply metadata, handlers, position, and playbackState so controls stay available.
+   */
+  function pulseMediaSessionIfActive() {
+    if (!("mediaSession" in navigator)) return;
+    var a = mqPlayback.el;
+    var gi = mqPlayback.activeGlobalIndex;
+    if (!a || gi == null || !data[gi]) return;
+    setMediaPlaybackState(a.paused ? "paused" : "playing");
+    setNowPlayingMetadata(data[gi], a);
+  }
+
+  function startPausedMediaSessionKeepalive() {
+    stopMediaSessionKeepalive();
+    mediaSessionKeepaliveTimer = setInterval(function () {
+      if (!mqPlayback.el || mqPlayback.activeGlobalIndex == null || !mqPlayback.el.paused) {
+        stopMediaSessionKeepalive();
+        return;
+      }
+      pulseMediaSessionIfActive();
+    }, 22000);
+  }
+
+  var MEDIA_NOTIF_PREF_KEY = "mq_pref_media_notif";
+
+  function getPersistentMediaNotifPref() {
+    return localStorage.getItem(MEDIA_NOTIF_PREF_KEY) === "true";
+  }
+
+  function setPersistentMediaNotifPref(on) {
+    if (on) localStorage.setItem(MEDIA_NOTIF_PREF_KEY, "true");
+    else {
+      localStorage.setItem(MEDIA_NOTIF_PREF_KEY, "false");
+      closePersistentMediaNotification();
+    }
+  }
+
+  function postMediaNotificationToSw(payload) {
+    if (!("serviceWorker" in navigator)) return;
+    var c = navigator.serviceWorker.controller;
+    if (c) {
+      c.postMessage(payload);
+      return;
+    }
+    navigator.serviceWorker.ready.then(function (reg) {
+      if (reg.active) reg.active.postMessage(payload);
+    });
+  }
+
+  function closePersistentMediaNotification() {
+    postMediaNotificationToSw({ type: "MQ_MEDIA_NOTIF_CLOSE" });
+  }
+
+  function updatePersistentMediaNotification() {
+    if (!getPersistentMediaNotifPref()) return;
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    var gi = mqPlayback.activeGlobalIndex;
+    var a = mqPlayback.el;
+    if (gi == null || !data[gi] || !a) {
+      closePersistentMediaNotification();
+      return;
+    }
+    var row = data[gi];
+    var title = "Para " + row.para + " · Ruku " + row.rukuInPara;
+    var line = (a.paused ? "Paused" : "Playing") + " · " + row.surah + " — " + row.verses;
+    postMediaNotificationToSw({
+      type: "MQ_MEDIA_NOTIF_SHOW",
+      title: title,
+      body: line,
+      playing: !a.paused
+    });
+  }
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.addEventListener("message", function (e) {
+      var d = e.data;
+      if (!d || d.type !== "MQ_MEDIA_CONTROL") return;
+      var a = mqPlayback.el;
+      if (!a || mqPlayback.activeGlobalIndex == null) return;
+      if (d.action === "play") {
+        a.play().catch(function () {});
+      } else if (d.action === "pause") {
+        a.pause();
+      }
+    });
+  }
+
   window.addEventListener("pagehide", function () {
     if (mqPlayback.el && mqPlayback.activeGlobalIndex != null) savePlaybackPersist();
+  });
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "visible") return;
+    if (mqPlayback.el && mqPlayback.activeGlobalIndex != null && mqPlayback.el.paused) {
+      pulseMediaSessionIfActive();
+    }
+  });
+
+  window.addEventListener("focus", function () {
+    if (mqPlayback.el && mqPlayback.activeGlobalIndex != null && mqPlayback.el.paused) {
+      pulseMediaSessionIfActive();
+    }
   });
 
   paraSelect.addEventListener("change", function () {
@@ -1503,6 +1627,8 @@
   var ghTokenInput = document.getElementById("gh-token-input");
   var togglePara = document.getElementById("show-only-recorded-para");
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
+  var prefMediaNotif = document.getElementById("pref-media-notification");
+  var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
   var toolbarVolume = document.getElementById("toolbar-volume");
@@ -1527,6 +1653,21 @@
     setAudioVolume(n / 100);
     applyVolumeToAllAudioElements();
     syncVolumeUI();
+  }
+
+  function syncMediaNotifHint() {
+    if (!mediaNotifHint) return;
+    if (typeof Notification === "undefined") {
+      mediaNotifHint.textContent = "Notifications are not supported in this browser.";
+      return;
+    }
+    if (Notification.permission === "denied") {
+      mediaNotifHint.textContent = "Permission denied. Enable notifications for this site in your browser settings.";
+    } else if (Notification.permission === "default") {
+      mediaNotifHint.textContent = "Turn the option on and allow the prompt for best results on Android Chrome.";
+    } else {
+      mediaNotifHint.textContent = "Optional. Keeps a system notification while a track is open (playing or paused). Works best on Android Chrome; iOS is limited.";
+    }
   }
 
   function openSettings() {
@@ -1567,6 +1708,17 @@
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
         btn.classList.toggle("active", btn.dataset.uiTheme === th);
       });
+    }
+    if (prefMediaNotif) {
+      if (typeof Notification !== "undefined") {
+        if (getPersistentMediaNotifPref() && Notification.permission !== "granted") {
+          setPersistentMediaNotifPref(false);
+        }
+        prefMediaNotif.checked = getPersistentMediaNotifPref() && Notification.permission === "granted";
+      } else {
+        prefMediaNotif.checked = false;
+      }
+      syncMediaNotifHint();
     }
   }
 
@@ -1632,6 +1784,44 @@
     setShowOnlyRecordedRuku(this.checked);
     renderTable({ skipViewRestore: true });
   });
+
+  if (prefMediaNotif) {
+    prefMediaNotif.addEventListener("change", function () {
+      var want = this.checked;
+      if (!want) {
+        setPersistentMediaNotifPref(false);
+        syncMediaNotifHint();
+        return;
+      }
+      if (typeof Notification === "undefined") {
+        this.checked = false;
+        syncMediaNotifHint();
+        return;
+      }
+      if (Notification.permission === "granted") {
+        setPersistentMediaNotifPref(true);
+        updatePersistentMediaNotification();
+        syncMediaNotifHint();
+        return;
+      }
+      if (Notification.permission === "denied") {
+        this.checked = false;
+        syncMediaNotifHint();
+        alert("Notifications are blocked for this site. Enable them in your browser settings.");
+        return;
+      }
+      Notification.requestPermission().then(function (perm) {
+        if (perm === "granted") {
+          setPersistentMediaNotifPref(true);
+          updatePersistentMediaNotification();
+        } else {
+          prefMediaNotif.checked = false;
+          setPersistentMediaNotifPref(false);
+        }
+        syncMediaNotifHint();
+      });
+    });
+  }
 
   playbackModeGroup.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-mode]");

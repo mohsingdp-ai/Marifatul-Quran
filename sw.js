@@ -1,6 +1,82 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v4";
+const CACHE = "mq-v6";
+const MEDIA_NOTIF_TAG = "mq-media";
+
+function mediaNotifIconUrl() {
+  try {
+    return new URL("./icon-192.png", self.registration.scope).href;
+  } catch (e) {
+    return "./icon-192.png";
+  }
+}
+
+self.addEventListener("message", function (event) {
+  var d = event.data;
+  if (!d || typeof d !== "object") return;
+
+  if (d.type === "MQ_MEDIA_NOTIF_SHOW") {
+    var title = d.title || "Marifatul Quran";
+    var playing = !!d.playing;
+    var opts = {
+      body: d.body || "",
+      tag: MEDIA_NOTIF_TAG,
+      icon: mediaNotifIconUrl(),
+      badge: mediaNotifIconUrl(),
+      renotify: true,
+      requireInteraction: true,
+      silent: true,
+      ongoing: true,
+      data: { scope: self.registration.scope },
+      actions: playing
+        ? [{ action: "pause", title: "Pause" }]
+        : [{ action: "play", title: "Play" }]
+    };
+
+    var p = self.registration.showNotification(title, opts);
+    if (event.waitUntil) event.waitUntil(p);
+    return;
+  }
+
+  if (d.type === "MQ_MEDIA_NOTIF_CLOSE") {
+    var p = self.registration.getNotifications({ tag: MEDIA_NOTIF_TAG }).then(function (ns) {
+      ns.forEach(function (n) {
+        n.close();
+      });
+    });
+    if (event.waitUntil) event.waitUntil(p);
+  }
+});
+
+self.addEventListener("notificationclick", function (event) {
+  event.preventDefault();
+  var action = event.action;
+  var scope = (event.notification.data && event.notification.data.scope) || self.registration.scope;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(function (clientList) {
+      var client = null;
+      for (var i = 0; i < clientList.length; i++) {
+        if (clientList[i].url.indexOf(scope) === 0) {
+          client = clientList[i];
+          break;
+        }
+      }
+      if (!client && clientList.length) client = clientList[0];
+
+      if (client) {
+        return client.focus().then(function () {
+          if (action === "play" || action === "pause") {
+            client.postMessage({ type: "MQ_MEDIA_CONTROL", action: action });
+          }
+        });
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(scope);
+      }
+    })
+  );
+});
 const AUDIO_CACHE = "mq-audio";
 const STATIC = [
   "./",
