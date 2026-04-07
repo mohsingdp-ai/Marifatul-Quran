@@ -291,7 +291,11 @@
   var allParaOptions = null; // cached for iOS option.hidden fix
 
   function audioFileExists(audioPath) {
-    return !!audioPath;
+    if (!audioPath) return false;
+    var abs = resolveUrl(audioPath);
+    return caches.open(AUDIO_CACHE).then(function (cache) {
+      return cache.match(abs).then(function (cached) { return !!cached; });
+    }).catch(function () { return false; });
   }
 
   function showNoRecording(audioCell) {
@@ -342,7 +346,7 @@
   function hasRecording(item) {
     if (sessionBlobUrls[item.globalIndex]) return true;
     var audioSrc = getAudioSrc(item.row, item.globalIndex);
-    return audioSrc && audioFileExists(audioSrc);
+    return !!audioSrc;
   }
 
   /** Snapshot active (or paused mid-track) audio before tbody is replaced. */
@@ -2189,9 +2193,26 @@
     var urls = [];
     items.forEach(function (item) {
       var src = getAudioSrc(item.row, item.globalIndex);
-      if (src && audioFileExists(src)) urls.push(src);
+      if (src) urls.push(src);
     });
     return urls;
+  }
+
+  function getAudioUrlsForParaAsync(para) {
+    var items = indexedData[para] || [];
+    var promises = items.map(function (item) {
+      var src = getAudioSrc(item.row, item.globalIndex);
+      if (!src) return Promise.resolve(false);
+      return audioFileExists(src);
+    });
+    return Promise.all(promises).then(function (results) {
+      var urls = [];
+      items.forEach(function (item, i) {
+        var src = getAudioSrc(item.row, item.globalIndex);
+        if (src && results[i]) urls.push(src);
+      });
+      return urls;
+    });
   }
 
   function downloadBatch(urls, onProgress) {
@@ -2257,25 +2278,44 @@
   downloadAllBtn.addEventListener("click", function () {
     if (!navigator.onLine) { alert("No internet connection."); return; }
 
-    var allUrls = [];
-    for (var p = 1; p <= 30; p++) {
-      allUrls = allUrls.concat(getAudioUrlsForPara(p));
-    }
-    if (!allUrls.length) { alert("No recordings found."); return; }
-    if (!confirm("Download " + allUrls.length + " audio files for offline use?")) return;
-
     downloadAllBtn.disabled = true;
-    downloadAllBtn.textContent = "⏳ Downloading…";
-    downloadAllStatus.textContent = "0/" + allUrls.length;
+    downloadAllBtn.textContent = "⏳ Checking...";
+    downloadAllStatus.textContent = "Preparing...";
 
-    downloadBatch(allUrls, function (done, total) {
-      downloadAllStatus.textContent = done + "/" + total;
-    }).then(function () {
-      downloadAllBtn.textContent = "✓ All saved";
-      downloadAllStatus.textContent = "";
-      downloadAllBtn.disabled = false;
-      renderTable();
-      setTimeout(function () { downloadAllBtn.textContent = "📥 Download All Paras"; }, 3000);
+    var allPromises = [];
+    for (var p = 1; p <= 30; p++) {
+      allPromises.push(getAudioUrlsForParaAsync(p));
+    }
+
+    Promise.all(allPromises).then(function (results) {
+      var allUrls = [];
+      var cachedCount = 0;
+      results.forEach(function (urls) {
+        cachedCount += urls.length;
+        allUrls = allUrls.concat(urls);
+      });
+
+      var totalToDownload = allUrls.length;
+      if (!totalToDownload) { alert("No recordings found."); return; }
+      if (!confirm("Download " + totalToDownload + " audio files for offline use? (" + cachedCount + " already cached)")) {
+        downloadAllBtn.disabled = false;
+        downloadAllBtn.textContent = "📥 Download All Paras";
+        downloadAllStatus.textContent = "";
+        return;
+      }
+
+      downloadAllBtn.textContent = "⏳ Downloading…";
+      downloadAllStatus.textContent = "0/" + totalToDownload;
+
+      downloadBatch(allUrls, function (done, total) {
+        downloadAllStatus.textContent = done + "/" + total;
+      }).then(function () {
+        downloadAllBtn.textContent = "✓ All saved";
+        downloadAllStatus.textContent = "";
+        downloadAllBtn.disabled = false;
+        renderTable();
+        setTimeout(function () { downloadAllBtn.textContent = "📥 Download All Paras"; }, 3000);
+      });
     });
   });
 
