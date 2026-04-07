@@ -780,6 +780,8 @@
             progress.style.setProperty("--progress", pct + "%");
             timeCurrent.textContent = formatTime(t);
             timeDuration.textContent = formatTime(dur);
+            var toolbarFill = document.getElementById("toolbar-progress-fill");
+            if (toolbarFill) toolbarFill.style.width = pct + "%";
           } else {
             timeCurrent.textContent = formatTime(t);
           }
