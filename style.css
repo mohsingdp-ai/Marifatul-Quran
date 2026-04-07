@@ -229,6 +229,7 @@ body {
 }
 
 .toolbar-now-playing {
+  position: relative;
   flex: 1;
   min-width: 0;
   max-width: 32rem;
@@ -271,6 +272,29 @@ body {
 .toolbar-now-playing-badge.is-paused-state {
   background: rgba(154, 117, 32, 0.2);
   color: var(--arabic-gold);
+}
+
+.toolbar-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+.toolbar-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--teal-accent);
+  border-radius: 0 0 10px 10px;
+  transition: width 0.3s linear;
+}
+
+.toolbar-now-playing.is-paused .toolbar-progress-fill {
+  background: var(--arabic-gold);
 }
 
 .toolbar-now-playing-text {

@@ -1147,6 +1147,8 @@
       }
       titleEl.textContent = "No track selected";
       metaEl.textContent = "Play a recording from the list below.";
+      var toolbarFill = document.getElementById("toolbar-progress-fill");
+      if (toolbarFill) toolbarFill.style.width = "0%";
       gotoBtn.disabled = true;
       if (shell) shell.classList.remove("is-playing", "is-paused");
       syncToolbarTransport();
@@ -1279,6 +1281,8 @@
       els.progress.value = pct;
       els.progress.style.setProperty("--progress", pct + "%");
       els.timeCurrent.textContent = formatTime(a.currentTime);
+      var toolbarFill = document.getElementById("toolbar-progress-fill");
+      if (toolbarFill) toolbarFill.style.width = pct + "%";
       if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
         try {
           navigator.mediaSession.setPositionState({
