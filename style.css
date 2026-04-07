@@ -1480,13 +1480,13 @@ tr.playing .audio-progress::-moz-range-thumb {
     align-items: center;
   }
 
-  .audio-offline-btn {
+  /* .audio-offline-btn {
     order: 4;
   }
 
   .audio-share-wa-btn {
     order: 5;
-  }
+  } */
 
   .audio-play-btn {
     width: 46px;
