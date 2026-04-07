@@ -1873,9 +1873,32 @@
     });
   }
 
-  settingsBtn.addEventListener("click", openSettings);
+  settingsBtn.addEventListener("click", function () { closeToolbarMenu(); openSettings(); });
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsBackdrop.addEventListener("click", closeSettings);
+
+  /* Toolbar three-dot menu */
+  var toolbarMenuBtn = document.getElementById("toolbar-menu-btn");
+  var toolbarMenuDropdown = document.getElementById("toolbar-menu-dropdown");
+  function closeToolbarMenu() {
+    if (toolbarMenuDropdown) {
+      toolbarMenuDropdown.classList.remove("is-open");
+      if (toolbarMenuBtn) toolbarMenuBtn.setAttribute("aria-expanded", "false");
+    }
+  }
+  if (toolbarMenuBtn && toolbarMenuDropdown) {
+    toolbarMenuBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = toolbarMenuDropdown.classList.toggle("is-open");
+      toolbarMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    toolbarMenuDropdown.addEventListener("click", function () {
+      closeToolbarMenu();
+    });
+    document.addEventListener("click", function () {
+      closeToolbarMenu();
+    });
+  }
 
   document.getElementById("clear-cache-btn").addEventListener("click", function () {
     if (!confirm("This will reinstall the app with the latest version. All offline audio will need to be re-downloaded. Continue?")) return;

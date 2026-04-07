@@ -402,6 +402,83 @@ body {
   gap: 0.5rem;
 }
 
+.toolbar-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.btn-toolbar-menu {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--row-white);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-toolbar-menu:hover {
+  border-color: var(--teal-accent);
+  color: var(--teal-accent);
+  background: var(--teal-tint-low);
+}
+
+.toolbar-menu-dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 180px;
+  background: var(--row-white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.toolbar-menu-dropdown.is-open {
+  display: block;
+}
+
+.toolbar-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.toolbar-menu-item:hover {
+  background: var(--teal-tint-hover);
+  color: var(--teal-accent);
+}
+
+.toolbar-menu-item + .toolbar-menu-item {
+  border-top: 1px solid var(--border);
+}
+
+.toolbar-menu-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
 .btn-toolbar {
   display: inline-flex;
   align-items: center;
@@ -1392,21 +1469,12 @@ tr.playing .audio-progress::-moz-range-thumb {
   }
 
   .toolbar-bottom {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
   }
 
   .toolbar-now-playing {
     max-width: none;
-  }
-
-  .toolbar-btn-group .btn-toolbar {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .toolbar-btn-group {
-    width: 100%;
   }
 }
 
@@ -1615,19 +1683,6 @@ tr.playing .audio-progress::-moz-range-thumb {
     padding: 0.6rem 0.65rem;
   }
 
-  .toolbar-btn-group {
-    gap: 0.35rem;
-  }
-
-  .toolbar-btn-group .btn-toolbar {
-    padding: 0 0.6rem;
-    font-size: 0.75rem;
-  }
-
-  .toolbar-volume-wrap {
-    display: none;
-  }
-
   .btn-toolbar-locate {
     width: 32px;
     height: 32px;
@@ -1812,9 +1867,7 @@ tr.playing .audio-progress::-moz-range-thumb {
 }
 
 .toolbar-volume-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: none;
 }
 
 .toolbar-volume-icon {
