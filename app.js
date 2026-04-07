@@ -1136,14 +1136,7 @@
     gotoBtn.disabled = false;
 
     if (badge) {
-      badge.hidden = false;
-      if (state === "playing") {
-        badge.textContent = "Playing";
-        badge.className = "toolbar-now-playing-badge is-live";
-      } else {
-        badge.textContent = "Paused";
-        badge.className = "toolbar-now-playing-badge is-paused-state";
-      }
+      badge.hidden = true;
     }
     if (shell) {
       shell.classList.toggle("is-playing", state === "playing");
