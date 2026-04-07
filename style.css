@@ -318,6 +318,69 @@ body {
   background: rgba(0, 0, 0, 0.4);
 }
 
+/* Persistent upload / recording status (dismiss only; no auto-hide) */
+.upload-status-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 150;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: var(--text-primary);
+  background: var(--row-white);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.upload-status-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-status-banner--progress {
+  border-top-color: var(--teal-accent);
+  background: var(--teal-light);
+}
+
+.upload-status-banner--success {
+  border-top-color: var(--success-fg);
+  background: var(--success-bg);
+}
+
+.upload-status-banner--error {
+  border-top-color: #c62828;
+  background: #ffebee;
+  color: #b71c1c;
+}
+
+html[data-theme="dark"] .upload-status-banner {
+  background: var(--modal-bg);
+  color: var(--text-primary);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .upload-status-banner--progress {
+  background: rgba(15, 122, 122, 0.22);
+  border-top-color: var(--teal-accent);
+}
+
+html[data-theme="dark"] .upload-status-banner--success {
+  background: rgba(46, 125, 50, 0.2);
+  border-top-color: var(--success-fg);
+}
+
+html[data-theme="dark"] .upload-status-banner--error {
+  background: rgba(198, 40, 40, 0.22);
+  color: #ffcdd2;
+  border-top-color: #ef5350;
+}
+
 .modal-content {
   position: relative;
   background: var(--modal-bg);

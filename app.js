@@ -24,12 +24,18 @@
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
+  /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
+  var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
 
   if (!tbody || typeof QURAN_DATA === "undefined") return;
 
   // Data from QURAN_DATA (no persistence, no editing)
   var data = JSON.parse(JSON.stringify(QURAN_DATA));
   var sessionBlobUrls = {};
+  /** `globalIndex` -> true while a GitHub upload is in flight (survives table re-renders). */
+  var pendingUploadByIndex = {};
+  /** Playback snapshot kept when that ruku row is not in the table (e.g. after switching Para). */
+  var stickyPlaybackResume = null;
   var escapeNode = document.createElement("div");
   var indexedData = buildParaIndex(data);
   var currentPlayingAudio = null;
@@ -186,7 +192,7 @@
     audioCell.appendChild(span);
   }
 
-  function buildRow(item, canUpload) {
+  function buildRow(item, canUpload, playbackResume) {
     var row = item.row;
     var globalIndex = item.globalIndex;
     var tr = document.createElement("tr");
@@ -209,7 +215,8 @@
     var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
 
     if (audioSrc && (sessionBlobUrls[globalIndex] || audioFileExists(audioSrc))) {
-      buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass);
+      var resumeThis = playbackResume && String(playbackResume.globalIndex) === String(globalIndex) ? playbackResume : null;
+      buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass, resumeThis);
     } else {
       showNoRecording(audioCell);
     }
@@ -227,6 +234,83 @@
     if (sessionBlobUrls[item.globalIndex]) return true;
     var audioSrc = getAudioSrc(item.row, item.globalIndex);
     return audioSrc && audioFileExists(audioSrc);
+  }
+
+  /** Snapshot active (or paused mid-track) audio before tbody is replaced. */
+  function capturePlaybackResumeState() {
+    var audios = tbody.querySelectorAll("audio");
+    var chosen = null;
+    var chosenTr = null;
+    for (var i = 0; i < audios.length; i++) {
+      var a = audios[i];
+      if (a.paused && a.currentTime < 0.05) continue;
+      var tr = a.closest("tr");
+      if (!tr || tr.dataset.globalIndex == null) continue;
+      if (!a.paused) {
+        chosen = a;
+        chosenTr = tr;
+        break;
+      }
+      if (!chosen) {
+        chosen = a;
+        chosenTr = tr;
+      }
+    }
+    if (!chosen || !chosenTr) return null;
+    return {
+      globalIndex: String(chosenTr.dataset.globalIndex),
+      currentTime: chosen.currentTime,
+      wasPlaying: !chosen.paused,
+      playbackRate: chosen.playbackRate || 1
+    };
+  }
+
+  /** @param {string|undefined} scrollBasePara If set, `tbody` still shows this para (e.g. before a select change). */
+  function saveTableViewState(scrollBasePara) {
+    var wrap = document.querySelector(".table-wrapper");
+    if (!wrap) return null;
+    var state = {
+      para: scrollBasePara != null ? String(scrollBasePara) : String(paraSelect.value),
+      filterPara: getShowOnlyRecordedPara(),
+      filterRuku: getShowOnlyRecordedRuku(),
+      scrollTop: wrap.scrollTop
+    };
+    var rows = tbody.querySelectorAll("tr[data-global-index]");
+    if (!rows.length) return state;
+    var wrapRect = wrap.getBoundingClientRect();
+    for (var i = 0; i < rows.length; i++) {
+      var rect = rows[i].getBoundingClientRect();
+      if (rect.bottom > wrapRect.top + 1) {
+        state.anchorGlobalIndex = rows[i].dataset.globalIndex;
+        state.anchorOffset = rect.top - wrapRect.top;
+        break;
+      }
+    }
+    return state;
+  }
+
+  function restoreTableViewState(state) {
+    if (!state) return;
+    if (state.para !== paraSelect.value) return;
+    if (state.filterPara !== getShowOnlyRecordedPara()) return;
+    if (state.filterRuku !== getShowOnlyRecordedRuku()) return;
+    var wrap = document.querySelector(".table-wrapper");
+    if (!wrap) return;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        if (state.anchorGlobalIndex != null) {
+          var tr = tbody.querySelector('tr[data-global-index="' + state.anchorGlobalIndex + '"]');
+          if (tr) {
+            var wrapRect = wrap.getBoundingClientRect();
+            var rect = tr.getBoundingClientRect();
+            wrap.scrollTop += rect.top - wrapRect.top - state.anchorOffset;
+            return;
+          }
+        }
+        var maxScroll = Math.max(0, wrap.scrollHeight - wrap.clientHeight);
+        wrap.scrollTop = Math.max(0, Math.min(state.scrollTop, maxScroll));
+      });
+    });
   }
 
   function updateParaSelect() {
@@ -266,7 +350,16 @@
     }
   }
 
-  function renderTable() {
+  /**
+   * @param {{ skipViewRestore?: boolean, scrollBasePara?: string }} [options]
+   *   skipViewRestore — filters/list changed in a way that invalidates scroll (e.g. para/ruku toggles).
+   *   scrollBasePara — para the old `tbody` was built for when `para-select` has already changed.
+   */
+  function renderTable(options) {
+    options = options || {};
+    var viewState = options.skipViewRestore ? null : saveTableViewState(options.scrollBasePara);
+    var snap = capturePlaybackResumeState();
+    if (snap) stickyPlaybackResume = snap;
     var canUpload = hasGitHubToken();
     var filterRuku = getShowOnlyRecordedRuku();
 
@@ -284,7 +377,10 @@
     setActionColumnVisibility(canUpload);
 
     filtered.forEach(function (item) {
-      fragment.appendChild(buildRow(item, canUpload));
+      var rowResume = stickyPlaybackResume && String(stickyPlaybackResume.globalIndex) === String(item.globalIndex)
+        ? stickyPlaybackResume
+        : null;
+      fragment.appendChild(buildRow(item, canUpload, rowResume));
     });
 
     if (filtered.length === 0) {
@@ -294,6 +390,8 @@
     }
 
     tbody.appendChild(fragment);
+    restoreTableViewState(viewState);
+    tableRenderedPara = String(paraSelect.value);
   }
 
   function positionPathTooltip(tr) {
@@ -303,7 +401,7 @@
     pathTooltip.style.transform = "translateY(-100%)";
   }
 
-  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn) {
+  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn, playbackResume) {
     var audio = null;
 
     function ensureAudioElement() {
@@ -619,6 +717,71 @@
     wrap.appendChild(buildWhatsAppShareBtn(row, src));
 
     audioCell.appendChild(wrap);
+
+    if (playbackResume) {
+      (function () {
+        var snap = playbackResume;
+        var a = ensureAudioElement();
+        var pr = snap.playbackRate || 1;
+        var si = speeds.indexOf(pr);
+        if (si === -1) {
+          si = 0;
+          var best = Infinity;
+          for (var j = 0; j < speeds.length; j++) {
+            var d = Math.abs(speeds[j] - pr);
+            if (d < best) {
+              best = d;
+              si = j;
+            }
+          }
+        }
+        currentSpeedIndex = si;
+        speedBtn.textContent = speeds[currentSpeedIndex] + "x";
+        a.playbackRate = speeds[currentSpeedIndex];
+        a._ready.then(function () {
+          var dur = a.duration && isFinite(a.duration) ? a.duration : 0;
+          var t = snap.currentTime;
+          if (dur > 0) t = Math.min(Math.max(0, t), Math.max(0, dur - 0.05));
+          else t = Math.max(0, t);
+          a.currentTime = t;
+          if (dur > 0) {
+            var pct = (t / dur) * 100;
+            progress.value = pct;
+            progress.style.setProperty("--progress", pct + "%");
+            timeCurrent.textContent = formatTime(t);
+            timeDuration.textContent = formatTime(dur);
+          } else {
+            timeCurrent.textContent = formatTime(t);
+          }
+          if (snap.wasPlaying) {
+            a.play().catch(function () { /* autoplay policy */ });
+            playBtn.innerHTML = PAUSE_SVG;
+            playBtn.setAttribute("aria-label", "Pause");
+            tr.classList.add("playing");
+            currentPlayingAudio = a;
+            setNowPlayingMetadata(row, a);
+            setMediaPlaybackState("playing");
+          } else {
+            playBtn.innerHTML = PLAY_SVG;
+            playBtn.setAttribute("aria-label", "Play");
+            tr.classList.remove("playing");
+            currentPlayingAudio = null;
+            setNowPlayingMetadata(row, a);
+            setMediaPlaybackState("paused");
+            if (dur > 0 && "mediaSession" in navigator && navigator.mediaSession.setPositionState) {
+              try {
+                navigator.mediaSession.setPositionState({
+                  duration: dur,
+                  playbackRate: a.playbackRate || 1,
+                  position: t
+                });
+              } catch (e) { /* ignore */ }
+            }
+          }
+          stickyPlaybackResume = null;
+        });
+      })();
+    }
   }
 
   var AUDIO_CACHE = "mq-audio";
@@ -987,7 +1150,9 @@
     }
   }
 
-  paraSelect.addEventListener("change", renderTable);
+  paraSelect.addEventListener("change", function () {
+    renderTable({ scrollBasePara: tableRenderedPara });
+  });
 
   tbody.addEventListener("mouseover", function (e) {
     var tr = e.target.closest("tr");
@@ -1116,12 +1281,12 @@
 
   togglePara.addEventListener("change", function () {
     setShowOnlyRecordedPara(this.checked);
-    renderTable();
+    renderTable({ skipViewRestore: true });
   });
 
   toggleRuku.addEventListener("change", function () {
     setShowOnlyRecordedRuku(this.checked);
-    renderTable();
+    renderTable({ skipViewRestore: true });
   });
 
   playbackModeGroup.addEventListener("click", function (e) {
@@ -1272,6 +1437,41 @@
     });
   }
 
+  var uploadStatusBannerEl = null;
+
+  function ensureUploadStatusBanner() {
+    if (uploadStatusBannerEl) return uploadStatusBannerEl;
+    var bar = document.createElement("div");
+    bar.id = "upload-status-banner";
+    bar.className = "upload-status-banner";
+    bar.setAttribute("role", "status");
+    bar.innerHTML =
+      "<span class=\"upload-status-banner-text\"></span>" +
+      "<button type=\"button\" class=\"upload-status-banner-dismiss btn btn-sm btn-secondary\" aria-label=\"Dismiss notification\">Dismiss</button>";
+    bar.style.display = "none";
+    document.body.appendChild(bar);
+    bar.querySelector(".upload-status-banner-dismiss").addEventListener("click", function () {
+      bar.style.display = "none";
+      bar.classList.remove("upload-status-banner--progress", "upload-status-banner--success", "upload-status-banner--error");
+    });
+    uploadStatusBannerEl = bar;
+    return bar;
+  }
+
+  /**
+   * Shows upload/recording status until the user clicks Dismiss (no auto-hide).
+   * @param {"progress"|"success"|"error"} kind
+   */
+  function showUploadStatus(message, kind) {
+    var el = ensureUploadStatusBanner();
+    el.querySelector(".upload-status-banner-text").textContent = message;
+    el.classList.remove("upload-status-banner--progress", "upload-status-banner--success", "upload-status-banner--error");
+    if (kind === "success") el.classList.add("upload-status-banner--success");
+    else if (kind === "error") el.classList.add("upload-status-banner--error");
+    else el.classList.add("upload-status-banner--progress");
+    el.style.display = "flex";
+  }
+
   function buildUploadButton(actionCell, row, globalIndex) {
     if (!getGitHubToken()) return;
     var fileInput = document.createElement("input");
@@ -1285,6 +1485,11 @@
     btn.textContent = "⬆ Upload";
     btn.addEventListener("click", function () { fileInput.click(); });
 
+    if (pendingUploadByIndex[globalIndex]) {
+      btn.disabled = true;
+      btn.textContent = "Uploading…";
+    }
+
     fileInput.addEventListener("change", function () {
       if (!this.files || !this.files[0]) return;
       var file = this.files[0];
@@ -1294,6 +1499,7 @@
       if (ext !== ".ogg" && ext !== ".opus" && ext !== ".wav") ext = ".ogg";
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
+      var summary = "Para " + row.para + " · Ruku " + row.rukuInPara + " (" + row.surah + ")";
 
       // Immediate playback via blob
       if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
@@ -1301,19 +1507,22 @@
       sessionBlobUrls[globalIndex] = blobUrl;
       row.audioUrl = filePath;
 
+      pendingUploadByIndex[globalIndex] = true;
       btn.disabled = true;
       btn.textContent = "Uploading…";
+      showUploadStatus("Recording upload in progress — " + summary, "progress");
 
       fileToBase64(file).then(function (b64) {
         return uploadToGitHub(filePath, b64, "Add " + targetName);
       }).then(function () {
-        btn.textContent = "✓ Done";
-        btn.className = "btn btn-sm btn-primary";
+        delete pendingUploadByIndex[globalIndex];
+        showUploadStatus("Recording uploaded successfully — " + summary, "success");
         renderTable();
       }).catch(function (err) {
+        delete pendingUploadByIndex[globalIndex];
         btn.disabled = false;
         btn.textContent = "⬆ Upload";
-        alert("Upload failed: " + err.message);
+        showUploadStatus("Upload failed — " + summary + ": " + err.message, "error");
       });
     });
 
