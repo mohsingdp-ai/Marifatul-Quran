@@ -39,6 +39,17 @@
   var escapeNode = document.createElement("div");
   var indexedData = buildParaIndex(data);
   var currentPlayingAudio = null;
+  var PLAYBACK_STORAGE_KEY = "mq_playback_v1";
+  /** globalIndex -> { t: seconds } last heard position per recording */
+  var POSITIONS_STORAGE_KEY = "mq_audio_positions_v1";
+  var mqPlayback = {
+    el: null,
+    _listenersBound: false,
+    activeGlobalIndex: null,
+    alternateUrls: [],
+    alternateIndex: 0
+  };
+  var persistPlaybackTimer = null;
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";
@@ -113,6 +124,103 @@
     tbody.querySelectorAll("audio").forEach(function (a) {
       a.volume = vol;
     });
+    if (mqPlayback.el) mqPlayback.el.volume = vol;
+  }
+
+  function getPositionsMap() {
+    try {
+      return JSON.parse(localStorage.getItem(POSITIONS_STORAGE_KEY) || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function getSavedPositionForIndex(globalIndex) {
+    var x = getPositionsMap()[String(globalIndex)];
+    return x && typeof x.t === "number" && isFinite(x.t) ? x.t : null;
+  }
+
+  /** Mid-track positions only; near start/end removes the entry. */
+  function savePositionForIndex(globalIndex, currentTime, duration) {
+    if (globalIndex == null || !isFinite(currentTime)) return;
+    var key = String(globalIndex);
+    var map = getPositionsMap();
+    var durOk = duration && isFinite(duration) && duration > 1;
+    var nearEnd = durOk && currentTime >= duration - 0.85;
+    if (nearEnd) {
+      delete map[key];
+    } else if (currentTime < 0.35) {
+      if (durOk) delete map[key];
+    } else {
+      map[key] = { t: currentTime };
+    }
+    try {
+      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) { /* quota */ }
+  }
+
+  function clearSavedPositionForIndex(globalIndex) {
+    if (globalIndex == null) return;
+    var map = getPositionsMap();
+    delete map[String(globalIndex)];
+    try {
+      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(map));
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyStoredMapPosition(globalIndex, a) {
+    var t = getSavedPositionForIndex(globalIndex);
+    if (t == null || !a.duration || !isFinite(a.duration) || a.duration <= 0) return;
+    var end = Math.max(0, a.duration - 0.4);
+    var clamped = Math.min(Math.max(0, t), end);
+    if (clamped < 0.35) return;
+    a.currentTime = clamped;
+  }
+
+  function readPlaybackPersist() {
+    try {
+      var raw = localStorage.getItem(PLAYBACK_STORAGE_KEY);
+      if (!raw) return null;
+      var o = JSON.parse(raw);
+      if (o.globalIndex == null) return null;
+      var gi = parseInt(o.globalIndex, 10);
+      if (isNaN(gi) || gi < 0 || gi >= data.length) return null;
+      return {
+        globalIndex: String(gi),
+        currentTime: typeof o.currentTime === "number" ? o.currentTime : 0,
+        wasPlaying: !!o.wasPlaying,
+        playbackRate: typeof o.playbackRate === "number" ? o.playbackRate : 1
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearPlaybackPersist() {
+    try {
+      localStorage.removeItem(PLAYBACK_STORAGE_KEY);
+    } catch (e) { /* ignore */ }
+  }
+
+  function savePlaybackPersist() {
+    if (!mqPlayback.el || mqPlayback.activeGlobalIndex == null) return;
+    var a = mqPlayback.el;
+    var gi = mqPlayback.activeGlobalIndex;
+    try {
+      localStorage.setItem(PLAYBACK_STORAGE_KEY, JSON.stringify({
+        globalIndex: gi,
+        currentTime: a.currentTime,
+        wasPlaying: !a.paused,
+        playbackRate: a.playbackRate || 1
+      }));
+    } catch (e) { /* ignore */ }
+    var dur = a.duration && isFinite(a.duration) ? a.duration : 0;
+    savePositionForIndex(gi, a.currentTime, dur);
+  }
+
+  function schedulePersistPlayback() {
+    if (persistPlaybackTimer) clearTimeout(persistPlaybackTimer);
+    persistPlaybackTimer = setTimeout(savePlaybackPersist, 500);
   }
 
   function getShowOnlyRecordedPara() {
@@ -216,7 +324,7 @@
 
     if (audioSrc && (sessionBlobUrls[globalIndex] || audioFileExists(audioSrc))) {
       var resumeThis = playbackResume && String(playbackResume.globalIndex) === String(globalIndex) ? playbackResume : null;
-      buildAudioPlayer(tr, audioCell, row, audioSrc, clearPlayingClass, resumeThis);
+      buildAudioPlayer(tr, audioCell, row, globalIndex, audioSrc, clearPlayingClass, resumeThis);
     } else {
       showNoRecording(audioCell);
     }
@@ -238,31 +346,18 @@
 
   /** Snapshot active (or paused mid-track) audio before tbody is replaced. */
   function capturePlaybackResumeState() {
-    var audios = tbody.querySelectorAll("audio");
-    var chosen = null;
-    var chosenTr = null;
-    for (var i = 0; i < audios.length; i++) {
-      var a = audios[i];
-      if (a.paused && a.currentTime < 0.05) continue;
-      var tr = a.closest("tr");
-      if (!tr || tr.dataset.globalIndex == null) continue;
-      if (!a.paused) {
-        chosen = a;
-        chosenTr = tr;
-        break;
-      }
-      if (!chosen) {
-        chosen = a;
-        chosenTr = tr;
-      }
+    var a = mqPlayback.el;
+    var gi = mqPlayback.activeGlobalIndex;
+    if (a && gi != null) {
+      if (a.paused && a.currentTime < 0.05) return null;
+      return {
+        globalIndex: String(gi),
+        currentTime: a.currentTime,
+        wasPlaying: !a.paused,
+        playbackRate: a.playbackRate || 1
+      };
     }
-    if (!chosen || !chosenTr) return null;
-    return {
-      globalIndex: String(chosenTr.dataset.globalIndex),
-      currentTime: chosen.currentTime,
-      wasPlaying: !chosen.paused,
-      playbackRate: chosen.playbackRate || 1
-    };
+    return null;
   }
 
   /** @param {string|undefined} scrollBasePara If set, `tbody` still shows this para (e.g. before a select change). */
@@ -359,7 +454,9 @@
     options = options || {};
     var viewState = options.skipViewRestore ? null : saveTableViewState(options.scrollBasePara);
     var snap = capturePlaybackResumeState();
+    if (!snap) snap = readPlaybackPersist();
     if (snap) stickyPlaybackResume = snap;
+    else stickyPlaybackResume = null;
     var canUpload = hasGitHubToken();
     var filterRuku = getShowOnlyRecordedRuku();
 
@@ -371,6 +468,11 @@
     if (filterRuku) {
       filtered = filtered.filter(hasRecording);
     }
+
+    var resumeIndex = stickyPlaybackResume ? stickyPlaybackResume.globalIndex : null;
+    var willResume = resumeIndex != null && filtered.some(function (item) {
+      return String(item.globalIndex) === String(resumeIndex);
+    });
 
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
@@ -392,6 +494,20 @@
     tbody.appendChild(fragment);
     restoreTableViewState(viewState);
     tableRenderedPara = String(paraSelect.value);
+    if (!willResume) {
+      var a = mqPlayback.el;
+      var gi = mqPlayback.activeGlobalIndex;
+      var keepsContext = a && gi != null && (!a.paused || (a.currentTime > 0.05 && isFinite(a.currentTime)));
+      if (keepsContext && data[gi]) {
+        syncToolbarNowPlaying(data[gi], a.paused ? "paused" : "playing");
+        syncToolbarTransport();
+      } else {
+        syncToolbarNowPlaying(null, "idle");
+        syncToolbarTransport();
+      }
+    } else {
+      syncToolbarTransport();
+    }
   }
 
   function positionPathTooltip(tr) {
@@ -401,126 +517,9 @@
     pathTooltip.style.transform = "translateY(-100%)";
   }
 
-  function buildAudioPlayer(tr, audioCell, row, src, clearPlayingFn, playbackResume) {
-    var audio = null;
-
+  function buildAudioPlayer(tr, audioCell, row, globalIndex, src, clearPlayingFn, playbackResume) {
     function ensureAudioElement() {
-      if (audio) return audio;
-      audio = document.createElement("audio");
-      audio.preload = "none";
-      audio.controls = false;
-      audio.volume = getAudioVolume();
-      audio._alternateUrls = getAudioUrlAlternates(src);
-      audio._alternateIndex = 0;
-
-      audio._ready = new Promise(function (resolve) {
-        var allUrls = [src].concat(audio._alternateUrls);
-        (function tryLoadFromCache(i) {
-          if (i >= allUrls.length) {
-            audio.src = src;
-            audio.load();
-            resolve();
-            return;
-          }
-          getCachedAudioBlob(allUrls[i]).then(function (blobUrl) {
-            if (blobUrl) {
-              audio.src = blobUrl;
-              audio.load();
-              resolve();
-            } else {
-              tryLoadFromCache(i + 1);
-            }
-          });
-        })(0);
-      });
-
-      audio.addEventListener("play", function () {
-        playBtn.innerHTML = PAUSE_SVG;
-        playBtn.setAttribute("aria-label", "Pause");
-        if (currentPlayingAudio && currentPlayingAudio !== audio) {
-          currentPlayingAudio.pause();
-        }
-        currentPlayingAudio = audio;
-        clearPlayingFn();
-        tr.classList.add("playing");
-        tr.classList.remove("audio-paused");
-        setNowPlayingMetadata(row, audio);
-        setMediaPlaybackState("playing");
-      });
-      audio.addEventListener("pause", function () {
-        playBtn.innerHTML = PLAY_SVG;
-        playBtn.setAttribute("aria-label", "Play");
-        tr.classList.add("audio-paused");
-        if (currentPlayingAudio !== audio) {
-          currentPlayingAudio = audio;
-        }
-        setMediaPlaybackState("paused");
-      });
-      audio.addEventListener("ended", function () {
-        var pbMode = getPlaybackMode();
-        if (pbMode === "loop") {
-          audio.currentTime = 0;
-          audio.play();
-          return;
-        }
-        playBtn.innerHTML = PLAY_SVG;
-        playBtn.setAttribute("aria-label", "Play");
-        tr.classList.remove("playing", "audio-paused");
-        progress.value = 0;
-        timeCurrent.textContent = "0:00";
-        if (currentPlayingAudio === audio) currentPlayingAudio = null;
-        setMediaPlaybackState("none");
-        if (pbMode === "next") {
-          var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
-          var idx = playBtns.indexOf(playBtn);
-          if (idx !== -1 && idx + 1 < playBtns.length) {
-            playBtns[idx + 1].click();
-            playBtns[idx + 1].closest("tr").scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        }
-      });
-      audio.addEventListener("error", function () {
-        var alternates = audio._alternateUrls || [];
-        var idx = audio._alternateIndex || 0;
-        if (alternates.length && idx < alternates.length) {
-          audio._alternateIndex = idx + 1;
-          audio.src = alternates[idx];
-          audio.load();
-          audio.addEventListener("canplay", function onAlternateReady() {
-            audio.removeEventListener("canplay", onAlternateReady);
-            audio.play();
-          }, { once: true });
-          return;
-        }
-        var msg = document.createElement("span");
-        msg.className = "path-not-found";
-        msg.textContent = "Path Not found";
-        audioCell.innerHTML = "";
-        audioCell.appendChild(msg);
-      });
-      audio.addEventListener("loadedmetadata", function () {
-        timeDuration.textContent = formatTime(audio.duration);
-      });
-      audio.addEventListener("timeupdate", function () {
-        if (audio.duration && isFinite(audio.duration)) {
-          var pct = (audio.currentTime / audio.duration) * 100;
-          progress.value = pct;
-          progress.style.setProperty("--progress", pct + "%");
-          timeCurrent.textContent = formatTime(audio.currentTime);
-          if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
-            try {
-              navigator.mediaSession.setPositionState({
-                duration: audio.duration,
-                playbackRate: audio.playbackRate || 1,
-                position: audio.currentTime
-              });
-            } catch (e) { /* ignore */ }
-          }
-        }
-      });
-
-      audioCell.appendChild(audio);
-      return audio;
+      return getMqAudioEl();
     }
 
     var wrap = document.createElement("div");
@@ -573,7 +572,9 @@
       currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
       var speed = speeds[currentSpeedIndex];
       speedBtn.textContent = speed + "x";
-      if (audio) audio.playbackRate = speed;
+      if (mqPlayback.activeGlobalIndex === globalIndex && mqPlayback.el) {
+        mqPlayback.el.playbackRate = speed;
+      }
     });
 
     var seekBackBtn = document.createElement("button");
@@ -583,9 +584,9 @@
     seekBackBtn.setAttribute("aria-label", "Seek back 5 seconds");
 
     seekBackBtn.addEventListener("click", function () {
-      var a = ensureAudioElement();
-      a._ready.then(function () {
-        a.currentTime = Math.max(0, a.currentTime - 5);
+      prepareMqTrack(globalIndex, row, src).then(function () {
+        var a = mqPlayback.el;
+        if (a) a.currentTime = Math.max(0, a.currentTime - 5);
       });
     });
 
@@ -596,9 +597,9 @@
     seekFwdBtn.setAttribute("aria-label", "Seek forward 5 seconds");
 
     seekFwdBtn.addEventListener("click", function () {
-      var a = ensureAudioElement();
-      a._ready.then(function () {
-        a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
+      prepareMqTrack(globalIndex, row, src).then(function () {
+        var a = mqPlayback.el;
+        if (a) a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
       });
     });
 
@@ -615,20 +616,15 @@
 
     playBtn.addEventListener("click", function () {
       var a = ensureAudioElement();
-      a._ready.then(function () {
-        a.playbackRate = speeds[currentSpeedIndex];
-        a.loop = false;
-        if (a.paused) {
-          if (currentPlayingAudio && currentPlayingAudio !== a) {
-            currentPlayingAudio.pause();
-          }
-          a.play();
-          clearPlayingFn();
-          tr.classList.add("playing");
-          currentPlayingAudio = a;
-        } else {
-          a.pause();
-        }
+      if (mqPlayback.activeGlobalIndex === globalIndex && a && !a.paused) {
+        a.pause();
+        return;
+      }
+      prepareMqTrack(globalIndex, row, src).then(function () {
+        var mqA = mqPlayback.el;
+        mqA.playbackRate = speeds[currentSpeedIndex];
+        mqA.loop = false;
+        mqA.play();
       });
     });
 
@@ -643,11 +639,11 @@
       return Math.max(0, Math.min(100, ((x - rect.left) / rect.width) * 100));
     }
     function seekToPct(pct) {
-      var a = ensureAudioElement();
       progress.value = pct;
       progress.style.setProperty("--progress", pct + "%");
-      a._ready.then(function () {
-        if (a.duration && isFinite(a.duration)) {
+      prepareMqTrack(globalIndex, row, src).then(function () {
+        var a = mqPlayback.el;
+        if (a && a.duration && isFinite(a.duration)) {
           a.currentTime = (pct / 100) * a.duration;
         }
       });
@@ -656,9 +652,10 @@
     var seeking = false;
     progressOverlay.addEventListener("mousemove", function (e) {
       var pct = pctFromEvent(e);
-      if (audio && audio.duration && isFinite(audio.duration)) {
-        var sec = (pct / 100) * audio.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
+      var a = mqPlayback.el;
+      if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
+        var sec = (pct / 100) * a.duration;
+        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
         hoverTime.style.left = pct + "%";
         hoverTime.classList.add("is-visible");
         if (seeking) seekToPct(pct);
@@ -689,9 +686,10 @@
       seeking = true;
       var pct = pctFromEvent(e);
       seekToPct(pct);
-      if (audio && audio.duration && isFinite(audio.duration)) {
-        var sec = (pct / 100) * audio.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
+      var a = mqPlayback.el;
+      if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
+        var sec = (pct / 100) * a.duration;
+        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
         hoverTime.style.left = pct + "%";
         hoverTime.classList.add("is-visible");
       }
@@ -700,9 +698,10 @@
       if (seeking && e.cancelable) e.preventDefault();
       var pct = pctFromEvent(e);
       seekToPct(pct);
-      if (audio && audio.duration && isFinite(audio.duration)) {
-        var sec = (pct / 100) * audio.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(audio.duration);
+      var a = mqPlayback.el;
+      if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
+        var sec = (pct / 100) * a.duration;
+        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
         hoverTime.style.left = pct + "%";
       }
     }, { passive: false });
@@ -724,7 +723,6 @@
     if (playbackResume) {
       (function () {
         var snap = playbackResume;
-        var a = ensureAudioElement();
         var pr = snap.playbackRate || 1;
         var si = speeds.indexOf(pr);
         if (si === -1) {
@@ -740,13 +738,15 @@
         }
         currentSpeedIndex = si;
         speedBtn.textContent = speeds[currentSpeedIndex] + "x";
-        a.playbackRate = speeds[currentSpeedIndex];
-        a._ready.then(function () {
+        prepareMqTrack(globalIndex, row, src, { skipStoredPosition: true }).then(function () {
+          var a = mqPlayback.el;
+          a.playbackRate = speeds[currentSpeedIndex];
           var dur = a.duration && isFinite(a.duration) ? a.duration : 0;
           var t = snap.currentTime;
           if (dur > 0) t = Math.min(Math.max(0, t), Math.max(0, dur - 0.05));
           else t = Math.max(0, t);
           a.currentTime = t;
+          savePositionForIndex(globalIndex, t, dur);
           if (dur > 0) {
             var pct = (t / dur) * 100;
             progress.value = pct;
@@ -764,6 +764,7 @@
             tr.classList.add("playing");
             currentPlayingAudio = a;
             setNowPlayingMetadata(row, a);
+            syncToolbarNowPlaying(row, "playing");
             setMediaPlaybackState("playing");
           } else {
             playBtn.innerHTML = PLAY_SVG;
@@ -771,6 +772,7 @@
             tr.classList.add("playing", "audio-paused");
             currentPlayingAudio = a;
             setNowPlayingMetadata(row, a);
+            syncToolbarNowPlaying(row, "paused");
             setMediaPlaybackState("paused");
             if (dur > 0 && "mediaSession" in navigator && navigator.mediaSession.setPositionState) {
               try {
@@ -783,6 +785,7 @@
             }
           }
           stickyPlaybackResume = null;
+          syncToolbarTransport();
         });
       })();
     }
@@ -1096,6 +1099,299 @@
     return escapeNode.innerHTML;
   }
 
+  /** Toolbar strip: shows which ruku is active (playing or paused). */
+  function syncToolbarNowPlaying(row, state) {
+    state = state || "idle";
+    var shell = document.getElementById("toolbar-now-playing");
+    var badge = document.getElementById("toolbar-now-playing-badge");
+    var titleEl = document.getElementById("toolbar-now-playing-title");
+    var metaEl = document.getElementById("toolbar-now-playing-meta");
+    var gotoBtn = document.getElementById("goto-playing-btn");
+    if (!titleEl || !metaEl || !gotoBtn) return;
+
+    if (state === "idle" || !row) {
+      clearPlaybackPersist();
+      if (badge) {
+        badge.hidden = true;
+        badge.textContent = "";
+        badge.className = "toolbar-now-playing-badge";
+      }
+      titleEl.textContent = "No track selected";
+      metaEl.textContent = "Play a recording from the list below.";
+      gotoBtn.disabled = true;
+      if (shell) shell.classList.remove("is-playing", "is-paused");
+      syncToolbarTransport();
+      return;
+    }
+
+    titleEl.textContent = "Para " + row.para + " · Ruku " + row.rukuInPara;
+    metaEl.textContent = row.surah + " · " + row.verses;
+    if (parseInt(paraSelect.value, 10) !== row.para) {
+      metaEl.textContent += " · Open Para " + row.para + " to see this row.";
+    }
+    gotoBtn.disabled = false;
+
+    if (badge) {
+      badge.hidden = false;
+      if (state === "playing") {
+        badge.textContent = "Playing";
+        badge.className = "toolbar-now-playing-badge is-live";
+      } else {
+        badge.textContent = "Paused";
+        badge.className = "toolbar-now-playing-badge is-paused-state";
+      }
+    }
+    if (shell) {
+      shell.classList.toggle("is-playing", state === "playing");
+      shell.classList.toggle("is-paused", state === "paused");
+    }
+    syncToolbarTransport();
+  }
+
+  function getRowControlsByGlobalIndex(gi) {
+    var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+    if (!tr) return null;
+    var playBtn = tr.querySelector(".audio-play-btn");
+    var progress = tr.querySelector(".audio-progress");
+    var timeCurrent = tr.querySelector(".audio-time-current");
+    var timeDuration = tr.querySelector(".audio-time-duration");
+    if (!playBtn || !progress) return null;
+    return { tr: tr, playBtn: playBtn, progress: progress, timeCurrent: timeCurrent, timeDuration: timeDuration };
+  }
+
+  function triggerPlayNextForGlobalIndex(gi) {
+    var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
+    var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+    if (!tr) return false;
+    var btn = tr.querySelector(".audio-play-btn");
+    if (!btn) return false;
+    var idx = playBtns.indexOf(btn);
+    if (idx === -1 || idx + 1 >= playBtns.length) return false;
+    playBtns[idx + 1].click();
+    var ntr = playBtns[idx + 1].closest("tr");
+    if (ntr) ntr.scrollIntoView({ behavior: "smooth", block: "center" });
+    return true;
+  }
+
+  function bindMqAudioLifecycle() {
+    if (mqPlayback._listenersBound) return;
+    mqPlayback._listenersBound = true;
+    var a = mqPlayback.el;
+
+    a.addEventListener("play", function () {
+      currentPlayingAudio = a;
+      clearPlayingClass();
+      var gi = mqPlayback.activeGlobalIndex;
+      if (gi == null) return;
+      var els = getRowControlsByGlobalIndex(gi);
+      if (els) {
+        els.tr.classList.add("playing");
+        els.tr.classList.remove("audio-paused");
+        els.playBtn.innerHTML = PAUSE_SVG;
+        els.playBtn.setAttribute("aria-label", "Pause");
+      }
+      var r = data[gi];
+      if (r) {
+        setNowPlayingMetadata(r, a);
+        syncToolbarNowPlaying(r, "playing");
+      }
+      setMediaPlaybackState("playing");
+      savePlaybackPersist();
+    });
+
+    a.addEventListener("pause", function () {
+      var gi = mqPlayback.activeGlobalIndex;
+      var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
+      if (els) {
+        els.playBtn.innerHTML = PLAY_SVG;
+        els.playBtn.setAttribute("aria-label", "Play");
+        els.tr.classList.add("audio-paused");
+        if (!els.tr.classList.contains("playing")) els.tr.classList.add("playing");
+      }
+      if (gi != null && data[gi]) syncToolbarNowPlaying(data[gi], "paused");
+      setMediaPlaybackState("paused");
+      savePlaybackPersist();
+    });
+
+    a.addEventListener("ended", function () {
+      var pbMode = getPlaybackMode();
+      if (pbMode === "loop") {
+        a.currentTime = 0;
+        a.play();
+        return;
+      }
+      var gi = mqPlayback.activeGlobalIndex;
+      var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
+      if (els) {
+        els.playBtn.innerHTML = PLAY_SVG;
+        els.playBtn.setAttribute("aria-label", "Play");
+        els.tr.classList.remove("playing", "audio-paused");
+        els.progress.value = 0;
+        els.progress.style.setProperty("--progress", "0%");
+        els.timeCurrent.textContent = "0:00";
+      }
+      if (gi != null) clearSavedPositionForIndex(gi);
+      currentPlayingAudio = null;
+      mqPlayback.activeGlobalIndex = null;
+      setMediaPlaybackState("none");
+      if (pbMode === "next" && gi != null && triggerPlayNextForGlobalIndex(gi)) return;
+      clearPlaybackPersist();
+      syncToolbarNowPlaying(null, "idle");
+    });
+
+    a.addEventListener("timeupdate", function () {
+      schedulePersistPlayback();
+      var gi = mqPlayback.activeGlobalIndex;
+      if (gi == null) return;
+      var els = getRowControlsByGlobalIndex(gi);
+      if (!els || !a.duration || !isFinite(a.duration)) return;
+      var pct = (a.currentTime / a.duration) * 100;
+      els.progress.value = pct;
+      els.progress.style.setProperty("--progress", pct + "%");
+      els.timeCurrent.textContent = formatTime(a.currentTime);
+      if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: a.duration,
+            playbackRate: a.playbackRate || 1,
+            position: a.currentTime
+          });
+        } catch (e) { /* ignore */ }
+      }
+    });
+
+    a.addEventListener("loadedmetadata", function () {
+      var gi = mqPlayback.activeGlobalIndex;
+      var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
+      if (els && a.duration && isFinite(a.duration)) {
+        els.timeDuration.textContent = formatTime(a.duration);
+      }
+    });
+
+    a.addEventListener("error", function () {
+      var alts = mqPlayback.alternateUrls || [];
+      var idx = mqPlayback.alternateIndex || 0;
+      if (alts.length && idx < alts.length) {
+        mqPlayback.alternateIndex = idx + 1;
+        a.src = alts[idx];
+        a.load();
+        a.addEventListener("canplay", function onAlt() {
+          a.removeEventListener("canplay", onAlt);
+          a.play();
+        }, { once: true });
+        return;
+      }
+      var gi = mqPlayback.activeGlobalIndex;
+      currentPlayingAudio = null;
+      mqPlayback.activeGlobalIndex = null;
+      clearPlaybackPersist();
+      syncToolbarNowPlaying(null, "idle");
+      if (gi == null) return;
+      var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+      if (tr) {
+        var cell = tr.querySelector(".audio-cell");
+        if (cell) {
+          cell.innerHTML = "";
+          var msg = document.createElement("span");
+          msg.className = "path-not-found";
+          msg.textContent = "Path Not found";
+          cell.appendChild(msg);
+        }
+      }
+    });
+  }
+
+  function getMqAudioEl() {
+    if (!mqPlayback.el) {
+      mqPlayback.el = document.createElement("audio");
+      mqPlayback.el.preload = "none";
+      mqPlayback.el.volume = getAudioVolume();
+      var host = document.getElementById("mq-audio-host");
+      (host || document.body).appendChild(mqPlayback.el);
+    }
+    if (!mqPlayback._listenersBound) bindMqAudioLifecycle();
+    return mqPlayback.el;
+  }
+
+  function prepareMqTrack(globalIndex, row, src, options) {
+    options = options || {};
+    getMqAudioEl();
+    var a = mqPlayback.el;
+    if (mqPlayback.activeGlobalIndex === globalIndex) {
+      return Promise.resolve(a);
+    }
+    tbody.querySelectorAll(".audio-play-btn").forEach(function (btn) {
+      btn.innerHTML = PLAY_SVG;
+      btn.setAttribute("aria-label", "Play");
+    });
+    clearPlayingClass();
+    mqPlayback.activeGlobalIndex = globalIndex;
+    mqPlayback.alternateUrls = getAudioUrlAlternates(src);
+    mqPlayback.alternateIndex = 0;
+    var allUrls = [src].concat(mqPlayback.alternateUrls);
+
+    function whenMetadataThenResolve(resolve) {
+      function runSeekAndResolve() {
+        if (!options.skipStoredPosition) {
+          applyStoredMapPosition(globalIndex, a);
+        }
+        resolve(a);
+      }
+      if (a.readyState >= 1 && a.duration && isFinite(a.duration) && a.duration > 0) {
+        runSeekAndResolve();
+        return;
+      }
+      function onMeta() {
+        a.removeEventListener("loadedmetadata", onMeta);
+        a.removeEventListener("error", onErr);
+        runSeekAndResolve();
+      }
+      function onErr() {
+        a.removeEventListener("loadedmetadata", onMeta);
+        a.removeEventListener("error", onErr);
+        resolve(a);
+      }
+      a.addEventListener("loadedmetadata", onMeta, { once: true });
+      a.addEventListener("error", onErr, { once: true });
+    }
+
+    return new Promise(function (resolve) {
+      (function tryLoad(i) {
+        if (i >= allUrls.length) {
+          a.src = src;
+          a.load();
+          whenMetadataThenResolve(resolve);
+          return;
+        }
+        getCachedAudioBlob(allUrls[i]).then(function (blobUrl) {
+          if (blobUrl) {
+            a.src = blobUrl;
+            a.load();
+            whenMetadataThenResolve(resolve);
+          } else tryLoad(i + 1);
+        });
+      })(0);
+    });
+  }
+
+  function syncToolbarTransport() {
+    var btn = document.getElementById("toolbar-play-pause-btn");
+    var icon = document.getElementById("toolbar-transport-icon");
+    if (!btn || !icon) return;
+    var gi = mqPlayback.activeGlobalIndex;
+    var has = gi != null && data[gi];
+    btn.disabled = !has;
+    if (!has) {
+      icon.innerHTML = PLAY_SVG;
+      btn.setAttribute("aria-label", "Play or pause");
+      return;
+    }
+    var a = mqPlayback.el;
+    var paused = !a || a.paused;
+    icon.innerHTML = paused ? PLAY_SVG : PAUSE_SVG;
+    btn.setAttribute("aria-label", paused ? "Play" : "Pause");
+  }
+
   function setMediaPlaybackState(state) {
     if (!("mediaSession" in navigator)) return;
     try {
@@ -1153,6 +1449,10 @@
       // Ignore unsupported Media Session handlers on some browsers.
     }
   }
+
+  window.addEventListener("pagehide", function () {
+    if (mqPlayback.el && mqPlayback.activeGlobalIndex != null) savePlaybackPersist();
+  });
 
   paraSelect.addEventListener("change", function () {
     renderTable({ scrollBasePara: tableRenderedPara });
@@ -1284,14 +1584,42 @@
   syncVolumeUI();
 
   var gotoPlayingBtn = document.getElementById("goto-playing-btn");
+  var toolbarPlayPauseBtn = document.getElementById("toolbar-play-pause-btn");
   function scrollToPlayingRow() {
-    var row = tbody.querySelector("tr.playing");
-    if (!row) return;
-    row.scrollIntoView({ behavior: "smooth", block: "center" });
+    var gi = mqPlayback.activeGlobalIndex;
+    if (gi == null || !data[gi]) return;
+    var r = data[gi];
+    if (parseInt(paraSelect.value, 10) !== r.para) {
+      paraSelect.value = String(r.para);
+      renderTable({ scrollBasePara: tableRenderedPara });
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var row = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+        if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
   }
   if (gotoPlayingBtn) {
     gotoPlayingBtn.addEventListener("click", function () {
       scrollToPlayingRow();
+    });
+  }
+  if (toolbarPlayPauseBtn) {
+    toolbarPlayPauseBtn.addEventListener("click", function () {
+      var gi = mqPlayback.activeGlobalIndex;
+      if (gi == null || !data[gi]) return;
+      var row = data[gi];
+      var src = getAudioSrc(row, gi);
+      if (!src || !audioFileExists(src)) return;
+      var a = getMqAudioEl();
+      if (!a.paused) {
+        a.pause();
+        return;
+      }
+      prepareMqTrack(gi, row, src).then(function () {
+        a.play();
+      });
     });
   }
 
@@ -1594,6 +1922,9 @@
       var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
       if (!playBtns.length) return;
       var playingTr = tbody.querySelector("tr.playing");
+      if (!playingTr && mqPlayback.activeGlobalIndex != null) {
+        playingTr = tbody.querySelector('tr[data-global-index="' + mqPlayback.activeGlobalIndex + '"]');
+      }
       var currentBtn = playingTr ? playingTr.querySelector(".audio-play-btn") : null;
       var idx = currentBtn ? playBtns.indexOf(currentBtn) : -1;
       var nextIdx = e.key === "ArrowDown"
@@ -1661,15 +1992,15 @@
     if (!urls.length) { alert("No recordings in Para " + para + "."); return; }
 
     downloadParaBtn.disabled = true;
-    downloadParaBtn.textContent = "⏳ 0/" + urls.length;
+    downloadParaBtn.textContent = "Downloading 0/" + urls.length + "…";
 
     downloadBatch(urls, function (done, total) {
-      downloadParaBtn.textContent = "⏳ " + done + "/" + total;
+      downloadParaBtn.textContent = "Downloading " + done + "/" + total + "…";
     }).then(function () {
-      downloadParaBtn.textContent = "✓ Para " + para + " saved";
+      downloadParaBtn.textContent = "Saved · Para " + para;
       downloadParaBtn.disabled = false;
       renderTable();
-      setTimeout(function () { downloadParaBtn.textContent = "📥 Download Para"; }, 3000);
+      setTimeout(function () { downloadParaBtn.textContent = "Download para"; }, 3000);
     });
   });
 
@@ -1702,6 +2033,17 @@
     });
   });
 
+  (function bootstrapPlaybackFromStorage() {
+    var p = readPlaybackPersist();
+    if (p) {
+      var gi = parseInt(p.globalIndex, 10);
+      if (!isNaN(gi) && data[gi]) {
+        paraSelect.value = String(data[gi].para);
+      }
+    }
+    var ti = document.getElementById("toolbar-transport-icon");
+    if (ti) ti.innerHTML = PLAY_SVG;
+  })();
   renderTable();
 })();
 

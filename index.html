@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
   <header class="header">
     <h1>Marifatul Quran</h1>
     <p class="subtitle">Ruku Recordings</p>
@@ -31,50 +32,66 @@
 
   <main class="main">
     <div class="controls toolbar">
-      <div class="controls-left">
-        <label for="para-select">Para (Juz)</label>
-        <select id="para-select" aria-label="Select Para">
-        <option value="1" selected>Para 1</option>
-        <option value="2">Para 2</option>
-        <option value="3">Para 3</option>
-        <option value="4">Para 4</option>
-        <option value="5">Para 5</option>
-        <option value="6">Para 6</option>
-        <option value="7">Para 7</option>
-        <option value="8">Para 8</option>
-        <option value="9">Para 9</option>
-        <option value="10">Para 10</option>
-        <option value="11">Para 11</option>
-        <option value="12">Para 12</option>
-        <option value="13">Para 13</option>
-        <option value="14">Para 14</option>
-        <option value="15">Para 15</option>
-        <option value="16">Para 16</option>
-        <option value="17">Para 17</option>
-        <option value="18">Para 18</option>
-        <option value="19">Para 19</option>
-        <option value="20">Para 20</option>
-        <option value="21">Para 21</option>
-        <option value="22">Para 22</option>
-        <option value="23">Para 23</option>
-        <option value="24">Para 24</option>
-        <option value="25">Para 25</option>
-        <option value="26">Para 26</option>
-        <option value="27">Para 27</option>
-        <option value="28">Para 28</option>
-        <option value="29">Para 29</option>
-        <option value="30">Para 30</option>
-      </select>
-        <div class="toolbar-volume-wrap">
-          <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
-          <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
+      <div class="toolbar-top">
+        <div class="controls-left">
+          <label for="para-select">Para (Juz)</label>
+          <select id="para-select" aria-label="Select Para">
+            <option value="1" selected>Para 1</option>
+            <option value="2">Para 2</option>
+            <option value="3">Para 3</option>
+            <option value="4">Para 4</option>
+            <option value="5">Para 5</option>
+            <option value="6">Para 6</option>
+            <option value="7">Para 7</option>
+            <option value="8">Para 8</option>
+            <option value="9">Para 9</option>
+            <option value="10">Para 10</option>
+            <option value="11">Para 11</option>
+            <option value="12">Para 12</option>
+            <option value="13">Para 13</option>
+            <option value="14">Para 14</option>
+            <option value="15">Para 15</option>
+            <option value="16">Para 16</option>
+            <option value="17">Para 17</option>
+            <option value="18">Para 18</option>
+            <option value="19">Para 19</option>
+            <option value="20">Para 20</option>
+            <option value="21">Para 21</option>
+            <option value="22">Para 22</option>
+            <option value="23">Para 23</option>
+            <option value="24">Para 24</option>
+            <option value="25">Para 25</option>
+            <option value="26">Para 26</option>
+            <option value="27">Para 27</option>
+            <option value="28">Para 28</option>
+            <option value="29">Para 29</option>
+            <option value="30">Para 30</option>
+          </select>
+          <div class="toolbar-volume-wrap" title="Volume">
+            <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
+            <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
+          </div>
         </div>
       </div>
-      <div class="controls-right">
-        <button type="button" class="btn btn-sm btn-secondary" id="goto-playing-btn" title="Scroll to the current track" aria-label="Scroll to now playing">⌖ Now playing</button>
-        <button type="button" class="btn btn-sm btn-offline-para" id="download-para-btn">📥 Download Para</button>
-        <button type="button" class="btn btn-sm btn-install" id="install-btn">⬇ Install App</button>
-        <button type="button" class="btn btn-sm btn-secondary" id="settings-btn">⚙ Settings</button>
+      <div class="toolbar-bottom">
+        <div class="toolbar-now-playing" id="toolbar-now-playing" aria-live="polite">
+          <button type="button" class="btn-toolbar-transport" id="toolbar-play-pause-btn" disabled title="Play or pause" aria-label="Play or pause">
+            <span id="toolbar-transport-icon" class="toolbar-transport-icon"></span>
+          </button>
+          <span class="toolbar-now-playing-badge" id="toolbar-now-playing-badge" hidden></span>
+          <div class="toolbar-now-playing-text">
+            <span class="toolbar-now-playing-title" id="toolbar-now-playing-title">No track selected</span>
+            <span class="toolbar-now-playing-meta" id="toolbar-now-playing-meta">Play a recording from the list below.</span>
+          </div>
+          <button type="button" class="btn-toolbar-locate" id="goto-playing-btn" title="Scroll to current track in the list" aria-label="Scroll to current track in list" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          </button>
+        </div>
+        <div class="toolbar-btn-group" role="group" aria-label="Actions">
+          <button type="button" class="btn btn-toolbar btn-toolbar--primary" id="download-para-btn">Download para</button>
+          <button type="button" class="btn btn-toolbar btn-toolbar--ghost" id="install-btn">Install app</button>
+          <button type="button" class="btn btn-toolbar btn-toolbar--ghost" id="settings-btn">Settings</button>
+        </div>
       </div>
     </div>
 
