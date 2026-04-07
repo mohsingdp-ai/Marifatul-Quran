@@ -42,6 +42,8 @@
   --admin-badge-bg: #e8f5f5;
   --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   --loop-active-bg: rgba(15, 122, 122, 0.1);
+  /* Stacked-row labels (mobile); must stay readable on --row-white / --row-gray */
+  --mobile-td-label: var(--teal-header);
 }
 
 html[data-theme="dark"] {
@@ -85,6 +87,8 @@ html[data-theme="dark"] {
   --admin-badge-bg: #153030;
   --tooltip-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
   --loop-active-bg: rgba(45, 180, 180, 0.18);
+  /* Bright enough vs --row-white / --row-gray cards (teal-header is too dark here) */
+  --mobile-td-label: var(--verse-link);
 }
 
 * {
@@ -1137,11 +1141,11 @@ tr.playing .audio-play-btn {
   .ruku-table tbody td::before {
     content: attr(data-label);
     display: block;
-    font-weight: 600;
-    color: var(--teal-header);
-    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--mobile-td-label);
+    font-size: 0.78rem;
     text-transform: uppercase;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     margin-bottom: 0.25rem;
   }
 
