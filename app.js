@@ -1901,10 +1901,18 @@
   }
 
   document.getElementById("clear-cache-btn").addEventListener("click", function () {
-    if (!confirm("This will reinstall the app with the latest version. All offline audio will need to be re-downloaded. Continue?")) return;
+    if (!confirm("Clear all cached data? Your current track position will be preserved. Offline audio will need to be re-downloaded.")) return;
     var btn = this;
     btn.disabled = true;
-    btn.textContent = "🔄 Reinstalling…";
+    btn.textContent = "Clearing…";
+
+    // Preserve current track and essential settings
+    var preserve = {};
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme"];
+    keepKeys.forEach(function (k) {
+      var v = localStorage.getItem(k);
+      if (v !== null) preserve[k] = v;
+    });
 
     // 1. Clear all SW caches
     var clearCaches = caches.keys().then(function (keys) {
@@ -1918,9 +1926,12 @@
         })
       : Promise.resolve();
 
-    // 3. Clear localStorage and sessionStorage
+    // 3. Clear localStorage and sessionStorage, then restore preserved keys
     try { localStorage.clear(); } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
+    Object.keys(preserve).forEach(function (k) {
+      localStorage.setItem(k, preserve[k]);
+    });
 
     // 4. Clear IndexedDB databases
     var clearIDB = ("indexedDB" in window && indexedDB.databases)
@@ -1935,9 +1946,7 @@
       : Promise.resolve();
 
     Promise.all([clearCaches, clearSW, clearIDB]).then(function () {
-      // Redirect fresh; ?reinstall signals the install flow on next load
-      var url = location.origin + location.pathname + "?reinstall=" + Date.now();
-      location.replace(url);
+      location.reload();
     });
   });
 

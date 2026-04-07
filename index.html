@@ -71,24 +71,24 @@
             <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
             <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
           </div>
-          <div class="toolbar-menu-wrap">
-            <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+        </div>
+        <div class="toolbar-menu-wrap">
+          <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+          </button>
+          <div class="toolbar-menu-dropdown" id="toolbar-menu-dropdown">
+            <button type="button" class="toolbar-menu-item" id="download-para-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download para
             </button>
-            <div class="toolbar-menu-dropdown" id="toolbar-menu-dropdown">
-              <button type="button" class="toolbar-menu-item" id="download-para-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Download para
-              </button>
-              <button type="button" class="toolbar-menu-item" id="install-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                Install app
-              </button>
-              <button type="button" class="toolbar-menu-item" id="settings-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                Settings
-              </button>
-            </div>
+            <button type="button" class="toolbar-menu-item" id="install-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              Install app
+            </button>
+            <button type="button" class="toolbar-menu-item" id="settings-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Settings
+            </button>
           </div>
         </div>
       </div>
@@ -135,86 +135,134 @@
   <div class="modal" id="settings-modal">
     <div class="modal-backdrop" id="settings-modal-backdrop"></div>
     <div class="modal-content">
-      <h2 class="modal-title">⚙ Settings</h2>
+      <div class="modal-header">
+        <h2 class="modal-title">Settings</h2>
+        <button type="button" class="modal-close-btn" id="settings-close-btn" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
       <div class="settings-form">
-        <div class="settings-row">
-          <label>Role</label>
-          <div class="settings-role-group">
-            <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn">👤 User</button>
-            <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn">🔐 Admin</button>
+        <!-- General -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            General
           </div>
-          <span class="settings-role-badge" id="role-badge">User</span>
-        </div>
-        <div class="settings-row">
-          <label>Appearance</label>
-          <div class="settings-role-group" id="theme-mode-group">
-            <button type="button" class="btn btn-sm settings-role-btn active" data-ui-theme="dark">🌙 Dark</button>
-            <button type="button" class="btn btn-sm settings-role-btn" data-ui-theme="light">☀ Light</button>
-          </div>
-        </div>
-        <div class="settings-row">
-          <span class="settings-section-title">Show only recorded</span>
-          <label class="settings-toggle-label">
-            <input type="checkbox" id="show-only-recorded-para" />
-            <span class="settings-toggle-switch"></span>
-            Para (Juz)
-          </label>
-          <label class="settings-toggle-label">
-            <input type="checkbox" id="show-only-recorded-ruku" />
-            <span class="settings-toggle-switch"></span>
-            Ruku
-          </label>
-        </div>
-        <div class="settings-row">
-          <span class="settings-section-title">Playback</span>
-          <div class="settings-playback-row">
-            <label>After ruku ends</label>
-            <div class="settings-role-group" id="playback-mode-group">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-mode="none">⏹ None</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-mode="loop">🔁 Loop</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-mode="next">⏭ Next</button>
+          <div class="settings-row">
+            <div class="settings-row-inline">
+              <label>Role</label>
+              <span class="settings-role-badge" id="role-badge">User</span>
+            </div>
+            <div class="settings-role-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn">User</button>
+              <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn">Admin</button>
             </div>
           </div>
-          <div class="settings-speed-row">
-            <label for="default-speed-select">Default speed</label>
-            <select id="default-speed-select" class="settings-speed-select">
-              <option value="0.75">0.75x</option>
-              <option value="1" selected>1x</option>
-              <option value="1.25">1.25x</option>
-              <option value="1.5">1.5x</option>
-              <option value="1.75">1.75x</option>
-              <option value="2">2x</option>
-            </select>
+          <div class="settings-row">
+            <label>Appearance</label>
+            <div class="settings-role-group" id="theme-mode-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ui-theme="dark">Dark</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ui-theme="light">Light</button>
+            </div>
           </div>
-          <div class="settings-volume-row">
+        </div>
+
+        <!-- Filters -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filters
+          </div>
+          <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Show only recorded Para</span>
+              <input type="checkbox" id="show-only-recorded-para" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+          </div>
+          <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Show only recorded Ruku</span>
+              <input type="checkbox" id="show-only-recorded-ruku" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Playback -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Playback
+          </div>
+          <div class="settings-row">
+            <label>After ruku ends</label>
+            <div class="settings-role-group" id="playback-mode-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-mode="none">Stop</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="loop">Loop</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="next">Next</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-inline">
+              <label for="default-speed-select">Default speed</label>
+              <select id="default-speed-select" class="settings-speed-select">
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="1.75">1.75x</option>
+                <option value="2">2x</option>
+              </select>
+            </div>
+          </div>
+          <div class="settings-row">
             <label for="settings-volume-range">Volume</label>
-            <input type="range" id="settings-volume-range" class="settings-volume-range" min="0" max="100" step="1" value="100" aria-valuemin="0" aria-valuemax="100" />
-            <span class="settings-volume-value" id="settings-volume-value">100%</span>
+            <div class="settings-volume-row">
+              <input type="range" id="settings-volume-range" class="settings-volume-range" min="0" max="100" step="1" value="100" aria-valuemin="0" aria-valuemax="100" />
+              <span class="settings-volume-value" id="settings-volume-value">100%</span>
+            </div>
           </div>
-          <label class="settings-toggle-label settings-media-notif-toggle" style="margin-top:0.65rem">
-            <input type="checkbox" id="pref-media-notification" />
-            <span class="settings-toggle-switch"></span>
-            Persistent notification (lock screen / shade)
-          </label>
-          <p class="settings-hint" id="media-notif-hint" style="margin:0.35rem 0 0;font-size:0.8rem;color:var(--text-muted);line-height:1.35">
-            Optional. Keeps a system notification while a track is open (playing or paused). Works best on Android Chrome; iOS is limited. Browser will ask for permission when you turn this on.
-          </p>
-        </div>
-        <div class="settings-row">
-          <span class="settings-section-title">Offline Downloads</span>
-          <div class="settings-download-row">
-            <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn">📥 Download All Paras</button>
-            <span class="download-all-status" id="download-all-status"></span>
+          <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Lock screen notification</span>
+              <input type="checkbox" id="pref-media-notification" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+            <p class="settings-hint" id="media-notif-hint">
+              Keeps a system notification while a track is open. Works best on Android Chrome.
+            </p>
           </div>
         </div>
-        <div class="settings-row settings-admin-section" id="admin-section" style="display:none">
-          <label for="gh-token-input">GitHub Personal Access Token</label>
-          <input type="password" id="gh-token-input" placeholder="Paste token here…" autocomplete="off">
+
+        <!-- Storage -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Storage
+          </div>
+          <div class="settings-row">
+            <div class="settings-download-row">
+              <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn">Download All Paras</button>
+              <span class="download-all-status" id="download-all-status"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin -->
+        <div class="settings-group settings-admin-section" id="admin-section" style="display:none">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Admin
+          </div>
+          <div class="settings-row">
+            <label for="gh-token-input">GitHub Token</label>
+            <input type="password" id="gh-token-input" placeholder="Paste token here…" autocomplete="off">
+          </div>
         </div>
       </div>
       <div class="settings-actions">
-        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">🔄 Reinstall App</button>
-        <button type="button" class="btn btn-sm btn-secondary" id="settings-close-btn">Close</button>
+        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">Clear Cache</button>
       </div>
     </div>
   </div>
