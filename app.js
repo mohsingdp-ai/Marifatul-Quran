@@ -1,6 +1,26 @@
 (function () {
   "use strict";
 
+  function getUiTheme() {
+    var t = localStorage.getItem("ui_theme");
+    return t === "light" ? "light" : "dark";
+  }
+
+  function setUiTheme(theme) {
+    localStorage.setItem("ui_theme", theme === "light" ? "light" : "dark");
+  }
+
+  function applyUiTheme(theme) {
+    var t = theme === "light" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", t === "dark" ? "#0a1111" : "#0d4f4f");
+    }
+  }
+
+  applyUiTheme(getUiTheme());
+
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
@@ -1019,6 +1039,7 @@
   var toolbarVolume = document.getElementById("toolbar-volume");
   var settingsVolumeRange = document.getElementById("settings-volume-range");
   var settingsVolumeValue = document.getElementById("settings-volume-value");
+  var themeModeGroup = document.getElementById("theme-mode-group");
 
   function syncVolumeUI() {
     var pct = Math.round(getAudioVolume() * 100);
@@ -1072,6 +1093,12 @@
     });
     speedSelect.value = String(getDefaultSpeed());
     syncVolumeUI();
+    var th = getUiTheme();
+    if (themeModeGroup) {
+      themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
+        btn.classList.toggle("active", btn.dataset.uiTheme === th);
+      });
+    }
   }
 
   if (toolbarVolume) {
@@ -1109,6 +1136,19 @@
   speedSelect.addEventListener("change", function () {
     setDefaultSpeed(parseFloat(this.value));
   });
+
+  if (themeModeGroup) {
+    themeModeGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-ui-theme]");
+      if (!btn) return;
+      var next = btn.dataset.uiTheme;
+      setUiTheme(next);
+      applyUiTheme(next);
+      themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+      });
+    });
+  }
 
   settingsBtn.addEventListener("click", openSettings);
   settingsCloseBtn.addEventListener("click", closeSettings);

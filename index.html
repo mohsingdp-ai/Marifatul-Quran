@@ -1,6 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function () {
+      var t = localStorage.getItem("ui_theme");
+      document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+    })();
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marifatul Quran - Ruku Recordings</title>
@@ -103,6 +109,13 @@
             <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn">🔐 Admin</button>
           </div>
           <span class="settings-role-badge" id="role-badge">User</span>
+        </div>
+        <div class="settings-row">
+          <label>Appearance</label>
+          <div class="settings-role-group" id="theme-mode-group">
+            <button type="button" class="btn btn-sm settings-role-btn active" data-ui-theme="dark">🌙 Dark</button>
+            <button type="button" class="btn btn-sm settings-role-btn" data-ui-theme="light">☀ Light</button>
+          </div>
         </div>
         <div class="settings-row">
           <span class="settings-section-title">Show only recorded</span>
