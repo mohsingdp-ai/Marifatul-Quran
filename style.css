@@ -572,6 +572,11 @@ html[data-theme="dark"] .upload-status-banner--error {
   box-shadow: inset 3px 0 0 var(--teal-accent);
 }
 
+/* Current track while paused: keep highlight, no “live” pulse on the button */
+.ruku-table tbody tr.playing.audio-paused {
+  box-shadow: inset 3px 0 0 rgba(15, 122, 122, 0.55);
+}
+
 .ruku-table td {
   padding: 0.65rem 1rem;
   vertical-align: middle;
@@ -671,7 +676,15 @@ html[data-theme="dark"] .upload-status-banner--error {
 tr.playing .audio-play-btn {
   background: linear-gradient(145deg, #0d8a8a, #0a3f3f);
   box-shadow: 0 0 0 3px rgba(15,122,122,0.2), 0 3px 12px rgba(13,79,79,0.4);
+}
+
+tr.playing:not(.audio-paused) .audio-play-btn {
   animation: playing-pulse 2s ease-in-out infinite;
+}
+
+tr.playing.audio-paused .audio-play-btn {
+  animation: none;
+  opacity: 0.95;
 }
 
 @keyframes playing-pulse {
@@ -824,10 +837,6 @@ tr.playing .audio-progress::-webkit-slider-thumb {
 tr.playing .audio-progress::-moz-range-thumb {
   border-color: var(--teal-dark);
   box-shadow: 0 0 0 4px rgba(15, 122, 122, 0.2), 0 2px 8px rgba(13, 79, 79, 0.35);
-}
-
-tr.playing .audio-play-btn {
-  box-shadow: 0 0 0 3px rgba(15, 122, 122, 0.2), 0 2px 8px rgba(13, 79, 79, 0.3);
 }
 
 .audio-speed-btn {

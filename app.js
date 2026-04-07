@@ -156,8 +156,8 @@
   }
 
   function clearPlayingClass() {
-    tbody.querySelectorAll("tr.playing").forEach(function (tr) {
-      tr.classList.remove("playing");
+    tbody.querySelectorAll("tr.playing, tr.audio-paused").forEach(function (tr) {
+      tr.classList.remove("playing", "audio-paused");
     });
   }
 
@@ -443,14 +443,17 @@
         currentPlayingAudio = audio;
         clearPlayingFn();
         tr.classList.add("playing");
+        tr.classList.remove("audio-paused");
         setNowPlayingMetadata(row, audio);
         setMediaPlaybackState("playing");
       });
       audio.addEventListener("pause", function () {
         playBtn.innerHTML = PLAY_SVG;
         playBtn.setAttribute("aria-label", "Play");
-        if (audio.currentTime < (audio.duration || 0) - 0.1) tr.classList.remove("playing");
-        if (currentPlayingAudio === audio) currentPlayingAudio = null;
+        tr.classList.add("audio-paused");
+        if (currentPlayingAudio !== audio) {
+          currentPlayingAudio = audio;
+        }
         setMediaPlaybackState("paused");
       });
       audio.addEventListener("ended", function () {
@@ -462,7 +465,7 @@
         }
         playBtn.innerHTML = PLAY_SVG;
         playBtn.setAttribute("aria-label", "Play");
-        tr.classList.remove("playing");
+        tr.classList.remove("playing", "audio-paused");
         progress.value = 0;
         timeCurrent.textContent = "0:00";
         if (currentPlayingAudio === audio) currentPlayingAudio = null;
@@ -757,6 +760,7 @@
             a.play().catch(function () { /* autoplay policy */ });
             playBtn.innerHTML = PAUSE_SVG;
             playBtn.setAttribute("aria-label", "Pause");
+            tr.classList.remove("audio-paused");
             tr.classList.add("playing");
             currentPlayingAudio = a;
             setNowPlayingMetadata(row, a);
@@ -764,8 +768,8 @@
           } else {
             playBtn.innerHTML = PLAY_SVG;
             playBtn.setAttribute("aria-label", "Play");
-            tr.classList.remove("playing");
-            currentPlayingAudio = null;
+            tr.classList.add("playing", "audio-paused");
+            currentPlayingAudio = a;
             setNowPlayingMetadata(row, a);
             setMediaPlaybackState("paused");
             if (dur > 0 && "mediaSession" in navigator && navigator.mediaSession.setPositionState) {
@@ -1278,6 +1282,18 @@
   }
 
   syncVolumeUI();
+
+  var gotoPlayingBtn = document.getElementById("goto-playing-btn");
+  function scrollToPlayingRow() {
+    var row = tbody.querySelector("tr.playing");
+    if (!row) return;
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  if (gotoPlayingBtn) {
+    gotoPlayingBtn.addEventListener("click", function () {
+      scrollToPlayingRow();
+    });
+  }
 
   togglePara.addEventListener("change", function () {
     setShowOnlyRecordedPara(this.checked);
