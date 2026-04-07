@@ -682,10 +682,35 @@
       seeking = false;
     }
 
-    /* Touch support for progress bar (mobile) */
+    /* Touch support for progress bar (mobile) —
+       Wait for horizontal movement before seeking so vertical scrolls aren't hijacked. */
+    var touchStartX = null;
+    var touchStartY = null;
+    var touchLocked = false; // true once we decide seek vs scroll
     progressOverlay.addEventListener("touchstart", function (e) {
-      if (e.cancelable) e.preventDefault();
-      seeking = true;
+      touchStartX = getClientX(e);
+      touchStartY = e.touches[0].clientY;
+      touchLocked = false;
+      seeking = false;
+    }, { passive: true });
+    progressOverlay.addEventListener("touchmove", function (e) {
+      if (touchStartX === null) return;
+      if (!touchLocked) {
+        var dx = Math.abs(getClientX(e) - touchStartX);
+        var dy = Math.abs(e.touches[0].clientY - touchStartY);
+        if (dy > 8 && dy > dx) {
+          // vertical scroll — bail out entirely
+          touchStartX = null;
+          return;
+        }
+        if (dx > 8) {
+          touchLocked = true;
+          seeking = true;
+        } else {
+          return; // not enough movement yet
+        }
+      }
+      if (seeking && e.cancelable) e.preventDefault();
       var pct = pctFromEvent(e);
       seekToPct(pct);
       var a = mqPlayback.el;
@@ -696,23 +721,23 @@
         hoverTime.classList.add("is-visible");
       }
     }, { passive: false });
-    progressOverlay.addEventListener("touchmove", function (e) {
-      if (seeking && e.cancelable) e.preventDefault();
-      var pct = pctFromEvent(e);
-      seekToPct(pct);
-      var a = mqPlayback.el;
-      if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
-        var sec = (pct / 100) * a.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
-        hoverTime.style.left = pct + "%";
+    progressOverlay.addEventListener("touchend", function (e) {
+      // If locked to seek but barely moved, treat as a tap-to-seek
+      if (touchStartX !== null && !touchLocked) {
+        var dx = Math.abs(getClientX(e) - touchStartX);
+        if (dx < 8) {
+          seekToPct(pctFromEvent(e));
+        }
       }
-    }, { passive: false });
-    progressOverlay.addEventListener("touchend", function () {
       seeking = false;
+      touchStartX = null;
+      touchLocked = false;
       hoverTime.classList.remove("is-visible");
     });
     progressOverlay.addEventListener("touchcancel", function () {
       seeking = false;
+      touchStartX = null;
+      touchLocked = false;
       hoverTime.classList.remove("is-visible");
     });
 
