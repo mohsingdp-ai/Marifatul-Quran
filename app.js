@@ -1214,6 +1214,7 @@
       clearPlayingClass();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
+      if (typeof preloadNextTrack === "function") preloadNextTrack(gi);
       var els = getRowControlsByGlobalIndex(gi);
       if (els) {
         els.tr.classList.add("playing");
@@ -1346,13 +1347,38 @@
   function getMqAudioEl() {
     if (!mqPlayback.el) {
       mqPlayback.el = document.createElement("audio");
-      mqPlayback.el.preload = "none";
+      mqPlayback.el.preload = "auto";
       mqPlayback.el.volume = getAudioVolume();
       var host = document.getElementById("mq-audio-host");
       (host || document.body).appendChild(mqPlayback.el);
     }
     if (!mqPlayback._listenersBound) bindMqAudioLifecycle();
     return mqPlayback.el;
+  }
+
+  function preloadNextTrack(gi) {
+    var playBtns = Array.from(tbody.querySelectorAll(".audio-play-btn"));
+    var currentTr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+    if (!currentTr) return;
+    var currentBtn = currentTr.querySelector(".audio-play-btn");
+    if (!currentBtn) return;
+    var idx = playBtns.indexOf(currentBtn);
+    if (idx === -1 || idx + 1 >= playBtns.length) return;
+    var nextBtn = playBtns[idx + 1];
+    var ntr = nextBtn.closest("tr");
+    if (!ntr) return;
+    var nextGi = ntr.getAttribute("data-global-index");
+    if (nextGi == null) return;
+    var nextRow = data[nextGi];
+    if (!nextRow) return;
+    var nextSrc = nextRow.audioUrl;
+    if (!nextSrc) return;
+    getCachedAudioBlob(nextSrc).then(function(blobUrl) {
+      if (blobUrl) {
+        mqPlayback._preloaded = mqPlayback._preloaded || {};
+        mqPlayback._preloaded[nextGi] = blobUrl;
+      }
+    });
   }
 
   function prepareMqTrack(globalIndex, row, src, options) {
@@ -1372,6 +1398,10 @@
     mqPlayback.alternateUrls = getAudioUrlAlternates(src);
     mqPlayback.alternateIndex = 0;
     var allUrls = [src].concat(mqPlayback.alternateUrls);
+
+    if (mqPlayback._preloaded && mqPlayback._preloaded[globalIndex]) {
+      allUrls.unshift(mqPlayback._preloaded[globalIndex]);
+    }
 
     function whenMetadataThenResolve(resolve) {
       function runSeekAndResolve() {
