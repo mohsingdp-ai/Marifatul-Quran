@@ -1197,8 +1197,27 @@
     if (!btn) return false;
     var idx = playBtns.indexOf(btn);
     if (idx === -1 || idx + 1 >= playBtns.length) return false;
-    playBtns[idx + 1].click();
-    var ntr = playBtns[idx + 1].closest("tr");
+    var nextBtn = playBtns[idx + 1];
+    var ntr = nextBtn.closest("tr");
+    if (!ntr) return false;
+    var nextGi = ntr.getAttribute("data-global-index");
+    var nextRow = data[nextGi];
+    if (!nextRow) {
+      nextBtn.click();
+      if (ntr) ntr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return true;
+    }
+    var nextSrc = getAudioSrc(nextRow, nextGi);
+    if (!nextSrc) {
+      nextBtn.click();
+      if (ntr) ntr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return true;
+    }
+    prepareMqTrack(nextGi, nextRow, nextSrc).then(function () {
+      var mqA = mqPlayback.el;
+      mqA.loop = false;
+      mqA.play();
+    });
     if (ntr) ntr.scrollIntoView({ behavior: "smooth", block: "center" });
     return true;
   }
@@ -1369,16 +1388,36 @@
     if (!ntr) return;
     var nextGi = ntr.getAttribute("data-global-index");
     if (nextGi == null) return;
+    if (mqPlayback._preloadedAudio && mqPlayback._preloadedAudio.gi === nextGi) return;
     var nextRow = data[nextGi];
     if (!nextRow) return;
-    var nextSrc = nextRow.audioUrl;
+    var nextSrc = getAudioSrc(nextRow, nextGi);
     if (!nextSrc) return;
-    getCachedAudioBlob(nextSrc).then(function(blobUrl) {
-      if (blobUrl) {
-        mqPlayback._preloaded = mqPlayback._preloaded || {};
-        mqPlayback._preloaded[nextGi] = blobUrl;
+
+    var allUrls = [nextSrc].concat(getAudioUrlAlternates(nextSrc));
+
+    function tryPreload(i) {
+      if (i >= allUrls.length) {
+        var preloadAudio = new Audio();
+        preloadAudio.preload = "auto";
+        preloadAudio.src = nextSrc;
+        preloadAudio.load();
+        mqPlayback._preloadedAudio = { gi: nextGi, audio: preloadAudio, src: nextSrc };
+        return;
       }
-    });
+      getCachedAudioBlob(allUrls[i]).then(function(blobUrl) {
+        if (blobUrl) {
+          var preloadAudio = new Audio();
+          preloadAudio.preload = "auto";
+          preloadAudio.src = blobUrl;
+          preloadAudio.load();
+          mqPlayback._preloadedAudio = { gi: nextGi, audio: preloadAudio, src: blobUrl };
+        } else {
+          tryPreload(i + 1);
+        }
+      });
+    }
+    tryPreload(0);
   }
 
   function prepareMqTrack(globalIndex, row, src, options) {
@@ -1397,13 +1436,22 @@
     mqPlayback.activeGlobalIndex = globalIndex;
     mqPlayback.alternateUrls = getAudioUrlAlternates(src);
     mqPlayback.alternateIndex = 0;
-    var allUrls = [src].concat(mqPlayback.alternateUrls);
 
-    if (mqPlayback._preloaded && mqPlayback._preloaded[globalIndex]) {
-      allUrls.unshift(mqPlayback._preloaded[globalIndex]);
+    if (mqPlayback._preloadedAudio && mqPlayback._preloadedAudio.gi === String(globalIndex)) {
+      var preloaded = mqPlayback._preloadedAudio;
+      mqPlayback._preloadedAudio = null;
+      a.src = preloaded.src;
+      a.load();
+      if (!options.skipStoredPosition) {
+        applyStoredMapPosition(globalIndex, a);
+      }
+      updatePersistentMediaNotification();
+      return Promise.resolve(a);
     }
 
-    function whenMetadataThenResolve(resolve) {
+    var allUrls = [src].concat(mqPlayback.alternateUrls);
+
+    function whenReadyThenResolve(resolve) {
       function runSeekAndResolve() {
         if (!options.skipStoredPosition) {
           applyStoredMapPosition(globalIndex, a);
@@ -1411,9 +1459,15 @@
         updatePersistentMediaNotification();
         resolve(a);
       }
-      if (a.readyState >= 1 && a.duration && isFinite(a.duration) && a.duration > 0) {
+      if (a.readyState >= 2) {
         runSeekAndResolve();
         return;
+      }
+      function onCanPlay() {
+        a.removeEventListener("canplay", onCanPlay);
+        a.removeEventListener("loadedmetadata", onMeta);
+        a.removeEventListener("error", onErr);
+        runSeekAndResolve();
       }
       function onMeta() {
         a.removeEventListener("loadedmetadata", onMeta);
@@ -1421,10 +1475,12 @@
         runSeekAndResolve();
       }
       function onErr() {
+        a.removeEventListener("canplay", onCanPlay);
         a.removeEventListener("loadedmetadata", onMeta);
         a.removeEventListener("error", onErr);
         resolve(a);
       }
+      a.addEventListener("canplay", onCanPlay, { once: true });
       a.addEventListener("loadedmetadata", onMeta, { once: true });
       a.addEventListener("error", onErr, { once: true });
     }
@@ -1434,14 +1490,14 @@
         if (i >= allUrls.length) {
           a.src = src;
           a.load();
-          whenMetadataThenResolve(resolve);
+          whenReadyThenResolve(resolve);
           return;
         }
         getCachedAudioBlob(allUrls[i]).then(function (blobUrl) {
           if (blobUrl) {
             a.src = blobUrl;
             a.load();
-            whenMetadataThenResolve(resolve);
+            whenReadyThenResolve(resolve);
           } else tryLoad(i + 1);
         });
       })(0);
