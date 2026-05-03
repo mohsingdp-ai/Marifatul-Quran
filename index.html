@@ -85,6 +85,10 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
               Install app
             </button>
+            <button type="button" class="toolbar-menu-item" id="share-bulk-links-btn" title="Select rukus as tiles, then copy or share title + player link text (opaque link when available)">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Share rukus
+            </button>
             <button type="button" class="toolbar-menu-item" id="settings-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               Settings
@@ -263,6 +267,64 @@
       </div>
       <div class="settings-actions">
         <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">Clear Cache</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Para rukus as audio files + caption (one per share) -->
+  <div class="modal" id="share-para-file-modal" aria-hidden="true">
+    <div class="modal-backdrop" id="share-para-file-modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="share-para-file-modal-title">Share as file</h2>
+        <button type="button" class="modal-close-btn" id="share-para-file-close-btn" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="share-para-wa-modal-body">
+        <p class="settings-hint" id="share-para-file-progress"></p>
+        <pre class="share-para-wa-preview" id="share-para-file-preview"></pre>
+        <div class="modal-actions share-para-wa-actions share-para-file-actions">
+          <button type="button" class="btn btn-sm" id="share-para-file-share-all-btn">Share all recordings</button>
+          <div class="share-para-file-actions-row">
+            <button type="button" class="btn btn-sm" id="share-para-file-share-btn">Share this ruku</button>
+            <button type="button" class="btn btn-sm" id="share-para-file-next-btn">Next ruku</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share multiple ruku player links as one text block (?para= & ruku=) -->
+  <div class="modal" id="share-bulk-links-modal" aria-hidden="true">
+    <div class="modal-backdrop" id="share-bulk-links-modal-backdrop"></div>
+    <div class="modal-content modal-content-wide share-bulk-links-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title" id="share-bulk-links-modal-title">Share ruku links</h2>
+        <button type="button" class="modal-close-btn" id="share-bulk-links-close-btn" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="share-para-wa-modal-body share-bulk-links-body">
+        <!-- <p class="settings-hint share-bulk-links-intro">Tap tiles to select. <strong>Copy text</strong> or <strong>Share…</strong> builds one block per ruku (title + player link).</p> -->
+        <div class="share-bulk-links-toolbar">
+          <div class="share-bulk-links-toolbar-btns">
+            <button type="button" class="btn btn-sm btn-primary share-bulk-pill-btn" id="share-bulk-links-select-all-btn">Select all</button>
+            <button type="button" class="btn btn-sm btn-outline share-bulk-pill-btn" id="share-bulk-links-clear-btn">Clear</button>
+          </div>
+          <span class="share-bulk-links-count" id="share-bulk-links-count">0 selected</span>
+        </div>
+        <div class="share-bulk-links-list" id="share-bulk-links-list" role="group" aria-label="Rukus in this Para"></div>
+        <div class="modal-actions share-para-wa-actions share-bulk-links-footer">
+          <button type="button" class="btn btn-sm btn-outline share-bulk-footer-btn" id="share-bulk-links-copy-btn">
+            <svg class="share-bulk-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy text
+          </button>
+          <button type="button" class="btn btn-sm btn-primary share-bulk-footer-btn" id="share-bulk-links-share-btn">
+            <svg class="share-bulk-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share…
+          </button>
+        </div>
       </div>
     </div>
   </div>

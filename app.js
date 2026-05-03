@@ -26,6 +26,8 @@
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
   /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
+  /** When opening `?para=&ruku=`, scroll to that ruku after the first table render. */
+  var pendingRukuHighlightFromUrl = null;
 
   if (!tbody || typeof QURAN_DATA === "undefined") return;
 
@@ -409,6 +411,26 @@
         }
         var maxScroll = Math.max(0, wrap.scrollHeight - wrap.clientHeight);
         wrap.scrollTop = Math.max(0, Math.min(state.scrollTop, maxScroll));
+      });
+    });
+  }
+
+  function scrollTableToRukuRow(paraNum, rukuLabel) {
+    if (rukuLabel == null || String(rukuLabel).trim() === "") return;
+    var items = indexedData[paraNum] || [];
+    var foundGi = null;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].row.rukuInPara === rukuLabel) {
+        foundGi = items[i].globalIndex;
+        break;
+      }
+    }
+    if (foundGi == null) return;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var tr = tbody.querySelector('tr[data-global-index="' + foundGi + '"]');
+        if (!tr) return;
+        tr.scrollIntoView({ block: "center", behavior: "smooth" });
       });
     });
   }
@@ -839,6 +861,51 @@
     return a.href;
   }
 
+  /** Same folder as the main app; base URL for player.html deep links. */
+  function getPlayerPageUrl() {
+    var u = new URL("player.html", window.location.href);
+    u.hash = "";
+    return u.href.replace(/#$/, "");
+  }
+
+  /**
+   * Opaque share link: player.html?t=&lt;token&gt; when playToken exists (see data.js).
+   * Legacy ?para=&ruku= still works for bookmarks.
+   */
+  function buildPlayerDeepLink(paraNum, row) {
+    var u = new URL(getPlayerPageUrl());
+    if (row && row.playToken) {
+      u.searchParams.set("t", row.playToken);
+    } else {
+      u.searchParams.set("para", String(paraNum));
+      u.searchParams.set("ruku", row.rukuInPara);
+    }
+    return u.href.replace(/#$/, "");
+  }
+
+  /** One ruku block: title line + player URL (opaque ?t= when playToken exists). */
+  function formatBulkRukuLinkBlock(paraNum, row) {
+    var title =
+      "P" + paraNum + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+    return title + "\n" + buildPlayerDeepLink(paraNum, row);
+  }
+
+  /** Rows in this Para that have audio, for file+caption share (one ruku per share action). */
+  function getParaRukuFileShareItems(paraNum) {
+    var items = indexedData[paraNum] || [];
+    var list = [];
+    items.forEach(function (item) {
+      var row = item.row;
+      var src = getAudioSrc(row, item.globalIndex);
+      if (!src) return;
+      var title =
+        "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+      var caption = title + "\n" + buildPlayerDeepLink(row.para, row);
+      list.push({ row: row, src: src, caption: caption });
+    });
+    return list;
+  }
+
   function isAudioCached(url) {
     var abs = resolveUrl(url);
     return caches.open(AUDIO_CACHE).then(function (cache) {
@@ -1024,6 +1091,173 @@
     return btn;
   }
 
+  /**
+   * Share one recording via Web Share API (audio file + text) or download fallback.
+   * @returns {Promise<void>}
+   */
+  function shareAudioFileWithCaption(src, row, caption) {
+    function tryDownloadFileFallback(blob) {
+      var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
+      var name = recordingShareFilename(row, src);
+      var objectUrl = URL.createObjectURL(new Blob([blob], { type: mime }));
+      var a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = name;
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 60000);
+    }
+
+    var captionCopied = false;
+
+    return copyShareCaption(caption)
+      .then(function (copied) {
+        captionCopied = !!copied;
+        return fetchAudioBlobForShare(src);
+      })
+      .then(function (blob) {
+        if (!blob || !blob.size) {
+          alert("Could not load the recording to share. Check your connection or save it offline first.");
+          return;
+        }
+
+        var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
+        var file = new File([blob], recordingShareFilename(row, src), { type: mime });
+
+        var canFileShare =
+          typeof navigator.share === "function" &&
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: [file] });
+
+        if (canFileShare) {
+          return navigator
+            .share({
+              text: caption,
+              files: [file]
+            })
+            .then(function () {
+              if (captionCopied) {
+                alert(
+                  "Audio shared. If WhatsApp sends only the file, paste the copied caption in the chat."
+                );
+              }
+            })
+            .catch(function (err) {
+              if (err && err.name === "AbortError") return;
+              tryDownloadFileFallback(blob);
+              alert(
+                captionCopied
+                  ? "Could not open share. The recording was downloaded. Attach it in WhatsApp and paste the copied caption."
+                  : "Could not open share. The recording was downloaded—attach it in WhatsApp."
+              );
+            });
+        }
+
+        tryDownloadFileFallback(blob);
+        alert(
+          captionCopied
+            ? "The recording was downloaded. Send it in WhatsApp as an attachment, then paste the copied caption."
+            : "The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files)."
+        );
+      })
+      .catch(function () {
+        alert(
+          captionCopied
+            ? "Could not share this file. Try Save offline, then share from your device and paste the copied caption."
+            : "Could not share this file. Try Save offline, then share from your device."
+        );
+      });
+  }
+
+  /** Combined caption for sharing every ruku in a Para in one share sheet. */
+  function buildParaBatchShareCaption(paraNum, items) {
+    var lines = [
+      "Marifatul Quran — Para " + paraNum + " (" + items.length + " recordings)",
+      ""
+    ];
+    items.forEach(function (it) {
+      lines.push(
+        "P" +
+          it.row.para +
+          ": " +
+          it.row.rukuInPara +
+          " — " +
+          it.row.surah +
+          " (" +
+          it.row.verses +
+          ")"
+      );
+    });
+    return lines.join("\n");
+  }
+
+  /**
+   * Share all Para recordings in one native share (multiple files + caption) when supported.
+   * @returns {Promise<void>}
+   */
+  function shareAllParaRecordingsAsFiles(items, paraNum) {
+    if (!items || !items.length) return Promise.resolve();
+
+    var caption = buildParaBatchShareCaption(paraNum, items);
+
+    return Promise.all(
+      items.map(function (it) {
+        return fetchAudioBlobForShare(it.src).then(function (blob) {
+          if (!blob || !blob.size) {
+            throw new Error(
+              "Could not load " +
+                it.row.rukuInPara +
+                ". Save offline first or check your connection."
+            );
+          }
+          var mime =
+            blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(it.src);
+          return new File([blob], recordingShareFilename(it.row, it.src), { type: mime });
+        });
+      })
+    )
+      .then(function (files) {
+        var canMulti =
+          typeof navigator.share === "function" &&
+          typeof navigator.canShare === "function" &&
+          navigator.canShare({ files: files });
+
+        if (!canMulti) {
+          alert(
+            'This browser or app cannot share multiple files in one step. Use "Share this ruku" and "Next ruku" for each recording.'
+          );
+          return;
+        }
+
+        var captionCopied = false;
+        return copyShareCaption(caption)
+          .then(function (copied) {
+            captionCopied = !!copied;
+            return navigator.share({ text: caption, files: files });
+          })
+          .then(function () {
+            if (captionCopied) {
+              alert(
+                "Shared " +
+                  files.length +
+                  " files. If the app only received attachments, paste the copied caption into the chat."
+              );
+            }
+          })
+          .catch(function (err) {
+            if (err && err.name === "AbortError") return;
+            alert(
+              'Could not share all files at once. Try "Share this ruku" one at a time, or pick another app from the share sheet.'
+            );
+          });
+      })
+      .catch(function (e) {
+        alert(e && e.message ? e.message : "Could not load all recordings for sharing.");
+      });
+  }
+
   function buildWhatsAppShareBtn(row, src) {
     var btn = document.createElement("button");
     btn.type = "button";
@@ -1036,84 +1270,15 @@
       e.stopPropagation();
       if (btn.disabled) return;
 
-      var caption = [
-        "Marifatul Quran — recording",
-        "Para " + row.para + ", Ruku " + row.rukuInPara,
-        row.surah + " — " + row.verses
-      ].join("\n");
-
-      function openWhatsAppText(msg) {
-        var wa = "https://wa.me/?text=" + encodeURIComponent(msg);
-        window.open(wa, "_blank", "noopener,noreferrer");
-      }
-
-      function tryDownloadFileFallback(blob) {
-        var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
-        var name = recordingShareFilename(row, src);
-        var objectUrl = URL.createObjectURL(new Blob([blob], { type: mime }));
-        var a = document.createElement("a");
-        a.href = objectUrl;
-        a.download = name;
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(function () { URL.revokeObjectURL(objectUrl); }, 60000);
-      }
+      var title =
+        "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+      var caption = title + "\n" + buildPlayerDeepLink(row.para, row);
 
       btn.disabled = true;
-      var captionCopied = false;
-      var captionCopyPromise = copyShareCaption(caption).then(function (copied) {
-        captionCopied = copied;
-        return copied;
-      });
-
-      fetchAudioBlobForShare(src).then(function (blob) {
-        if (!blob || !blob.size) {
-          btn.disabled = false;
-          alert("Could not load the recording to share. Check your connection or save it offline first.");
-          return;
-        }
-
-        var mime = blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(src);
-        var file = new File([blob], recordingShareFilename(row, src), { type: mime });
-
-        var canFileShare = typeof navigator.share === "function" &&
-          typeof navigator.canShare === "function" &&
-          navigator.canShare({ files: [file] });
-
-        if (canFileShare) {
-          return captionCopyPromise.then(function () {
-            return navigator.share({
-              text: caption,
-              files: [file]
-            });
-          }).then(function () {
-            if (captionCopied) {
-              alert("Audio shared. If WhatsApp sends only the file, paste the copied caption in the chat.");
-            }
-          }).catch(function (err) {
-            if (err && err.name === "AbortError") return;
-            tryDownloadFileFallback(blob);
-            alert(captionCopied
-              ? "Could not open share. The recording was downloaded. Attach it in WhatsApp and paste the copied caption."
-              : "Could not open share. The recording was downloaded—attach it in WhatsApp.");
-          });
-        }
-
-        tryDownloadFileFallback(blob);
-        return captionCopyPromise.then(function () {
-          alert(captionCopied
-            ? "The recording was downloaded. Send it in WhatsApp as an attachment, then paste the copied caption."
-            : "The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).");
-        });
-      }).catch(function () {
-        captionCopyPromise.then(function () {
-          alert(captionCopied
-            ? "Could not share this file. Try Save offline, then share from your device and paste the copied caption."
-            : "Could not share this file. Try Save offline, then share from your device.");
-        });
-      }).then(function () {
+      shareAudioFileWithCaption(src, row, caption).then(
+        function () {},
+        function () {}
+      ).then(function () {
         btn.disabled = false;
       });
     });
@@ -2336,6 +2501,287 @@
     return Promise.all(workers);
   }
 
+  var shareBulkLinksBtn = document.getElementById("share-bulk-links-btn");
+  var shareBulkModal = document.getElementById("share-bulk-links-modal");
+  var shareBulkBackdrop = document.getElementById("share-bulk-links-modal-backdrop");
+  var shareBulkCloseBtn = document.getElementById("share-bulk-links-close-btn");
+  var shareBulkTitleEl = document.getElementById("share-bulk-links-modal-title");
+  var shareBulkListEl = document.getElementById("share-bulk-links-list");
+  var shareBulkCountEl = document.getElementById("share-bulk-links-count");
+  var shareBulkSelectAllBtn = document.getElementById("share-bulk-links-select-all-btn");
+  var shareBulkClearBtn = document.getElementById("share-bulk-links-clear-btn");
+  var shareBulkCopyBtn = document.getElementById("share-bulk-links-copy-btn");
+  var shareBulkShareBtn = document.getElementById("share-bulk-links-share-btn");
+
+  function getShareBulkLinksCombinedText() {
+    if (!shareBulkListEl) return "";
+    var tiles = shareBulkListEl.querySelectorAll(".share-bulk-links-tile.is-selected");
+    var parts = [];
+    tiles.forEach(function (tile) {
+      var gi = parseInt(tile.getAttribute("data-global-index"), 10);
+      if (isNaN(gi) || !data[gi]) return;
+      var row = data[gi];
+      parts.push(formatBulkRukuLinkBlock(row.para, row));
+    });
+    return parts.join("\n\n");
+  }
+
+  function updateShareBulkLinksUi() {
+    var n = shareBulkListEl ? shareBulkListEl.querySelectorAll(".share-bulk-links-tile.is-selected").length : 0;
+    var total = shareBulkListEl ? shareBulkListEl.querySelectorAll(".share-bulk-links-tile").length : 0;
+    if (shareBulkCountEl) shareBulkCountEl.textContent = n + " of " + total + " selected";
+    if (shareBulkCopyBtn) shareBulkCopyBtn.disabled = !n;
+    if (shareBulkShareBtn) shareBulkShareBtn.disabled = !n;
+  }
+
+  function populateShareBulkLinksModal(paraNum) {
+    if (shareBulkTitleEl) shareBulkTitleEl.textContent = "Share ruku links · Para " + paraNum;
+    if (!shareBulkListEl) return;
+    shareBulkListEl.textContent = "";
+    var items = indexedData[paraNum] || [];
+    items.forEach(function (item) {
+      var row = item.row;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "share-bulk-links-tile is-selected";
+      btn.setAttribute("aria-pressed", "true");
+      btn.setAttribute("data-global-index", String(item.globalIndex));
+      btn.setAttribute(
+        "title",
+        "P" + paraNum + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")"
+      );
+
+      var keyEl = document.createElement("span");
+      keyEl.className = "share-bulk-links-tile-key";
+      keyEl.textContent = row.rukuInPara;
+
+      var surahEl = document.createElement("span");
+      surahEl.className = "share-bulk-links-tile-surah";
+      surahEl.textContent = row.surah;
+
+      var versesEl = document.createElement("span");
+      versesEl.className = "share-bulk-links-tile-verses";
+      versesEl.textContent = row.verses;
+
+      btn.appendChild(keyEl);
+      btn.appendChild(surahEl);
+      btn.appendChild(versesEl);
+      shareBulkListEl.appendChild(btn);
+    });
+    updateShareBulkLinksUi();
+  }
+
+  function openShareBulkLinksModal(paraNum) {
+    if (!shareBulkModal) return;
+    var items = indexedData[paraNum] || [];
+    if (!items.length) {
+      alert("No ruku rows for Para " + paraNum + ".");
+      return;
+    }
+    populateShareBulkLinksModal(paraNum);
+    shareBulkModal.classList.add("is-open");
+    shareBulkModal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeShareBulkLinksModal() {
+    if (!shareBulkModal) return;
+    shareBulkModal.classList.remove("is-open");
+    shareBulkModal.setAttribute("aria-hidden", "true");
+    if (shareBulkListEl) shareBulkListEl.textContent = "";
+  }
+
+  if (shareBulkLinksBtn && shareBulkModal) {
+    shareBulkLinksBtn.addEventListener("click", function () {
+      closeToolbarMenu();
+      var paraNum = parseInt(paraSelect.value, 10);
+      if (isNaN(paraNum)) return;
+      openShareBulkLinksModal(paraNum);
+    });
+  }
+
+  if (shareBulkCloseBtn) shareBulkCloseBtn.addEventListener("click", closeShareBulkLinksModal);
+  if (shareBulkBackdrop) shareBulkBackdrop.addEventListener("click", closeShareBulkLinksModal);
+
+  if (shareBulkListEl) {
+    shareBulkListEl.addEventListener("click", function (e) {
+      var tile = e.target.closest(".share-bulk-links-tile");
+      if (!tile || !shareBulkListEl.contains(tile)) return;
+      var on = tile.classList.toggle("is-selected");
+      tile.setAttribute("aria-pressed", on ? "true" : "false");
+      updateShareBulkLinksUi();
+    });
+  }
+
+  if (shareBulkSelectAllBtn && shareBulkListEl) {
+    shareBulkSelectAllBtn.addEventListener("click", function () {
+      shareBulkListEl.querySelectorAll(".share-bulk-links-tile").forEach(function (t) {
+        t.classList.add("is-selected");
+        t.setAttribute("aria-pressed", "true");
+      });
+      updateShareBulkLinksUi();
+    });
+  }
+
+  if (shareBulkClearBtn && shareBulkListEl) {
+    shareBulkClearBtn.addEventListener("click", function () {
+      shareBulkListEl.querySelectorAll(".share-bulk-links-tile").forEach(function (t) {
+        t.classList.remove("is-selected");
+        t.setAttribute("aria-pressed", "false");
+      });
+      updateShareBulkLinksUi();
+    });
+  }
+
+  if (shareBulkCopyBtn) {
+    shareBulkCopyBtn.addEventListener("click", function () {
+      var t = getShareBulkLinksCombinedText();
+      if (!t) {
+        alert("Select at least one ruku.");
+        return;
+      }
+      copyShareCaption(t).then(function (ok) {
+        alert(ok ? "Copied to clipboard." : "Could not copy. Try Share again.");
+      });
+    });
+  }
+
+  if (shareBulkShareBtn) {
+    shareBulkShareBtn.addEventListener("click", function () {
+      var t = getShareBulkLinksCombinedText();
+      if (!t) {
+        alert("Select at least one ruku.");
+        return;
+      }
+      if (typeof navigator.share === "function") {
+        navigator
+          .share({ text: t })
+          .then(function () {})
+          .catch(function (err) {
+            if (err && err.name === "AbortError") return;
+            copyShareCaption(t).then(function (ok) {
+              alert(
+                ok
+                  ? "Share sheet failed — text was copied instead."
+                  : "Could not share or copy."
+              );
+            });
+          });
+      } else {
+        copyShareCaption(t).then(function (ok) {
+          alert(ok ? "Copied (Share not supported on this browser)." : "Could not copy.");
+        });
+      }
+    });
+  }
+
+  var shareParaFileBtn = document.getElementById("share-para-file-btn");
+  var shareFileModal = document.getElementById("share-para-file-modal");
+  var shareFileBackdrop = document.getElementById("share-para-file-modal-backdrop");
+  var shareFileCloseBtn = document.getElementById("share-para-file-close-btn");
+  var shareFileTitleEl = document.getElementById("share-para-file-modal-title");
+  var shareFileProgressEl = document.getElementById("share-para-file-progress");
+  var shareFilePreviewEl = document.getElementById("share-para-file-preview");
+  var shareFileShareBtn = document.getElementById("share-para-file-share-btn");
+  var shareFileAllBtn = document.getElementById("share-para-file-share-all-btn");
+  var shareFileNextBtn = document.getElementById("share-para-file-next-btn");
+  var shareFileItems = [];
+  var shareFileIndex = 0;
+  var shareFileParaNum = 1;
+
+  function updateShareFileModal() {
+    if (!shareFilePreviewEl || !shareFileProgressEl || !shareFileNextBtn) return;
+    var total = shareFileItems.length;
+    if (!total) return;
+    var cur = shareFileItems[shareFileIndex];
+    var n = shareFileIndex + 1;
+    shareFileProgressEl.textContent = "P" + shareFileParaNum + " · ruku " + n + " of " + total;
+    shareFilePreviewEl.textContent = cur.caption;
+    var last = shareFileIndex >= total - 1;
+    shareFileNextBtn.disabled = last;
+    shareFileNextBtn.textContent = last ? "Last ruku" : "Next ruku";
+    if (shareFileAllBtn) {
+      shareFileAllBtn.style.display = total > 1 ? "" : "none";
+    }
+  }
+
+  function openShareFileModal(paraNum) {
+    if (!shareFileModal) return;
+    shareFileItems = getParaRukuFileShareItems(paraNum);
+    if (!shareFileItems.length) {
+      alert("No recordings to share for Para " + paraNum + ". Save offline or check audio paths.");
+      return;
+    }
+    shareFileParaNum = paraNum;
+    shareFileIndex = 0;
+    if (shareFileTitleEl) {
+      shareFileTitleEl.textContent = "Share Para " + paraNum + " as files";
+    }
+    updateShareFileModal();
+    shareFileModal.classList.add("is-open");
+    shareFileModal.setAttribute("aria-hidden", "false");
+  }
+
+  function closeShareFileModal() {
+    if (!shareFileModal) return;
+    shareFileModal.classList.remove("is-open");
+    shareFileModal.setAttribute("aria-hidden", "true");
+    shareFileItems = [];
+  }
+
+  if (shareParaFileBtn && shareFileModal) {
+    shareParaFileBtn.addEventListener("click", function () {
+      closeToolbarMenu();
+      var paraNum = parseInt(paraSelect.value, 10);
+      if (isNaN(paraNum)) return;
+      openShareFileModal(paraNum);
+    });
+  }
+
+  if (shareFileCloseBtn) shareFileCloseBtn.addEventListener("click", closeShareFileModal);
+  if (shareFileBackdrop) shareFileBackdrop.addEventListener("click", closeShareFileModal);
+
+  if (shareFileShareBtn) {
+    shareFileShareBtn.addEventListener("click", function () {
+      if (!shareFileItems.length || shareFileShareBtn.disabled) return;
+      var cur = shareFileItems[shareFileIndex];
+      shareFileShareBtn.disabled = true;
+      shareAudioFileWithCaption(cur.src, cur.row, cur.caption).then(
+        function () {},
+        function () {}
+      ).then(function () {
+        shareFileShareBtn.disabled = false;
+      });
+    });
+  }
+
+  if (shareFileAllBtn) {
+    shareFileAllBtn.addEventListener("click", function () {
+      if (!shareFileItems.length || shareFileAllBtn.disabled) return;
+      var items = shareFileItems;
+      var paraNum = shareFileParaNum;
+      shareFileAllBtn.disabled = true;
+      if (shareFileShareBtn) shareFileShareBtn.disabled = true;
+      if (shareFileNextBtn) shareFileNextBtn.disabled = true;
+      shareAllParaRecordingsAsFiles(items, paraNum)
+        .then(function () {}, function () {})
+        .then(function () {
+          shareFileAllBtn.disabled = false;
+          if (shareFileShareBtn) shareFileShareBtn.disabled = false;
+          updateShareFileModal();
+        });
+    });
+  }
+
+  if (shareFileNextBtn) {
+    shareFileNextBtn.addEventListener("click", function () {
+      if (shareFileNextBtn.disabled) return;
+      if (shareFileIndex < shareFileItems.length - 1) {
+        shareFileIndex += 1;
+        updateShareFileModal();
+      }
+    });
+  }
+
   // Download current Para button
   var downloadParaBtn = document.getElementById("download-para-btn");
   downloadParaBtn.addEventListener("click", function () {
@@ -2406,17 +2852,38 @@
   });
 
   (function bootstrapPlaybackFromStorage() {
-    var p = readPlaybackPersist();
-    if (p) {
-      var gi = parseInt(p.globalIndex, 10);
-      if (!isNaN(gi) && data[gi]) {
-        paraSelect.value = String(data[gi].para);
+    pendingRukuHighlightFromUrl = null;
+    var qp = new URLSearchParams(window.location.search);
+    var urlPara = parseInt(qp.get("para"), 10);
+    var urlParaOk = !isNaN(urlPara) && urlPara >= 1 && urlPara <= 30 &&
+      paraSelect.querySelector('option[value="' + urlPara + '"]');
+    if (urlParaOk) {
+      paraSelect.value = String(urlPara);
+      var rk = qp.get("ruku");
+      if (rk != null && String(rk).trim() !== "") {
+        try {
+          pendingRukuHighlightFromUrl = decodeURIComponent(String(rk)).trim();
+        } catch (err) {
+          pendingRukuHighlightFromUrl = String(rk).trim();
+        }
+      }
+    } else {
+      var p = readPlaybackPersist();
+      if (p) {
+        var gi = parseInt(p.globalIndex, 10);
+        if (!isNaN(gi) && data[gi]) {
+          paraSelect.value = String(data[gi].para);
+        }
       }
     }
     var ti = document.getElementById("toolbar-transport-icon");
     if (ti) ti.innerHTML = PLAY_SVG;
   })();
   renderTable();
+  if (pendingRukuHighlightFromUrl) {
+    scrollTableToRukuRow(parseInt(paraSelect.value, 10), pendingRukuHighlightFromUrl);
+    pendingRukuHighlightFromUrl = null;
+  }
 })();
 
 

@@ -4,6 +4,7 @@
  */
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const xmlPath = path.join(__dirname, "..", "[Bookmark]001_marifatul-quran.xml");
 const outPath = path.join(__dirname, "..", "data.js");
@@ -165,8 +166,9 @@ for (const line of lines) {
   }
 }
 
-// Preserve existing audio URL for As-Saff (para 28, surah 61) if it was in original data
+// Preserve existing audio URL for As-Saff (para 28, surah 61) and play tokens for deep links
 const existingDataPath = path.join(__dirname, "..", "data.js");
+const playTokenByKey = new Map();
 if (fs.existsSync(existingDataPath)) {
   const existing = fs.readFileSync(existingDataPath, "utf8");
   const saffAudioMatch = existing.match(/audioUrl:\s*"([^"]*1-Surah Saff[^"]*)"/);
@@ -177,7 +179,23 @@ if (fs.existsSync(existingDataPath)) {
     );
     if (idx >= 0) rows[idx].audioUrl = url;
   }
+  for (const line of existing.split("\n")) {
+    const pm = line.match(/para: (\d+), rukuInPara: "([^"]+)"/);
+    const tm = line.match(/playToken:\s*"([^"]+)"/);
+    if (pm && tm) playTokenByKey.set(pm[1] + "|" + pm[2], tm[1]);
+  }
 }
+
+function newPlayToken() {
+  return crypto
+    .randomBytes(12)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+const usedPlayTokens = new Set(playTokenByKey.values());
 
 function esc(s) {
   return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -194,8 +212,17 @@ const linesOut = [
 
 for (const r of rows) {
   const audioUrl = r.audioUrl ? esc(r.audioUrl) : "";
+  const key = r.para + "|" + r.rukuInPara;
+  let pt = playTokenByKey.get(key);
+  if (!pt) {
+    do {
+      pt = newPlayToken();
+    } while (usedPlayTokens.has(pt));
+    usedPlayTokens.add(pt);
+    playTokenByKey.set(key, pt);
+  }
   linesOut.push(
-    `  { para: ${r.para}, rukuInPara: "${r.rukuInPara}", surah: "${esc(r.surah)}", surahNumber: ${r.surahNumber}, surahArabic: "${r.surahArabic}", verses: "${r.verses}", audioUrl: "${audioUrl}" },`
+    `  { para: ${r.para}, rukuInPara: "${r.rukuInPara}", surah: "${esc(r.surah)}", surahNumber: ${r.surahNumber}, surahArabic: "${r.surahArabic}", verses: "${r.verses}", audioUrl: "${audioUrl}", playToken: "${pt}" },`
   );
 }
 
