@@ -1263,24 +1263,17 @@
     btn.type = "button";
     btn.className = "audio-share-wa-btn";
     btn.innerHTML = WHATSAPP_SVG;
-    btn.setAttribute("aria-label", "Share recording as file");
-    btn.title = "Share recording with caption";
+    btn.setAttribute("aria-label", "Share player link on WhatsApp");
+    btn.title = "Share player link on WhatsApp";
 
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (btn.disabled) return;
 
-      var title =
-        "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
-      var caption = title + "\n" + buildPlayerDeepLink(row.para, row);
-
-      btn.disabled = true;
-      shareAudioFileWithCaption(src, row, caption).then(
-        function () {},
-        function () {}
-      ).then(function () {
-        btn.disabled = false;
-      });
+      var text = formatBulkRukuLinkBlock(row.para, row);
+      var waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
+      var opened = window.open(waUrl, "_blank", "noopener");
+      if (!opened) window.location.href = waUrl;
     });
 
     return btn;

@@ -670,6 +670,33 @@ function addFiles(incoming) {
   if (currentIndex < 0) loadTrack(0);
 }
 
+function getAudioUrlAlternates(src) {
+  if (typeof src !== 'string' || !src.trim()) return [];
+  const base = src.replace(/\.(opus|ogg|wav)$/i, '');
+  const match = src.match(/\.(opus|ogg|wav)$/i);
+  const ext = match ? match[1].toLowerCase() : '';
+  return ['wav', 'ogg', 'opus']
+    .filter(e => e !== ext)
+    .map(e => `${base}.${e}`);
+}
+
+async function fetchFirstAudioBlob(src) {
+  const candidates = [src, ...getAudioUrlAlternates(src)];
+  for (const candidate of candidates) {
+    try {
+      const abs = new URL(candidate, window.location.href).href;
+      const res = await fetch(abs);
+      if (res.ok) {
+        const blob = await res.blob();
+        if (blob && blob.size) return { blob, src: candidate };
+      }
+    } catch (e) {
+      // Try the next extension.
+    }
+  }
+  return null;
+}
+
 // ── UI Updates ────────────────────────────────────────────────────────────────
 function updateUI() {
   const has = currentIndex >= 0;
@@ -899,15 +926,14 @@ async function initFromParaRukuQuery() {
     return;
   }
 
-  const audioAbs = new URL(row.audioUrl, window.location.href).href;
   queryLoadHint.style.display = 'block';
   queryLoadHint.textContent = 'Loading recording…';
 
   try {
-    const res = await fetch(audioAbs);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const blob = await res.blob();
-    const baseName = row.audioUrl.split('/').pop() || 'recording.opus';
+    const found = await fetchFirstAudioBlob(row.audioUrl);
+    if (!found) throw new Error('No playable audio URL found');
+    const blob = found.blob;
+    const baseName = found.src.split('/').pop() || 'recording.opus';
     const file = new File([blob], baseName, { type: blob.type || 'audio/ogg' });
     const label = `Para ${para} · ${ruku} — ${row.surah} (${row.verses})`;
 
