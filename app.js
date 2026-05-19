@@ -1263,17 +1263,18 @@
     btn.type = "button";
     btn.className = "audio-share-wa-btn";
     btn.innerHTML = WHATSAPP_SVG;
-    btn.setAttribute("aria-label", "Share player link on WhatsApp");
-    btn.title = "Share player link on WhatsApp";
+    btn.setAttribute("aria-label", "Share audio file on WhatsApp");
+    btn.title = "Share audio file on WhatsApp";
 
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (btn.disabled) return;
 
-      var text = formatBulkRukuLinkBlock(row.para, row);
-      var waUrl = "https://wa.me/?text=" + encodeURIComponent(text);
-      var opened = window.open(waUrl, "_blank", "noopener");
-      if (!opened) window.location.href = waUrl;
+      btn.disabled = true;
+      var caption = "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+      shareAudioFileWithCaption(src, row, caption).finally(function () {
+        btn.disabled = false;
+      });
     });
 
     return btn;
