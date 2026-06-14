@@ -869,21 +869,17 @@
   }
 
   /**
-   * Opaque share link: player.html?t=&lt;token&gt; when playToken exists (see data.js).
-   * Legacy ?para=&ruku= still works for bookmarks.
+   * Stable share link: player.html?para=&ruku= — maps directly to the ruku row
+   * (and its audioUrl). No tokens, so links never expire across data rebuilds.
    */
   function buildPlayerDeepLink(paraNum, row) {
     var u = new URL(getPlayerPageUrl());
-    if (row && row.playToken) {
-      u.searchParams.set("t", row.playToken);
-    } else {
-      u.searchParams.set("para", String(paraNum));
-      u.searchParams.set("ruku", row.rukuInPara);
-    }
+    u.searchParams.set("para", String(paraNum));
+    u.searchParams.set("ruku", row.rukuInPara);
     return u.href.replace(/#$/, "");
   }
 
-  /** One ruku block: title line + player URL (opaque ?t= when playToken exists). */
+  /** One ruku block: title line + stable ?para=&ruku= player URL. */
   function formatBulkRukuLinkBlock(paraNum, row) {
     var title =
       "P" + paraNum + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";

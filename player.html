@@ -873,50 +873,29 @@ function showNudge(text) {
   }, 700);
 }
 
-// ── Deep link: player.html?t=&lt;token&gt; (shared) or ?para=N&ruku=R3 (legacy) ──
+// ── Deep link: player.html?para=N&ruku=R3 ──────────────────────────────────────
 async function initFromParaRukuQuery() {
   if (typeof QURAN_DATA === 'undefined') return;
 
   const qp = new URLSearchParams(window.location.search);
   let row = null;
-  let para = NaN;
-  let ruku = '';
+  let para = parseInt(qp.get('para'), 10);
+  let ruku = qp.get('ruku');
 
-  const rawT = qp.get('t');
-  if (rawT != null && String(rawT).trim() !== '') {
-    const t = String(rawT).trim();
-    row = QURAN_DATA.find(r => r.playToken === t) || null;
-    if (row) {
-      para = row.para;
-      ruku = row.rukuInPara;
+  if (ruku != null && String(ruku).trim() !== '') {
+    try {
+      ruku = decodeURIComponent(String(ruku)).trim();
+    } catch (e) {
+      ruku = String(ruku).trim();
     }
+  } else {
+    ruku = '';
+  }
+  if (!isNaN(para) && para >= 1 && para <= 30 && ruku) {
+    row = QURAN_DATA.find(r => r.para === para && r.rukuInPara === ruku) || null;
   }
 
-  if (!row) {
-    para = parseInt(qp.get('para'), 10);
-    ruku = qp.get('ruku');
-    if (ruku != null && String(ruku).trim() !== '') {
-      try {
-        ruku = decodeURIComponent(String(ruku)).trim();
-      } catch (e) {
-        ruku = String(ruku).trim();
-      }
-    } else {
-      ruku = '';
-    }
-    if (!isNaN(para) && para >= 1 && para <= 30 && ruku) {
-      row = QURAN_DATA.find(r => r.para === para && r.rukuInPara === ruku) || null;
-    }
-  }
-
-  if (!row) {
-    if (rawT != null && String(rawT).trim() !== '') {
-      noTrackEl.textContent = 'Invalid or expired play link.';
-      queryLoadHint.style.display = 'block';
-      queryLoadHint.textContent = 'Ask for a new link from the main app.';
-    }
-    return;
-  }
+  if (!row) return;
 
   if (isNaN(para) || para < 1 || para > 30 || !ruku) return;
   if (!row.audioUrl || !String(row.audioUrl).trim()) {
