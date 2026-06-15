@@ -1377,10 +1377,31 @@
     return true;
   }
 
+  /** Toggle the spinner on the active track's play button (and toolbar) while it buffers. */
+  function setTrackLoading(isLoading) {
+    var gi = mqPlayback.activeGlobalIndex;
+    var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
+    if (els && els.playBtn) {
+      els.playBtn.classList.toggle("is-loading", isLoading);
+      els.playBtn.setAttribute("aria-busy", isLoading ? "true" : "false");
+    }
+    var toolbarBtn = document.getElementById("toolbar-play-pause-btn");
+    if (toolbarBtn) toolbarBtn.classList.toggle("is-loading", isLoading);
+  }
+
   function bindMqAudioLifecycle() {
     if (mqPlayback._listenersBound) return;
     mqPlayback._listenersBound = true;
     var a = mqPlayback.el;
+
+    // Loading/buffering indicator: on when fetching or stalled, off once playable.
+    a.addEventListener("loadstart", function () {
+      if (a.networkState === 2 /* NETWORK_LOADING */) setTrackLoading(true);
+    });
+    a.addEventListener("waiting", function () { setTrackLoading(true); });
+    a.addEventListener("stalled", function () { setTrackLoading(true); });
+    a.addEventListener("canplay", function () { setTrackLoading(false); });
+    a.addEventListener("playing", function () { setTrackLoading(false); });
 
     a.addEventListener("play", function () {
       stopMediaSessionKeepalive();
@@ -1485,6 +1506,7 @@
     });
 
     a.addEventListener("error", function () {
+      setTrackLoading(false);
       var alts = mqPlayback.alternateUrls || [];
       var idx = mqPlayback.alternateIndex || 0;
       if (alts.length && idx < alts.length) {

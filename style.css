@@ -1273,6 +1273,7 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 }
 
 .audio-play-btn {
+  position: relative;
   flex-shrink: 0;
   width: 38px;
   height: 38px;
@@ -1317,6 +1318,35 @@ tr.playing:not(.audio-paused) .audio-play-btn {
 tr.playing.audio-paused .audio-play-btn {
   animation: none;
   opacity: 0.95;
+}
+
+/* Loading state: shown while the audio is fetching/buffering before it can play.
+   Hides the play/pause glyph and overlays a spinner so the wait is visible. */
+.audio-play-btn.is-loading {
+  pointer-events: none;
+  animation: none !important;
+}
+
+.audio-play-btn.is-loading > svg {
+  opacity: 0;
+}
+
+.audio-play-btn.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: audio-spin 0.7s linear infinite;
+}
+
+@keyframes audio-spin {
+  to { transform: rotate(360deg); }
 }
 
 @keyframes playing-pulse {
