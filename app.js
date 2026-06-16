@@ -1608,6 +1608,10 @@
     tbody.querySelectorAll(".audio-play-btn").forEach(function (btn) {
       btn.innerHTML = PLAY_SVG;
       btn.setAttribute("aria-label", "Play");
+      // Clear any spinner orphaned by a superseded load on another row's button
+      // (is-loading sets pointer-events:none, so a stuck spinner makes the row unclickable).
+      btn.classList.remove("is-loading");
+      btn.setAttribute("aria-busy", "false");
     });
     clearPlayingClass();
     mqPlayback.activeGlobalIndex = globalIndex;
