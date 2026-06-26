@@ -2,6 +2,7 @@ package com.mohsingdp.marifatulquran.playback
 
 import android.content.ComponentName
 import android.content.Context
+import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
@@ -10,6 +11,7 @@ import com.google.common.util.concurrent.MoreExecutors
 import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.core.audioUrl
 import com.mohsingdp.marifatulquran.data.Prefs
+import com.mohsingdp.marifatulquran.download.Downloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -28,6 +30,7 @@ class PlayerController(
     context: Context,
     private val scope: CoroutineScope,
     private val prefs: Prefs,
+    private val downloader: Downloader,
 ) {
     private val _state = MutableStateFlow(PlayerUiState())
     val state: StateFlow<PlayerUiState> = _state
@@ -49,9 +52,14 @@ class PlayerController(
         }, MoreExecutors.directExecutor())
     }
 
-    // TODO(Phase 6): prefer downloaded local file when available
+    /** Offline-first: use local file if it exists, else stream from network. */
     private fun mediaItemFor(r: Ruku): MediaItem {
-        return MediaItem.fromUri(audioUrl(r))
+        val localFile = downloader.localFile(r)
+        return if (localFile.exists()) {
+            MediaItem.fromUri(Uri.fromFile(localFile))
+        } else {
+            MediaItem.fromUri(audioUrl(r))
+        }
     }
 
     fun setQueue(para: Int, rukus: List<Ruku>, startIndex: Int) {

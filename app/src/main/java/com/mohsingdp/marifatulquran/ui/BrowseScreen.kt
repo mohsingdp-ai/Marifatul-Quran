@@ -1,24 +1,40 @@
 package com.mohsingdp.marifatulquran.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.SnapshotStateMap
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.mohsingdp.marifatulquran.R
+import com.mohsingdp.marifatulquran.core.DownloadStatus
 import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.data.SavedPosition
+import com.mohsingdp.marifatulquran.download.Downloader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +43,9 @@ fun BrowseScreen(
     resume: SavedPosition? = null,
     onResume: () -> Unit = {},
     onOpen: (para: Int, index: Int) -> Unit,
+    downloader: Downloader,
+    downloadStatusMap: SnapshotStateMap<Ruku, DownloadStatus>,
+    scope: CoroutineScope,
 ) {
     Scaffold(
         topBar = {
@@ -45,9 +64,9 @@ fun BrowseScreen(
                 item {
                     val surahName = vm.rukusFor(resume.para).getOrNull(resume.rukuIndex)?.surah
                     val label = if (surahName != null) {
-                        "▶ Resume: $surahName — Para ${resume.para}"
+                        "Resume: $surahName — Para ${resume.para}"
                     } else {
-                        "▶ Resume: Para ${resume.para}"
+                        "Resume: Para ${resume.para}"
                     }
                     Button(
                         onClick = onResume,
@@ -63,19 +82,61 @@ fun BrowseScreen(
 
             vm.paras.forEach { paraGroup ->
                 item {
-                    Text(
-                        text = "Para ${paraGroup.para}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
+                    // Para header with "Download all" action
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                    )
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = "Para ${paraGroup.para}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        // Show "Download all" only if at least one ruku is not yet downloaded
+                        val anyNotDownloaded = paraGroup.rukus.any { r ->
+                            downloadStatusMap[r] != DownloadStatus.Downloaded
+                        }
+                        if (anyNotDownloaded) {
+                            TextButton(
+                                onClick = {
+                                    paraGroup.rukus.forEach { ruku ->
+                                        val current = downloadStatusMap[ruku]
+                                        if (current != DownloadStatus.Downloaded &&
+                                            current != DownloadStatus.Downloading
+                                        ) {
+                                            downloadStatusMap[ruku] = DownloadStatus.Downloading
+                                            scope.launch {
+                                                val result = downloader.download(ruku)
+                                                downloadStatusMap[ruku] = result
+                                            }
+                                        }
+                                    }
+                                },
+                            ) {
+                                Text("Download all")
+                            }
+                        }
+                    }
                 }
                 itemsIndexed(paraGroup.rukus) { indexInPara, ruku ->
                     RukuRow(
                         ruku = ruku,
+                        downloadStatus = downloadStatusMap[ruku] ?: DownloadStatus.NotDownloaded,
                         onClick = { onOpen(paraGroup.para, indexInPara) },
+                        onDownload = {
+                            if (downloadStatusMap[ruku] != DownloadStatus.Downloaded &&
+                                downloadStatusMap[ruku] != DownloadStatus.Downloading
+                            ) {
+                                downloadStatusMap[ruku] = DownloadStatus.Downloading
+                                scope.launch {
+                                    val result = downloader.download(ruku)
+                                    downloadStatusMap[ruku] = result
+                                }
+                            }
+                        },
                     )
                     HorizontalDivider()
                 }
@@ -85,21 +146,64 @@ fun BrowseScreen(
 }
 
 @Composable
-private fun RukuRow(ruku: Ruku, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+private fun RukuRow(
+    ruku: Ruku,
+    downloadStatus: DownloadStatus,
+    onClick: () -> Unit,
+    onDownload: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = "${ruku.surah} — ${ruku.surahArabic}",
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        Text(
-            text = "Para ${ruku.para} · ${ruku.rukuInPara} · ${ruku.verses}",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-        )
+        // Tappable text column (opens player)
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Text(
+                text = "${ruku.surah} — ${ruku.surahArabic}",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = "Para ${ruku.para} · ${ruku.rukuInPara} · ${ruku.verses}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            )
+        }
+
+        // Download affordance
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            when (downloadStatus) {
+                DownloadStatus.Downloading -> CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                )
+                DownloadStatus.Downloaded -> Icon(
+                    painter = painterResource(id = R.drawable.ic_downloaded),
+                    contentDescription = "Downloaded",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp),
+                )
+                else -> IconButton(
+                    onClick = onDownload,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_download),
+                        contentDescription = "Download",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+        }
     }
 }

@@ -9,9 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import com.mohsingdp.marifatulquran.core.DownloadStatus
+import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.data.DefaultRukuRepository
 import com.mohsingdp.marifatulquran.data.Prefs
 import com.mohsingdp.marifatulquran.data.SavedPosition
+import com.mohsingdp.marifatulquran.download.Downloader
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.BrowseScreen
 import com.mohsingdp.marifatulquran.ui.BrowseViewModel
@@ -31,11 +34,24 @@ class MainActivity : ComponentActivity() {
                 val vm = remember { BrowseViewModel(DefaultRukuRepository()) }
                 val scope = rememberCoroutineScope()
                 val prefs = remember { Prefs(this@MainActivity) }
-                val controller = remember { PlayerController(this@MainActivity, scope, prefs) }
+                val downloader = remember { Downloader(this@MainActivity) }
+                val controller = remember { PlayerController(this@MainActivity, scope, prefs, downloader) }
                 var screen by remember { mutableStateOf<Screen>(Screen.Browse) }
 
                 // Read saved position once on first composition
                 val savedPosition: SavedPosition? = remember { prefs.lastPosition() }
+
+                // Download status map — hoisted here so it survives Browse↔Player navigation.
+                // Initialized from disk so existing files are shown on launch.
+                val downloadStatusMap = remember {
+                    val map = androidx.compose.runtime.mutableStateMapOf<Ruku, DownloadStatus>()
+                    vm.paras.forEach { pg ->
+                        pg.rukus.forEach { ruku ->
+                            map[ruku] = downloader.status(ruku)
+                        }
+                    }
+                    map
+                }
 
                 when (val s = screen) {
                     is Screen.Browse -> {
@@ -52,12 +68,14 @@ class MainActivity : ComponentActivity() {
                                 }
                             },
                             onOpen = { para, index ->
-                                // Set the queue to all rukus of the tapped para, starting at tapped index
                                 val rukus = vm.rukusFor(para)
                                 controller.setQueue(para, rukus, index)
                                 controller.play()
                                 screen = Screen.Player(para, index)
                             },
+                            downloader = downloader,
+                            downloadStatusMap = downloadStatusMap,
+                            scope = scope,
                         )
                     }
 
