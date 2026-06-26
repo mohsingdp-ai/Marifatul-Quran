@@ -1204,3 +1204,31 @@ Expected: `APK OK: <≤2.0> MB`. (Spike baseline 1.92 MB universal; arm64 split 
 - **TDD boundary honored:** `:core` (1.x) and pure helpers (5.1, 6.1) are red→green→refactor; ViewModel (3.1) uses a fake repo; service/UI/DataStore-IO are "verify on device" per decision #9.
 - **Type consistency:** `Ruku`, `ParaGroup`, `audioUrl(ruku, base)`, `Playlist`, `RukuRepository.paras()`, `BrowseViewModel.rukusFor()`, `DownloadStatus`, `localFileName(ruku)` used consistently across tasks.
 - **Versions** all verified to exist (maven-metadata checks): Gradle 8.14.5, AGP 8.13.2, Kotlin 2.2.20, Compose BOM 2026.06.00, Media3 1.10.1.
+
+---
+
+## Phase 9 — Settings + playback mode (match web: Stop / Loop / Next)
+
+Web parity (from app.js/index.html): Settings → "After ruku ends" tri-state stored in `playback_mode` (default `none`). On track end: `none`=stop, `loop`=repeat current, `next`=play next ruku.
+
+### Task 9.1: `:core` PlaybackMode (TDD)
+- `enum class PlaybackMode { NONE, LOOP, NEXT }`; `fun PlaybackMode.storageValue(): String` ("none"/"loop"/"next"); `fun parsePlaybackMode(s: String?): PlaybackMode` (loop→LOOP, next→NEXT, else NONE); `const val PLAYBACK_MODE_KEY = "playback_mode"`.
+- Tests: parse("loop")==LOOP, parse("next")==NEXT, parse(null)/parse("x")==NONE; round-trip storageValue↔parse.
+
+### Task 9.2: Prefs + Settings screen + nav + PlayerController wiring (verify on device/build)
+- `Prefs`: `fun getPlaybackMode(): PlaybackMode` / `fun setPlaybackMode(m)` (SharedPreferences "mq", key PLAYBACK_MODE_KEY).
+- `ui/SettingsScreen.kt`: Scaffold + TopAppBar("Settings") + "After ruku ends" segmented buttons **Stop / Loop / Next** (active = current), writing Prefs + calling `controller.applyPlaybackMode(m)`.
+- Nav: add `Screen.Settings` to MainActivity sealed nav; a gear IconButton (vector `ic_settings.xml`) in BrowseScreen TopAppBar → Settings; BackHandler returns to Browse.
+- `PlayerController.applyPlaybackMode(m)`: `setRepeatMode(if (m==LOOP) REPEAT_MODE_ONE else REPEAT_MODE_OFF)`; remember `m`; in the existing Player.Listener add `onMediaItemTransition(item, reason)` → if `reason == MEDIA_ITEM_TRANSITION_REASON_AUTO && m == NONE` then `pause()`. Apply current mode in `setQueue` and whenever Settings changes it. Default NONE (matches web — CHANGES prior always-advance behavior).
+
+## Phase 10 — WhatsApp share (match web caption + deep link)
+
+### Task 10.1: `:core` share text (TDD)
+- `fun playerDeepLink(ruku: Ruku, base: String = PAGES_BASE): String` = `base.trimEnd('/') + "/player.html?para=" + ruku.para + "&ruku=" + formEncode(ruku.rukuInPara)` where formEncode = `URLEncoder.encode(value, "UTF-8")` (matches web URLSearchParams: space→`+`, `+`→`%2B`).
+- `fun shareCaption(ruku: Ruku, base: String = PAGES_BASE): String` = `"P${ruku.para}: ${ruku.rukuInPara} — ${ruku.surah} (${ruku.verses})\n" + playerDeepLink(ruku, base)`.
+- Tests: R1 → `.../player.html?para=1&ruku=R1`; a "+" ruku (e.g. "R16+") → `ruku=R16%2B`; caption line format exact.
+
+### Task 10.2: Share button + intent (verify on device/build)
+- Vector `ic_share.xml`. Share IconButton on each ruku row (and PlayerScreen). On click: `Intent(ACTION_SEND).setType("text/plain").putExtra(EXTRA_TEXT, shareCaption(ruku))`, try `setPackage("com.whatsapp")`; on `ActivityNotFoundException` fall back to `Intent.createChooser(...)`. (Matches web: shares ruku title + stable player.html link.)
+
+**Budget:** both phases must keep release arm64 APK ≤ 2 MiB (currently 1.876, ~124KB headroom).

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- NoActionBar window shell for the Compose app (Compose draws the real UI/colors).
+         Without this the system ActionBar shows the app label, duplicating the Compose TopAppBar. -->
+    <style name="Theme.MarifatulQuran" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#0D5C5C</item>
+        <item name="android:windowBackground">#EEF4F4</item>
+    </style>
+</resources>
