@@ -1,5 +1,8 @@
 package com.mohsingdp.marifatulquran.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,15 +29,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mohsingdp.marifatulquran.R
 import com.mohsingdp.marifatulquran.core.DownloadStatus
 import com.mohsingdp.marifatulquran.core.Ruku
+import com.mohsingdp.marifatulquran.core.shareCaption
 import com.mohsingdp.marifatulquran.data.SavedPosition
 import com.mohsingdp.marifatulquran.download.Downloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+/** Launch a WhatsApp share intent; fallback to system chooser if WhatsApp not installed. */
+internal fun shareRukuIntent(context: Context, ruku: Ruku) {
+    val text = shareCaption(ruku)
+    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
+    try {
+        context.startActivity(send.setPackage("com.whatsapp"))
+    } catch (e: ActivityNotFoundException) {
+        context.startActivity(
+            Intent.createChooser(
+                Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text),
+                "Share",
+            )
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +64,13 @@ fun BrowseScreen(
     resume: SavedPosition? = null,
     onResume: () -> Unit = {},
     onOpen: (para: Int, index: Int) -> Unit,
+    onOpenSettings: () -> Unit = {},
     downloader: Downloader,
     downloadStatusMap: SnapshotStateMap<Ruku, DownloadStatus>,
     scope: CoroutineScope,
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -54,7 +78,17 @@ fun BrowseScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_settings),
+                            contentDescription = "Settings",
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                },
             )
         },
     ) { innerPadding ->
@@ -137,6 +171,7 @@ fun BrowseScreen(
                                 }
                             }
                         },
+                        onShare = { shareRukuIntent(context, ruku) },
                     )
                     HorizontalDivider()
                 }
@@ -151,6 +186,7 @@ private fun RukuRow(
     downloadStatus: DownloadStatus,
     onClick: () -> Unit,
     onDownload: () -> Unit,
+    onShare: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -171,6 +207,19 @@ private fun RukuRow(
                 text = "Para ${ruku.para} · ${ruku.rukuInPara} · ${ruku.verses}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            )
+        }
+
+        // Share button
+        IconButton(
+            onClick = onShare,
+            modifier = Modifier.size(48.dp),
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_share),
+                contentDescription = "Share",
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.size(24.dp),
             )
         }
 

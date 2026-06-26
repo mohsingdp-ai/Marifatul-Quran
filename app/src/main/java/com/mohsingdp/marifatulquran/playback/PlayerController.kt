@@ -8,6 +8,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
+import com.mohsingdp.marifatulquran.core.PlaybackMode
 import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.core.audioUrl
 import com.mohsingdp.marifatulquran.data.Prefs
@@ -39,6 +40,9 @@ class PlayerController(
     /** The para currently loaded in the queue; updated on every setQueue call. */
     private var currentPara: Int = -1
 
+    /** Current playback mode — persisted to prefs on change. Default NONE. */
+    private var currentMode: PlaybackMode = PlaybackMode.NONE
+
     init {
         val token = SessionToken(context, ComponentName(context, PlaybackService::class.java))
         val future = MediaController.Builder(context, token).buildAsync()
@@ -46,10 +50,30 @@ class PlayerController(
             controller = future.get().also { c ->
                 c.addListener(object : Player.Listener {
                     override fun onEvents(player: Player, events: Player.Events) = pushState()
+                    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                        // When ExoPlayer auto-advances (reason=AUTO) and mode is NONE, stop playback
+                        if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO && currentMode == PlaybackMode.NONE) {
+                            controller?.pause()
+                        }
+                    }
                 })
+                // Apply the persisted playback mode right after connecting
+                val savedMode = prefs.getPlaybackMode()
+                currentMode = savedMode
+                applyRepeatMode(c, savedMode)
             }
             startPolling()
         }, MoreExecutors.directExecutor())
+    }
+
+    /** Apply playback mode: update repeat mode on the controller and remember it. */
+    fun applyPlaybackMode(m: PlaybackMode) {
+        currentMode = m
+        controller?.let { applyRepeatMode(it, m) }
+    }
+
+    private fun applyRepeatMode(c: MediaController, m: PlaybackMode) {
+        c.repeatMode = if (m == PlaybackMode.LOOP) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
     }
 
     /** Offline-first: use local file if it exists, else stream from network. */
@@ -67,6 +91,8 @@ class PlayerController(
         val c = controller ?: return
         c.setMediaItems(rukus.map { mediaItemFor(it) }, startIndex, 0L)
         c.prepare()
+        // Re-apply mode so repeat/stop behaviour is correct for this queue
+        applyRepeatMode(c, currentMode)
     }
 
     fun play() { controller?.play() }

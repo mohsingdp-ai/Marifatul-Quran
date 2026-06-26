@@ -1,6 +1,10 @@
 package com.mohsingdp.marifatulquran.data
 
 import android.content.Context
+import com.mohsingdp.marifatulquran.core.PLAYBACK_MODE_KEY
+import com.mohsingdp.marifatulquran.core.PlaybackMode
+import com.mohsingdp.marifatulquran.core.parsePlaybackMode
+import com.mohsingdp.marifatulquran.core.storageValue
 
 /** Stable SharedPreferences key for the saved position of a given para. */
 fun positionKey(para: Int): String = "pos_para_$para"
@@ -28,5 +32,12 @@ class Prefs(context: Context) {
         val rukuIndex = prefs.getInt("last_ruku_index", 0)
         val positionMs = prefs.getLong("last_position_ms", 0L)
         return SavedPosition(para, rukuIndex, positionMs)
+    }
+
+    fun getPlaybackMode(): PlaybackMode =
+        parsePlaybackMode(prefs.getString(PLAYBACK_MODE_KEY, null))
+
+    fun setPlaybackMode(m: PlaybackMode) {
+        prefs.edit().putString(PLAYBACK_MODE_KEY, m.storageValue()).apply()
     }
 }

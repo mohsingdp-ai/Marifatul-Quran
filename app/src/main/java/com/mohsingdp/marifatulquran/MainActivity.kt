@@ -27,11 +27,13 @@ import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.BrowseScreen
 import com.mohsingdp.marifatulquran.ui.BrowseViewModel
 import com.mohsingdp.marifatulquran.ui.PlayerScreen
+import com.mohsingdp.marifatulquran.ui.SettingsScreen
 import com.mohsingdp.marifatulquran.ui.theme.MarifatulTheme
 
 sealed interface Screen {
     data object Browse : Screen
     data class Player(val para: Int, val index: Int) : Screen
+    data object Settings : Screen
 }
 
 class MainActivity : ComponentActivity() {
@@ -95,6 +97,7 @@ class MainActivity : ComponentActivity() {
                                 controller.play()
                                 screen = Screen.Player(para, index)
                             },
+                            onOpenSettings = { screen = Screen.Settings },
                             downloader = downloader,
                             downloadStatusMap = downloadStatusMap,
                             scope = scope,
@@ -113,6 +116,19 @@ class MainActivity : ComponentActivity() {
 
                         PlayerScreen(
                             title = title,
+                            controller = controller,
+                            rukus = rukus,
+                            onBack = { screen = Screen.Browse },
+                        )
+                    }
+
+                    is Screen.Settings -> {
+                        BackHandler {
+                            screen = Screen.Browse
+                        }
+
+                        SettingsScreen(
+                            prefs = prefs,
                             controller = controller,
                             onBack = { screen = Screen.Browse },
                         )
