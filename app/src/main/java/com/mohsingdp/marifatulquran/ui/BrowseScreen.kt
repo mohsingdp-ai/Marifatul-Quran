@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -17,11 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mohsingdp.marifatulquran.core.Ruku
+import com.mohsingdp.marifatulquran.data.SavedPosition
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BrowseScreen(
     vm: BrowseViewModel,
+    resume: SavedPosition? = null,
+    onResume: () -> Unit = {},
     onOpen: (para: Int, index: Int) -> Unit,
 ) {
     Scaffold(
@@ -36,6 +40,27 @@ fun BrowseScreen(
         },
     ) { innerPadding ->
         LazyColumn(contentPadding = innerPadding) {
+            // Resume banner — shown at top if there is a saved position
+            if (resume != null) {
+                item {
+                    val surahName = vm.rukusFor(resume.para).getOrNull(resume.rukuIndex)?.surah
+                    val label = if (surahName != null) {
+                        "▶ Resume: $surahName — Para ${resume.para}"
+                    } else {
+                        "▶ Resume: Para ${resume.para}"
+                    }
+                    Button(
+                        onClick = onResume,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        Text(label)
+                    }
+                    HorizontalDivider()
+                }
+            }
+
             vm.paras.forEach { paraGroup ->
                 item {
                     Text(

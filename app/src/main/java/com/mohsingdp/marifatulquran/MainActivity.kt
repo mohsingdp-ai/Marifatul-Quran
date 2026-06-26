@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.mohsingdp.marifatulquran.data.DefaultRukuRepository
+import com.mohsingdp.marifatulquran.data.Prefs
+import com.mohsingdp.marifatulquran.data.SavedPosition
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.BrowseScreen
 import com.mohsingdp.marifatulquran.ui.BrowseViewModel
@@ -28,18 +30,35 @@ class MainActivity : ComponentActivity() {
             MarifatulTheme {
                 val vm = remember { BrowseViewModel(DefaultRukuRepository()) }
                 val scope = rememberCoroutineScope()
-                val controller = remember { PlayerController(this@MainActivity, scope) }
+                val prefs = remember { Prefs(this@MainActivity) }
+                val controller = remember { PlayerController(this@MainActivity, scope, prefs) }
                 var screen by remember { mutableStateOf<Screen>(Screen.Browse) }
+
+                // Read saved position once on first composition
+                val savedPosition: SavedPosition? = remember { prefs.lastPosition() }
 
                 when (val s = screen) {
                     is Screen.Browse -> {
-                        BrowseScreen(vm = vm) { para, index ->
-                            // Set the queue to all rukus of the tapped para, starting at tapped index
-                            val rukus = vm.rukusFor(para)
-                            controller.setQueue(rukus, index)
-                            controller.play()
-                            screen = Screen.Player(para, index)
-                        }
+                        BrowseScreen(
+                            vm = vm,
+                            resume = savedPosition,
+                            onResume = {
+                                if (savedPosition != null) {
+                                    val rukus = vm.rukusFor(savedPosition.para)
+                                    controller.setQueue(savedPosition.para, rukus, savedPosition.rukuIndex)
+                                    controller.seekTo(savedPosition.positionMs)
+                                    controller.play()
+                                    screen = Screen.Player(savedPosition.para, savedPosition.rukuIndex)
+                                }
+                            },
+                            onOpen = { para, index ->
+                                // Set the queue to all rukus of the tapped para, starting at tapped index
+                                val rukus = vm.rukusFor(para)
+                                controller.setQueue(para, rukus, index)
+                                controller.play()
+                                screen = Screen.Player(para, index)
+                            },
+                        )
                     }
 
                     is Screen.Player -> {
