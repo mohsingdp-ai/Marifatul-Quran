@@ -28,9 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mohsingdp.marifatulquran.R
+import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.playback.PlayerController
 
 private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
@@ -40,12 +42,17 @@ private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
 fun PlayerScreen(
     title: String,
     controller: PlayerController,
+    rukus: List<Ruku>,
     onBack: () -> Unit,
 ) {
     val uiState by controller.state.collectAsState()
     var selectedSpeed by remember { mutableFloatStateOf(1f) }
     var isSeeking by remember { mutableStateOf(false) }
     var seekPosition by remember { mutableFloatStateOf(0f) }
+    val context = LocalContext.current
+
+    // Resolve the current ruku for sharing (follows auto-advance)
+    val currentRuku = rukus.getOrNull(uiState.currentIndex)
 
     Scaffold(
         topBar = {
@@ -54,6 +61,8 @@ fun PlayerScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary,
                 ),
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -63,6 +72,17 @@ fun PlayerScreen(
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.titleLarge,
                         )
+                    }
+                },
+                actions = {
+                    if (currentRuku != null) {
+                        IconButton(onClick = { shareRukuIntent(context, currentRuku) }) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_share),
+                                contentDescription = "Share",
+                                modifier = Modifier.size(24.dp),
+                            )
+                        }
                     }
                 },
             )
