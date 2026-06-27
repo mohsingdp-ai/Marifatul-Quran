@@ -10,29 +10,28 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.content.ContextCompat
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.mohsingdp.marifatulquran.core.DownloadStatus
 import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.data.DefaultRukuRepository
 import com.mohsingdp.marifatulquran.data.Prefs
-import com.mohsingdp.marifatulquran.data.SavedPosition
 import com.mohsingdp.marifatulquran.download.Downloader
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.BrowseScreen
 import com.mohsingdp.marifatulquran.ui.BrowseViewModel
-import com.mohsingdp.marifatulquran.ui.PlayerScreen
 import com.mohsingdp.marifatulquran.ui.SettingsScreen
 import com.mohsingdp.marifatulquran.ui.theme.MarifatulTheme
 
 sealed interface Screen {
     data object Browse : Screen
-    data class Player(val para: Int, val index: Int) : Screen
     data object Settings : Screen
 }
 
@@ -62,10 +61,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Read saved position once on first composition
-                val savedPosition: SavedPosition? = remember { prefs.lastPosition() }
+                // Last saved position seeds the initially-shown Para (web defaults to Para 1).
+                val saved = remember { prefs.lastPosition() }
+                var selectedPara by rememberSaveable { mutableIntStateOf(saved?.para ?: 1) }
+                // -1 = nothing loaded into the player yet.
+                var playingPara by rememberSaveable { mutableIntStateOf(-1) }
 
-                // Download status map — hoisted here so it survives Browse↔Player navigation.
+                // Show the guided walkthrough automatically the first time the app is opened.
+                var showGuide by rememberSaveable { mutableStateOf(!prefs.isGuideSeen()) }
+
+                // Download status map — hoisted so it survives Browse↔Settings navigation.
                 // Initialized from disk so existing files are shown on launch.
                 val downloadStatusMap = remember {
                     val map = androidx.compose.runtime.mutableStateMapOf<Ruku, DownloadStatus>()
@@ -77,56 +82,31 @@ class MainActivity : ComponentActivity() {
                     map
                 }
 
-                when (val s = screen) {
+                when (screen) {
                     is Screen.Browse -> {
                         BrowseScreen(
                             vm = vm,
-                            resume = savedPosition,
-                            onResume = {
-                                if (savedPosition != null) {
-                                    val rukus = vm.rukusFor(savedPosition.para)
-                                    controller.setQueue(savedPosition.para, rukus, savedPosition.rukuIndex)
-                                    controller.seekTo(savedPosition.positionMs)
-                                    controller.play()
-                                    screen = Screen.Player(savedPosition.para, savedPosition.rukuIndex)
-                                }
-                            },
-                            onOpen = { para, index ->
-                                val rukus = vm.rukusFor(para)
-                                controller.setQueue(para, rukus, index)
-                                controller.play()
-                                screen = Screen.Player(para, index)
-                            },
-                            onOpenSettings = { screen = Screen.Settings },
+                            controller = controller,
+                            prefs = prefs,
                             downloader = downloader,
                             downloadStatusMap = downloadStatusMap,
                             scope = scope,
-                        )
-                    }
-
-                    is Screen.Player -> {
-                        val rukus = vm.rukusFor(s.para)
-                        val title = rukus.getOrNull(s.index)?.let {
-                            "${it.surah} — ${it.surahArabic}"
-                        } ?: "Para ${s.para}"
-
-                        BackHandler {
-                            screen = Screen.Browse
-                        }
-
-                        PlayerScreen(
-                            title = title,
-                            controller = controller,
-                            rukus = rukus,
-                            onBack = { screen = Screen.Browse },
+                            selectedPara = selectedPara,
+                            onSelectPara = { selectedPara = it },
+                            playingPara = playingPara,
+                            onPlayingParaChange = { playingPara = it },
+                            onOpenSettings = { screen = Screen.Settings },
+                            showGuide = showGuide,
+                            onShowGuide = { showGuide = true },
+                            onGuideFinished = {
+                                showGuide = false
+                                prefs.setGuideSeen()
+                            },
                         )
                     }
 
                     is Screen.Settings -> {
-                        BackHandler {
-                            screen = Screen.Browse
-                        }
-
+                        BackHandler { screen = Screen.Browse }
                         SettingsScreen(
                             prefs = prefs,
                             controller = controller,

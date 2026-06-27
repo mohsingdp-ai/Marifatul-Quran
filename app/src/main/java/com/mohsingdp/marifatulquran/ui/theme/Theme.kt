@@ -1,22 +1,72 @@
 package com.mohsingdp.marifatulquran.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 
-private val LightColors = lightColorScheme(
-    primary = TealAccent, onPrimary = Color(0xFFFFFFFF),
-    secondary = GoldLight, background = Color(0xFFEEF4F4), onBackground = TextLight,
-)
-private val DarkColors = darkColorScheme(
-    primary = TealAccent, secondary = GoldDark,
-    background = DarkSurface, onBackground = TextDark, surface = DarkHeader,
+/**
+ * Semantic palette mirroring the web app's CSS custom properties (dark theme).
+ * Components read these via [LocalMqColors] so colours stay in lock-step with style.css.
+ */
+data class MqColors(
+    val pageBg: Color = PageBg,
+    val cardBg: Color = CardBg,
+    val rowGray: Color = RowGray,
+    val tealDark: Color = TealDark,
+    val tealHeader: Color = TealHeader,
+    val tealAccent: Color = TealAccent,
+    val tealLight: Color = TealLight,
+    val label: Color = VerseLink,
+    val textPrimary: Color = TextPrimary,
+    val textMuted: Color = TextMuted,
+    val gold: Color = ArabicGold,
+    val goldDarkEnd: Color = GoldDarkEnd,
+    val playingBg: Color = PlayingBg,
+    val border: Color = Border,
+    val wa: Color = WaColor,
+) {
+    /** Teal play-button gradient (audio-play-btn, not-playing state). */
+    val tealButtonBrush: Brush
+        get() = Brush.linearGradient(listOf(tealAccent, tealDark))
+
+    /** Gold play-button gradient (tr.playing .audio-play-btn). */
+    val goldButtonBrush: Brush
+        get() = Brush.linearGradient(listOf(gold, goldDarkEnd))
+
+    /** Header bar gradient: linear-gradient(135deg, #0a3d3d, #062c2c 40%, #0f6060). */
+    val headerBrush: Brush
+        get() = Brush.linearGradient(
+            colorStops = arrayOf(0f to tealHeader, 0.4f to tealDark, 1f to HeaderGoldEnd),
+            start = Offset(0f, 0f),
+            end = Offset.Infinite,
+        )
+}
+
+val LocalMqColors = staticCompositionLocalOf { MqColors() }
+
+private val MqDarkScheme = darkColorScheme(
+    primary = TealAccent,
+    onPrimary = Color.White,
+    secondary = ArabicGold,
+    onSecondary = Color.White,
+    background = PageBg,
+    onBackground = TextPrimary,
+    surface = CardBg,
+    onSurface = TextPrimary,
+    surfaceVariant = RowGray,
+    onSurfaceVariant = TextMuted,
+    outline = Border,
 )
 
 @Composable
-fun MarifatulTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (darkTheme) DarkColors else LightColors, content = content)
+fun MarifatulTheme(content: @Composable () -> Unit) {
+    // The web app defaults to (and the screenshots show) the dark theme — force it
+    // so the native UI is identical regardless of the device's system setting.
+    androidx.compose.runtime.CompositionLocalProvider(LocalMqColors provides MqColors()) {
+        MaterialTheme(colorScheme = MqDarkScheme, content = content)
+    }
 }

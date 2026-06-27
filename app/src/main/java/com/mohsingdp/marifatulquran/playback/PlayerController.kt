@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 
 data class PlayerUiState(
     val isPlaying: Boolean = false,
+    val isBuffering: Boolean = false,
     val positionMs: Long = 0,
     val durationMs: Long = 0,
     val currentIndex: Int = 0,
@@ -108,6 +109,9 @@ class PlayerController(
         val c = controller ?: return
         val state = PlayerUiState(
             isPlaying = c.isPlaying,
+            // Loading = user has requested playback but audio hasn't started yet
+            // (e.g. streaming/buffering the file). Drives the play-button spinner.
+            isBuffering = c.playWhenReady && c.playbackState == Player.STATE_BUFFERING,
             positionMs = c.currentPosition.coerceAtLeast(0),
             durationMs = c.duration.coerceAtLeast(0),
             currentIndex = c.currentMediaItemIndex,

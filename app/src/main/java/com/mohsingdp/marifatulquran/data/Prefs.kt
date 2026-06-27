@@ -40,4 +40,18 @@ class Prefs(context: Context) {
     fun setPlaybackMode(m: PlaybackMode) {
         prefs.edit().putString(PLAYBACK_MODE_KEY, m.storageValue()).apply()
     }
+
+    /** Default playback speed seeded into each ruku's speed control. Mirrors the web `default_speed`. */
+    fun getDefaultSpeed(): Float = prefs.getFloat("default_speed", 1f)
+
+    fun setDefaultSpeed(speed: Float) {
+        prefs.edit().putFloat("default_speed", speed).apply()
+    }
+
+    /** Whether the first-run guided walkthrough has already been shown. */
+    fun isGuideSeen(): Boolean = prefs.getBoolean("guide_seen", false)
+
+    fun setGuideSeen() {
+        prefs.edit().putBoolean("guide_seen", true).apply()
+    }
 }
