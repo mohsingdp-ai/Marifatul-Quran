@@ -1,0 +1,27 @@
+<!-- Gold open Mushaf (book) on the brand teal background. Sized within the adaptive safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- left page -->
+    <path
+        android:fillColor="#E6C56A"
+        android:pathData="M54,43 C42,44 33,46 27,50 L27,71 C34,67 45,65 54,67 Z" />
+    <!-- right page -->
+    <path
+        android:fillColor="#D4B85C"
+        android:pathData="M54,43 C66,44 75,46 81,50 L81,71 C74,67 63,65 54,67 Z" />
+    <!-- spine -->
+    <path
+        android:strokeColor="#0A3D3D"
+        android:strokeWidth="1.6"
+        android:strokeLineCap="round"
+        android:pathData="M54,44 L54,66" />
+    <!-- text lines (left page) -->
+    <path android:strokeColor="#0A3D3D" android:strokeWidth="1.4" android:strokeLineCap="round" android:strokeAlpha="0.55"
+        android:pathData="M33,52 L49,50.5 M33,57 L49,55.5 M33,62 L49,60.5" />
+    <!-- text lines (right page) -->
+    <path android:strokeColor="#0A3D3D" android:strokeWidth="1.4" android:strokeLineCap="round" android:strokeAlpha="0.55"
+        android:pathData="M59,50.5 L75,52 M59,55.5 L75,57 M59,60.5 L75,62" />
+</vector>

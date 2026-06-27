@@ -274,17 +274,16 @@ private fun Header() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Marifatul Quran",
+                text = "قرآن پاک",
                 color = Color.White,
-                fontSize = 26.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "RUKU RECORDINGS",
+                text = "رکوع ریکارڈنگ",
                 color = Color.White.copy(alpha = 0.8f),
-                fontSize = 12.sp,
-                letterSpacing = 1.5.sp,
+                fontSize = 14.sp,
             )
         }
         // Gold underline accent (header::after)
