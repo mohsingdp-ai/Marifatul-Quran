@@ -333,15 +333,30 @@ private fun ToolbarCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val paraIndex = paras.indexOf(selectedPara)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 Text(
                     text = "Para (Juz)",
                     color = mq.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                 )
-                Spacer(Modifier.width(12.dp))
+                StepButton(
+                    iconRes = R.drawable.ic_chevron_left,
+                    contentDescription = "Previous Para",
+                    enabled = paraIndex > 0,
+                    onClick = { onSelectPara(paras[paraIndex - 1]) },
+                )
                 ParaDropdown(selectedPara, paras, onSelectPara, paraDropdownModifier)
+                StepButton(
+                    iconRes = R.drawable.ic_chevron_right,
+                    contentDescription = "Next Para",
+                    enabled = paraIndex >= 0 && paraIndex < paras.lastIndex,
+                    onClick = { onSelectPara(paras[paraIndex + 1]) },
+                )
             }
             OverflowMenu(
                 onDownloadPara = onDownloadPara,
@@ -401,6 +416,33 @@ private fun ParaDropdown(
                 )
             }
         }
+    }
+}
+
+/** Small bordered chevron button to step the selected Para by one (disabled at the ends). */
+@Composable
+private fun StepButton(
+    iconRes: Int,
+    contentDescription: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val mq = LocalMqColors.current
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(RoundedCornerShape(6.dp))
+            .border(1.dp, if (enabled) mq.border else mq.border.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+            .background(mq.cardBg)
+            .clickable(enabled = enabled, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = contentDescription,
+            tint = if (enabled) mq.tealAccent else mq.textMuted.copy(alpha = 0.4f),
+            modifier = Modifier.size(22.dp),
+        )
     }
 }
 
@@ -745,54 +787,61 @@ private fun AudioControls(
             }
             SeekButton(R.drawable.ic_seek_fwd, "+5", "Forward 5 seconds", onSeekFwd)
             SpeedPill(speed, onCycleSpeed)
+        }
+        Spacer(Modifier.height(6.dp))
+        // Timeline row: current time · slider · duration (times flank the bar).
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Text(
                 text = formatMs(positionMs),
                 color = mq.textMuted,
                 fontSize = 13.sp,
             )
+            Slider(
+                value = fraction(positionMs, durationMs),
+                onValueChange = onSeekTo,
+                enabled = isActive,
+                colors = SliderDefaults.colors(
+                    activeTrackColor = mq.tealAccent,
+                    inactiveTrackColor = mq.border,
+                    disabledActiveTrackColor = mq.tealAccent,
+                    disabledInactiveTrackColor = mq.border,
+                ),
+                // White circular thumb with a teal ring (matches .audio-progress thumb).
+                thumb = {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(mq.textPrimary)
+                            .border(3.dp, mq.tealAccent, CircleShape)
+                    )
+                },
+                track = { sliderState ->
+                    SliderDefaults.Track(
+                        sliderState = sliderState,
+                        colors = SliderDefaults.colors(
+                            activeTrackColor = mq.tealAccent,
+                            inactiveTrackColor = mq.border,
+                            disabledActiveTrackColor = mq.tealAccent,
+                            disabledInactiveTrackColor = mq.border,
+                        ),
+                        thumbTrackGapSize = 0.dp,
+                        drawStopIndicator = null,
+                        modifier = Modifier.height(8.dp),
+                    )
+                },
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = formatMs(durationMs),
+                color = mq.textMuted,
+                fontSize = 13.sp,
+            )
         }
-        Spacer(Modifier.height(6.dp))
-        Slider(
-            value = fraction(positionMs, durationMs),
-            onValueChange = onSeekTo,
-            enabled = isActive,
-            colors = SliderDefaults.colors(
-                activeTrackColor = mq.tealAccent,
-                inactiveTrackColor = mq.border,
-                disabledActiveTrackColor = mq.tealAccent,
-                disabledInactiveTrackColor = mq.border,
-            ),
-            // White circular thumb with a teal ring (matches .audio-progress thumb).
-            thumb = {
-                Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(mq.textPrimary)
-                        .border(3.dp, mq.tealAccent, CircleShape)
-                )
-            },
-            track = { sliderState ->
-                SliderDefaults.Track(
-                    sliderState = sliderState,
-                    colors = SliderDefaults.colors(
-                        activeTrackColor = mq.tealAccent,
-                        inactiveTrackColor = mq.border,
-                        disabledActiveTrackColor = mq.tealAccent,
-                        disabledInactiveTrackColor = mq.border,
-                    ),
-                    thumbTrackGapSize = 0.dp,
-                    drawStopIndicator = null,
-                    modifier = Modifier.height(8.dp),
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Text(
-            text = formatMs(durationMs),
-            color = mq.textMuted,
-            fontSize = 13.sp,
-        )
     }
 }
 
