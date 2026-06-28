@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -80,10 +81,17 @@ class PlayerController(
     /** Offline-first: use local file if it exists, else stream from network. */
     private fun mediaItemFor(r: Ruku): MediaItem {
         val localFile = downloader.localFile(r)
+        // Metadata so the lock-screen / notification shows the current Para & Ruku
+        // (matches the in-app mini-player wording) instead of the app label.
+        val metadata = MediaMetadata.Builder()
+            .setTitle("Para ${r.para} · Ruku ${r.rukuInPara}")
+            .setArtist("${r.surah} · ${r.verses}")
+            .build()
+        val builder = MediaItem.Builder().setMediaMetadata(metadata)
         return if (localFile.exists()) {
-            MediaItem.fromUri(Uri.fromFile(localFile))
+            builder.setUri(Uri.fromFile(localFile)).build()
         } else {
-            MediaItem.fromUri(audioUrl(r))
+            builder.setUri(audioUrl(r)).build()
         }
     }
 
