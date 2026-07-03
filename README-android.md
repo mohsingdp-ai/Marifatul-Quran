@@ -1,6 +1,6 @@
 # Marifatul Quran — Native Android App
 
-Native Kotlin (Jetpack Compose + Media3) audio player for the Marifatul Quran ruku recordings. Streams audio from GitHub Pages, with background/lockscreen playback, offline download, resume, speed control. Release APK ≈ **1.88 MB** (arm64).
+Native Kotlin (Jetpack Compose + Media3) audio player for the Marifatul Quran ruku recordings. Streams audio from GitHub Pages, with background/lockscreen playback, reliable background/offline download, resume, speed control. Release APK ≈ **1.99 MB** (arm64).
 
 - **Branch:** `feature/android-native`
 - **Package:** `com.mohsingdp.marifatulquran`
@@ -60,7 +60,17 @@ Output: `app/build/outputs/apk/release/app-arm64-v8a-release[-unsigned].apk`
 
 Browse 30 paras / 553 rukus (Material 3, teal/gold brand, system Arabic font) · stream from Pages (stock Media3 Opus decoder, no extension) · background + lockscreen (MediaSessionService) · seek / 5 speed presets / auto-advance · resume last position (SharedPreferences) · offline download (per-ruku + per-para, offline-first playback).
 
-**Pending real-device acceptance (Phase 8):** live tap-to-download + airplane-mode offline playback, lockscreen/notification controls, headset buttons. (Emulator software-GPU input was too flaky to tap-test these reliably; the code paths are built and the offline-detection path is verified.)
+### Download reliability (background/screen-off)
+
+Downloads run in a `dataSync` foreground service (`download/DownloadForegroundService`), NOT on the UI/composition scope, so they keep running when the app is backgrounded or the screen is off. Design:
+
+- **Bounded sequential queue** (`:core` `DownloadQueue`, deduped FIFO) instead of the old unbounded N-parallel fan-out that saturated the link.
+- **Retry with exponential backoff** (`:core` `retryWithBackoff`) + **HTTP Range resume** (`:core` `rangeHeaderFor` / `shouldResume`): a dropped connection resumes from the partial `.part` file rather than restarting.
+- **Atomic completion**: bytes only ever accumulate in `<name>.part`; the file is renamed to the final path (which the player treats as complete on `exists()` alone) only after a full-length check — so the player never sees a partial/empty file.
+- Status is a process-wide `StateFlow` (`download/DownloadRegistry`) the UI observes, so it survives Activity teardown.
+- Requires `FOREGROUND_SERVICE_DATA_SYNC` (manifest). Out of scope by design: auto-resume after force-close / reboot.
+
+**Pending real-device acceptance (Phase 8):** live tap-to-download **with the app backgrounded / screen off** (confirm the download notification shows and the file completes), airplane-mode offline playback, lockscreen/notification controls, headset buttons. (Emulator software-GPU input was too flaky to tap-test these reliably; the code paths are built and unit-tested, and the offline-detection path is verified.)
 
 ## Audio + data
 

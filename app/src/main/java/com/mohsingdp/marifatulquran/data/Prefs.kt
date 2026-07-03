@@ -54,4 +54,11 @@ class Prefs(context: Context) {
     fun setGuideSeen() {
         prefs.edit().putBoolean("guide_seen", true).apply()
     }
+
+    /** Whether the WhatsApp share affordances are shown. Defaults to off. */
+    fun isWhatsAppShareEnabled(): Boolean = prefs.getBoolean("whatsapp_share", false)
+
+    fun setWhatsAppShareEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("whatsapp_share", enabled).apply()
+    }
 }

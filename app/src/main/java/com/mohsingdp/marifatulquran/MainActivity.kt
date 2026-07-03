@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -19,10 +20,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import com.mohsingdp.marifatulquran.core.DownloadStatus
-import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.data.DefaultRukuRepository
 import com.mohsingdp.marifatulquran.data.Prefs
+import com.mohsingdp.marifatulquran.download.DownloadRegistry
 import com.mohsingdp.marifatulquran.download.Downloader
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.BrowseScreen
@@ -70,17 +70,11 @@ class MainActivity : ComponentActivity() {
                 // Show the guided walkthrough automatically the first time the app is opened.
                 var showGuide by rememberSaveable { mutableStateOf(!prefs.isGuideSeen()) }
 
-                // Download status map — hoisted so it survives Browse↔Settings navigation.
-                // Initialized from disk so existing files are shown on launch.
-                val downloadStatusMap = remember {
-                    val map = androidx.compose.runtime.mutableStateMapOf<Ruku, DownloadStatus>()
-                    vm.paras.forEach { pg ->
-                        pg.rukus.forEach { ruku ->
-                            map[ruku] = downloader.status(ruku)
-                        }
-                    }
-                    map
-                }
+                // Per-ruku download status lives in a process-wide registry, so it survives Activity
+                // teardown and is shared with the background download service. Seed it from disk
+                // once, then observe it (existing files show as downloaded on launch).
+                remember { DownloadRegistry.seedFromDiskOnce(vm.paras.flatMap { it.rukus }, downloader) }
+                val downloadStatusMap by DownloadRegistry.statuses.collectAsState()
 
                 when (screen) {
                     is Screen.Browse -> {

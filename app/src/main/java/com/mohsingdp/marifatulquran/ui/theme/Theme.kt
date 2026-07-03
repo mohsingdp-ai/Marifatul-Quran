@@ -1,12 +1,17 @@
 package com.mohsingdp.marifatulquran.ui.theme
 
+import android.app.Activity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 /**
  * Semantic palette mirroring the web app's CSS custom properties (dark theme).
@@ -64,6 +69,25 @@ private val MqDarkScheme = darkColorScheme(
 
 @Composable
 fun MarifatulTheme(content: @Composable () -> Unit) {
+    // The app is always dark, so force the system status & navigation bars to dark
+    // appearance (light icons) regardless of the device's light/dark setting —
+    // otherwise on a light-mode phone the back/home/recents icons render dark and
+    // are invisible against the dark UI.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            // Paint the bars to match the app (teal status, dark nav) on devices that
+            // are NOT edge-to-edge (e.g. Android 14); ignored/transparent on 15+.
+            @Suppress("DEPRECATION")
+            window.statusBarColor = TealHeader.toArgb()
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = PageBg.toArgb()
+            val controller = WindowCompat.getInsetsController(window, view)
+            controller.isAppearanceLightStatusBars = false
+            controller.isAppearanceLightNavigationBars = false
+        }
+    }
     // The web app defaults to (and the screenshots show) the dark theme — force it
     // so the native UI is identical regardless of the device's system setting.
     androidx.compose.runtime.CompositionLocalProvider(LocalMqColors provides MqColors()) {

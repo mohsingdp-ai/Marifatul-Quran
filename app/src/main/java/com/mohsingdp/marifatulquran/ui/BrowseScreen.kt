@@ -3,6 +3,10 @@ package com.mohsingdp.marifatulquran.ui
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,9 +15,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -36,13 +45,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateMap
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,29 +64,76 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.mohsingdp.marifatulquran.R
 import com.mohsingdp.marifatulquran.core.DownloadStatus
 import com.mohsingdp.marifatulquran.core.Ruku
-import com.mohsingdp.marifatulquran.core.shareCaption
 import com.mohsingdp.marifatulquran.data.Prefs
+import com.mohsingdp.marifatulquran.download.DownloadForegroundService
+import com.mohsingdp.marifatulquran.download.DownloadRegistry
 import com.mohsingdp.marifatulquran.download.Downloader
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.theme.LocalMqColors
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val SPEEDS = listOf(0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
 
-/** Launch a WhatsApp share intent; fallback to system chooser if WhatsApp not installed. */
-internal fun shareRukuIntent(context: Context, ruku: Ruku) {
-    val text = shareCaption(ruku)
+/**
+ * Build the WhatsApp audio-share intent for these rukus, staging each file in the cache under a
+ * human-readable name (e.g. "An-Nisa Ruku 1 (24–25).opus"). Returns null if no audio is available
+ * locally (caller should fall back to a text share). The caller adds setPackage / chooser.
+ */
+private fun buildAudioShareIntent(context: Context, downloader: Downloader, rukus: List<Ruku>): Intent? {
+    val authority = "${context.packageName}.fileprovider"
+    val shareDir = File(context.cacheDir, "shared").apply { mkdirs() }
+    val uris = ArrayList<Uri>()
+    for (r in rukus) {
+        val src = downloader.localFile(r)
+        if (!src.exists() || src.length() == 0L) continue
+        val dst = File(shareDir, shareFileName(r))
+        try {
+            src.copyTo(dst, overwrite = true)
+            uris.add(FileProvider.getUriForFile(context, authority, dst))
+        } catch (e: Exception) {
+            // Skip files we can't stage.
+        }
+    }
+    if (uris.isEmpty()) return null
+    return (if (uris.size == 1) {
+        Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
+    } else {
+        Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+    }).apply {
+        type = "audio/*"
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+}
+
+/** Share caption WITHOUT the deep link — just the human-readable reference. */
+private fun shareText(ruku: Ruku): String =
+    "P${ruku.para}: ${ruku.rukuInPara} — ${ruku.surah} (${ruku.verses})"
+
+/** Filesystem-safe, human-readable share name: "{surah} Ruku {n} ({verses}).{ext}". */
+private fun shareFileName(ruku: Ruku): String {
+    val ext = ruku.audioUrl.substringAfterLast('.', "ogg")
+    val rukuNo = ruku.rukuInPara.replace("R", "Ruku ")
+    val raw = "${ruku.surah} $rukuNo (${ruku.verses})"
+    val safe = raw.replace(Regex("[\\\\/:*?\"<>|]"), "-")
+    return "$safe.$ext"
+}
+
+private fun shareTextToWhatsApp(context: Context, text: String) {
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
     try {
         context.startActivity(send.setPackage("com.whatsapp"))
@@ -99,7 +158,7 @@ fun BrowseScreen(
     controller: PlayerController,
     prefs: Prefs,
     downloader: Downloader,
-    downloadStatusMap: SnapshotStateMap<Ruku, DownloadStatus>,
+    downloadStatusMap: Map<Ruku, DownloadStatus>,
     scope: CoroutineScope,
     selectedPara: Int,
     onSelectPara: (Int) -> Unit,
@@ -117,21 +176,117 @@ fun BrowseScreen(
     val uiScope = rememberCoroutineScope()
     // Seed the speed control from the saved default (mirrors the web's getDefaultSpeed()).
     var speed by remember { mutableFloatStateOf(prefs.getDefaultSpeed()) }
+    // WhatsApp share affordances are hidden when the user turns the setting off. Re-read on each
+    // composition so returning from Settings reflects a change immediately.
+    val whatsAppShareEnabled = prefs.isWhatsAppShareEnabled()
 
-    // Captured screen rects of the walkthrough targets (Para dropdown, first card's play button).
+    // Captured screen rects of the walkthrough targets (Para dropdown, first card's
+    // play / WhatsApp-share / download buttons).
     var paraRect by remember { mutableStateOf<Rect?>(null) }
     var playRect by remember { mutableStateOf<Rect?>(null) }
+    var shareRect by remember { mutableStateOf<Rect?>(null) }
+    var downloadRect by remember { mutableStateOf<Rect?>(null) }
 
     val rukus = vm.rukusFor(selectedPara)
     val activeRuku = if (playingPara != -1) {
         vm.rukusFor(playingPara).getOrNull(ui.currentIndex)
     } else null
 
-    /** Load a ruku of the displayed para into the shared player (does not auto-play). */
+    // True when the currently-playing card is itself visible in the list (same Para on screen
+    // and its row is within the viewport). Used to suppress the redundant sticky now-playing bar.
+    val onPlayingPara = selectedPara == playingPara
+    val activeIndex = ui.currentIndex
+    val activeCardInView by remember(onPlayingPara, activeIndex) {
+        derivedStateOf {
+            onPlayingPara && listState.layoutInfo.visibleItemsInfo.any { it.index == activeIndex }
+        }
+    }
+    // Set when "locate" is tapped while viewing a different Para; the scroll runs once that Para
+    // is on screen (the list contents have swapped).
+    var pendingLocate by remember { mutableStateOf(false) }
+
+    /** Load a ruku of the displayed player (does not auto-play). */
     fun activate(index: Int) {
         controller.setQueue(selectedPara, rukus, index)
         controller.setSpeed(speed)
         onPlayingParaChange(selectedPara)
+    }
+
+    // --- Bulk-selection share: ONE share action; each selected ruku is a separate block. ---
+    var selectionMode by remember { mutableStateOf(false) }
+    val selected = remember { mutableStateListOf<Ruku>() }
+    // Rukus currently being prepared for share (fetching audio); their WhatsApp button shows a spinner.
+    val sharingRukus = remember { mutableStateListOf<Ruku>() }
+    // Selection is scoped to the current Para; reset it when the Para changes.
+    LaunchedEffect(selectedPara) { selected.clear() }
+    // Deferred "locate": once the Para switch from a sticky-bar tap has taken effect, scroll the
+    // now-on-screen playing card to the top.
+    LaunchedEffect(selectedPara) {
+        if (pendingLocate && selectedPara == playingPara) {
+            pendingLocate = false
+            listState.animateScrollToItem(ui.currentIndex)
+        }
+    }
+    // Two-step WhatsApp share: send audio first, then (when WhatsApp returns) the text message.
+    // The caption is held here until the audio share comes back.
+    var pendingShareText by remember { mutableStateOf<String?>(null) }
+    val audioShareLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) {
+        val text = pendingShareText
+        pendingShareText = null
+        if (!text.isNullOrEmpty()) {
+            Toast.makeText(context, "Now send the message", Toast.LENGTH_SHORT).show()
+            shareTextToWhatsApp(context, text)
+        }
+    }
+
+    /**
+     * Share one or more rukus as audio file(s), then a follow-up text message. Any not-yet-downloaded
+     * ruku is fetched first (its WhatsApp button shows a spinner) so there's always a file to attach.
+     */
+    fun shareRukus(items: List<Ruku>) {
+        if (items.isEmpty()) return
+        scope.launch {
+            items.forEach { if (it !in sharingRukus) sharingRukus.add(it) }
+            try {
+                for (r in items) {
+                    if (DownloadRegistry.statusOf(r) != DownloadStatus.Downloaded) {
+                        DownloadForegroundService.enqueue(context, r)
+                        // Wait for the background download to finish (or fail) before staging the file,
+                        // but never hang the share spinner indefinitely if it stalls (fall through to
+                        // the text-only share when buildAudioShareIntent finds no local file).
+                        withTimeoutOrNull(120_000) {
+                            DownloadRegistry.statuses.first {
+                                val s = it[r]
+                                s == DownloadStatus.Downloaded || s is DownloadStatus.Failed
+                            }
+                        }
+                    }
+                }
+                val caption = items.joinToString("\n\n") { shareText(it) }
+                val audioIntent = withContext(Dispatchers.IO) {
+                    buildAudioShareIntent(context, downloader, items)
+                }
+                if (audioIntent == null) {
+                    // Nothing downloaded — just share the text.
+                    shareTextToWhatsApp(context, caption)
+                    return@launch
+                }
+                // 1) Audio to WhatsApp; 2) text fires from the launcher callback on return.
+                pendingShareText = caption
+                try {
+                    audioShareLauncher.launch(Intent(audioIntent).setPackage("com.whatsapp"))
+                } catch (e: ActivityNotFoundException) {
+                    // WhatsApp absent: chooser for the audio, then share the text too.
+                    pendingShareText = null
+                    context.startActivity(Intent.createChooser(audioIntent, "Share"))
+                    shareTextToWhatsApp(context, caption)
+                }
+            } finally {
+                sharingRukus.removeAll(items)
+            }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -142,46 +297,84 @@ fun BrowseScreen(
     ) {
         Header()
 
+        // Sticky Para toolbar — stays put while the ruku list scrolls.
+        Box(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
+            ToolbarCard(
+                selectedPara = selectedPara,
+                paras = vm.paras.map { it.para },
+                onSelectPara = onSelectPara,
+                paraDropdownModifier = Modifier.onGloballyPositioned { paraRect = it.boundsInRoot() },
+                onDownloadPara = {
+                    rukus.forEach { ruku ->
+                        if (isDownloadable(downloadStatusMap[ruku])) {
+                            DownloadForegroundService.enqueue(context, ruku)
+                        }
+                    }
+                },
+                onOpenSettings = onOpenSettings,
+                onShowGuide = onShowGuide,
+                onSelect = { selectionMode = true },
+                showShare = whatsAppShareEnabled,
+            )
+        }
+
+        // Selection action bar (bulk share) — shown only in selection mode.
+        if (selectionMode) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, mq.border, RoundedCornerShape(8.dp))
+                        .clickable { selectionMode = false; selected.clear() }
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                ) { Text("Cancel", color = mq.textMuted, fontSize = 14.sp) }
+                Text(
+                    "${selected.size} selected",
+                    color = mq.textPrimary,
+                    fontSize = 14.sp,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                )
+                val canShare = selected.isNotEmpty()
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (canShare) mq.wa else mq.border)
+                        .clickable(enabled = canShare) {
+                            val toShare = selected.toList()
+                            selectionMode = false
+                            selected.clear()
+                            shareRukus(toShare)
+                        }
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "Share (${selected.size})",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(10.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                start = 10.dp, end = 10.dp, top = 0.dp,
+                // Clear the system navigation bar, plus extra room for the sticky now-playing bar
+                // when a track is loaded — so the last card is never hidden behind either.
+                bottom = (if (activeRuku != null) 96.dp else 10.dp) +
+                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(),
+            ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            item {
-                ToolbarCard(
-                    selectedPara = selectedPara,
-                    paras = vm.paras.map { it.para },
-                    onSelectPara = onSelectPara,
-                    paraDropdownModifier = Modifier.onGloballyPositioned { paraRect = it.boundsInRoot() },
-                    onDownloadPara = {
-                        rukus.forEach { ruku ->
-                            val cur = downloadStatusMap[ruku]
-                            if (cur != DownloadStatus.Downloaded && cur != DownloadStatus.Downloading) {
-                                downloadStatusMap[ruku] = DownloadStatus.Downloading
-                                scope.launch { downloadStatusMap[ruku] = downloader.download(ruku) }
-                            }
-                        }
-                    },
-                    onOpenSettings = onOpenSettings,
-                    onShowGuide = onShowGuide,
-                    nowPlaying = {
-                        NowPlayingCard(
-                            activeRuku = activeRuku,
-                            isPlaying = ui.isPlaying,
-                            progress = fraction(ui.positionMs, ui.durationMs),
-                            onToggle = { if (ui.isPlaying) controller.pause() else controller.play() },
-                            onLocate = {
-                                if (playingPara != -1) {
-                                    onSelectPara(playingPara)
-                                    uiScope.launch { listState.animateScrollToItem(ui.currentIndex + 1) }
-                                }
-                            },
-                        )
-                    },
-                )
-            }
-
             itemsIndexed(rukus) { index, ruku ->
                 val isActive = selectedPara == playingPara && index == ui.currentIndex
                 RukuCard(
@@ -217,35 +410,98 @@ fun BrowseScreen(
                     },
                     onDownload = {
                         if (isDownloadable(downloadStatusMap[ruku])) {
-                            downloadStatusMap[ruku] = DownloadStatus.Downloading
-                            scope.launch { downloadStatusMap[ruku] = downloader.download(ruku) }
+                            DownloadForegroundService.enqueue(context, ruku)
                         }
                     },
-                    onShare = { shareRukuIntent(context, ruku) },
+                    onShare = { shareRukus(listOf(ruku)) },
+                    isSharing = ruku in sharingRukus,
+                    showShare = whatsAppShareEnabled,
+                    selectionMode = selectionMode,
+                    isSelected = selected.contains(ruku),
+                    onToggleSelect = {
+                        if (selected.contains(ruku)) selected.remove(ruku) else selected.add(ruku)
+                    },
                     playButtonModifier = if (index == 0) {
                         Modifier.onGloballyPositioned { playRect = it.boundsInRoot() }
+                    } else Modifier,
+                    shareButtonModifier = if (index == 0) {
+                        Modifier.onGloballyPositioned { shareRect = it.boundsInRoot() }
+                    } else Modifier,
+                    downloadButtonModifier = if (index == 0) {
+                        Modifier.onGloballyPositioned { downloadRect = it.boundsInRoot() }
                     } else Modifier,
                 )
             }
         }
     }
 
+        // Sticky now-playing bar pinned to the bottom — shown only while a track is loaded AND
+        // the playing card isn't already visible in the list (no point duplicating it on screen).
+        if (activeRuku != null && !activeCardInView) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 10.dp),
+            ) {
+                NowPlayingCard(
+                    activeRuku = activeRuku,
+                    isPlaying = ui.isPlaying,
+                    progress = fraction(ui.positionMs, ui.durationMs),
+                    onToggle = { if (ui.isPlaying) controller.pause() else controller.play() },
+                    onLocate = {
+                        if (playingPara != -1) {
+                            if (selectedPara == playingPara) {
+                                // Already on the right Para — just scroll to the card.
+                                uiScope.launch { listState.animateScrollToItem(ui.currentIndex) }
+                            } else {
+                                // Switch Para first; the scroll is deferred until the new list is
+                                // on screen (see LaunchedEffect(selectedPara) below).
+                                pendingLocate = true
+                                onSelectPara(playingPara)
+                            }
+                        }
+                    },
+                )
+            }
+        }
+
         // First-run / replayable guided walkthrough overlay.
         if (showGuide) {
             LaunchedEffect(Unit) { listState.animateScrollToItem(0) }
             GuideOverlay(
-                steps = listOf(
-                    GuideStep(
-                        title = "Choose a Para (Juz)",
-                        body = "Tap here to pick a Para from 1–30. Its rukus appear in the list below.",
-                        target = paraRect,
-                    ),
-                    GuideStep(
-                        title = "Play a recording",
-                        body = "Tap the play button on any ruku card to listen. Use −5 / +5 to skip, or drag the bar to seek.",
-                        target = playRect,
-                    ),
-                ),
+                steps = buildList {
+                    add(
+                        GuideStep(
+                            title = "Choose a Para (Juz)",
+                            body = "Tap here to pick a Para from 1–30. Its rukus appear in the list below.",
+                            target = paraRect,
+                        )
+                    )
+                    add(
+                        GuideStep(
+                            title = "Play a recording",
+                            body = "Tap the play button on any ruku card to listen. Use −5 / +5 to skip, or drag the bar to seek.",
+                            target = playRect,
+                        )
+                    )
+                    add(
+                        GuideStep(
+                            title = "Download for offline",
+                            body = "Tap the download icon to save a ruku on your device. A ✓ means it's saved — play it anytime, even without internet.",
+                            target = downloadRect,
+                        )
+                    )
+                    if (whatsAppShareEnabled) {
+                        add(
+                            GuideStep(
+                                title = "Share on WhatsApp",
+                                body = "Tap the WhatsApp icon to send a ruku to family or friends. Use the ⋮ menu's “Select to share” to send several at once.",
+                                target = shareRect,
+                            )
+                        )
+                    }
+                },
                 onFinish = onGuideFinished,
             )
         }
@@ -270,20 +526,20 @@ private fun Header() {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(mq.headerBrush)
-                .padding(horizontal = 24.dp, vertical = 18.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 14.dp, bottom = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "قرآن پاک",
                 color = Color.White,
-                fontSize = 30.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(2.dp))
             Text(
                 text = "رکوع ریکارڈنگ",
                 color = Color.White.copy(alpha = 0.8f),
-                fontSize = 14.sp,
+                fontSize = 13.sp,
             )
         }
         // Gold underline accent (header::after)
@@ -313,7 +569,8 @@ private fun ToolbarCard(
     onDownloadPara: () -> Unit,
     onOpenSettings: () -> Unit,
     onShowGuide: () -> Unit,
-    nowPlaying: @Composable () -> Unit,
+    onSelect: () -> Unit,
+    showShare: Boolean,
 ) {
     val mq = LocalMqColors.current
     Column(
@@ -330,43 +587,29 @@ private fun ToolbarCard(
                 .background(mq.rowGray)
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             val paraIndex = paras.indexOf(selectedPara)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(
-                    text = "Para (Juz)",
-                    color = mq.textPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-                StepButton(
-                    iconRes = R.drawable.ic_chevron_left,
-                    contentDescription = "Previous Para",
-                    enabled = paraIndex > 0,
-                    onClick = { onSelectPara(paras[paraIndex - 1]) },
-                )
-                ParaDropdown(selectedPara, paras, onSelectPara, paraDropdownModifier)
-                StepButton(
-                    iconRes = R.drawable.ic_chevron_right,
-                    contentDescription = "Next Para",
-                    enabled = paraIndex >= 0 && paraIndex < paras.lastIndex,
-                    onClick = { onSelectPara(paras[paraIndex + 1]) },
-                )
-            }
+            StepButton(
+                iconRes = R.drawable.ic_chevron_left,
+                contentDescription = "Previous Para",
+                enabled = paraIndex > 0,
+                onClick = { onSelectPara(paras[paraIndex - 1]) },
+            )
+            ParaDropdown(selectedPara, paras, onSelectPara, paraDropdownModifier.weight(1f))
+            StepButton(
+                iconRes = R.drawable.ic_chevron_right,
+                contentDescription = "Next Para",
+                enabled = paraIndex >= 0 && paraIndex < paras.lastIndex,
+                onClick = { onSelectPara(paras[paraIndex + 1]) },
+            )
             OverflowMenu(
                 onDownloadPara = onDownloadPara,
                 onOpenSettings = onOpenSettings,
                 onShowGuide = onShowGuide,
+                onSelect = onSelect,
+                showShare = showShare,
             )
-        }
-        HorizontalDivider(color = mq.border, thickness = 1.dp)
-        // Now-playing
-        Box(modifier = Modifier.padding(12.dp)) {
-            nowPlaying()
         }
     }
 }
@@ -379,23 +622,28 @@ private fun ParaDropdown(
     modifier: Modifier = Modifier,
 ) {
     val mq = LocalMqColors.current
+    val density = LocalDensity.current
     var open by remember { mutableStateOf(false) }
+    // Width of the select field, so the dropdown can match it exactly.
+    var fieldWidthPx by remember { mutableStateOf(0) }
     Box(modifier) {
         Row(
             modifier = Modifier
+                .fillMaxWidth()
+                .onGloballyPositioned { fieldWidthPx = it.size.width }
                 .clip(RoundedCornerShape(6.dp))
                 .border(1.dp, mq.border, RoundedCornerShape(6.dp))
                 .background(mq.cardBg)
                 .clickable { open = true }
-                .padding(start = 12.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 12.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "Para $selectedPara",
                 color = mq.textPrimary,
                 fontSize = 16.sp,
             )
-            Spacer(Modifier.width(4.dp))
             Icon(
                 painter = painterResource(R.drawable.ic_chevron_down),
                 contentDescription = null,
@@ -406,13 +654,34 @@ private fun ParaDropdown(
         DropdownMenu(
             expanded = open,
             onDismissRequest = { open = false },
-            modifier = Modifier.background(mq.cardBg),
+            // Match the select's width + light border, and reset the menu's own vertical padding
+            // so the border hugs the items.
+            modifier = Modifier
+                .width(with(density) { fieldWidthPx.toDp() })
+                .clip(RoundedCornerShape(6.dp))
+                .background(mq.cardBg)
+                .border(1.dp, mq.border, RoundedCornerShape(6.dp))
+                .heightIn(max = 360.dp),
         ) {
-            paras.forEach { p ->
+            paras.forEachIndexed { index, p ->
+                val selected = p == selectedPara
                 DropdownMenuItem(
-                    text = { Text("Para $p", color = mq.textPrimary) },
+                    modifier = Modifier.background(
+                        if (selected) mq.tealAccent.copy(alpha = 0.15f) else Color.Transparent
+                    ),
+                    text = {
+                        Text(
+                            "Para $p",
+                            color = if (selected) mq.tealAccent else mq.textPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                        )
+                    },
                     onClick = { onSelectPara(p); open = false },
                 )
+                if (index < paras.lastIndex) {
+                    HorizontalDivider(thickness = 1.dp, color = mq.border.copy(alpha = 0.6f))
+                }
             }
         }
     }
@@ -450,6 +719,8 @@ private fun OverflowMenu(
     onDownloadPara: () -> Unit,
     onOpenSettings: () -> Unit,
     onShowGuide: () -> Unit,
+    onSelect: () -> Unit,
+    showShare: Boolean,
 ) {
     val mq = LocalMqColors.current
     var open by remember { mutableStateOf(false) }
@@ -475,20 +746,32 @@ private fun OverflowMenu(
             onDismissRequest = { open = false },
             modifier = Modifier.background(mq.cardBg),
         ) {
-            DropdownMenuItem(
-                text = { Text("Download para", color = mq.textPrimary) },
-                onClick = { onDownloadPara(); open = false },
-            )
-            DropdownMenuItem(
-                text = { Text("Settings", color = mq.textPrimary) },
-                onClick = { onOpenSettings(); open = false },
-            )
-            DropdownMenuItem(
-                text = { Text("Show guide", color = mq.textPrimary) },
-                onClick = { onShowGuide(); open = false },
-            )
+            if (showShare) {
+                MenuItem(R.drawable.ic_share, "Select to share") { onSelect(); open = false }
+            }
+            MenuItem(R.drawable.ic_download, "Download Para") { onDownloadPara(); open = false }
+            MenuItem(R.drawable.ic_settings, "Settings") { onOpenSettings(); open = false }
+            MenuItem(R.drawable.ic_locate, "Show Guide") { onShowGuide(); open = false }
         }
     }
+}
+
+/** A dropdown menu row with a leading teal icon. */
+@Composable
+private fun MenuItem(iconRes: Int, label: String, onClick: () -> Unit) {
+    val mq = LocalMqColors.current
+    DropdownMenuItem(
+        text = { Text(label, color = mq.textPrimary, fontSize = 15.sp) },
+        leadingIcon = {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = mq.tealAccent,
+                modifier = Modifier.size(20.dp),
+            )
+        },
+        onClick = onClick,
+    )
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -517,7 +800,9 @@ private fun NowPlayingCard(
                 if (hasTrack) mq.tealAccent.copy(alpha = 0.45f) else mq.border,
                 RoundedCornerShape(10.dp),
             )
-            .background(if (hasTrack) mq.playingBg else mq.rowGray),
+            .background(if (hasTrack) mq.playingBg else mq.rowGray)
+            // Tap anywhere on the bar to jump to the currently playing ruku.
+            .clickable(enabled = hasTrack, onClick = onLocate),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
@@ -551,23 +836,13 @@ private fun NowPlayingCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            // Locate button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, mq.border, RoundedCornerShape(10.dp))
-                    .background(mq.cardBg)
-                    .clickable(enabled = hasTrack, onClick = onLocate),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_locate),
-                    contentDescription = "Go to current track",
-                    tint = if (hasTrack) mq.tealAccent else mq.textMuted,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
+            // Locate hint (whole bar is tappable to jump to the playing ruku).
+            Icon(
+                painter = painterResource(R.drawable.ic_locate),
+                contentDescription = "Go to current track",
+                tint = if (hasTrack) mq.tealAccent else mq.textMuted,
+                modifier = Modifier.size(20.dp),
+            )
         }
         // Progress bar pinned to the bottom edge.
         if (hasTrack) {
@@ -603,107 +878,153 @@ private fun RukuCard(
     onCycleSpeed: () -> Unit,
     onDownload: () -> Unit,
     onShare: () -> Unit,
+    isSharing: Boolean,
+    showShare: Boolean,
+    selectionMode: Boolean,
+    isSelected: Boolean,
+    onToggleSelect: () -> Unit,
     playButtonModifier: Modifier = Modifier,
+    shareButtonModifier: Modifier = Modifier,
+    downloadButtonModifier: Modifier = Modifier,
 ) {
     val mq = LocalMqColors.current
+    // "R1" -> "Ruku 1", "R16+" -> "Ruku 16+", "R1-R2" -> "Ruku 1-2"
+    val rukuLabel = "Ruku " + ruku.rukuInPara.replace("R", "")
+    val highlighted = isActive || (selectionMode && isSelected)
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
             .border(
                 1.dp,
-                if (isActive) mq.tealAccent else mq.border,
+                if (highlighted) mq.tealAccent else mq.border,
                 RoundedCornerShape(10.dp),
             )
-            .background(if (isActive) mq.playingBg else mq.cardBg)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .background(if (highlighted) mq.playingBg else mq.cardBg)
+            .then(if (selectionMode) Modifier.clickable { onToggleSelect() } else Modifier)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
     ) {
-        LabeledField("RUKU #", "${ruku.rukuInPara} (Para ${ruku.para})", mq.textPrimary)
-        FieldDivider()
-        LabeledField("SURAH", ruku.surah, mq.textPrimary)
-        FieldDivider()
-        LabeledField("VERSES", ruku.verses, mq.label, valueWeight = FontWeight.Medium)
-        FieldDivider()
-        ArabicField(ruku)
-        FieldDivider()
-        // AUDIO
-        Text(
-            text = "AUDIO",
-            color = mq.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp),
-        )
-        AudioControls(
-            isActive = isActive,
-            isPlaying = isPlaying,
-            isBuffering = isBuffering,
-            positionMs = positionMs,
-            durationMs = durationMs,
-            speed = speed,
-            downloadStatus = downloadStatus,
-            onPlayToggle = onPlayToggle,
-            onSeekBack = onSeekBack,
-            onSeekFwd = onSeekFwd,
-            onSeekTo = onSeekTo,
-            onCycleSpeed = onCycleSpeed,
-            onDownload = onDownload,
-            onShare = onShare,
-            playButtonModifier = playButtonModifier,
-        )
-    }
-}
-
-@Composable
-private fun LabeledField(
-    label: String,
-    value: String,
-    valueColor: Color,
-    valueWeight: FontWeight = FontWeight.Normal,
-) {
-    val mq = LocalMqColors.current
-    Column(modifier = Modifier.padding(vertical = 6.dp)) {
-        Text(
-            text = label,
-            color = mq.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(text = value, color = valueColor, fontSize = 16.sp, fontWeight = valueWeight)
-    }
-}
-
-@Composable
-private fun ArabicField(ruku: Ruku) {
-    val mq = LocalMqColors.current
-    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
-        Text(
-            text = "ARABIC",
-            color = mq.label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.5.sp,
+        // Header (always shown): play/pause (or checkbox) • 2-line title + Arabic • actions.
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.End,
-        )
-        Spacer(Modifier.height(3.dp))
-        Text(
-            text = "${ruku.surahNumber} ${ruku.surahArabic}",
-            color = mq.gold,
-            fontSize = 18.sp,
-            fontFamily = FontFamily.Serif,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = TextAlign.End,
-        )
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (selectionMode) {
+                SelectionCheck(selected = isSelected)
+            } else {
+                Box(modifier = playButtonModifier.size(44.dp), contentAlignment = Alignment.Center) {
+                    GradientCircleButton(
+                        size = 44.dp,
+                        brush = if (isActive) mq.goldButtonBrush else mq.tealButtonBrush,
+                        enabled = true,
+                        iconRes = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
+                        iconSize = 20.dp,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        onClick = onPlayToggle,
+                    )
+                    if (isBuffering) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                        )
+                    }
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = rukuLabel,
+                    color = mq.textPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "${ruku.surahArabic} (${ruku.surahNumber})",
+                    color = mq.tealAccent,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    lineHeight = 20.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = "Ayat ${ruku.verses}",
+                    color = mq.textMuted,
+                    fontSize = 13.sp,
+                    lineHeight = 17.sp,
+                )
+            }
+            if (!selectionMode) {
+                if (showShare) {
+                    Box(modifier = shareButtonModifier) {
+                        if (isSharing) {
+                            Box(
+                                modifier = Modifier.size(46.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                    color = mq.wa,
+                                )
+                            }
+                        } else {
+                            OutlineCircleButton(
+                                iconRes = R.drawable.ic_whatsapp,
+                                tint = mq.wa,
+                                contentDescription = "Share on WhatsApp",
+                                onClick = onShare,
+                            )
+                        }
+                    }
+                }
+                Box(modifier = downloadButtonModifier) {
+                    DownloadStatusButton(downloadStatus = downloadStatus, onDownload = onDownload)
+                }
+            }
+        }
+        // Expanded controls only for the active track (hidden during selection).
+        if (isActive && !selectionMode) {
+            Spacer(Modifier.height(10.dp))
+            AudioControls(
+                isActive = isActive,
+                positionMs = positionMs,
+                durationMs = durationMs,
+                speed = speed,
+                onSeekBack = onSeekBack,
+                onSeekFwd = onSeekFwd,
+                onSeekTo = onSeekTo,
+                onCycleSpeed = onCycleSpeed,
+            )
+        }
     }
 }
 
+/** Circular checkbox shown on each card while in bulk-selection mode. */
 @Composable
-private fun FieldDivider() {
-    HorizontalDivider(color = LocalMqColors.current.border, thickness = 1.dp)
+private fun SelectionCheck(selected: Boolean) {
+    val mq = LocalMqColors.current
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(CircleShape)
+            .background(if (selected) mq.tealAccent else Color.Transparent)
+            .border(2.dp, if (selected) mq.tealAccent else mq.border, CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (selected) {
+            Icon(
+                painter = painterResource(R.drawable.ic_downloaded),
+                contentDescription = "Selected",
+                tint = Color.White,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -714,76 +1035,23 @@ private fun FieldDivider() {
 @Composable
 private fun AudioControls(
     isActive: Boolean,
-    isPlaying: Boolean,
-    isBuffering: Boolean,
     positionMs: Long,
     durationMs: Long,
     speed: Float,
-    downloadStatus: DownloadStatus,
-    onPlayToggle: () -> Unit,
     onSeekBack: () -> Unit,
     onSeekFwd: () -> Unit,
     onSeekTo: (Float) -> Unit,
     onCycleSpeed: () -> Unit,
-    onDownload: () -> Unit,
-    onShare: () -> Unit,
-    playButtonModifier: Modifier = Modifier,
 ) {
     val mq = LocalMqColors.current
     Column(modifier = Modifier.fillMaxWidth()) {
+        // Secondary controls (play/pause, share and download live in the card header row).
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SeekButton(R.drawable.ic_seek_back, "-5", "Back 5 seconds", onSeekBack)
-            // Download affordance
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(34.dp)) {
-                when (downloadStatus) {
-                    DownloadStatus.Downloading -> CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                        color = mq.tealAccent,
-                    )
-                    DownloadStatus.Downloaded -> OutlineCircleButton(
-                        iconRes = R.drawable.ic_downloaded,
-                        tint = mq.tealAccent,
-                        contentDescription = "Downloaded",
-                        onClick = {},
-                    )
-                    else -> OutlineCircleButton(
-                        iconRes = R.drawable.ic_download,
-                        tint = mq.textMuted,
-                        contentDescription = "Download",
-                        onClick = onDownload,
-                    )
-                }
-            }
-            OutlineCircleButton(
-                iconRes = R.drawable.ic_whatsapp,
-                tint = mq.wa,
-                contentDescription = "Share on WhatsApp",
-                onClick = onShare,
-            )
-            // Big play / pause
-            Box(modifier = playButtonModifier.size(52.dp), contentAlignment = Alignment.Center) {
-                GradientCircleButton(
-                    size = 52.dp,
-                    brush = if (isActive) mq.goldButtonBrush else mq.tealButtonBrush,
-                    enabled = true,
-                    iconRes = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
-                    iconSize = 24.dp,
-                    contentDescription = if (isPlaying) "Pause" else "Play",
-                    onClick = onPlayToggle,
-                )
-                if (isBuffering) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(26.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                    )
-                }
-            }
             SeekButton(R.drawable.ic_seek_fwd, "+5", "Forward 5 seconds", onSeekFwd)
             SpeedPill(speed, onCycleSpeed)
         }
@@ -849,7 +1117,7 @@ private fun SeekButton(iconRes: Int, label: String, contentDescription: String, 
     val mq = LocalMqColors.current
     Box(
         modifier = Modifier
-            .size(42.dp)
+            .size(46.dp)
             .clip(CircleShape)
             .border(1.5.dp, mq.border, CircleShape)
             .clickable(onClick = onClick),
@@ -859,14 +1127,50 @@ private fun SeekButton(iconRes: Int, label: String, contentDescription: String, 
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
             tint = mq.textMuted,
-            modifier = Modifier.size(26.dp),
+            modifier = Modifier.size(28.dp),
         )
         Text(
             text = label,
             color = mq.textMuted,
-            fontSize = 8.sp,
+            fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
         )
+    }
+}
+
+/** Download affordance shown on every card: tappable download → spinner → green tick. */
+@Composable
+private fun DownloadStatusButton(downloadStatus: DownloadStatus, onDownload: () -> Unit) {
+    val mq = LocalMqColors.current
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(46.dp)) {
+        when (downloadStatus) {
+            DownloadStatus.Downloading -> CircularProgressIndicator(
+                modifier = Modifier.size(22.dp),
+                strokeWidth = 2.dp,
+                color = mq.tealAccent,
+            )
+            DownloadStatus.Downloaded -> Box(
+                modifier = Modifier
+                    .size(46.dp)
+                    .clip(CircleShape)
+                    .border(1.5.dp, mq.border, CircleShape)
+                    .background(mq.cardBg),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_downloaded),
+                    contentDescription = "Downloaded",
+                    tint = mq.wa,
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+            else -> OutlineCircleButton(
+                iconRes = R.drawable.ic_download,
+                tint = mq.textMuted,
+                contentDescription = "Download",
+                onClick = onDownload,
+            )
+        }
     }
 }
 
@@ -880,7 +1184,7 @@ private fun OutlineCircleButton(
     val mq = LocalMqColors.current
     Box(
         modifier = Modifier
-            .size(34.dp)
+            .size(46.dp)
             .clip(CircleShape)
             .border(1.5.dp, mq.border, CircleShape)
             .background(mq.cardBg)
@@ -891,7 +1195,7 @@ private fun OutlineCircleButton(
             painter = painterResource(iconRes),
             contentDescription = contentDescription,
             tint = tint,
-            modifier = Modifier.size(16.dp),
+            modifier = Modifier.size(19.dp),
         )
     }
 }
@@ -930,18 +1234,17 @@ private fun SpeedPill(speed: Float, onClick: () -> Unit) {
     val label = if (speed == speed.toInt().toFloat()) "${speed.toInt()}x" else "${speed}x"
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .border(1.5.dp, mq.border, RoundedCornerShape(20.dp))
+            .size(46.dp)
+            .clip(CircleShape)
+            .border(1.5.dp, mq.border, CircleShape)
             .background(mq.cardBg)
-            .clickable(onClick = onClick)
-            .widthIn(min = 36.dp)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             color = mq.textMuted,
-            fontSize = 12.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
         )
     }

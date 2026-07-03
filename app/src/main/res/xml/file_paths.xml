@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shareable copies of downloaded ruku audio live in cacheDir/shared/ with human-readable names. -->
+<paths>
+    <cache-path name="shared" path="shared/" />
+</paths>
