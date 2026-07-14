@@ -1,12 +1,12 @@
 package com.mohsingdp.marifatulquran.ui
 
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -133,6 +133,13 @@ private fun shareFileName(ruku: Ruku): String {
     return "$safe.$ext"
 }
 
+/** Copy the share caption to the clipboard so the user can paste it alongside the shared audio. */
+private fun copyShareText(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("Ruku reference", text))
+    Toast.makeText(context, "Reference copied — paste it in the chat", Toast.LENGTH_SHORT).show()
+}
+
 private fun shareTextToWhatsApp(context: Context, text: String) {
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
     try {
@@ -227,23 +234,10 @@ fun BrowseScreen(
             listState.animateScrollToItem(ui.currentIndex)
         }
     }
-    // Two-step WhatsApp share: send audio first, then (when WhatsApp returns) the text message.
-    // The caption is held here until the audio share comes back.
-    var pendingShareText by remember { mutableStateOf<String?>(null) }
-    val audioShareLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult(),
-    ) {
-        val text = pendingShareText
-        pendingShareText = null
-        if (!text.isNullOrEmpty()) {
-            Toast.makeText(context, "Now send the message", Toast.LENGTH_SHORT).show()
-            shareTextToWhatsApp(context, text)
-        }
-    }
-
     /**
-     * Share one or more rukus as audio file(s), then a follow-up text message. Any not-yet-downloaded
-     * ruku is fetched first (its WhatsApp button shows a spinner) so there's always a file to attach.
+     * Share one or more rukus as audio file(s). The reference caption is copied to the clipboard so
+     * the user can paste it alongside the audio. Any not-yet-downloaded ruku is fetched first (its
+     * WhatsApp button shows a spinner) so there's always a file to attach.
      */
     fun shareRukus(items: List<Ruku>) {
         if (items.isEmpty()) return
@@ -273,15 +267,13 @@ fun BrowseScreen(
                     shareTextToWhatsApp(context, caption)
                     return@launch
                 }
-                // 1) Audio to WhatsApp; 2) text fires from the launcher callback on return.
-                pendingShareText = caption
+                // Copy the caption so the user can paste it with the audio, then share the audio once.
+                copyShareText(context, caption)
                 try {
-                    audioShareLauncher.launch(Intent(audioIntent).setPackage("com.whatsapp"))
+                    context.startActivity(Intent(audioIntent).setPackage("com.whatsapp"))
                 } catch (e: ActivityNotFoundException) {
-                    // WhatsApp absent: chooser for the audio, then share the text too.
-                    pendingShareText = null
+                    // WhatsApp absent: fall back to the system chooser for the audio.
                     context.startActivity(Intent.createChooser(audioIntent, "Share"))
-                    shareTextToWhatsApp(context, caption)
                 }
             } finally {
                 sharingRukus.removeAll(items)
