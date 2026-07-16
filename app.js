@@ -257,6 +257,219 @@
     localStorage.setItem("validated_rukus", JSON.stringify(v));
   }
 
+  /* ===================== Hifz (memorization) tracking ===================== */
+  var HIFZ_STORAGE_KEY = "hifz_status";
+  var HIFZ_LABELS = { "": "Not started", learning: "Learning", memorized: "Memorized" };
+  var hifzAllKeysCache = null;
+  var hifzValidKeysCache = null;
+
+  function getHifzMap() {
+    try { return JSON.parse(localStorage.getItem(HIFZ_STORAGE_KEY) || "{}"); }
+    catch (e) { return {}; }
+  }
+  function saveHifzMap(map) {
+    localStorage.setItem(HIFZ_STORAGE_KEY, JSON.stringify(map));
+  }
+  function hifzAllKeys() {
+    if (!hifzAllKeysCache) {
+      hifzAllKeysCache = data.map(function (row) { return Hifz.keyFor(row.para, row.rukuInPara); });
+    }
+    return hifzAllKeysCache;
+  }
+  function hifzValidKeySet() {
+    if (!hifzValidKeysCache) hifzValidKeysCache = new Set(hifzAllKeys());
+    return hifzValidKeysCache;
+  }
+  function rukusForPara(para) {
+    return (indexedData[para] || []).map(function (item) { return item.row.rukuInPara; });
+  }
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  /** Advance a ruku's progress state (tap). Persists and returns the new entry (or null). */
+  function hifzTap(para, ruku) {
+    var map = getHifzMap();
+    var key = Hifz.keyFor(para, ruku);
+    var cur = map[key] ? map[key].s : undefined;
+    var next = Hifz.cycleStatus(cur);
+    if (next === undefined) {
+      delete map[key];
+    } else {
+      var wasRevise = map[key] && map[key].rev && next === "memorized";
+      map[key] = { s: next, rev: !!wasRevise, at: todayISO() };
+    }
+    saveHifzMap(map);
+    return map[key] || null;
+  }
+
+  /** Toggle needs-revision on a memorized ruku (long-press / right-click). */
+  function hifzToggleRevision(para, ruku) {
+    var map = getHifzMap();
+    var key = Hifz.keyFor(para, ruku);
+    var entry = map[key];
+    if (!entry || entry.s !== "memorized") return entry || null;
+    var updated = Hifz.applyRevisionToggle(entry);
+    updated.at = todayISO();
+    map[key] = updated;
+    saveHifzMap(map);
+    return updated;
+  }
+
+  function paintHifzPill(pill, entry) {
+    var state = entry ? entry.s : "";
+    var revise = !!(entry && entry.rev);
+    pill.dataset.state = state;
+    pill.dataset.revise = revise ? "true" : "false";
+    var label = revise ? "Revise" : HIFZ_LABELS[state];
+    pill.querySelector(".hifz-pill-label").textContent = label;
+    pill.setAttribute("aria-label",
+      "Memorization: " + label + ". Tap to advance, hold to flag for revision.");
+    pill.setAttribute("title", "Tap to advance · Hold to flag for revision");
+  }
+
+  function buildHifzPill(row) {
+    var para = row.para, ruku = row.rukuInPara;
+    var pill = document.createElement("button");
+    pill.type = "button";
+    pill.className = "hifz-pill";
+    var dot = document.createElement("span");
+    dot.className = "hifz-pill-dot";
+    dot.setAttribute("aria-hidden", "true");
+    var label = document.createElement("span");
+    label.className = "hifz-pill-label";
+    pill.appendChild(dot);
+    pill.appendChild(label);
+
+    var map = getHifzMap();
+    paintHifzPill(pill, map[Hifz.keyFor(para, ruku)]);
+
+    var longPressTimer = null;
+    var longPressed = false;
+
+    function doTap() {
+      var entry = hifzTap(para, ruku);
+      paintHifzPill(pill, entry);
+      renderHifzMeter();
+    }
+    function doRevision() {
+      var entry = hifzToggleRevision(para, ruku);
+      paintHifzPill(pill, entry);
+      renderHifzMeter();
+    }
+
+    pill.addEventListener("pointerdown", function () {
+      longPressed = false;
+      longPressTimer = setTimeout(function () {
+        longPressed = true;
+        doRevision();
+      }, 450);
+    });
+    function cancelLongPress() {
+      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+    }
+    pill.addEventListener("pointerup", cancelLongPress);
+    pill.addEventListener("pointerleave", cancelLongPress);
+    pill.addEventListener("pointercancel", cancelLongPress);
+
+    pill.addEventListener("click", function () {
+      if (longPressed) { longPressed = false; return; }
+      doTap();
+    });
+    pill.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      doRevision();
+    });
+    pill.addEventListener("keydown", function (e) {
+      if (e.key === "r" || e.key === "R") { e.preventDefault(); doRevision(); }
+    });
+
+    return pill;
+  }
+
+  function renderHifzMeter() {
+    var meter = document.getElementById("hifz-meter");
+    if (!meter) return;
+    var para = parseInt(paraSelect.value, 10);
+    var map = getHifzMap();
+    var p = Hifz.computeParaProgress(map, para, rukusForPara(para));
+    var overall = Hifz.computeOverall(map, hifzAllKeys());
+
+    document.getElementById("hifz-meter-para").textContent = "Para " + para;
+    document.getElementById("hifz-meter-total").textContent =
+      overall.memorized + " / " + overall.total + " memorized";
+
+    var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
+    var fill = document.getElementById("hifz-meter-fill");
+    fill.style.width = pct + "%";
+    var bar = meter.querySelector(".hifz-meter-bar");
+    if (bar) bar.setAttribute("aria-valuenow", String(pct));
+
+    var counts = document.getElementById("hifz-meter-counts");
+    counts.textContent = "";
+    function addCount(kind, n, text) {
+      if (!n) return;
+      var span = document.createElement("span");
+      span.className = "hifz-count";
+      span.dataset.kind = kind;
+      span.textContent = text;
+      counts.appendChild(span);
+    }
+    addCount("memorized", p.memorized, p.memorized + "/" + p.total + " memorized");
+    addCount("learning", p.learning, p.learning + " learning");
+    addCount("revise", p.revise, p.revise + " to revise");
+    if (!p.memorized && !p.learning) {
+      var span = document.createElement("span");
+      span.className = "hifz-count";
+      span.textContent = "No progress in this Para yet";
+      counts.appendChild(span);
+    }
+  }
+
+  function exportHifz() {
+    var payload = Hifz.serialize(getHifzMap(), todayISO());
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "hifz-progress-" + todayISO() + ".json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    setHifzIoStatus("Exported " + Object.keys(getHifzMap()).length + " rukus.");
+  }
+
+  function importHifzFromFile(file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed;
+      try { parsed = JSON.parse(reader.result); }
+      catch (e) { setHifzIoStatus("Import failed: that file isn't valid JSON."); return; }
+      var res = Hifz.parseAndMerge(getHifzMap(), parsed, hifzValidKeySet());
+      saveHifzMap(res.merged);
+      renderTable({ skipViewRestore: true });
+      setHifzIoStatus("Imported " + res.imported + ", skipped " + res.skipped + " unknown.");
+    };
+    reader.onerror = function () { setHifzIoStatus("Import failed: couldn't read the file."); };
+    reader.readAsText(file);
+  }
+
+  function resetHifz() {
+    if (!window.confirm("Reset all memorization progress? This cannot be undone.")) return;
+    localStorage.removeItem(HIFZ_STORAGE_KEY);
+    renderTable({ skipViewRestore: true });
+    setHifzIoStatus("Progress reset.");
+  }
+
+  function setHifzIoStatus(msg) {
+    var el = document.getElementById("hifz-io-status");
+    if (el) el.textContent = msg;
+  }
+
   function hasGitHubToken() {
     return isAdmin() && !!getGitHubToken().trim();
   }
@@ -319,12 +532,16 @@
     var savedPath = normalizeAudioPath(row.audioUrl);
 
     tr.innerHTML =
-      "<td data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
-      "<td data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
+      "<td class=\"col-hifz hifz-cell\" data-label=\"Hifz\"></td>" +
+      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
+      "<td class=\"col-surah\" data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
       "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
       (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
+
+    var hifzCell = tr.querySelector(".hifz-cell");
+    if (hifzCell) hifzCell.appendChild(buildHifzPill(row));
 
     var audioCell = tr.querySelector(".audio-cell");
     var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
@@ -514,7 +731,7 @@
 
     if (filtered.length === 0) {
       var emptyTr = document.createElement("tr");
-      emptyTr.innerHTML = "<td colspan=\"6\" style=\"text-align:center;padding:1rem;color:#555;\">No recordings in this Para</td>";
+      emptyTr.innerHTML = "<td colspan=\"7\" style=\"text-align:center;padding:1rem;color:#555;\">No recordings in this Para</td>";
       fragment.appendChild(emptyTr);
     }
 
@@ -536,6 +753,7 @@
     } else {
       syncToolbarTransport();
     }
+    renderHifzMeter();
   }
 
   function positionPathTooltip(tr) {
@@ -2171,6 +2389,22 @@
     });
   }
 
+  (function wireHifzIo() {
+    var exportBtn = document.getElementById("hifz-export-btn");
+    var importBtn = document.getElementById("hifz-import-btn");
+    var importFile = document.getElementById("hifz-import-file");
+    var resetBtn = document.getElementById("hifz-reset-btn");
+    if (exportBtn) exportBtn.addEventListener("click", exportHifz);
+    if (importBtn && importFile) {
+      importBtn.addEventListener("click", function () { importFile.click(); });
+      importFile.addEventListener("change", function () {
+        if (importFile.files && importFile.files[0]) importHifzFromFile(importFile.files[0]);
+        importFile.value = "";
+      });
+    }
+    if (resetBtn) resetBtn.addEventListener("click", resetHifz);
+  })();
+
   document.getElementById("clear-cache-btn").addEventListener("click", function () {
     if (!confirm("Clear all cached data? Your current track position will be preserved. Offline audio will need to be re-downloaded.")) return;
     var btn = this;
@@ -2179,7 +2413,7 @@
 
     // Preserve current track and essential settings
     var preserve = {};
-    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme"];
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", HIFZ_STORAGE_KEY];
     keepKeys.forEach(function (k) {
       var v = localStorage.getItem(k);
       if (v !== null) preserve[k] = v;
