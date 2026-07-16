@@ -20,6 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -31,21 +33,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mohsingdp.marifatulquran.R
 import com.mohsingdp.marifatulquran.core.PlaybackMode
+import com.mohsingdp.marifatulquran.core.parseHifz
+import com.mohsingdp.marifatulquran.core.serializeHifz
+import com.mohsingdp.marifatulquran.data.HifzRegistry
 import com.mohsingdp.marifatulquran.data.Prefs
 import com.mohsingdp.marifatulquran.playback.PlayerController
 import com.mohsingdp.marifatulquran.ui.theme.LocalMqColors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Settings screen, styled to match the main Browse screen: the same teal gradient header with the
@@ -59,9 +69,42 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     val mq = LocalMqColors.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var currentMode by remember { mutableStateOf(prefs.getPlaybackMode()) }
     var defaultSpeed by remember { mutableFloatStateOf(prefs.getDefaultSpeed()) }
     var whatsAppShare by remember { mutableStateOf(prefs.isWhatsAppShareEnabled()) }
+    var hifzStatus by remember { mutableStateOf("") }
+    var showResetConfirm by remember { mutableStateOf(false) }
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val body = serializeHifz(HifzRegistry.exportMap())
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { it.write(body.toByteArray()) }
+                }.isSuccess
+            }
+            hifzStatus = if (ok) "Exported ${HifzRegistry.exportMap().size} rukus." else "Export failed."
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val text = withContext(Dispatchers.IO) {
+                runCatching { context.contentResolver.openInputStream(uri)?.use { it.readBytes().decodeToString() } }.getOrNull()
+            }
+            if (text == null) { hifzStatus = "Import failed: couldn't read the file."; return@launch }
+            val parsed = parseHifz(text)
+            val applied = HifzRegistry.import(parsed, prefs)
+            hifzStatus = "Imported $applied, skipped ${parsed.size - applied} unknown."
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -163,7 +206,84 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            // Hifz progress — back up / restore memorization across devices or reinstalls.
+            SettingsCard {
+                SectionTitle("Hifz progress", bottomPadding = 2.dp)
+                Text(
+                    text = "Back up your memorization progress or move it to another device.",
+                    color = mq.textMuted,
+                    fontSize = 13.sp,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    HifzActionButton("Export", Modifier.weight(1f)) {
+                        exportLauncher.launch("hifz-progress.txt")
+                    }
+                    HifzActionButton("Import", Modifier.weight(1f)) {
+                        importLauncher.launch(arrayOf("text/plain", "*/*"))
+                    }
+                    HifzActionButton("Reset", Modifier.weight(1f), danger = true) {
+                        showResetConfirm = true
+                    }
+                }
+                // Inline confirm (lighter than a Material dialog; keeps the APK under budget).
+                if (showResetConfirm) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "Reset all memorization progress? This cannot be undone.",
+                        color = mq.textMuted,
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(bottom = 8.dp),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        HifzActionButton("Cancel", Modifier.weight(1f)) { showResetConfirm = false }
+                        HifzActionButton("Reset", Modifier.weight(1f), danger = true) {
+                            HifzRegistry.clear(prefs)
+                            hifzStatus = "Progress reset."
+                            showResetConfirm = false
+                        }
+                    }
+                }
+                if (hifzStatus.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(hifzStatus, color = mq.textMuted, fontSize = 13.sp)
+                }
+            }
         }
+    }
+}
+
+/** Small bordered action button used in the Hifz-progress card. */
+@Composable
+private fun HifzActionButton(
+    label: String,
+    modifier: Modifier = Modifier,
+    danger: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val mq = LocalMqColors.current
+    Box(
+        modifier = modifier
+            .height(42.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .border(1.dp, if (danger) mq.gold else mq.border, RoundedCornerShape(8.dp))
+            .background(mq.cardBg)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = if (danger) mq.gold else mq.textPrimary,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
     }
 }
 

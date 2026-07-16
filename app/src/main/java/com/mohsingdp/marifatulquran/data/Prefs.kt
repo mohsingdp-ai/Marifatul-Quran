@@ -1,8 +1,13 @@
 package com.mohsingdp.marifatulquran.data
 
 import android.content.Context
+import com.mohsingdp.marifatulquran.core.HifzEntry
 import com.mohsingdp.marifatulquran.core.PLAYBACK_MODE_KEY
 import com.mohsingdp.marifatulquran.core.PlaybackMode
+import com.mohsingdp.marifatulquran.core.Ruku
+import com.mohsingdp.marifatulquran.core.decodeHifzEntry
+import com.mohsingdp.marifatulquran.core.encodeHifzEntry
+import com.mohsingdp.marifatulquran.core.hifzKey
 import com.mohsingdp.marifatulquran.core.parsePlaybackMode
 import com.mohsingdp.marifatulquran.core.storageValue
 
@@ -60,5 +65,25 @@ class Prefs(context: Context) {
 
     fun setWhatsAppShareEnabled(enabled: Boolean) {
         prefs.edit().putBoolean("whatsapp_share", enabled).apply()
+    }
+
+    // --- Hifz (memorization) progress. Stored one entry per ruku under "hifz_<para>_<ruku>";
+    //     absent key = not started. This prefs file is what Auto Backup restores. ---
+    private fun hifzPrefKey(ruku: Ruku) = "hifz_${hifzKey(ruku)}"
+
+    fun getHifz(ruku: Ruku): HifzEntry? =
+        prefs.getString(hifzPrefKey(ruku), null)?.let { decodeHifzEntry(it) }
+
+    fun setHifz(ruku: Ruku, entry: HifzEntry?) {
+        prefs.edit().apply {
+            if (entry == null) remove(hifzPrefKey(ruku)) else putString(hifzPrefKey(ruku), encodeHifzEntry(entry))
+        }.apply()
+    }
+
+    /** Remove every stored hifz entry (Reset progress). */
+    fun clearHifz() {
+        prefs.edit().apply {
+            prefs.all.keys.filter { it.startsWith("hifz_") }.forEach { remove(it) }
+        }.apply()
     }
 }

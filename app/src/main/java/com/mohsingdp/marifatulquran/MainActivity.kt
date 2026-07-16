@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.mohsingdp.marifatulquran.data.DefaultRukuRepository
+import com.mohsingdp.marifatulquran.data.HifzRegistry
 import com.mohsingdp.marifatulquran.data.Prefs
 import com.mohsingdp.marifatulquran.download.DownloadRegistry
 import com.mohsingdp.marifatulquran.download.Downloader
@@ -76,6 +77,10 @@ class MainActivity : ComponentActivity() {
                 remember { DownloadRegistry.seedFromDiskOnce(vm.paras.flatMap { it.rukus }, downloader) }
                 val downloadStatusMap by DownloadRegistry.statuses.collectAsState()
 
+                // Hifz (memorization) progress: process-wide, seeded from prefs once, then observed.
+                remember { HifzRegistry.seedFromPrefsOnce(vm.paras.flatMap { it.rukus }, prefs) }
+                val hifzEntries by HifzRegistry.entries.collectAsState()
+
                 when (screen) {
                     is Screen.Browse -> {
                         BrowseScreen(
@@ -90,6 +95,9 @@ class MainActivity : ComponentActivity() {
                             playingPara = playingPara,
                             onPlayingParaChange = { playingPara = it },
                             onOpenSettings = { screen = Screen.Settings },
+                            hifzEntries = hifzEntries,
+                            onHifzTap = { HifzRegistry.tap(it, System.currentTimeMillis(), prefs) },
+                            onHifzRevision = { HifzRegistry.toggleRevision(it, System.currentTimeMillis(), prefs) },
                             showGuide = showGuide,
                             onShowGuide = { showGuide = true },
                             onGuideFinished = {

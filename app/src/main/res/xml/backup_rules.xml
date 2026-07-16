@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Auto Backup (Android <= 11). Backs up app data (SharedPreferences: memorization, play history,
+  settings) to the user's Google Drive so it survives a reinstall. Excludes the downloaded audio,
+  which is large and re-downloadable — well over the 25 MB Auto Backup quota.
+-->
+<full-backup-content>
+    <exclude domain="file" path="audio/" />
+</full-backup-content>

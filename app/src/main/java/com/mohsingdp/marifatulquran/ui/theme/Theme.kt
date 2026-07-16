@@ -33,6 +33,11 @@ data class MqColors(
     val playingBg: Color = PlayingBg,
     val border: Color = Border,
     val wa: Color = WaColor,
+    val mutedChipBg: Color = MutedChipBg,
+    val learningBg: Color = WarnChipBg,
+    val learningFg: Color = WarnChipFg,
+    val memorizedBg: Color = SuccessBg,
+    val memorizedFg: Color = SuccessFg,
 ) {
     /** Teal play-button gradient (audio-play-btn, not-playing state). */
     val tealButtonBrush: Brush

@@ -10,6 +10,9 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,6 +64,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventTimeoutCancellationException
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -74,6 +79,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import com.mohsingdp.marifatulquran.R
 import com.mohsingdp.marifatulquran.core.DownloadStatus
+import com.mohsingdp.marifatulquran.core.HifzEntry
+import com.mohsingdp.marifatulquran.core.HifzState
 import com.mohsingdp.marifatulquran.core.Ruku
 import com.mohsingdp.marifatulquran.data.Prefs
 import com.mohsingdp.marifatulquran.download.DownloadForegroundService
@@ -172,6 +179,9 @@ fun BrowseScreen(
     playingPara: Int,
     onPlayingParaChange: (Int) -> Unit,
     onOpenSettings: () -> Unit,
+    hifzEntries: Map<Ruku, HifzEntry>,
+    onHifzTap: (Ruku) -> Unit,
+    onHifzRevision: (Ruku) -> Unit,
     showGuide: Boolean = false,
     onShowGuide: () -> Unit = {},
     onGuideFinished: () -> Unit = {},
@@ -310,6 +320,16 @@ fun BrowseScreen(
             )
         }
 
+        // Per-Para memorization meter (hidden while bulk-selecting to keep that bar prominent).
+        if (!selectionMode) {
+            HifzMeter(
+                para = selectedPara,
+                paraRukus = rukus,
+                entries = hifzEntries,
+                overallTotal = vm.paras.sumOf { it.rukus.size },
+            )
+        }
+
         // Selection action bar (bulk share) — shown only in selection mode.
         if (selectionMode) {
             Row(
@@ -371,6 +391,9 @@ fun BrowseScreen(
                 val isActive = selectedPara == playingPara && index == ui.currentIndex
                 RukuCard(
                     ruku = ruku,
+                    hifzEntry = hifzEntries[ruku],
+                    onHifzTap = { onHifzTap(ruku) },
+                    onHifzRevision = { onHifzRevision(ruku) },
                     isActive = isActive,
                     isPlaying = isActive && ui.isPlaying,
                     isBuffering = isActive && ui.isBuffering,
@@ -856,6 +879,9 @@ private fun NowPlayingCard(
 @Composable
 private fun RukuCard(
     ruku: Ruku,
+    hifzEntry: HifzEntry?,
+    onHifzTap: () -> Unit,
+    onHifzRevision: () -> Unit,
     isActive: Boolean,
     isPlaying: Boolean,
     isBuffering: Boolean,
@@ -949,6 +975,10 @@ private fun RukuCard(
                     fontSize = 13.sp,
                     lineHeight = 17.sp,
                 )
+                if (!selectionMode) {
+                    Spacer(Modifier.height(6.dp))
+                    HifzPill(entry = hifzEntry, onTap = onHifzTap, onLongPress = onHifzRevision)
+                }
             }
             if (!selectionMode) {
                 if (showShare) {
@@ -993,6 +1023,135 @@ private fun RukuCard(
                 onCycleSpeed = onCycleSpeed,
             )
         }
+    }
+}
+
+/**
+ * Tap + long-press detector built from the same low-level pointer primitives `clickable` already
+ * pulls in — so long-press costs ~no extra APK size (unlike `combinedClickable`, which drags in a
+ * separate ~16 KB gesture/haptics path that busts the 2 MB budget).
+ */
+private fun Modifier.tapAndLongPress(onTap: () -> Unit, onLongPress: () -> Unit): Modifier =
+    pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown()
+            var longPressed = false
+            val up = try {
+                withTimeout(viewConfiguration.longPressTimeoutMillis) { waitForUpOrCancellation() }
+            } catch (e: PointerEventTimeoutCancellationException) {
+                longPressed = true
+                null
+            }
+            when {
+                longPressed -> {
+                    onLongPress()
+                    waitForUpOrCancellation() // swallow the eventual release
+                }
+                up != null -> onTap()
+                // up == null && !longPressed => gesture cancelled (e.g. a scroll); ignore.
+            }
+        }
+    }
+
+/** Status pill on a ruku card. Tap cycles progress; long-press toggles needs-revision. */
+@Composable
+private fun HifzPill(entry: HifzEntry?, onTap: () -> Unit, onLongPress: () -> Unit) {
+    val mq = LocalMqColors.current
+    val state = entry?.state
+    val revise = entry?.revise == true
+    val bg: Color
+    val fg: Color
+    val label: String
+    when (state) {
+        HifzState.MEMORIZED -> {
+            bg = mq.memorizedBg; fg = mq.memorizedFg; label = if (revise) "Revise" else "Memorized"
+        }
+        HifzState.LEARNING -> {
+            bg = mq.learningBg; fg = mq.learningFg; label = "Learning"
+        }
+        null -> {
+            bg = mq.mutedChipBg; fg = mq.textMuted; label = "Not started"
+        }
+    }
+    val dotColor = if (revise) mq.gold else fg
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(bg)
+            .then(if (revise) Modifier.border(1.dp, mq.gold, RoundedCornerShape(999.dp)) else Modifier)
+            .tapAndLongPress(onTap = onTap, onLongPress = onLongPress)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(dotColor))
+        Text(label, color = fg, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+/** Per-Para memorization meter: green fill = memorized fraction, plus counts and overall total. */
+@Composable
+private fun HifzMeter(
+    para: Int,
+    paraRukus: List<Ruku>,
+    entries: Map<Ruku, HifzEntry>,
+    overallTotal: Int,
+) {
+    val mq = LocalMqColors.current
+    val memorized = paraRukus.count { entries[it]?.state == HifzState.MEMORIZED }
+    val learning = paraRukus.count { entries[it]?.state == HifzState.LEARNING }
+    val revise = paraRukus.count { val e = entries[it]; e != null && e.state == HifzState.MEMORIZED && e.revise }
+    val total = paraRukus.size
+    val overallMem = entries.values.count { it.state == HifzState.MEMORIZED }
+    val fraction = if (total > 0) memorized.toFloat() / total else 0f
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("Para $para", color = mq.textPrimary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Text("$overallMem / $overallTotal memorized", color = mq.textMuted, fontSize = 12.sp)
+        }
+        Spacer(Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .background(mq.border),
+        ) {
+            if (fraction > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction)
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(Brush.horizontalGradient(listOf(mq.tealAccent, mq.memorizedFg))),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            if (memorized > 0) HifzCount(mq.memorizedFg, "$memorized/$total memorized")
+            if (learning > 0) HifzCount(mq.learningFg, "$learning learning")
+            if (revise > 0) HifzCount(mq.gold, "$revise to revise")
+            if (memorized == 0 && learning == 0) {
+                Text("No progress in this Para yet", color = mq.textMuted, fontSize = 12.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun HifzCount(color: Color, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Box(modifier = Modifier.size(7.dp).clip(CircleShape).background(color))
+        Text(text, color = color, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
     }
 }
 
