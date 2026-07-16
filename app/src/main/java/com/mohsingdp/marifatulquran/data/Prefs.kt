@@ -67,6 +67,13 @@ class Prefs(context: Context) {
         prefs.edit().putBoolean("whatsapp_share", enabled).apply()
     }
 
+    /** Whether the hifz (memorization) tracker is shown. Defaults to on. */
+    fun isHifzEnabled(): Boolean = prefs.getBoolean("hifz_enabled", true)
+
+    fun setHifzEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("hifz_enabled", enabled).apply()
+    }
+
     // --- Hifz (memorization) progress. Stored one entry per ruku under "hifz_<para>_<ruku>";
     //     absent key = not started. This prefs file is what Auto Backup restores. ---
     private fun hifzPrefKey(ruku: Ruku) = "hifz_${hifzKey(ruku)}"

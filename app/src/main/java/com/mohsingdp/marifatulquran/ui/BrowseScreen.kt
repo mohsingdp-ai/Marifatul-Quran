@@ -196,6 +196,8 @@ fun BrowseScreen(
     // WhatsApp share affordances are hidden when the user turns the setting off. Re-read on each
     // composition so returning from Settings reflects a change immediately.
     val whatsAppShareEnabled = prefs.isWhatsAppShareEnabled()
+    // Re-read on each composition so returning from Settings reflects the change immediately.
+    val hifzEnabled = prefs.isHifzEnabled()
 
     // Captured screen rects of the walkthrough targets (Para dropdown, first card's
     // play / WhatsApp-share / download buttons).
@@ -320,8 +322,8 @@ fun BrowseScreen(
             )
         }
 
-        // Per-Para memorization meter (hidden while bulk-selecting to keep that bar prominent).
-        if (!selectionMode) {
+        // Per-Para memorization meter (hidden while bulk-selecting or when hifz is disabled).
+        if (!selectionMode && hifzEnabled) {
             HifzMeter(
                 para = selectedPara,
                 paraRukus = rukus,
@@ -391,6 +393,7 @@ fun BrowseScreen(
                 val isActive = selectedPara == playingPara && index == ui.currentIndex
                 RukuCard(
                     ruku = ruku,
+                    showHifz = hifzEnabled,
                     hifzEntry = hifzEntries[ruku],
                     onHifzTap = { onHifzTap(ruku) },
                     onHifzRevision = { onHifzRevision(ruku) },
@@ -879,6 +882,7 @@ private fun NowPlayingCard(
 @Composable
 private fun RukuCard(
     ruku: Ruku,
+    showHifz: Boolean,
     hifzEntry: HifzEntry?,
     onHifzTap: () -> Unit,
     onHifzRevision: () -> Unit,
@@ -975,7 +979,7 @@ private fun RukuCard(
                     fontSize = 13.sp,
                     lineHeight = 17.sp,
                 )
-                if (!selectionMode) {
+                if (!selectionMode && showHifz) {
                     Spacer(Modifier.height(6.dp))
                     HifzPill(entry = hifzEntry, onTap = onHifzTap, onLongPress = onHifzRevision)
                 }

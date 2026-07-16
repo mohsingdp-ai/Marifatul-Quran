@@ -74,6 +74,7 @@ fun SettingsScreen(
     var currentMode by remember { mutableStateOf(prefs.getPlaybackMode()) }
     var defaultSpeed by remember { mutableFloatStateOf(prefs.getDefaultSpeed()) }
     var whatsAppShare by remember { mutableStateOf(prefs.isWhatsAppShareEnabled()) }
+    var hifzEnabled by remember { mutableStateOf(prefs.isHifzEnabled()) }
     var hifzStatus by remember { mutableStateOf("") }
     var showResetConfirm by remember { mutableStateOf(false) }
 
@@ -207,53 +208,84 @@ fun SettingsScreen(
                 }
             }
 
-            // Hifz progress — back up / restore memorization across devices or reinstalls.
+            // Hifz tracking — enable/disable the memorization tracker + back up / restore it.
             SettingsCard {
-                SectionTitle("Hifz progress", bottomPadding = 2.dp)
-                Text(
-                    text = "Back up your memorization progress or move it to another device.",
-                    color = mq.textMuted,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                )
                 Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    HifzActionButton("Export", Modifier.weight(1f)) {
-                        exportLauncher.launch("hifz-progress.txt")
+                    Column(modifier = Modifier.weight(1f)) {
+                        SectionTitle("Hifz tracking", bottomPadding = 2.dp)
+                        Text(
+                            text = "Show memorization progress and the pill on each ruku",
+                            color = mq.textMuted,
+                            fontSize = 13.sp,
+                        )
                     }
-                    HifzActionButton("Import", Modifier.weight(1f)) {
-                        importLauncher.launch(arrayOf("text/plain", "*/*"))
-                    }
-                    HifzActionButton("Reset", Modifier.weight(1f), danger = true) {
-                        showResetConfirm = true
-                    }
+                    Spacer(Modifier.width(12.dp))
+                    Switch(
+                        checked = hifzEnabled,
+                        onCheckedChange = {
+                            hifzEnabled = it
+                            prefs.setHifzEnabled(it)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = mq.tealAccent,
+                            checkedBorderColor = mq.tealAccent,
+                            uncheckedThumbColor = mq.textMuted,
+                            uncheckedTrackColor = mq.cardBg,
+                            uncheckedBorderColor = mq.border,
+                        ),
+                    )
                 }
-                // Inline confirm (lighter than a Material dialog; keeps the APK under budget).
-                if (showResetConfirm) {
-                    Spacer(Modifier.height(10.dp))
+                if (hifzEnabled) {
+                    Spacer(Modifier.height(14.dp))
                     Text(
-                        "Reset all memorization progress? This cannot be undone.",
+                        text = "Back up your memorization progress or move it to another device.",
                         color = mq.textMuted,
                         fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        modifier = Modifier.padding(bottom = 12.dp),
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        HifzActionButton("Cancel", Modifier.weight(1f)) { showResetConfirm = false }
+                        HifzActionButton("Export", Modifier.weight(1f)) {
+                            exportLauncher.launch("hifz-progress.txt")
+                        }
+                        HifzActionButton("Import", Modifier.weight(1f)) {
+                            importLauncher.launch(arrayOf("text/plain", "*/*"))
+                        }
                         HifzActionButton("Reset", Modifier.weight(1f), danger = true) {
-                            HifzRegistry.clear(prefs)
-                            hifzStatus = "Progress reset."
-                            showResetConfirm = false
+                            showResetConfirm = true
                         }
                     }
-                }
-                if (hifzStatus.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    Text(hifzStatus, color = mq.textMuted, fontSize = 13.sp)
+                    // Inline confirm (lighter than a Material dialog; keeps the APK under budget).
+                    if (showResetConfirm) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "Reset all memorization progress? This cannot be undone.",
+                            color = mq.textMuted,
+                            fontSize = 13.sp,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            HifzActionButton("Cancel", Modifier.weight(1f)) { showResetConfirm = false }
+                            HifzActionButton("Reset", Modifier.weight(1f), danger = true) {
+                                HifzRegistry.clear(prefs)
+                                hifzStatus = "Progress reset."
+                                showResetConfirm = false
+                            }
+                        }
+                    }
+                    if (hifzStatus.isNotEmpty()) {
+                        Spacer(Modifier.height(10.dp))
+                        Text(hifzStatus, color = mq.textMuted, fontSize = 13.sp)
+                    }
                 }
             }
         }
