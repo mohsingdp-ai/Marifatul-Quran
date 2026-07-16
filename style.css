@@ -1252,6 +1252,12 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   width: 6.5rem;
 }
 
+/* Hifz tracking disabled: hide the meter and the whole Hifz column. */
+html[data-hifz="off"] .hifz-meter,
+html[data-hifz="off"] .col-hifz {
+  display: none;
+}
+
 /* Status pill on each ruku row */
 .hifz-pill {
   display: inline-flex;
