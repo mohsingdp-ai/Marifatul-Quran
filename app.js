@@ -263,6 +263,21 @@
   var hifzAllKeysCache = null;
   var hifzValidKeysCache = null;
 
+  function getHifzEnabled() {
+    return localStorage.getItem("hifz_enabled") !== "false";
+  }
+  function setHifzEnabled(on) {
+    localStorage.setItem("hifz_enabled", on ? "true" : "false");
+  }
+  function applyHifzEnabled(on) {
+    document.documentElement.setAttribute("data-hifz", on ? "on" : "off");
+    var io = document.getElementById("hifz-io-section");
+    if (io) io.style.display = on ? "" : "none";
+    var toggle = document.getElementById("hifz-enabled-toggle");
+    if (toggle) toggle.checked = on;
+    if (on) renderHifzMeter();
+  }
+
   function getHifzMap() {
     try { return JSON.parse(localStorage.getItem(HIFZ_STORAGE_KEY) || "{}"); }
     catch (e) { return {}; }
@@ -2390,6 +2405,15 @@
   }
 
   (function wireHifzIo() {
+    var enabledToggle = document.getElementById("hifz-enabled-toggle");
+    if (enabledToggle) {
+      enabledToggle.addEventListener("change", function () {
+        setHifzEnabled(enabledToggle.checked);
+        applyHifzEnabled(enabledToggle.checked);
+      });
+    }
+    applyHifzEnabled(getHifzEnabled());
+
     var exportBtn = document.getElementById("hifz-export-btn");
     var importBtn = document.getElementById("hifz-import-btn");
     var importFile = document.getElementById("hifz-import-file");

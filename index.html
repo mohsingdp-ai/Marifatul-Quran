@@ -5,6 +5,9 @@
     (function () {
       var t = localStorage.getItem("ui_theme");
       document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+      // Hifz tracking on by default; set before first paint to avoid a flash of the meter/column.
+      var h = localStorage.getItem("hifz_enabled");
+      document.documentElement.setAttribute("data-hifz", h === "false" ? "off" : "on");
     })();
   </script>
   <meta charset="UTF-8">
@@ -131,7 +134,7 @@
       <table class="ruku-table" id="ruku-table">
         <thead>
           <tr>
-            <th>Hifz</th>
+            <th class="col-hifz">Hifz</th>
             <th>Ruku #</th>
             <th>Surah</th>
             <th>Verses</th>
@@ -258,6 +261,13 @@
             Hifz progress
           </div>
           <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Hifz tracking</span>
+              <input type="checkbox" id="hifz-enabled-toggle" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+          </div>
+          <div class="settings-row" id="hifz-io-section">
             <p class="settings-hint">Back up your memorization progress or move it to another device.</p>
             <div class="hifz-actions-row">
               <button type="button" class="btn btn-sm" id="hifz-export-btn">Export</button>
