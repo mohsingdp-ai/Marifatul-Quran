@@ -116,10 +116,22 @@
       </div>
     </div>
 
+    <div class="hifz-meter" id="hifz-meter" aria-live="polite">
+      <div class="hifz-meter-head">
+        <span class="hifz-meter-para" id="hifz-meter-para">Para 1</span>
+        <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
+      </div>
+      <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div class="hifz-meter-fill" id="hifz-meter-fill"></div>
+      </div>
+      <div class="hifz-meter-counts" id="hifz-meter-counts"></div>
+    </div>
+
     <div class="table-wrapper">
       <table class="ruku-table" id="ruku-table">
         <thead>
           <tr>
+            <th>Hifz</th>
             <th>Ruku #</th>
             <th>Surah</th>
             <th>Verses</th>
@@ -239,6 +251,24 @@
           </div>
         </div>
 
+        <!-- Hifz progress -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17.3 5.7 21.4 8 14 2 9.4h7.6z"/></svg>
+            Hifz progress
+          </div>
+          <div class="settings-row">
+            <p class="settings-hint">Back up your memorization progress or move it to another device.</p>
+            <div class="hifz-actions-row">
+              <button type="button" class="btn btn-sm" id="hifz-export-btn">Export</button>
+              <button type="button" class="btn btn-sm" id="hifz-import-btn">Import</button>
+              <button type="button" class="btn btn-sm btn-danger" id="hifz-reset-btn">Reset</button>
+            </div>
+            <input type="file" id="hifz-import-file" accept="application/json,.json" hidden />
+            <p class="settings-hint" id="hifz-io-status" aria-live="polite"></p>
+          </div>
+        </div>
+
         <!-- Storage -->
         <div class="settings-group">
           <div class="settings-group-header">
@@ -330,6 +360,7 @@
   </div>
 
   <script src="data.js"></script>
+  <script src="hifz.js"></script>
   <script src="app.js"></script>
   <script>
     if ("serviceWorker" in navigator) {

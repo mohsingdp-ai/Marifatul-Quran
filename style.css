@@ -1217,31 +1217,23 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 }
 
 /* Ruku # column: one line, left-aligned */
-.ruku-table td:first-child {
+.ruku-table .col-ruku {
   min-width: 8rem;
 }
 
 /* Surah name: one line */
-.ruku-table td:nth-child(2) {
+.ruku-table .col-surah {
   min-width: 7rem;
 }
 
-/* Verses: one line */
-.ruku-table td:nth-child(3) {
-  min-width: 4rem;
-}
-
-/* Surah # & Arabic: one line */
-.ruku-table td:nth-child(4) {
-  min-width: 6rem;
-}
-
 .ruku-table .col-verses {
+  min-width: 4rem;
   color: var(--verse-link);
   font-weight: 500;
 }
 
 .ruku-table .col-surah-arabic {
+  min-width: 6rem;
   text-align: right;
   direction: rtl;
   font-family: "Traditional Arabic", "Scheherazade New", serif;
@@ -1252,6 +1244,148 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 .ruku-table .col-audio {
   text-align: left;
   min-width: 280px;
+}
+
+/* ============ Hifz (memorization) ============ */
+.ruku-table .col-hifz {
+  min-width: 6.5rem;
+  width: 6.5rem;
+}
+
+/* Status pill on each ruku row */
+.hifz-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.28rem 0.6rem 0.28rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--muted-chip-bg);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+
+.hifz-pill:hover { filter: brightness(0.97); }
+.hifz-pill:active { transform: scale(0.95); }
+
+.hifz-pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--page-bg), 0 0 0 4px var(--teal-accent);
+}
+
+/* Leading dot glyph */
+.hifz-pill-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.hifz-pill[data-state="learning"] {
+  background: var(--warn-chip-bg);
+  color: var(--warn-chip-fg);
+}
+
+.hifz-pill[data-state="memorized"] {
+  background: var(--success-bg);
+  color: var(--success-fg);
+}
+
+/* Needs-revision: memorized green + gold ring + gold dot */
+.hifz-pill[data-revise="true"] {
+  border-color: var(--arabic-gold);
+  box-shadow: inset 0 0 0 1px var(--arabic-gold);
+}
+.hifz-pill[data-revise="true"] .hifz-pill-dot {
+  background: var(--arabic-gold);
+}
+
+/* Per-Para memorization meter (signature element) */
+.hifz-meter {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.7rem 1rem 0.55rem;
+}
+
+.hifz-meter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.hifz-meter-para {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+
+.hifz-meter-total {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.hifz-meter-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--volume-track);
+  overflow: hidden;
+}
+
+.hifz-meter-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal-accent), var(--success-fg));
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hifz-meter-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.45rem;
+  min-height: 1.2rem;
+}
+
+.hifz-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+.hifz-count::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+.hifz-count[data-kind="memorized"] { color: var(--success-fg); }
+.hifz-count[data-kind="learning"] { color: var(--warn-chip-fg); }
+.hifz-count[data-kind="revise"] { color: var(--arabic-gold); }
+
+/* Export / import / reset buttons */
+.hifz-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .audio-cell audio {
