@@ -2602,3 +2602,125 @@ tr.playing .audio-progress::-moz-range-thumb {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* ------------------------------------------------------------------ */
+/* First-run guided walkthrough overlay (mirrors native GuideOverlay)  */
+/* ------------------------------------------------------------------ */
+.mq-guide-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Transparent spotlight div: a huge box-shadow spread acts as the dimmed
+   scrim with a transparent cutout around the target. pointer-events:none so
+   the overlay root still receives the advance tap. */
+.mq-guide-spotlight {
+  position: absolute;
+  border: 2.5px solid var(--teal-accent);
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.76);
+  pointer-events: none;
+  transition: top 0.18s ease, left 0.18s ease, width 0.18s ease, height 0.18s ease;
+}
+
+/* Full-screen SVG layer for the caption→target arrow. */
+.mq-guide-arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.mq-guide-arrow-line {
+  stroke: var(--arabic-gold);
+  stroke-width: 3;
+  stroke-linecap: round;
+  fill: none;
+}
+.mq-guide-arrow-head {
+  fill: var(--arabic-gold);
+  stroke: var(--arabic-gold);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.mq-guide-caption {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--modal-bg);
+  border: 1px solid rgba(15, 122, 122, 0.5);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  padding: 16px 18px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+html[data-theme="dark"] .mq-guide-caption {
+  border-color: rgba(45, 180, 180, 0.5);
+}
+
+.mq-guide-step-label {
+  color: var(--teal-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.mq-guide-title {
+  margin: 6px 0 6px;
+  color: var(--text-primary);
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+.mq-guide-body {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.mq-guide-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.mq-guide-skip {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 8px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mq-guide-next {
+  border: none;
+  background: var(--teal-accent);
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 9px 22px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.mq-guide-next:hover {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 560px) {
+  .mq-guide-caption {
+    left: 12px;
+    right: 12px;
+  }
+}

@@ -269,6 +269,14 @@
   function setHifzEnabled(on) {
     localStorage.setItem("hifz_enabled", on ? "true" : "false");
   }
+
+  /** Whether the first-run guided walkthrough has already been shown. */
+  function isGuideSeen() {
+    return localStorage.getItem("guide_seen") === "true";
+  }
+  function setGuideSeen() {
+    localStorage.setItem("guide_seen", "true");
+  }
   function applyHifzEnabled(on) {
     document.documentElement.setAttribute("data-hifz", on ? "on" : "off");
     var io = document.getElementById("hifz-io-section");
@@ -2437,7 +2445,7 @@
 
     // Preserve current track and essential settings
     var preserve = {};
-    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", HIFZ_STORAGE_KEY];
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", HIFZ_STORAGE_KEY, "guide_seen"];
     keepKeys.forEach(function (k) {
       var v = localStorage.getItem(k);
       if (v !== null) preserve[k] = v;
@@ -3153,10 +3161,225 @@
     var ti = document.getElementById("toolbar-transport-icon");
     if (ti) ti.innerHTML = PLAY_SVG;
   })();
+
+  /* ----------------------------------------------------------------- */
+  /* First-run guided walkthrough (mirrors native GuideOverlay).        */
+  /* ----------------------------------------------------------------- */
+  // Each step: a caption anchored to a target element's rect. Selectors are
+  // queried live on each render so the guide stays correct if the table
+  // re-renders. A null target centers the caption with no spotlight/arrow.
+  var GUIDE_STEPS = [
+    {
+      title: "Choose a Para (Juz)",
+      body: "Tap here to pick a Para from 1–30. Its rukus appear in the list below.",
+      selector: "#para-select",
+    },
+    {
+      title: "Play a recording",
+      body: "Tap the play button on any ruku to listen. Use −5 / +5 to skip, or drag the bar to seek.",
+      selector: "#ruku-tbody .audio-play-btn",
+    },
+    {
+      title: "Download for offline",
+      body: "Tap the download icon to save a ruku on your device. Once it's saved you can play it anytime, even without internet.",
+      selector: "#ruku-tbody .audio-offline-btn",
+    },
+    {
+      title: "Share on WhatsApp",
+      body: "Tap the WhatsApp icon to send a ruku to family or friends. Use the menu's “Share rukus” to send several at once.",
+      selector: "#ruku-tbody .audio-share-wa-btn",
+    },
+    {
+      title: "Track memorization (Hifz)",
+      body: "Tap the Hifz pill on a ruku to mark it as memorized — tap again to flag it for revision. The bar above the list shows your progress for this Para.",
+      selector: "#ruku-tbody .hifz-pill",
+    },
+  ];
+
+  function guideTargetRect(step) {
+    if (!step.selector) return null;
+    var el = document.querySelector(step.selector);
+    if (!el) return null;
+    var r = el.getBoundingClientRect();
+    // Skip elements that have no box (display:none / zero size).
+    if (r.width === 0 && r.height === 0) return null;
+    return r;
+  }
+
+  function drawGuideArrow(svg, from, to) {
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    var dx = to.x - from.x;
+    var dy = to.y - from.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", from.x);
+    line.setAttribute("y1", from.y);
+    line.setAttribute("x2", to.x);
+    line.setAttribute("y2", to.y);
+    line.setAttribute("class", "mq-guide-arrow-line");
+    svg.appendChild(line);
+    // Arrowhead: a "V" at the target end, pointing along the shaft.
+    var head = 11;
+    var angle = Math.atan2(dy, dx);
+    var a1 = angle + Math.PI - Math.PI / 6;
+    var a2 = angle + Math.PI + Math.PI / 6;
+    var poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    poly.setAttribute("points",
+      to.x + "," + to.y + " " +
+      (to.x + head * Math.cos(a1)) + "," + (to.y + head * Math.sin(a1)) + " " +
+      (to.x + head * Math.cos(a2)) + "," + (to.y + head * Math.sin(a2)));
+    poly.setAttribute("class", "mq-guide-arrow-head");
+    svg.appendChild(poly);
+  }
+
+  function showGuide() {
+    if (document.querySelector(".mq-guide-overlay")) return;
+
+    var root = document.createElement("div");
+    root.className = "mq-guide-overlay";
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-label", "Guided walkthrough");
+
+    var spotlight = document.createElement("div");
+    spotlight.className = "mq-guide-spotlight";
+    spotlight.style.display = "none";
+
+    var arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrowSvg.setAttribute("class", "mq-guide-arrow");
+
+    var caption = document.createElement("div");
+    caption.className = "mq-guide-caption";
+    caption.innerHTML =
+      '<div class="mq-guide-step-label"></div>' +
+      '<div class="mq-guide-title"></div>' +
+      '<p class="mq-guide-body"></p>' +
+      '<div class="mq-guide-actions">' +
+      '  <button type="button" class="mq-guide-skip">Skip</button>' +
+      '  <button type="button" class="mq-guide-next"></button>' +
+      '</div>';
+
+    root.appendChild(spotlight);
+    root.appendChild(arrowSvg);
+    root.appendChild(caption);
+    document.body.appendChild(root);
+
+    var labelEl = caption.querySelector(".mq-guide-step-label");
+    var titleEl = caption.querySelector(".mq-guide-title");
+    var bodyEl = caption.querySelector(".mq-guide-body");
+    var skipBtn = caption.querySelector(".mq-guide-skip");
+    var nextBtn = caption.querySelector(".mq-guide-next");
+
+    var index = 0;
+    var rafId = 0;
+
+    function renderStep() {
+      cancelAnimationFrame(rafId);
+      var step = GUIDE_STEPS[index];
+      var target = guideTargetRect(step);
+      var vh = window.innerHeight;
+
+      labelEl.textContent = "Step " + (index + 1) + " of " + GUIDE_STEPS.length;
+      titleEl.textContent = step.title;
+      bodyEl.textContent = step.body;
+      nextBtn.textContent = (index === GUIDE_STEPS.length - 1) ? "Got it" : "Next";
+
+      // Spotlight around the target (8px padding, like the native ring pad).
+      if (target) {
+        var pad = 8;
+        spotlight.style.display = "block";
+        spotlight.style.left = (target.left - pad) + "px";
+        spotlight.style.top = (target.top - pad) + "px";
+        spotlight.style.width = (target.width + pad * 2) + "px";
+        spotlight.style.height = (target.height + pad * 2) + "px";
+      } else {
+        spotlight.style.display = "none";
+      }
+
+      // Provisional caption placement; finalized after measuring its height.
+      var captionBelow = !target || target.top + target.height / 2 < vh * 0.5;
+      var provisionalTop;
+      if (!target) {
+        provisionalTop = vh * 0.4;
+      } else if (captionBelow) {
+        provisionalTop = target.bottom + 16;
+      } else {
+        provisionalTop = Math.max(16, target.top - 16 - 150);
+      }
+      caption.style.top = provisionalTop + "px";
+
+      rafId = requestAnimationFrame(function () {
+        var ch = caption.offsetHeight;
+        var finalTop;
+        if (!target) {
+          finalTop = vh * 0.4;
+        } else if (captionBelow) {
+          finalTop = Math.min(target.bottom + 16, vh - ch - 16);
+        } else {
+          finalTop = Math.max(16, target.top - 16 - ch);
+        }
+        caption.style.top = finalTop + "px";
+
+        // Arrow from the caption edge to the target.
+        if (target) {
+          var capRect = caption.getBoundingClientRect();
+          var ax = Math.max(capRect.left + 24, Math.min(target.left + target.width / 2, capRect.right - 24));
+          var from, to;
+          if (captionBelow) {
+            from = { x: ax, y: capRect.top - 4 };
+            to = { x: target.left + target.width / 2, y: target.bottom + 6 };
+          } else {
+            from = { x: ax, y: capRect.bottom + 4 };
+            to = { x: target.left + target.width / 2, y: target.top - 6 };
+          }
+          drawGuideArrow(arrowSvg, from, to);
+          arrowSvg.style.display = "";
+        } else {
+          arrowSvg.style.display = "none";
+        }
+      });
+    }
+
+    function finish() {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", renderStep);
+      window.removeEventListener("scroll", renderStep, true);
+      if (root.parentNode) root.parentNode.removeChild(root);
+      setGuideSeen();
+    }
+    function advance() {
+      if (index >= GUIDE_STEPS.length - 1) {
+        finish();
+      } else {
+        index++;
+        renderStep();
+      }
+    }
+
+    root.addEventListener("click", advance);
+    skipBtn.addEventListener("click", function (e) { e.stopPropagation(); finish(); });
+    nextBtn.addEventListener("click", function (e) { e.stopPropagation(); advance(); });
+    window.addEventListener("resize", renderStep);
+    // Reposition on any scroll (table is inside a scroll container) — capture phase.
+    window.addEventListener("scroll", renderStep, true);
+
+    renderStep();
+  }
+
   renderTable();
   if (pendingRukuHighlightFromUrl) {
     scrollTableToRukuRow(parseInt(paraSelect.value, 10), pendingRukuHighlightFromUrl);
     pendingRukuHighlightFromUrl = null;
+  }
+
+  // Replayable walkthrough via the toolbar menu.
+  var showGuideBtn = document.getElementById("show-guide-btn");
+  if (showGuideBtn) showGuideBtn.addEventListener("click", showGuide);
+
+  // Show the guided walkthrough automatically the first time the app is opened
+  // (after the first table render so the first row's controls exist).
+  if (!isGuideSeen()) {
+    requestAnimationFrame(function () { requestAnimationFrame(showGuide); });
   }
 })();
 
