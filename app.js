@@ -41,6 +41,10 @@
   var escapeNode = document.createElement("div");
   var indexedData = buildParaIndex(data);
   var currentPlayingAudio = null;
+  /** Ayat panels currently expanded, keyed "<para>|<rukuInPara>". Survives table re-renders. */
+  var expandedAyat = {};
+  /** Panel opened automatically by playback, so starting another track can close it again. */
+  var autoOpenedAyatKey = null;
   var PLAYBACK_STORAGE_KEY = "mq_playback_v1";
   /** globalIndex -> { t: seconds } last heard position per recording */
   var POSITIONS_STORAGE_KEY = "mq_audio_positions_v1";
@@ -49,7 +53,11 @@
     _listenersBound: false,
     activeGlobalIndex: null,
     alternateUrls: [],
-    alternateIndex: 0
+    alternateIndex: 0,
+    /** Plain URL of the active track, so a bad offline copy can fall back to the network. */
+    networkUrl: null,
+    /** URL whose offline-cache entry produced the current blob src, else null. */
+    cachedFrom: null
   };
   var persistPlaybackTimer = null;
   var mediaSessionKeepaliveTimer = null;
@@ -536,11 +544,147 @@
     }).catch(function () { return false; });
   }
 
+  /**
+   * A failed load is usually transient (dropped request) or a stale offline copy, not a
+   * genuinely missing file — so leave the user a way back instead of a dead-end label.
+   */
+  function buildAudioRetryBtn(globalIndex) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "audio-retry-btn";
+    btn.textContent = "Retry";
+    btn.title = "Clear the saved copy and load this recording again";
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      btn.disabled = true;
+      var row = data[globalIndex];
+      var src = row ? getAudioSrc(row, globalIndex) : null;
+      var urls = src ? [src].concat(getAudioUrlAlternates(src)) : [];
+      Promise.all(urls.map(evictCachedAudio)).then(function () {
+        renderTable({ skipViewRestore: false });
+      });
+    });
+    return btn;
+  }
+
   function showNoRecording(audioCell) {
     var span = document.createElement("span");
     span.className = "no-recording";
     span.textContent = "No recording";
     audioCell.appendChild(span);
+  }
+
+  /* ----------------------------------------------------------------- */
+  /* Ayat panel — Arabic text of a ruku, revealed under its table row.  */
+  /* Text lives in verses.js; rukus missing from it keep a plain cell.   */
+  /* ----------------------------------------------------------------- */
+
+  /** verses.js key for a ruku, e.g. "10|R1". */
+  function ayatKeyFor(row) {
+    return String(row.para) + "|" + String(row.rukuInPara);
+  }
+
+  function getRukuAyat(row) {
+    if (typeof QURAN_VERSES === "undefined" || !row) return null;
+    return QURAN_VERSES[ayatKeyFor(row)] || null;
+  }
+
+  function isAyatOpen(row) {
+    return !!row && expandedAyat[ayatKeyFor(row)] === true;
+  }
+
+  function ayatPanelId(globalIndex) {
+    return "ayat-panel-" + globalIndex;
+  }
+
+  function toArabicDigits(n) {
+    var digits = "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669";
+    return String(n).replace(/\d/g, function (d) { return digits.charAt(Number(d)); });
+  }
+
+  function buildAyatRow(item) {
+    var row = item.row;
+    var entry = getRukuAyat(row);
+    if (!entry) return null;
+
+    var tr = document.createElement("tr");
+    tr.className = "ayat-row";
+    tr.dataset.ayatFor = item.globalIndex;
+    tr.hidden = !isAyatOpen(row);
+
+    var td = document.createElement("td");
+    td.className = "ayat-cell";
+    // Widest the table ever gets (7 columns, admin Action column included).
+    td.colSpan = 7;
+
+    var count = entry.ayahs.length;
+    var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
+      "<div class=\"ayat-head\">" +
+        "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
+          row.surahNumber + ":" + escapeHtml(row.verses) + "</span>" +
+        "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
+      "</div>";
+
+    if (entry.showBasmala) {
+      html += "<div class=\"ayat-basmala\" lang=\"ar\">\ufdfd</div>";
+    }
+
+    html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
+    entry.ayahs.forEach(function (a) {
+      html += "<p class=\"ayat-item\">" + escapeHtml(a.text) +
+        "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
+    });
+    html += "</div>";
+
+    html += "<p class=\"ayat-source\">Uthmani script</p></div>";
+
+    td.innerHTML = html;
+    tr.appendChild(td);
+    return tr;
+  }
+
+  /** Push `expandedAyat` onto the rendered rows (visibility, aria, joined-card styling). */
+  function syncAyatRows() {
+    var ayatRows = tbody.querySelectorAll("tr.ayat-row[data-ayat-for]");
+    for (var i = 0; i < ayatRows.length; i++) {
+      var gi = ayatRows[i].dataset.ayatFor;
+      var open = isAyatOpen(data[gi]);
+      ayatRows[i].hidden = !open;
+      var mainTr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+      if (!mainTr) continue;
+      mainTr.classList.toggle("has-ayat-open", open);
+      var btn = mainTr.querySelector(".verses-toggle");
+      if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+  }
+
+  function toggleAyat(globalIndex) {
+    var row = data[globalIndex];
+    if (!getRukuAyat(row)) return;
+    var key = ayatKeyFor(row);
+    if (expandedAyat[key]) {
+      delete expandedAyat[key];
+      if (autoOpenedAyatKey === key) autoOpenedAyatKey = null;
+    } else {
+      expandedAyat[key] = true;
+    }
+    syncAyatRows();
+  }
+
+  /** Reveal the ayat of the track that just started, closing the one playback opened before it. */
+  function revealAyatForTrack(globalIndex) {
+    var row = data[globalIndex];
+    var key = row ? ayatKeyFor(row) : null;
+    // Close the previous auto-opened panel even when the new track has no ayat text yet.
+    if (autoOpenedAyatKey && autoOpenedAyatKey !== key) {
+      delete expandedAyat[autoOpenedAyatKey];
+      autoOpenedAyatKey = null;
+    }
+    if (getRukuAyat(row)) {
+      expandedAyat[key] = true;
+      autoOpenedAyatKey = key;
+    }
+    syncAyatRows();
   }
 
   function buildRow(item, canUpload, playbackResume) {
@@ -553,12 +697,20 @@
     var surahArabicCell = row.surahNumber + " " + row.surahArabic;
     var audioSrc = getAudioSrc(row, globalIndex);
     var savedPath = normalizeAudioPath(row.audioUrl);
+    var hasAyat = !!getRukuAyat(row);
+    var versesCell = hasAyat
+      ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
+        "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
+        escapeHtml(row.verses) + AYAT_CHEVRON_SVG + "</button>"
+      : escapeHtml(row.verses);
+
+    if (hasAyat && isAyatOpen(row)) tr.classList.add("has-ayat-open");
 
     tr.innerHTML =
       "<td class=\"col-hifz hifz-cell\" data-label=\"Hifz\"></td>" +
       "<td class=\"col-ruku\" data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
       "<td class=\"col-surah\" data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
-      "<td class=\"col-verses\" data-label=\"Verses\">" + escapeHtml(row.verses) + "</td>" +
+      "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
       "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
       (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
@@ -745,11 +897,16 @@
     tbody.textContent = "";
     setActionColumnVisibility(canUpload);
 
-    filtered.forEach(function (item) {
+    filtered.forEach(function (item, i) {
       var rowResume = stickyPlaybackResume && String(stickyPlaybackResume.globalIndex) === String(item.globalIndex)
         ? stickyPlaybackResume
         : null;
-      fragment.appendChild(buildRow(item, canUpload, rowResume));
+      var tr = buildRow(item, canUpload, rowResume);
+      // Ayat rows sit between track rows, so zebra striping is by class rather than :nth-child.
+      tr.classList.add(i % 2 === 0 ? "row-odd" : "row-even");
+      fragment.appendChild(tr);
+      var ayatTr = buildAyatRow(item);
+      if (ayatTr) fragment.appendChild(ayatTr);
     });
 
     if (filtered.length === 0) {
@@ -1067,6 +1224,7 @@
             playBtn.setAttribute("aria-label", "Play");
             tr.classList.add("playing", "audio-paused");
             currentPlayingAudio = a;
+            revealAyatForTrack(globalIndex);
             setNowPlayingMetadata(row, a);
             syncToolbarNowPlaying(row, "paused");
             setMediaPlaybackState("paused");
@@ -1091,6 +1249,7 @@
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
   var WHATSAPP_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2.005c-5.52 0-10 4.48-10 10.002 0 1.76.46 3.47 1.34 4.98L2.05 22l5.08-1.34c1.46.8 3.12 1.23 4.91 1.23 5.52 0 10-4.48 10-10.002 0-2.67-1.04-5.18-2.93-7.07a9.95 9.95 0 0 0-7.07-2.893zm.03 17.92c-1.5 0-2.97-.4-4.25-1.15l-.3-.18-3.18.84.85-3.11-.2-.31a7.764 7.764 0 0 1-1.2-4.12c0-4.28 3.47-7.75 7.75-7.75 2.07 0 4.02.81 5.48 2.28a7.684 7.684 0 0 1 2.25 5.47c-.01 4.28-3.48 7.76-7.75 7.76zm4.26-4.51c-.24-.12-1.43-.7-1.66-.78-.22-.08-.39-.12-.56.12-.17.24-.64.78-.79.94-.15.16-.3.18-.54.06-.24-.12-1.02-.37-1.95-1.2-.72-.64-1.2-1.43-1.34-1.67-.15-.24-.02-.37.11-.49.12-.12.24-.27.37-.4.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.53-1.26-.73-1.73-.19-.46-.39-.39-.53-.41h-.45c-.15 0-.4.06-.61.3-.21.24-.81.79-.81 1.92s.83 2.23.94 2.39c.12.16 1.62 2.48 3.93 3.48.55.23.98.37 1.31.47.55.18 1.05.16 1.44.09.44-.07 1.42-.58 1.62-1.14.21-.56.21-1.03.15-1.13-.06-.1-.22-.16-.46-.28z"/></svg>';
+  var AYAT_CHEVRON_SVG = '<svg class="verses-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
   var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
@@ -1150,16 +1309,34 @@
     }).catch(function () { return false; });
   }
 
+  /** Smallest plausible recording; anything shorter is a truncated or error-page cache write. */
+  var MIN_CACHED_AUDIO_BYTES = 1024;
+
   function getCachedAudioBlob(url) {
     var abs = resolveUrl(url);
     return caches.open(AUDIO_CACHE).then(function (cache) {
-      return cache.match(abs);
-    }).then(function (resp) {
-      if (!resp) return null;
-      return resp.blob().then(function (blob) {
-        return URL.createObjectURL(blob);
+      return cache.match(abs).then(function (resp) {
+        // A partial (206) or error response cached here would fail to decode forever,
+        // leaving the row stuck on "Path Not found". Drop it and fall back to the network.
+        if (!resp || resp.status !== 200) {
+          return (resp ? cache.delete(abs) : Promise.resolve()).then(function () { return null; });
+        }
+        return resp.blob().then(function (blob) {
+          if (!blob || blob.size < MIN_CACHED_AUDIO_BYTES) {
+            return cache.delete(abs).then(function () { return null; });
+          }
+          return URL.createObjectURL(blob);
+        });
       });
     }).catch(function () { return null; });
+  }
+
+  function evictCachedAudio(url) {
+    if (!url) return Promise.resolve(false);
+    var abs = resolveUrl(url);
+    return caches.open(AUDIO_CACHE).then(function (cache) {
+      return cache.delete(abs);
+    }).catch(function () { return false; });
   }
 
   function cacheAudioFile(url) {
@@ -1662,6 +1839,7 @@
       if (r) {
         setNowPlayingMetadata(r, a);
         syncToolbarNowPlaying(r, "playing");
+        revealAyatForTrack(gi);
       }
       setMediaPlaybackState("playing");
       savePlaybackPersist();
@@ -1748,6 +1926,26 @@
 
     a.addEventListener("error", function () {
       setTrackLoading(false);
+
+      // Playing from a saved offline copy that will not decode (truncated download, a
+      // partial response an older service worker stored). Drop it and retry the network
+      // URL — otherwise the row stays on "Path Not found" for good, even though the file
+      // is fine on the server.
+      if (mqPlayback.cachedFrom && mqPlayback.networkUrl) {
+        var stale = mqPlayback.cachedFrom;
+        var networkUrl = mqPlayback.networkUrl;
+        mqPlayback.cachedFrom = null;
+        evictCachedAudio(stale).then(function () {
+          a.src = networkUrl;
+          a.load();
+          a.addEventListener("canplay", function onNetwork() {
+            a.removeEventListener("canplay", onNetwork);
+            a.play();
+          }, { once: true });
+        });
+        return;
+      }
+
       var alts = mqPlayback.alternateUrls || [];
       var idx = mqPlayback.alternateIndex || 0;
       if (alts.length && idx < alts.length) {
@@ -1764,6 +1962,8 @@
       stopMediaSessionKeepalive();
       currentPlayingAudio = null;
       mqPlayback.activeGlobalIndex = null;
+      mqPlayback.cachedFrom = null;
+      mqPlayback.networkUrl = null;
       clearPlaybackPersist();
       syncToolbarNowPlaying(null, "idle");
       if (gi == null) return;
@@ -1776,6 +1976,7 @@
           msg.className = "path-not-found";
           msg.textContent = "Path Not found";
           cell.appendChild(msg);
+          cell.appendChild(buildAudioRetryBtn(gi));
         }
       }
     });
@@ -1829,7 +2030,7 @@
           preloadAudio.preload = "auto";
           preloadAudio.src = blobUrl;
           preloadAudio.load();
-          mqPlayback._preloadedAudio = { gi: nextGi, audio: preloadAudio, src: blobUrl };
+          mqPlayback._preloadedAudio = { gi: nextGi, audio: preloadAudio, src: blobUrl, cachedFrom: allUrls[i] };
         } else {
           tryPreload(i + 1);
         }
@@ -1858,10 +2059,13 @@
     mqPlayback.activeGlobalIndex = globalIndex;
     mqPlayback.alternateUrls = getAudioUrlAlternates(src);
     mqPlayback.alternateIndex = 0;
+    mqPlayback.networkUrl = src;
+    mqPlayback.cachedFrom = null;
 
     if (mqPlayback._preloadedAudio && mqPlayback._preloadedAudio.gi === String(globalIndex)) {
       var preloaded = mqPlayback._preloadedAudio;
       mqPlayback._preloadedAudio = null;
+      mqPlayback.cachedFrom = preloaded.cachedFrom || null;
       a.src = preloaded.src;
       a.load();
       if (!options.skipStoredPosition) {
@@ -1917,6 +2121,7 @@
         }
         getCachedAudioBlob(allUrls[i]).then(function (blobUrl) {
           if (blobUrl) {
+            mqPlayback.cachedFrom = allUrls[i];
             a.src = blobUrl;
             a.load();
             whenReadyThenResolve(resolve);
@@ -2118,8 +2323,16 @@
     renderTable({ scrollBasePara: tableRenderedPara });
   });
 
+  tbody.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest(".verses-toggle") : null;
+    if (!btn) return;
+    var tr = btn.closest("tr[data-global-index]");
+    if (tr) toggleAyat(tr.dataset.globalIndex);
+  });
+
   tbody.addEventListener("mouseover", function (e) {
-    var tr = e.target.closest("tr");
+    // Ayat rows carry no recording path, so they get no path tooltip.
+    var tr = e.target.closest("tr:not(.ayat-row)");
     if (!tr || !tbody.contains(tr) || tr === activeTooltipRow) return;
     activeTooltipRow = tr;
     pathTooltip.textContent = tr.dataset.pathText || "(No recording)";

@@ -1187,15 +1187,15 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   border-bottom: 1px solid var(--border);
 }
 
-.ruku-table tbody tr:nth-child(even) {
+.ruku-table tbody tr.row-even {
   background: var(--row-gray);
 }
 
-.ruku-table tbody tr:nth-child(odd) {
+.ruku-table tbody tr.row-odd {
   background: var(--row-white);
 }
 
-.ruku-table tbody tr:hover {
+.ruku-table tbody tr:not(.ayat-row):hover {
   background: var(--row-hover) !important;
 }
 
@@ -1244,6 +1244,139 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 .ruku-table .col-audio {
   text-align: left;
   min-width: 280px;
+}
+
+/* ============ Ayat panel (verses of a ruku) ============ */
+
+/* The Verses cell doubles as the disclosure control when verses.js has the text. */
+.verses-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.4rem;
+  margin: -0.15rem -0.4rem;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  font: inherit;
+  color: var(--verse-link);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.verses-toggle:hover {
+  background: var(--teal-tint-hover);
+}
+
+.verses-toggle:focus-visible {
+  outline: 2px solid var(--teal-accent);
+  outline-offset: 1px;
+}
+
+.verses-toggle-chevron {
+  flex: none;
+  opacity: 0.75;
+  transition: transform 0.18s ease;
+}
+
+.verses-toggle[aria-expanded="true"] .verses-toggle-chevron {
+  transform: rotate(180deg);
+}
+
+/* Collapsed panels stay in the DOM so open/closed state survives a re-render. */
+.ruku-table tbody tr.ayat-row[hidden] {
+  display: none;
+}
+
+.ruku-table tbody tr.ayat-row {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border);
+}
+
+.ruku-table tbody td.ayat-cell {
+  padding: 0 1rem 0.9rem;
+  white-space: normal;
+}
+
+.ayat-panel {
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal-accent);
+  border-radius: var(--radius);
+  background: var(--row-white);
+  padding: 0.85rem 1.1rem 0.7rem;
+}
+
+.ayat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.ayat-head-surah {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--verse-link);
+}
+
+.ayat-head-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ayat-basmala {
+  text-align: center;
+  font-size: 1.6rem;
+  line-height: 1.6;
+  color: var(--arabic-gold);
+  margin-bottom: 0.35rem;
+}
+
+.ayat-body {
+  font-family: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  font-size: 1.6rem;
+  line-height: 2.15;
+  color: var(--text-primary);
+  text-align: justify;
+  text-align-last: right;
+}
+
+.ayat-item {
+  margin: 0 0 0.35rem;
+}
+
+.ayat-item:last-child {
+  margin-bottom: 0;
+}
+
+/* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
+.ayat-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  margin: 0 0.3em;
+  padding: 0 0.25em;
+  border: 1px solid var(--arabic-gold);
+  border-radius: 50%;
+  font-size: 0.62em;
+  line-height: 1;
+  color: var(--arabic-gold);
+  vertical-align: middle;
+}
+
+.ayat-source {
+  margin: 0.6rem 0 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
 /* ============ Hifz (memorization) ============ */
@@ -1871,6 +2004,28 @@ tr.playing .audio-progress::-moz-range-thumb {
   border-radius: 4px;
 }
 
+.audio-cell .audio-retry-btn {
+  margin-left: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--teal-accent);
+  background: none;
+  border: 1px solid var(--teal-accent);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.audio-cell .audio-retry-btn:hover:not(:disabled) {
+  background: var(--teal-tint-hover);
+}
+
+.audio-cell .audio-retry-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Hover tooltip: audio path */
 .ruku-path-tooltip {
   position: fixed;
@@ -1995,11 +2150,11 @@ tr.playing .audio-progress::-moz-range-thumb {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
   }
 
-  .ruku-table tbody tr:nth-child(even) {
+  .ruku-table tbody tr.row-even {
     background: var(--row-gray);
   }
 
-  .ruku-table tbody tr:nth-child(odd) {
+  .ruku-table tbody tr.row-odd {
     background: var(--row-white);
   }
 
@@ -2046,6 +2201,37 @@ tr.playing .audio-progress::-moz-range-thumb {
     min-width: 0;
     max-width: none;
     width: 100%;
+  }
+
+  /* Card layout: the ayat panel is its own block tucked under the track card. */
+  .ruku-table tbody tr.has-ayat-open {
+    margin-bottom: 0.35rem;
+  }
+
+  .ruku-table tbody tr.ayat-row {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .ruku-table tbody td.ayat-cell {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .ruku-table tbody td.ayat-cell::before {
+    content: none;
+  }
+
+  .ayat-panel {
+    border-radius: 10px;
+    padding: 0.75rem 0.9rem 0.6rem;
+  }
+
+  .ayat-body {
+    font-size: 1.45rem;
+    line-height: 2.05;
   }
 
   .audio-controls {

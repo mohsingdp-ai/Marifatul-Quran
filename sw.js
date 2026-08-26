@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v6";
+const CACHE = "mq-v8";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -78,12 +78,61 @@ self.addEventListener("notificationclick", function (event) {
   );
 });
 const AUDIO_CACHE = "mq-audio";
+
+/**
+ * Cached audio is always a full 200 body, but media elements ask for byte ranges when
+ * seeking. Returning the whole file for a Range request makes the element restart or
+ * give up, so slice the cached body into a proper 206 instead.
+ */
+function audioCacheResponse(cached, request) {
+  const range = request.headers.get("range");
+  if (!range) return cached;
+
+  return cached.arrayBuffer().then(function (buf) {
+    const size = buf.byteLength;
+    const m = /^bytes=(\d*)-(\d*)$/.exec(range.trim());
+    if (!m || (m[1] === "" && m[2] === "")) return cached;
+
+    let start;
+    let end;
+    if (m[1] === "") {
+      // Suffix range: "bytes=-500" means the last 500 bytes.
+      start = Math.max(0, size - parseInt(m[2], 10));
+      end = size - 1;
+    } else {
+      start = parseInt(m[1], 10);
+      end = m[2] === "" ? size - 1 : Math.min(parseInt(m[2], 10), size - 1);
+    }
+
+    if (start > end || start >= size) {
+      return new Response(null, {
+        status: 416,
+        headers: { "Content-Range": "bytes */" + size }
+      });
+    }
+
+    return new Response(buf.slice(start, end + 1), {
+      status: 206,
+      statusText: "Partial Content",
+      headers: {
+        "Content-Type": cached.headers.get("Content-Type") || "audio/ogg",
+        "Content-Length": String(end - start + 1),
+        "Content-Range": "bytes " + start + "-" + end + "/" + size,
+        "Accept-Ranges": "bytes"
+      }
+    });
+  }).catch(function () {
+    return cached;
+  });
+}
+
 const STATIC = [
   "./",
   "./index.html",
   "./style.css",
   "./app.js",
   "./data.js",
+  "./verses.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
@@ -121,10 +170,14 @@ self.addEventListener("fetch", function (e) {
     e.respondWith(
       caches.open(AUDIO_CACHE).then(function (cache) {
         return cache.match(e.request).then(function (cached) {
-          if (cached) return cached;
+          if (cached) return audioCacheResponse(cached, e.request);
           return fetch(e.request).then(function (res) {
-            var clone = res.clone();
-            cache.put(e.request, clone);
+            // Only whole, successful bodies are worth keeping. A 206 slice or an error
+            // page stored here would fail to decode on every later play of this track,
+            // and Cache.put rejects on 206 anyway.
+            if (res.status === 200) {
+              cache.put(e.request, res.clone()).catch(function () { /* quota / unsupported */ });
+            }
             return res;
           });
         });
