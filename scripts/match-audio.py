@@ -61,8 +61,23 @@ def ruku_text(ctx: dict, entry: dict) -> str:
 
 # ---------------------------------------------------------------- transcription
 
+def audio_seconds(path: Path) -> float:
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "csv=p=0", str(path)], capture_output=True, text=True)
+    try:
+        return float(out.stdout.strip())
+    except ValueError:
+        return 0.0
+
+
 def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0,
                skip: int = 0) -> str:
+    # Skipping the preamble is only safe on a long recording. A third of these are shorter
+    # than the default skip -- para 30 runs down to 33 seconds -- and skipping past the end
+    # yields an empty transcript that then "matches" nothing and looks like a bad row. Keep
+    # at least KEEP seconds of audio, giving up the skip entirely on the shortest files.
+    KEEP = 120
+    skip = int(min(skip, max(0, audio_seconds(audio) - KEEP)))
     # Cache key ignores device/batch on purpose: those change speed, not the transcript.
     key = hashlib.md5(f"{audio}|{skip}|{window}|{model_name}".encode()).hexdigest()
     cached = CACHE / f"{key}.json"
@@ -85,7 +100,8 @@ def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0,
         text = " ".join(s.text for s in segments)
     finally:
         wav.unlink(missing_ok=True)
-    cached.write_text(json.dumps({"audio": str(audio), "window": window, "text": text}))
+    cached.write_text(json.dumps({"audio": str(audio), "skip": skip, "window": window,
+                                  "text": text}))
     return text
 
 # ---------------------------------------------------------------- scoring
