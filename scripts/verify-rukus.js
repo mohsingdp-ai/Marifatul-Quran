@@ -33,6 +33,16 @@ function evalDataFile(file, globalName) {
 /** The bookmark writes surah 61 short; data.js spells it out. Mirrors build-data.js:155. */
 const SURAH_ALIAS = { "As-Saf": "As-Saff" };
 
+/**
+ * Places where data.js deliberately departs from the bookmark, keyed "<para>|<surah>|<label>".
+ * Each needs a reason: an unexplained entry here would just hide a real defect.
+ *
+ * Para 3 ends with Ali 'Imran 92 on its own, but juz 4 begins at 92 ("لن تنالوا البر"),
+ * Ali 'Imran's tenth ruku runs 92-101 undivided, and para 4's opening recording contains 92
+ * before moving into 93. The bookmark is the odd one out, so 92 sits at the head of para 4.
+ */
+const DELIBERATE = new Set(["3|Ali 'Imran|R10"]);
+
 /** Compare surah names on letters only, after resolving known spelling differences. */
 const norm = (s) => (SURAH_ALIAS[s] || s).replace(/[^a-z]/gi, "").toLowerCase();
 
@@ -61,6 +71,7 @@ function main() {
   const verses = evalDataFile("verses.js", "QURAN_VERSES");
 
   const findings = { LABEL: [], NOLABEL: [], MERGED: [], MISSING: [] };
+  const intended = [];
   let checked = 0;
 
   for (let para = 1; para <= 30; para++) {
@@ -93,13 +104,22 @@ function main() {
     }
 
     for (const e of entries) {
-      if (!covered.has(`${norm(e.surah)}:${e.label}`)) {
-        findings.MISSING.push(`P${para} ${e.surah} ${e.label} (${e.start}-${e.end}) — no row covers it`);
+      if (covered.has(`${norm(e.surah)}:${e.label}`)) continue;
+      const key = `${para}|${e.surah}|${e.label}`;
+      if (DELIBERATE.has(key)) {
+        intended.push(`P${para} ${e.surah} ${e.label} (${e.start}-${e.end}) — moved on purpose`);
+        continue;
       }
+      findings.MISSING.push(`P${para} ${e.surah} ${e.label} (${e.start}-${e.end}) — no row covers it`);
     }
   }
 
   console.log(`Checked ${checked} rows against the bookmark.\n`);
+  if (intended.length) {
+    console.log(`Deliberate departures from the bookmark: ${intended.length}`);
+    intended.forEach((i) => console.log("  " + i));
+    console.log();
+  }
   const order = ["MISSING", "NOLABEL", "MERGED", "LABEL"];
   let total = 0;
   for (const kind of order) {
