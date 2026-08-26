@@ -15,6 +15,7 @@
  *   END     -- a row ends mid-ruku, other than the last row of a para
  *   SPAN    -- the row covers several rukus without saying so in bookRuku
  *   JUZ     -- the row's ayat sit in a different juz than its para (informational)
+ *   PARA    -- a para does not begin or end where the juz does (informational)
  *
  * A para's first and last rows are exempt from START/END: juz boundaries fall mid-ruku all
  * over the Quran, so a para routinely opens or closes part-way through one. Sixteen of the
@@ -58,7 +59,7 @@ async function loadMeta() {
 
 function main(meta, only) {
   const { rows, verses } = loadData();
-  const findings = { START: [], END: [], SPAN: [], JUZ: [] };
+  const findings = { START: [], END: [], SPAN: [], JUZ: [], PARA: [] };
   let checked = 0;
 
   const paraRows = {};
@@ -108,12 +109,46 @@ function main(meta, only) {
     }
   }
 
+  /* Does each para open and close on the juz boundary? 58 of the 60 edges should match
+     exactly; the two that do not are the Ali 'Imran 92 choice, which is deliberate. */
+  const juzEdge = {};
+  for (let sn = 1; sn <= 114; sn++) {
+    for (const a of meta[sn] || []) {
+      const j = a.juz;
+      if (!juzEdge[j]) juzEdge[j] = { first: [sn, a.n], last: [sn, a.n] };
+      juzEdge[j].last = [sn, a.n];
+    }
+  }
+  const name = {};
+  rows.forEach((r) => { name[r.surahNumber] = r.surah; });
+  const show = ([sn, n]) => `${name[sn] || sn} ${n}`;
+  for (let para = 1; para <= 30; para++) {
+    if (only.length && !only.includes(para)) continue;
+    const mine = paraRows[para];
+    if (!mine || !mine.length || !juzEdge[para]) continue;
+    const firstEntry = verses[`${para}|${mine[0].rukuInPara}`];
+    const lastEntry = verses[`${para}|${mine[mine.length - 1].rukuInPara}`];
+    if (!firstEntry || !lastEntry) continue;
+    const got = {
+      first: [mine[0].surahNumber, firstEntry.ayahs[0].n],
+      last: [mine[mine.length - 1].surahNumber, lastEntry.ayahs[lastEntry.ayahs.length - 1].n]
+    };
+    const same = (a, b) => a[0] === b[0] && a[1] === b[1];
+    if (!same(got.first, juzEdge[para].first)) {
+      findings.PARA.push(`P${para} opens at ${show(got.first)}, juz ${para} opens at ${show(juzEdge[para].first)}`);
+    }
+    if (!same(got.last, juzEdge[para].last)) {
+      findings.PARA.push(`P${para} closes at ${show(got.last)}, juz ${para} closes at ${show(juzEdge[para].last)}`);
+    }
+  }
+
   console.log(`Checked ${checked} rows against the Quran's ruku divisions.\n`);
   let hard = 0;
-  for (const kind of ["START", "END", "SPAN", "JUZ"]) {
+  const soft = new Set(["JUZ", "PARA"]);
+  for (const kind of ["START", "END", "SPAN", "JUZ", "PARA"]) {
     const list = findings[kind];
-    if (kind !== "JUZ") hard += list.length;
-    console.log(`${kind}: ${list.length}${kind === "JUZ" ? "  (informational — conventions differ)" : ""}`);
+    if (!soft.has(kind)) hard += list.length;
+    console.log(`${kind}: ${list.length}${soft.has(kind) ? "  (informational — conventions differ)" : ""}`);
     list.slice(0, 12).forEach((f) => console.log("  " + f));
     if (list.length > 12) console.log(`  … and ${list.length - 12} more`);
     console.log();
