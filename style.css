@@ -1230,6 +1230,14 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   min-width: 4rem;
   color: var(--verse-link);
   font-weight: 500;
+  /* A merged row's "(243-248)(249-252)" may wrap between its groups; each range itself
+     stays on one line via .verses-part. Without this the longest value in a para dictates
+     the column width for every row. */
+  white-space: normal;
+}
+
+.verses-part {
+  white-space: nowrap;
 }
 
 .ruku-table .col-surah-arabic {
@@ -1252,6 +1260,9 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 .verses-toggle {
   display: inline-flex;
   align-items: center;
+  /* The parts of a merged row's range are flex items here, so they only wrap if the flex
+     container lets them; without this one long value widens the column for the whole para. */
+  flex-wrap: wrap;
   gap: 0.3rem;
   padding: 0.15rem 0.4rem;
   margin: -0.15rem -0.4rem;

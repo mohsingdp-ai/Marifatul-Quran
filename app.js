@@ -337,6 +337,21 @@
   }
 
   /**
+   * A merged row states both rukus it covers, e.g. "(243–248)(249–252)". Left as one
+   * unbreakable string that single value sets the Verses column width for every row in the
+   * para, which pushed the table wider than the page and produced a horizontal scrollbar.
+   * Offer a break between the groups while keeping each range intact, so the column is only
+   * as wide as it needs to be.
+   */
+  function versesHtml(text) {
+    var groups = String(text).match(/\([^)]*\)/g);
+    if (!groups) return "<span class=\"verses-part\">" + escapeHtml(text) + "</span>";
+    return groups.map(function (g) {
+      return "<span class=\"verses-part\">" + escapeHtml(g) + "</span>";
+    }).join("<wbr>");
+  }
+
+  /**
    * Rukus that share one recording are merged in data.js (e.g. "R5" + "R6" -> "R5-R6"),
    * which renames their progress keys. Fold pre-merge keys onto their new home, otherwise a
    * user who had memorized them sees the progress vanish. Idempotent, so running every load
@@ -735,8 +750,8 @@
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
         "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
-        escapeHtml(row.verses) + AYAT_CHEVRON_SVG + "</button>"
-      : escapeHtml(row.verses);
+        versesHtml(row.verses) + AYAT_CHEVRON_SVG + "</button>"
+      : versesHtml(row.verses);
 
     if (hasAyat && isAyatOpen(row)) tr.classList.add("has-ayat-open");
 
