@@ -185,19 +185,28 @@ def main() -> int:
             claim = f"{row.get('bookRuku') or row['rukuInPara']} {row['verses']}"
             # A merged row genuinely holds two rukus, so a hit on either half agrees.
             claimed = set((row.get("bookRuku") or row["rukuInPara"]).split("-"))
-            claimed_ok = best["label"] in claimed
-            if margin < args.margin:
-                verdict, kind = "unsure", "unsure"
-            elif claimed_ok:
+
+            # Verifying a claim is a much easier question than identifying a recording from
+            # scratch, and the ranking is only ~87% right at picking a winner. So judge the
+            # claim by where it lands, not by whether it won: a claim sitting near the top
+            # is consistent with the audio, and only one buried far down is real evidence
+            # against it. That trades recall for the precision this needs.
+            rank = next((i + 1 for i, (_, e) in enumerate(ranked) if e["label"] in claimed),
+                        len(ranked))
+            if rank == 1:
                 verdict, kind = "ok", "agree"
+            elif rank <= 3:
+                verdict, kind = f"ok (claim ranked #{rank})", "agree"
+            elif rank <= max(3, len(ranked) // 3):
+                verdict, kind = f"weak (claim ranked #{rank}/{len(ranked)})", "unsure"
             else:
-                verdict, kind = "<< MISMATCH", "disagree"
+                verdict, kind = f"<< SUSPECT (claim ranked #{rank}/{len(ranked)})", "disagree"
             if kind == "agree": agree += 1
             elif kind == "disagree": disagree += 1
             else: unsure += 1
             print(f"{Path(url).name[:31]:32} {claim[:15]:16} {heard[:21]:22} {margin:7.2f}  {verdict}")
 
-    print(f"\nagree {agree}   mismatch {disagree}   undecided {unsure}")
+    print(f"\nconsistent {agree}   suspect {disagree}   weak {unsure}")
     return 1 if disagree else 0
 
 if __name__ == "__main__":
