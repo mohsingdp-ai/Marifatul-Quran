@@ -1,0 +1,5 @@
+# ASR environment for scripts/match-audio.sh — large, machine-specific, recreatable
+.venv-asr/
+
+# Cached Whisper transcripts (scripts/match-audio.py)
+.cache/
