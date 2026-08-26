@@ -314,6 +314,30 @@
   function rukusForPara(para) {
     return (indexedData[para] || []).map(function (item) { return item.row.rukuInPara; });
   }
+
+  /**
+   * The ruku number to SHOW. Two numbers exist and they differ on most rows:
+   * `rukuInPara` is a sequential position within the para and the key hifz progress,
+   * verses.js and deep links are stored under, so it can never move. `bookRuku` is the
+   * number the Marifatul Quran bookmark itself uses, restarting at R1 at each new surah —
+   * that is the one a reader following the book recognises, so it is what we display.
+   */
+  function rukuDisplay(row) {
+    return (row && (row.bookRuku || row.rukuInPara)) || "";
+  }
+
+  /**
+   * Rukus that share one recording are merged in data.js (e.g. "R5" + "R6" -> "R5-R6"),
+   * which renames their progress keys. Fold pre-merge keys onto their new home, otherwise a
+   * user who had memorized them sees the progress vanish. Idempotent, so running every load
+   * is fine; it only writes when something actually moved.
+   */
+  function migrateHifzKeys() {
+    var map = getHifzMap();
+    if (!Object.keys(map).length) return;
+    var res = Hifz.migrateKeys(map, hifzValidKeySet());
+    if (res.migrated) saveHifzMap(res.merged);
+  }
   function todayISO() {
     var d = new Date();
     return d.getFullYear() + "-" +
@@ -693,7 +717,7 @@
     var tr = document.createElement("tr");
     tr.dataset.globalIndex = globalIndex;
 
-    var rukuLabel = row.rukuInPara + " (Para " + row.para + ")";
+    var rukuLabel = rukuDisplay(row) + " (Para " + row.para + ")";
     var surahArabicCell = row.surahNumber + " " + row.surahArabic;
     var audioSrc = getAudioSrc(row, globalIndex);
     var savedPath = normalizeAudioPath(row.audioUrl);
@@ -1282,7 +1306,7 @@
   /** One ruku block: title line + stable ?para=&ruku= player URL. */
   function formatBulkRukuLinkBlock(paraNum, row) {
     var title =
-      "P" + paraNum + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+      "P" + paraNum + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
     return title + "\n" + buildPlayerDeepLink(paraNum, row);
   }
 
@@ -1295,7 +1319,7 @@
       var src = getAudioSrc(row, item.globalIndex);
       if (!src) return;
       var title =
-        "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+        "P" + row.para + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
       var caption = title + "\n" + buildPlayerDeepLink(row.para, row);
       list.push({ row: row, src: src, caption: caption });
     });
@@ -1596,7 +1620,7 @@
         "P" +
           it.row.para +
           ": " +
-          it.row.rukuInPara +
+          rukuDisplay(it.row) +
           " — " +
           it.row.surah +
           " (" +
@@ -1622,7 +1646,7 @@
           if (!blob || !blob.size) {
             throw new Error(
               "Could not load " +
-                it.row.rukuInPara +
+                rukuDisplay(it.row) +
                 ". Save offline first or check your connection."
             );
           }
@@ -1685,7 +1709,7 @@
       if (btn.disabled) return;
 
       btn.disabled = true;
-      var caption = "P" + row.para + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")";
+      var caption = "P" + row.para + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
       shareAudioFileWithCaption(src, row, caption).finally(function () {
         btn.disabled = false;
       });
@@ -1734,7 +1758,7 @@
       return;
     }
 
-    titleEl.textContent = "Para " + row.para + " · Ruku " + row.rukuInPara;
+    titleEl.textContent = "Para " + row.para + " · Ruku " + rukuDisplay(row);
     metaEl.textContent = row.surah + " · " + row.verses;
     if (parseInt(paraSelect.value, 10) !== row.para) {
       metaEl.textContent += " · Para " + row.para;
@@ -2161,7 +2185,7 @@
   function setNowPlayingMetadata(row, audio) {
     if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
 
-    var title = "Para " + row.para + " - " + row.rukuInPara;
+    var title = "Para " + row.para + " - " + rukuDisplay(row);
     var artist = row.surah + " | " + row.verses;
 
     try {
@@ -2278,7 +2302,7 @@
       return;
     }
     var row = data[gi];
-    var title = "Para " + row.para + " · Ruku " + row.rukuInPara;
+    var title = "Para " + row.para + " · Ruku " + rukuDisplay(row);
     var line = (a.paused ? "Paused" : "Playing") + " · " + row.surah + " — " + row.verses;
     postMediaNotificationToSw({
       type: "MQ_MEDIA_NOTIF_SHOW",
@@ -2633,6 +2657,7 @@
         applyHifzEnabled(enabledToggle.checked);
       });
     }
+    migrateHifzKeys();
     applyHifzEnabled(getHifzEnabled());
 
     var exportBtn = document.getElementById("hifz-export-btn");
@@ -2839,7 +2864,7 @@
       if (ext !== ".ogg" && ext !== ".opus" && ext !== ".wav") ext = ".ogg";
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
-      var summary = "Para " + row.para + " · Ruku " + row.rukuInPara + " (" + row.surah + ")";
+      var summary = "Para " + row.para + " · Ruku " + rukuDisplay(row) + " (" + row.surah + ")";
 
       // Immediate playback via blob
       if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
@@ -3043,12 +3068,12 @@
       btn.setAttribute("data-global-index", String(item.globalIndex));
       btn.setAttribute(
         "title",
-        "P" + paraNum + ": " + row.rukuInPara + " — " + row.surah + " (" + row.verses + ")"
+        "P" + paraNum + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")"
       );
 
       var keyEl = document.createElement("span");
       keyEl.className = "share-bulk-links-tile-key";
-      keyEl.textContent = row.rukuInPara;
+      keyEl.textContent = rukuDisplay(row);
 
       var surahEl = document.createElement("span");
       surahEl.className = "share-bulk-links-tile-surah";
