@@ -72,12 +72,16 @@ def audio_seconds(path: Path) -> float:
 
 def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0,
                skip: int = 0) -> str:
-    # Skipping the preamble is only safe on a long recording. A third of these are shorter
-    # than the default skip -- para 30 runs down to 33 seconds -- and skipping past the end
-    # yields an empty transcript that then "matches" nothing and looks like a bad row. Keep
-    # at least KEEP seconds of audio, giving up the skip entirely on the shortest files.
+    # The preamble scales with the lecture, so the skip has to as well. A fixed 210s lands a
+    # fifth of the way into a 20-minute recording but nearly two thirds into a 6-minute one,
+    # past the recitation and into the closing announcements -- which is what made para 5's
+    # An-Nisa 97-100 and para 7's Al-An'am 95-100 look wrong when both are fine. Take a
+    # fraction instead, and still keep KEEP seconds so the shortest files are not skipped
+    # past entirely (para 30 runs down to 33 seconds).
     KEEP = 120
-    skip = int(min(skip, max(0, audio_seconds(audio) - KEEP)))
+    FRACTION = 0.2
+    seconds = audio_seconds(audio)
+    skip = int(min(skip, seconds * FRACTION, max(0, seconds - KEEP)))
     # Cache key ignores device/batch on purpose: those change speed, not the transcript.
     key = hashlib.md5(f"{audio}|{skip}|{window}|{model_name}".encode()).hexdigest()
     cached = CACHE / f"{key}.json"
