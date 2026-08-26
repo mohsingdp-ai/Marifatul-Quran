@@ -22,10 +22,24 @@
  * twenty-nine para boundaries do. Flagging those buries the real thing this looks for -- a
  * gap or overlap in the MIDDLE of a para, where no boundary explains it.
  *
- * JUZ is informational on purpose. Juz boundaries have competing conventions -- this source
- * starts juz 4 at Ali 'Imran 93, while the widely quoted start is 92 ("لن تنالوا البر") --
- * so a mismatch here is a question to look at, not a defect. Ruku boundaries do not vary.
+ * JUZ and PARA are informational on purpose. Juz boundaries have competing conventions --
+ * this source starts juz 4 at Ali 'Imran 93, while the widely quoted start is 92 ("لن تنالوا
+ * البر") -- so a mismatch there is a question to look at, not a defect. Ruku boundaries do
+ * not vary, which is why START/END/SPAN are hard failures.
+ *
+ * Divergences that have been looked at and settled are listed in SETTLED below and reported
+ * apart from open ones, so a run shows only what still needs a decision.
  */
+
+/**
+ * Juz edges deliberately placed against this source, each with the reason.
+ *
+ * Para 3 ends at Ali 'Imran 91 and para 4 opens at 92. Ali 'Imran's tenth ruku runs 92-101
+ * undivided, para 4's opening recording contains 92 before moving into 93, and 92 is the
+ * commonly quoted start of juz 4. This source marks 92 as juz 3; the boundary here follows
+ * the recitation and the ruku division instead. Confirmed against the printed division.
+ */
+const SETTLED = [/Ali 'Imran 9[12]/];
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
@@ -144,6 +158,20 @@ function main(meta, only) {
 
   console.log(`Checked ${checked} rows against the Quran's ruku divisions.\n`);
   let hard = 0;
+  const settled = [];
+  for (const kind of ["JUZ", "PARA"]) {
+    findings[kind] = findings[kind].filter((f) => {
+      if (!SETTLED.some((re) => re.test(f))) return true;
+      settled.push(f);
+      return false;
+    });
+  }
+  if (settled.length) {
+    console.log(`Settled divergences (decided, not open): ${settled.length}`);
+    settled.forEach((f) => console.log("  " + f));
+    console.log();
+  }
+
   const soft = new Set(["JUZ", "PARA"]);
   for (const kind of ["START", "END", "SPAN", "JUZ", "PARA"]) {
     const list = findings[kind];
