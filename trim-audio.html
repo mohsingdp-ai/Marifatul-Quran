@@ -117,6 +117,9 @@
   .btn-jump:hover { color: var(--muted); }
 
   /* Segments */
+  .cut-region { position: absolute; top: 0; bottom: 0; background: rgba(220, 70, 70, 0.28);
+                border-left: 1px solid #d4544f; border-right: 1px solid #d4544f; pointer-events: none; }
+  .cut-item .marker-range { color: #d4544f; }
   .segments-area { border-top: 1px solid var(--border2); padding: 10px 18px 14px; }
   .segments-title { font-size: 10px; color: var(--muted); letter-spacing: 0.3em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-bottom: 10px; }
   .segment-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border2); }
@@ -231,6 +234,7 @@
       <div class="splitter-title">✂ Audio Splitter</div>
       <div class="splitter-actions">
         <button class="btn-sm btn-add" id="btnAddMarker">+ Add Split Point</button>
+        <button class="btn-sm btn-add" id="btnCutStart">✂ Cut From Here</button>
         <button class="btn-sm btn-clear" id="btnClearMarkers">Clear All</button>
       </div>
     </div>
@@ -238,6 +242,8 @@
     <div class="marker-list" id="markerList">
       <div class="no-markers" id="noMarkersMsg">Click "+ Add Split Point" or click on the waveform to add a split — current playhead position will be used</div>
     </div>
+
+    <div class="marker-list" id="cutList" style="display:none"></div>
 
     <div class="segments-area" id="segmentsArea" style="display:none">
       <div class="segments-title">Segments to export</div>
@@ -280,6 +286,8 @@ const noMarkersMsg = document.getElementById('noMarkersMsg');
 const segmentsArea = document.getElementById('segmentsArea');
 const segmentList = document.getElementById('segmentList');
 const btnAddMarker = document.getElementById('btnAddMarker');
+const btnCutStart = document.getElementById('btnCutStart');
+const cutList = document.getElementById('cutList');
 const btnClearMarkers = document.getElementById('btnClearMarkers');
 const btnDlAll = document.getElementById('btnDlAll');
 const queryLoadHint = document.getElementById('queryLoadHint');
@@ -292,6 +300,8 @@ let objUrl = null;
 let audioCtx = null;
 let decodedBuffer = null;
 let splitMarkers = []; // sorted list of times in seconds
+let cutRegions = [];   // [{start, end}] spans removed from every export, joined seamlessly
+let pendingCutStart = null;
 let segmentNames = [];
 let currentFileObj = null;
 let animFrame;
@@ -435,6 +445,108 @@ function renderMarkerLines() {
   });
 }
 
+// ── Cut regions ──────────────────────────────────────────────────────────────
+// A split point divides the audio; a cut region takes a piece OUT of it. Cuts apply to
+// every export, so a passage removed here disappears from whichever segment contained it
+// and the audio either side is joined.
+
+/** Two presses: the first fixes the start, the second closes the region at the playhead. */
+function toggleCutAt(time) {
+  const dur = audio.duration || 0;
+  if (!dur) return;
+  time = Math.max(0, Math.min(dur, parseFloat(time.toFixed(2))));
+  if (pendingCutStart === null) {
+    pendingCutStart = time;
+  } else {
+    const start = Math.min(pendingCutStart, time);
+    const end = Math.max(pendingCutStart, time);
+    pendingCutStart = null;
+    if (end - start >= 0.05) { cutRegions.push({ start, end }); normaliseCuts(); }
+  }
+  renderCuts(); renderCutRegions(); renderSegments(); updateCutButton();
+}
+
+/** Sort and merge overlaps, so joined output never depends on the order they were added. */
+function normaliseCuts() {
+  cutRegions.sort((a, b) => a.start - b.start);
+  const out = [];
+  for (const c of cutRegions) {
+    const prev = out[out.length - 1];
+    if (prev && c.start <= prev.end) prev.end = Math.max(prev.end, c.end);
+    else out.push({ start: c.start, end: c.end });
+  }
+  cutRegions = out;
+}
+
+function removeCut(i) {
+  cutRegions.splice(i, 1);
+  renderCuts(); renderCutRegions(); renderSegments();
+}
+
+function updateCutButton() {
+  btnCutStart.textContent = pendingCutStart === null
+    ? '✂ Cut From Here'
+    : '✂ End Cut (' + fmtFull(pendingCutStart) + ' →)';
+}
+
+function renderCuts() {
+  cutList.innerHTML = '';
+  cutList.style.display = cutRegions.length ? 'block' : 'none';
+  cutRegions.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'marker-item cut-item';
+    row.innerHTML = '<span class="marker-label">✂' + (i + 1) + '</span>' +
+      '<input class="marker-time-input cut-from" type="text" value="' + fmtFull(c.start) + '" title="Cut starts">' +
+      '<input class="marker-time-input cut-to" type="text" value="' + fmtFull(c.end) + '" title="Cut ends">' +
+      '<span class="marker-range">removed — ' + fmt(c.end - c.start) + '</span>' +
+      '<button class="btn-jump" title="Jump to start"></button>' +
+      '<button class="btn-del" title="Keep this part"></button>';
+    row.querySelector('.btn-jump').innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>';
+    row.querySelector('.btn-del').innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
+    row.querySelector('.btn-jump').addEventListener('click', () => { audio.currentTime = c.start; drawPlayhead(); });
+    row.querySelector('.btn-del').addEventListener('click', () => removeCut(i));
+    const edit = () => {
+      const a = parseTimeInput(row.querySelector('.cut-from').value);
+      const b = parseTimeInput(row.querySelector('.cut-to').value);
+      if (!isNaN(a) && !isNaN(b) && b > a) {
+        cutRegions[i] = { start: a, end: b };
+        normaliseCuts(); renderCuts(); renderCutRegions(); renderSegments();
+      } else { renderCuts(); }
+    };
+    row.querySelector('.cut-from').addEventListener('change', edit);
+    row.querySelector('.cut-to').addEventListener('change', edit);
+    cutList.appendChild(row);
+  });
+}
+
+function renderCutRegions() {
+  document.querySelectorAll('.cut-region').forEach(e => e.remove());
+  const dur = audio.duration || 1;
+  const W = waveCanvas.offsetWidth;
+  cutRegions.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cut-region';
+    el.style.left = ((c.start / dur) * W) + 'px';
+    el.style.width = Math.max(1, ((c.end - c.start) / dur) * W) + 'px';
+    waveformWrap.appendChild(el);
+  });
+}
+
+/** The parts of [start,end] that survive the cuts, in order. */
+function keptSpans(start, end) {
+  let spans = [{ start, end }];
+  for (const c of cutRegions) {
+    const next = [];
+    for (const s of spans) {
+      if (c.end <= s.start || c.start >= s.end) { next.push(s); continue; }
+      if (c.start > s.start) next.push({ start: s.start, end: c.start });
+      if (c.end < s.end) next.push({ start: c.end, end: s.end });
+    }
+    spans = next;
+  }
+  return spans.filter(s => s.end - s.start > 0.001);
+}
+
 // ── Segments ─────────────────────────────────────────────────────────────────
 function getSegments() {
   const dur = audio.duration || 0;
@@ -452,7 +564,7 @@ function renderSegments() {
   segmentsArea.style.display = 'block';
   segmentList.innerHTML = '';
   segs.forEach((seg, i) => {
-    const dur = seg.end - seg.start;
+    const dur = keptSpans(seg.start, seg.end).reduce((a, sp) => a + (sp.end - sp.start), 0);
     const item = document.createElement('div');
     item.className = 'segment-item';
     item.innerHTML = `
@@ -483,33 +595,50 @@ async function exportSegment(idx) {
 
   try {
     const sampleRate = decodedBuffer.sampleRate;
-    const startSample = Math.floor(seg.start * sampleRate);
-    const endSample = Math.floor(seg.end * sampleRate);
-    const length = endSample - startSample;
+    const numCh = decodedBuffer.numberOfChannels;
 
-    const offCtx = new OfflineAudioContext(decodedBuffer.numberOfChannels, length, sampleRate);
-    const source = offCtx.createBufferSource();
+    // Copy only the spans that survive the cuts, laid end to end. Nothing is faded across
+    // the join: these are spoken lectures, and a cut is meant to land in a pause.
+    const spans = keptSpans(seg.start, seg.end);
+    if (!spans.length) throw new Error('every part of this segment has been cut');
+    const length = spans.reduce(
+      (a, sp) => a + (Math.floor(sp.end * sampleRate) - Math.floor(sp.start * sampleRate)), 0);
 
-    const segBuffer = offCtx.createBuffer(decodedBuffer.numberOfChannels, length, sampleRate);
-    for (let ch = 0; ch < decodedBuffer.numberOfChannels; ch++) {
-      segBuffer.getChannelData(ch).set(decodedBuffer.getChannelData(ch).subarray(startSample, endSample));
+    const offCtx = new OfflineAudioContext(numCh, length, sampleRate);
+    const segBuffer = offCtx.createBuffer(numCh, length, sampleRate);
+    for (let ch = 0; ch < numCh; ch++) {
+      const src = decodedBuffer.getChannelData(ch);
+      const dst = segBuffer.getChannelData(ch);
+      let at = 0;
+      for (const sp of spans) {
+        const from = Math.floor(sp.start * sampleRate);
+        const to = Math.floor(sp.end * sampleRate);
+        dst.set(src.subarray(from, to), at);
+        at += to - from;
+      }
     }
 
-    source.buffer = segBuffer;
-    source.connect(offCtx.destination);
-    source.start();
-    await offCtx.startRendering();
+    // Match the recordings in audio/: Opus in Ogg. WAV only if the browser cannot encode.
+    let blob, ext;
+    try {
+      const at48k = sampleRate === 48000 ? segBuffer : await resampleTo48k(segBuffer);
+      blob = await bufferToOpus(at48k);
+      ext = '.opus';
+    } catch (err) {
+      console.warn('Opus encoding unavailable, falling back to WAV:', err);
+      blob = bufferToWav(segBuffer);
+      ext = '.wav';
+    }
 
-    // Encode to WAV
-    const wavBlob = bufferToWav(segBuffer);
-    const url = URL.createObjectURL(wavBlob);
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = (segmentNames[idx] || seg.name) + '.wav';
+    a.download = (segmentNames[idx] || seg.name) + ext;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
   } catch(e) {
     console.error(e);
+    alert('Could not export this segment: ' + e.message);
   }
 
   btn.classList.remove('processing');
@@ -522,6 +651,151 @@ async function exportAll() {
     await exportSegment(i);
     await new Promise(r => setTimeout(r, 400));
   }
+}
+
+// ── Ogg Opus encoding ────────────────────────────────────────────────────────
+// The recordings in audio/ are Opus in an Ogg container at 48 kHz, and exports should match
+// so a trimmed file can replace one directly. Chrome's MediaRecorder cannot produce that --
+// it offers WebM-Opus, and a WebM renamed .opus is not an Ogg file and would not decode
+// where the real ones do. WebCodecs encodes the Opus packets, and the Ogg framing below is
+// written by hand, which is the whole of the difference between the two.
+
+const OGG_CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let r = i << 24;
+    for (let j = 0; j < 8; j++) r = (r & 0x80000000) ? ((r << 1) ^ 0x04c11db7) : (r << 1);
+    t[i] = r >>> 0;
+  }
+  return t;
+})();
+
+/** Ogg's CRC32: no input/output reflection and no final xor, unlike the common one. */
+function oggCrc(bytes) {
+  let crc = 0;
+  for (let i = 0; i < bytes.length; i++) {
+    crc = ((crc << 8) ^ OGG_CRC_TABLE[((crc >>> 24) & 0xff) ^ bytes[i]]) >>> 0;
+  }
+  return crc >>> 0;
+}
+
+function oggPage(serial, seq, headerType, granule, packets) {
+  const laces = [];
+  for (const pk of packets) {
+    let n = pk.length;
+    while (n >= 255) { laces.push(255); n -= 255; }
+    laces.push(n);
+  }
+  const bodyLen = packets.reduce((a, pk) => a + pk.length, 0);
+  const page = new Uint8Array(27 + laces.length + bodyLen);
+  const dv = new DataView(page.buffer);
+  page.set([0x4f, 0x67, 0x67, 0x53], 0);      // "OggS"
+  page[4] = 0;                                 // stream structure version
+  page[5] = headerType;                        // 2 = first page, 4 = last, 0 = middle
+  dv.setUint32(6, granule >>> 0, true);        // granule position, 64-bit little endian
+  dv.setUint32(10, Math.floor(granule / 4294967296), true);
+  dv.setUint32(14, serial, true);
+  dv.setUint32(18, seq, true);
+  dv.setUint32(22, 0, true);                   // CRC is computed over the page with 0 here
+  page[26] = laces.length;
+  page.set(laces, 27);
+  let off = 27 + laces.length;
+  for (const pk of packets) { page.set(pk, off); off += pk.length; }
+  dv.setUint32(22, oggCrc(page), true);
+  return page;
+}
+
+function opusHeadPacket(channels, preSkip) {
+  const b = new Uint8Array(19);
+  b.set([0x4f, 0x70, 0x75, 0x73, 0x48, 0x65, 0x61, 0x64], 0); // "OpusHead"
+  b[8] = 1;                                    // version
+  b[9] = channels;
+  const dv = new DataView(b.buffer);
+  dv.setUint16(10, preSkip, true);
+  dv.setUint32(12, 48000, true);               // original input rate, informational
+  dv.setUint16(16, 0, true);                   // output gain
+  b[18] = 0;                                   // channel mapping family
+  return b;
+}
+
+function opusTagsPacket() {
+  const vendor = new TextEncoder().encode('Marifatul Quran trim-audio');
+  const b = new Uint8Array(8 + 4 + vendor.length + 4);
+  b.set(new TextEncoder().encode('OpusTags'), 0);
+  const dv = new DataView(b.buffer);
+  dv.setUint32(8, vendor.length, true);
+  b.set(vendor, 12);
+  dv.setUint32(12 + vendor.length, 0, true);   // zero user comments
+  return b;
+}
+
+/** Opus is always 48 kHz; anything else has to be resampled before encoding. */
+async function resampleTo48k(buffer) {
+  const frames = Math.ceil(buffer.length * 48000 / buffer.sampleRate);
+  const off = new OfflineAudioContext(buffer.numberOfChannels, frames, 48000);
+  const src = off.createBufferSource();
+  src.buffer = buffer;
+  src.connect(off.destination);
+  src.start();
+  return off.startRendering();
+}
+
+/** AudioBuffer (48 kHz) -> Blob of Ogg Opus. */
+async function bufferToOpus(buffer) {
+  if (typeof AudioEncoder === 'undefined') throw new Error('WebCodecs AudioEncoder unavailable');
+  const channels = Math.min(buffer.numberOfChannels, 2);
+  const SAMPLE_RATE = 48000;
+  const FRAME = 960;                           // 20 ms, the Opus packet size used here
+  const PRE_SKIP = 312;                        // encoder priming samples, discarded on decode
+
+  const packets = [];
+  let encErr = null;
+  const encoder = new AudioEncoder({
+    output: (chunk) => { const d = new Uint8Array(chunk.byteLength); chunk.copyTo(d); packets.push(d); },
+    error: (e) => { encErr = e; }
+  });
+  encoder.configure({ codec: 'opus', sampleRate: SAMPLE_RATE, numberOfChannels: channels, bitrate: 64000 });
+
+  const total = buffer.length;
+  const CHUNK = FRAME * 25;                    // feed in ~half-second blocks
+  for (let off = 0; off < total; off += CHUNK) {
+    const frames = Math.min(CHUNK, total - off);
+    const planar = new Float32Array(channels * frames);
+    for (let ch = 0; ch < channels; ch++) {
+      planar.set(buffer.getChannelData(ch).subarray(off, off + frames), ch * frames);
+    }
+    encoder.encode(new AudioData({
+      format: 'f32-planar', sampleRate: SAMPLE_RATE, numberOfFrames: frames,
+      numberOfChannels: channels, timestamp: Math.round((off / SAMPLE_RATE) * 1e6), data: planar
+    }));
+  }
+  await encoder.flush();
+  encoder.close();
+  if (encErr) throw encErr;
+
+  const serial = (Math.random() * 0xffffffff) >>> 0;
+  const pages = [
+    oggPage(serial, 0, 2, 0, [opusHeadPacket(channels, PRE_SKIP)]),
+    oggPage(serial, 1, 0, 0, [opusTagsPacket()])
+  ];
+  let seq = 2, granule = 0, batch = [], laceCount = 0;
+  const flush = (last) => {
+    if (!batch.length) return;
+    pages.push(oggPage(serial, seq++, last ? 4 : 0, granule, batch));
+    batch = []; laceCount = 0;
+  };
+  for (let i = 0; i < packets.length; i++) {
+    const pk = packets[i];
+    const laces = Math.floor(pk.length / 255) + 1;
+    if (laceCount + laces > 250) flush(false);  // a page carries at most 255 lacing values
+    batch.push(pk); laceCount += laces;
+    granule += FRAME;
+    if (i === packets.length - 1) flush(true);
+  }
+  if (batch.length) flush(true);
+  if (pages.length === 2) pages.push(oggPage(serial, seq, 4, granule, [new Uint8Array(0)]));
+
+  return new Blob(pages, { type: 'audio/ogg' });
 }
 
 function bufferToWav(buffer) {
@@ -580,6 +854,8 @@ function loadTrack(index, opts) {
   audio.volume = parseFloat(volumeSlider.value);
   currentIndex = index;
   splitMarkers = [];
+  cutRegions = []; pendingCutStart = null;
+  renderCuts(); renderCutRegions(); updateCutButton();
   segmentNames = [];
 
   if (autoplay) {
@@ -689,8 +965,11 @@ waveCanvas.addEventListener('click', (e) => {
 });
 
 btnAddMarker.addEventListener('click', () => addSplitAt(audio.currentTime || 0));
+btnCutStart.addEventListener('click', () => toggleCutAt(audio.currentTime || 0));
 btnClearMarkers.addEventListener('click', () => {
   splitMarkers = [];
+  cutRegions = []; pendingCutStart = null;
+  renderCuts(); renderCutRegions(); updateCutButton();
   segmentNames = [];
   renderMarkers();
   renderMarkerLines();
