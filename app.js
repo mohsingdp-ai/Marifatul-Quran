@@ -256,12 +256,22 @@
     try { return JSON.parse(localStorage.getItem("validated_rukus") || "{}"); }
     catch (e) { return {}; }
   }
-  function isRukuValidated(globalIndex) {
-    return !!getValidatedRukus()[globalIndex];
+  /**
+  * Keyed "<para>:<rukuInPara>", not by position in QURAN_DATA. A positional key silently
+  * re-points every tick at a different ruku the next time a row is merged or inserted, and
+  * a verification pass you cannot trust is worse than none. Numeric keys left by the old
+  * scheme are ignored rather than converted: after the data reshaped they no longer say
+  * what they used to, so carrying them over would assert checks nobody made.
+  */
+  function validationKey(row) {
+    return String(row.para) + ":" + String(row.rukuInPara);
   }
-  function setRukuValidated(globalIndex, val) {
+  function isRukuValidated(row) {
+    return !!getValidatedRukus()[validationKey(row)];
+  }
+  function setRukuValidated(row, val) {
     var v = getValidatedRukus();
-    if (val) v[globalIndex] = true; else delete v[globalIndex];
+    if (val) v[validationKey(row)] = true; else delete v[validationKey(row)];
     localStorage.setItem("validated_rukus", JSON.stringify(v));
   }
 
@@ -711,7 +721,7 @@
     syncAyatRows();
   }
 
-  function buildRow(item, canUpload, playbackResume) {
+  function buildRow(item, showActions, canUpload, playbackResume) {
     var row = item.row;
     var globalIndex = item.globalIndex;
     var tr = document.createElement("tr");
@@ -737,13 +747,13 @@
       "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
       "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
-      (canUpload ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
+      (showActions ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
     var hifzCell = tr.querySelector(".hifz-cell");
     if (hifzCell) hifzCell.appendChild(buildHifzPill(row));
 
     var audioCell = tr.querySelector(".audio-cell");
-    var actionCell = canUpload ? tr.querySelector(".action-cell") : null;
+    var actionCell = showActions ? tr.querySelector(".action-cell") : null;
 
     if (audioSrc && (sessionBlobUrls[globalIndex] || audioFileExists(audioSrc))) {
       var resumeThis = playbackResume && String(playbackResume.globalIndex) === String(globalIndex) ? playbackResume : null;
@@ -752,9 +762,9 @@
       showNoRecording(audioCell);
     }
 
-    if (canUpload && actionCell) {
-      buildUploadButton(actionCell, row, globalIndex);
-      buildValidateControl(actionCell, globalIndex);
+    if (actionCell) {
+      if (canUpload) buildUploadButton(actionCell, row, globalIndex);
+      buildValidateControl(actionCell, row);
     }
 
     tr.dataset.pathText = savedPath || "(No recording)";
@@ -901,6 +911,7 @@
     if (snap) stickyPlaybackResume = snap;
     else stickyPlaybackResume = null;
     var canUpload = hasGitHubToken();
+    var showActions = isAdmin();
     var filterRuku = getShowOnlyRecordedRuku();
 
     // Update para select first so any para jump happens before getFilteredData reads the value
@@ -919,13 +930,13 @@
 
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
-    setActionColumnVisibility(canUpload);
+    setActionColumnVisibility(showActions);
 
     filtered.forEach(function (item, i) {
       var rowResume = stickyPlaybackResume && String(stickyPlaybackResume.globalIndex) === String(item.globalIndex)
         ? stickyPlaybackResume
         : null;
-      var tr = buildRow(item, canUpload, rowResume);
+      var tr = buildRow(item, showActions, canUpload, rowResume);
       // Ayat rows sit between track rows, so zebra striping is by class rather than :nth-child.
       tr.classList.add(i % 2 === 0 ? "row-odd" : "row-even");
       fragment.appendChild(tr);
@@ -2728,6 +2739,7 @@
   roleUserBtn.addEventListener("click", function () {
     setRole("user");
     syncSettingsUI();
+    renderTable();
   });
 
   roleAdminBtn.addEventListener("click", function () {
@@ -2741,6 +2753,7 @@
     }
     setRole("admin");
     syncSettingsUI();
+    renderTable();
   });
 
   function fileToBase64(file) {
@@ -2895,21 +2908,21 @@
     actionCell.appendChild(btn);
   }
 
-  function buildValidateControl(actionCell, globalIndex) {
+  function buildValidateControl(actionCell, row) {
     var label = document.createElement("label");
-    label.className = "validate-label" + (isRukuValidated(globalIndex) ? " validated" : "");
+    label.className = "validate-label" + (isRukuValidated(row) ? " validated" : "");
     label.title = "Mark recording as validated";
 
     var cb = document.createElement("input");
     cb.type = "checkbox";
     cb.className = "validate-check";
-    cb.checked = isRukuValidated(globalIndex);
+    cb.checked = isRukuValidated(row);
 
     var span = document.createElement("span");
     span.textContent = cb.checked ? "✓ Validated" : "✓ Validate";
 
     cb.addEventListener("change", function () {
-      setRukuValidated(globalIndex, this.checked);
+      setRukuValidated(row, this.checked);
       label.classList.toggle("validated", this.checked);
       span.textContent = this.checked ? "✓ Validated" : "✓ Validate";
     });
