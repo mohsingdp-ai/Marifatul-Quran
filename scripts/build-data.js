@@ -1,6 +1,19 @@
 /**
  * Build data.js from [Bookmark]001_marifatul-quran.xml
  * Run: node scripts/build-data.js
+ *
+ * WARNING — this regenerates data.js from scratch and does NOT preserve:
+ *   - audioUrl on any row but the As-Saff one below (every track would need re-pointing)
+ *   - rows that merge two rukus because one recording covers both (573 rows out, not 527)
+ *   - the "+" suffixes on rukuInPara that mark a ruku running past its printed range
+ * Treat it as a scaffold for a fresh bookmark, not a refresh you can run over live data.
+ * To check the live data.js against the bookmark instead, use scripts/verify-rukus.js.
+ *
+ * Two ruku numbers per row, and they are not the same thing:
+ *   rukuInPara — sequential position within the para. The key for hifz progress and
+ *                verses.js, so it must stay unique within a para.
+ *   bookRuku   — the number the bookmark itself uses, which restarts at R1 at every new
+ *                surah. This is what the UI shows, and it repeats within a para.
  */
 const fs = require("fs");
 const path = require("path");
@@ -130,6 +143,7 @@ const xml = fs.readFileSync(xmlPath, "utf8");
 const lines = xml.split("\n");
 let currentPara = 0;
 const rows = [];
+const seqInPara = {}; // para -> how many rukus emitted so far, for rukuInPara
 
 const paraRe = /NAME="Para (\d+)"/;
 const rukuRe = /NAME="R(\d+) \((\d+)-(\d+)\) - (.+?)"/;
@@ -153,9 +167,11 @@ for (const line of lines) {
     }
     const verses = verseStart + "\u2013" + verseEnd; // en dash
     const displaySurah = surahName === "As-Saf" ? "As-Saff" : surahName;
+    seqInPara[currentPara] = (seqInPara[currentPara] || 0) + 1;
     rows.push({
       para: currentPara,
-      rukuInPara: "R" + rukuNum,
+      rukuInPara: "R" + seqInPara[currentPara],
+      bookRuku: "R" + rukuNum,
       surah: displaySurah,
       surahNumber: info.number,
       surahArabic: info.arabic,
@@ -173,7 +189,7 @@ if (fs.existsSync(existingDataPath)) {
   if (saffAudioMatch) {
     const url = saffAudioMatch[1];
     const idx = rows.findIndex(
-      (r) => r.para === 28 && r.surahNumber === 61 && r.rukuInPara === "R1"
+      (r) => r.para === 28 && r.surahNumber === 61 && r.bookRuku === "R1"
     );
     if (idx >= 0) rows[idx].audioUrl = url;
   }
@@ -195,7 +211,7 @@ const linesOut = [
 for (const r of rows) {
   const audioUrl = r.audioUrl ? esc(r.audioUrl) : "";
   linesOut.push(
-    `  { para: ${r.para}, rukuInPara: "${r.rukuInPara}", surah: "${esc(r.surah)}", surahNumber: ${r.surahNumber}, surahArabic: "${r.surahArabic}", verses: "${r.verses}", audioUrl: "${audioUrl}" },`
+    `  { para: ${r.para}, rukuInPara: "${r.rukuInPara}", bookRuku: "${r.bookRuku}", surah: "${esc(r.surah)}", surahNumber: ${r.surahNumber}, surahArabic: "${r.surahArabic}", verses: "${r.verses}", audioUrl: "${audioUrl}" },`
   );
 }
 

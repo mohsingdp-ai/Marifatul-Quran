@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v8";
+const CACHE = "mq-v10";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -147,14 +147,41 @@ self.addEventListener("install", function (e) {
   self.skipWaiting();
 });
 
+/**
+ * Recordings that were corrected in place. Their URLs did not change, and the audio cache is
+ * keyed by URL and never expires, so a client that already downloaded the wrong take would
+ * keep playing it forever. Evict just these instead of dropping the whole audio cache, which
+ * would cost offline users every track they have saved.
+ */
+const AUDIO_EVICT = [
+  // Para 1's opening recording is Al-Baqarah 1-7, not Al-Fatihah; it moved to a truthful
+  // name, so the old URL is dead weight in any cache that already holds it.
+  "./audio/1/1__R1__Al-Fatihah.opus",
+  "./audio/2/2__R8__Al-Baqarah.ogg",
+  "./audio/6/6__R13__Al-Ma'idah.opus"
+];
+
+function evictCorrectedAudio() {
+  return caches.open(AUDIO_CACHE).then(function (cache) {
+    return Promise.all(AUDIO_EVICT.map(function (rel) {
+      var href;
+      try { href = new URL(rel, self.registration.scope).href; } catch (err) { href = rel; }
+      return cache.delete(href, { ignoreSearch: true }).catch(function () { /* not cached */ });
+    }));
+  }).catch(function () { /* audio cache unavailable */ });
+}
+
 self.addEventListener("activate", function (e) {
   e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys.filter(function (k) { return k !== CACHE && k !== AUDIO_CACHE; })
-            .map(function (k) { return caches.delete(k); })
-      );
-    })
+    Promise.all([
+      caches.keys().then(function (keys) {
+        return Promise.all(
+          keys.filter(function (k) { return k !== CACHE && k !== AUDIO_CACHE; })
+              .map(function (k) { return caches.delete(k); })
+        );
+      }),
+      evictCorrectedAudio()
+    ])
   );
   self.clients.claim();
 });

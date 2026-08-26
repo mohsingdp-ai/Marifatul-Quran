@@ -4,8 +4,11 @@
  * Run:  node scripts/build-verses.js 10:R1          (one ruku)
  *       node scripts/build-verses.js 10             (whole para)
  *       node scripts/build-verses.js --all          (every ruku — large)
+ *       node scripts/build-verses.js 19 --prune     (also drop keys data.js no longer has)
  *
- * Existing entries in verses.js are kept, so rukus can be added a few at a time.
+ * Existing entries in verses.js are kept, so rukus can be added a few at a time. Rukus that
+ * were merged or renamed in data.js leave their old key behind unreachable; --prune clears
+ * those out, since the UI can only ever look one up by a live data.js row.
  * Source: api.alquran.cloud, edition `quran-uthmani`.
  */
 const fs = require("fs");
@@ -51,6 +54,30 @@ function parseVerseRange(spec) {
   return Array.from(new Set(nums)).sort((a, b) => a - b);
 }
 
+/**
+ * data.js writes open-ended ranges as "243-248+" or "1-12+", meaning the ruku runs on to
+ * wherever the next one starts. Read literally those drop 66 ayat at para boundaries, so
+ * close each range against the next ruku in the same surah, else the end of the surah.
+ */
+function effectiveRange(rows, index, nums, surahLength) {
+  const start = nums[0];
+  let end = nums[nums.length - 1];
+
+  const next = rows[index + 1];
+  let bound;
+  if (next && next.surahNumber === rows[index].surahNumber) {
+    const nextNums = parseVerseRange(next.verses);
+    bound = nextNums.length ? nextNums[0] - 1 : end;
+  } else {
+    bound = surahLength;
+  }
+  if (bound > end) end = bound;
+
+  const out = [];
+  for (let n = start; n <= end; n++) out.push(n);
+  return out;
+}
+
 const surahCache = new Map();
 
 async function fetchSurah(surahNumber) {
@@ -69,17 +96,39 @@ async function fetchSurah(surahNumber) {
 /**
  * The API prefixes ayah 1 of every surah (except Al-Fatihah and At-Tawbah) with the
  * Basmala. Strip it so it is not repeated mid-ruku; the UI renders it as a header.
+ *
+ * Matching on a literal is too brittle: the same word can carry its combining marks in
+ * either order (shadda-then-fatha vs fatha-then-shadda) and render identically, so an
+ * exact compare silently misses. Compare consonant skeletons instead.
  */
-const BASMALA = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+function letterSkeleton(text) {
+  return text
+    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200D]/g, "")
+    .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
+    .replace(/\s+/g, "");
+}
+
+const BASMALA_SKELETON = letterSkeleton("بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ");
 
 function stripBasmala(text, surahNumber, ayahNumber) {
   if (ayahNumber !== 1 || surahNumber === 1 || surahNumber === 9) return text;
-  if (text.startsWith(BASMALA)) return text.slice(BASMALA.length).trim();
+  let skeleton = "";
+  for (let i = 0; i < text.length; i++) {
+    skeleton += letterSkeleton(text[i]);
+    if (skeleton === BASMALA_SKELETON) {
+      // Consume the final letter's own harakat (and the separating space) before cutting.
+      let j = i + 1;
+      while (j < text.length && letterSkeleton(text[j]) === "") j++;
+      return text.slice(j).trim();
+    }
+    if (!BASMALA_SKELETON.startsWith(skeleton)) return text; // no Basmala prefix here
+  }
   return text;
 }
 
 function selectRows(rows, targets) {
   if (targets.includes("--all")) return rows;
+  targets = targets.filter((t) => t !== "--prune");
   return rows.filter((row) =>
     targets.some((t) => {
       const [para, ruku] = t.split(":");
@@ -135,8 +184,9 @@ function serialize(verses) {
 
 async function main() {
   const targets = process.argv.slice(2);
-  if (!targets.length) {
-    console.error("Usage: node scripts/build-verses.js <para[:ruku]>... | --all");
+  const prune = targets.includes("--prune");
+  if (!targets.filter((t) => t !== "--prune").length) {
+    console.error("Usage: node scripts/build-verses.js <para[:ruku]>... | --all  [--prune]");
     process.exit(1);
   }
 
@@ -148,6 +198,7 @@ async function main() {
   }
 
   const verses = loadExistingVerses();
+  const extended = [];
 
   for (const row of selected) {
     const nums = parseVerseRange(row.verses);
@@ -156,8 +207,13 @@ async function main() {
       continue;
     }
     const surah = await fetchSurah(row.surahNumber);
+    const surahLength = Math.max(...surah.keys());
+    const range = effectiveRange(rows, rows.indexOf(row), nums, surahLength);
+    if (range.length > nums.length) {
+      extended.push(`${row.para}|${row.rukuInPara} "${row.verses}" -> ${range[0]}-${range[range.length - 1]}`);
+    }
     const ayahs = [];
-    for (const n of nums) {
+    for (const n of range) {
       const text = surah.get(n);
       if (!text) {
         console.warn(`Missing ${row.surahNumber}:${n} for ${row.para}|${row.rukuInPara}`);
@@ -169,10 +225,22 @@ async function main() {
       surahNumber: row.surahNumber,
       surahArabic: row.surahArabic,
       // Ruku opens the surah: render the Basmala as a header (never for At-Tawbah).
-      showBasmala: nums[0] === 1 && row.surahNumber !== 1 && row.surahNumber !== 9,
+      showBasmala: range[0] === 1 && row.surahNumber !== 1 && row.surahNumber !== 9,
       ayahs
     };
     console.log(`${row.para}|${row.rukuInPara} — ${row.surah} ${row.verses} (${ayahs.length} ayat)`);
+  }
+
+  if (prune) {
+    const live = new Set(rows.map((row) => `${row.para}|${row.rukuInPara}`));
+    const stale = Object.keys(verses).filter((k) => !live.has(k));
+    stale.forEach((k) => delete verses[k]);
+    if (stale.length) console.log(`\nPruned ${stale.length} key(s) absent from data.js:\n  ${stale.join("\n  ")}`);
+  }
+
+  if (extended.length) {
+    console.log(`\nClosed ${extended.length} open-ended range(s) against the next ruku:`);
+    extended.forEach((e) => console.log("  " + e));
   }
 
   fs.writeFileSync(outPath, serialize(verses), "utf8");
