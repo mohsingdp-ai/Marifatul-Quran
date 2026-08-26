@@ -61,19 +61,24 @@ def ruku_text(ctx: dict, entry: dict) -> str:
 
 # ---------------------------------------------------------------- transcription
 
-def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0) -> str:
+def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0,
+               skip: int = 0) -> str:
     # Cache key ignores device/batch on purpose: those change speed, not the transcript.
-    key = hashlib.md5(f"{audio}|{window}|{model_name}".encode()).hexdigest()
+    key = hashlib.md5(f"{audio}|{skip}|{window}|{model_name}".encode()).hexdigest()
     cached = CACHE / f"{key}.json"
     if cached.exists():
         return json.loads(cached.read_text())["text"]
 
     CACHE.mkdir(parents=True, exist_ok=True)
     wav = CACHE / f"{key}.wav"
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-t", str(window), "-i", str(audio),
-                    "-ar", "16000", "-ac", "1", str(wav)], check=True)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(skip), "-t", str(window),
+                    "-i", str(audio), "-ar", "16000", "-ac", "1", str(wav)], check=True)
     try:
-        kwargs = {"language": "ar", "beam_size": 1, "vad_filter": True}
+        # Left to itself Whisper falls into repetition loops on this material, emitting one
+        # phrase 20 times over and burying the recitation. Not conditioning on its own
+        # previous output is the fix; the n-gram block catches what still slips through.
+        kwargs = {"language": "ar", "beam_size": 1, "vad_filter": True,
+                  "condition_on_previous_text": False, "no_repeat_ngram_size": 4}
         if batch > 0:
             kwargs["batch_size"] = batch
         segments, _ = model.transcribe(str(wav), **kwargs)
@@ -119,7 +124,10 @@ def main() -> int:
     ap.add_argument("--para", type=int, action="append", help="para to check (repeatable)")
     ap.add_argument("--all", action="store_true", help="every para (slow)")
     ap.add_argument("--model", default="small", help="whisper model: small | medium | large-v3")
-    ap.add_argument("--window", type=int, default=300, help="seconds from the start to listen to")
+    ap.add_argument("--window", type=int, default=420, help="seconds of audio to listen to")
+    ap.add_argument("--skip", type=int, default=210,
+                    help="seconds to skip first; these lectures open with a long preamble "
+                         "(praise, series notices) before any ayah is recited")
     ap.add_argument("--device", default="cpu", help="cpu | cuda")
     ap.add_argument("--compute-type", dest="compute_type", default=None,
                     help="int8 | int8_float16 | float16 (default: int8 on cpu, float16 on cuda)")
@@ -164,7 +172,7 @@ def main() -> int:
             while True:
                 try:
                     transcripts[r["audioUrl"]] = transcribe(model, audio, args.window,
-                                                            args.model, batch)
+                                                            args.model, batch, args.skip)
                     break
                 except RuntimeError as err:
                     if "out of memory" not in str(err).lower() or batch == 0:

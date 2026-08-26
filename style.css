@@ -1944,14 +1944,23 @@ tr.playing .audio-progress::-moz-range-thumb {
 }
 
 @media (min-width: 768px) {
+  /* Lay the upload button and validate pill out side by side WITHOUT making the <td> a flex
+     container. display:flex takes the cell out of table layout, so it can no longer shrink
+     to its content and sat at a hard 200px -- which pushed the table past the 1200px page
+     width and put a scrollbar on wide screens. Inline children keep table sizing intact. */
   .action-cell {
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
+    white-space: nowrap;
   }
-  .validate-label {
+  .action-cell > * {
+    vertical-align: middle;
+  }
+  .action-cell > * + * {
+    margin-left: 6px;
+  }
+  /* Needs to outrank the later `.validate-label { display: flex }`, which would otherwise
+     drop the pill onto its own line now that the cell is no longer a flex container. */
+  .action-cell > .validate-label {
+    display: inline-flex;
     margin-top: 0;
   }
 }
