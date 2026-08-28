@@ -121,7 +121,12 @@
           </div>
         </div>
       </div>
+      <!-- Holds the gap the now-playing strip leaves behind once it docks to the
+           bottom of the viewport, so the page below does not jump. -->
+      <div class="toolbar-dock-spacer" id="toolbar-dock-spacer" aria-hidden="true"></div>
     </div>
+    <!-- Never moves: docking is triggered when this scrolls above the viewport. -->
+    <div class="toolbar-dock-sentinel" id="toolbar-dock-sentinel" aria-hidden="true"></div>
 
     <div class="hifz-meter" id="hifz-meter" aria-live="polite">
       <div class="hifz-meter-head">

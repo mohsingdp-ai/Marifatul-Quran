@@ -1756,6 +1756,54 @@
     return escapeNode.innerHTML;
   }
 
+  /* ----------------------------------------------------------------- */
+  /* Docked mini-player — once a track is loaded and the toolbar has    */
+  /* scrolled off the top, the now-playing strip pins to the bottom of  */
+  /* the viewport so playback stays controllable while the reader       */
+  /* scrolls through an open ayat panel. It is the same element with    */
+  /* the same ids throughout, so every sync path keeps working.         */
+  /* ----------------------------------------------------------------- */
+  var toolbarBottom = document.querySelector(".toolbar-bottom");
+  var toolbarDockSpacer = document.getElementById("toolbar-dock-spacer");
+  var toolbarDockSentinel = document.getElementById("toolbar-dock-sentinel");
+  /** True while the toolbar's place in the page sits above the viewport. */
+  var toolbarScrolledOff = false;
+
+  function toolbarHasTrack() {
+    var shell = document.getElementById("toolbar-now-playing");
+    return !!shell && (shell.classList.contains("is-playing") || shell.classList.contains("is-paused"));
+  }
+
+  function syncToolbarDock() {
+    if (!toolbarBottom || !toolbarDockSpacer) return;
+    var wantDocked = toolbarScrolledOff && toolbarHasTrack();
+    if (wantDocked === toolbarBottom.classList.contains("is-docked")) return;
+    if (wantDocked) {
+      // Measure while the strip is still in flow so the spacer fills exactly
+      // the gap it leaves and the rows below it do not jump.
+      toolbarDockSpacer.style.height = toolbarBottom.offsetHeight + "px";
+      toolbarDockSpacer.classList.add("is-active");
+      toolbarBottom.classList.add("is-docked");
+      document.body.classList.add("has-docked-player");
+    } else {
+      toolbarBottom.classList.remove("is-docked");
+      document.body.classList.remove("has-docked-player");
+      toolbarDockSpacer.classList.remove("is-active");
+      toolbarDockSpacer.style.height = "";
+    }
+  }
+
+  // The sentinel sits just below the toolbar and never moves (the spacer keeps
+  // the toolbar's height constant), so observing it cannot feed back on itself.
+  if (toolbarDockSentinel && typeof IntersectionObserver === "function") {
+    new IntersectionObserver(function (entries) {
+      var entry = entries[entries.length - 1];
+      // Gone off the *top*, not merely still below the fold.
+      toolbarScrolledOff = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      syncToolbarDock();
+    }).observe(toolbarDockSentinel);
+  }
+
   /** Toolbar strip: shows which ruku is active (playing or paused). */
   function syncToolbarNowPlaying(row, state) {
     state = state || "idle";
@@ -1781,6 +1829,7 @@
       gotoBtn.disabled = true;
       if (shell) shell.classList.remove("is-playing", "is-paused");
       syncToolbarTransport();
+      syncToolbarDock();
       return;
     }
 
@@ -1799,6 +1848,7 @@
       shell.classList.toggle("is-paused", state === "paused");
     }
     syncToolbarTransport();
+    syncToolbarDock();
   }
 
   function getRowControlsByGlobalIndex(gi) {

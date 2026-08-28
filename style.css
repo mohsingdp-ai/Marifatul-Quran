@@ -215,6 +215,66 @@ body {
   border-radius: 0 0 var(--radius) var(--radius);
 }
 
+/* ------------------------------------------------------------------ */
+/* Docked mini-player                                                  */
+/* Once a track is loaded and the toolbar has scrolled off the top,    */
+/* the now-playing strip pins to the bottom of the viewport so play/   */
+/* pause, progress and "go to track" stay reachable while the reader   */
+/* scrolls through a long ayat panel. Same element, same ids — only    */
+/* its position changes, so every sync path keeps working.             */
+/* ------------------------------------------------------------------ */
+.toolbar-bottom.is-docked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  margin: 0 auto;
+  max-width: 1200px;
+  box-sizing: border-box;
+  background: var(--row-white);
+  border-top: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.22);
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  animation: toolbar-dock-in 0.18s ease;
+}
+
+/* The strip is width-capped in the toolbar to sit beside the menu; docked it
+   owns the whole bar. */
+.toolbar-bottom.is-docked .toolbar-now-playing {
+  max-width: none;
+}
+
+@keyframes toolbar-dock-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-bottom.is-docked {
+    animation: none;
+  }
+}
+
+/* Reserves the docked strip's in-flow height so the page does not jump. */
+.toolbar-dock-spacer {
+  display: none;
+}
+
+.toolbar-dock-spacer.is-active {
+  display: block;
+}
+
+.toolbar-dock-sentinel {
+  height: 0;
+}
+
+/* Keeps the last ayah clear of the docked bar. */
+body.has-docked-player {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
+}
+
 .controls-left {
   display: flex;
   align-items: center;
