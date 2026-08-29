@@ -57,7 +57,9 @@
     /** Plain URL of the active track, so a bad offline copy can fall back to the network. */
     networkUrl: null,
     /** URL whose offline-cache entry produced the current blob src, else null. */
-    cachedFrom: null
+    cachedFrom: null,
+    /** Whether `networkUrl` has already been given its second chance for this track. */
+    networkRetried: false
   };
   var persistPlaybackTimer = null;
   var mediaSessionKeepaliveTimer = null;
@@ -585,6 +587,11 @@
 
   var allParaOptions = null; // cached for iOS option.hidden fix
 
+  /**
+   * Resolves true when a saved offline copy of this URL is in the audio cache. Async — it
+   * answers with a Promise, so it must be awaited, never dropped into a plain condition
+   * where every call reads as truthy.
+   */
   function audioFileExists(audioPath) {
     if (!audioPath) return false;
     var abs = resolveUrl(audioPath);
@@ -770,7 +777,9 @@
     var audioCell = tr.querySelector(".audio-cell");
     var actionCell = showActions ? tr.querySelector(".action-cell") : null;
 
-    if (audioSrc && (sessionBlobUrls[globalIndex] || audioFileExists(audioSrc))) {
+    // Any row with a source gets a player; an offline copy is not a precondition for one,
+    // and getAudioSrc already prefers this session's blob when there is one.
+    if (audioSrc) {
       var resumeThis = playbackResume && String(playbackResume.globalIndex) === String(globalIndex) ? playbackResume : null;
       buildAudioPlayer(tr, audioCell, row, globalIndex, audioSrc, clearPlayingClass, resumeThis);
     } else {
@@ -2035,6 +2044,7 @@
         var stale = mqPlayback.cachedFrom;
         var networkUrl = mqPlayback.networkUrl;
         mqPlayback.cachedFrom = null;
+        mqPlayback.networkRetried = true;
         evictCachedAudio(stale).then(function () {
           a.src = networkUrl;
           a.load();
@@ -2043,6 +2053,24 @@
             a.play();
           }, { once: true });
         });
+        return;
+      }
+
+      /**
+       * A dropped request is the usual cause of a failed load, and the alternates below are
+       * extensions 485 of the 527 recorded rows simply do not have — so falling straight to
+       * them turns one blip into two guaranteed 404s and a "Path Not found" on a file that
+       * is fine. Give the canonical URL one more go first. The flag caps it at one, so a
+       * genuinely missing file still reaches the alternates and the label.
+       */
+      if (mqPlayback.networkUrl && !mqPlayback.networkRetried) {
+        mqPlayback.networkRetried = true;
+        a.src = mqPlayback.networkUrl;
+        a.load();
+        a.addEventListener("canplay", function onNetworkRetry() {
+          a.removeEventListener("canplay", onNetworkRetry);
+          a.play();
+        }, { once: true });
         return;
       }
 
@@ -2161,6 +2189,7 @@
     mqPlayback.alternateIndex = 0;
     mqPlayback.networkUrl = src;
     mqPlayback.cachedFrom = null;
+    mqPlayback.networkRetried = false;
 
     if (mqPlayback._preloadedAudio && mqPlayback._preloadedAudio.gi === String(globalIndex)) {
       var preloaded = mqPlayback._preloadedAudio;
@@ -2612,7 +2641,7 @@
       if (gi == null || !data[gi]) return;
       var row = data[gi];
       var src = getAudioSrc(row, gi);
-      if (!src || !audioFileExists(src)) return;
+      if (!src) return;
       var a = getMqAudioEl();
       if (!a.paused) {
         a.pause();

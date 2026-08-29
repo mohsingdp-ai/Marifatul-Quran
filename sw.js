@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v10";
+const CACHE = "mq-v11";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -158,7 +158,10 @@ const AUDIO_EVICT = [
   // name, so the old URL is dead weight in any cache that already holds it.
   "./audio/1/1__R1__Al-Fatihah.opus",
   "./audio/2/2__R8__Al-Baqarah.ogg",
-  "./audio/6/6__R13__Al-Ma'idah.opus"
+  "./audio/6/6__R13__Al-Ma'idah.opus",
+  // An-Nisa R1 was re-cut (8:10 -> 5:46) and re-exported over the same URL, so a client
+  // holding the old take would keep playing the sections that were meant to come out.
+  "./audio/5/5__R1__An-Nisa.opus"
 ];
 
 function evictCorrectedAudio() {
