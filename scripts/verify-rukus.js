@@ -45,8 +45,19 @@ const SURAH_ALIAS = { "As-Saf": "As-Saff" };
  * its first ayah. Al-Ma'idah's ninth ruku runs 78-86 undivided, para 6's closing recording
  * carries 82 through to its end, and para 7's opens on 83. The row still spans part of R1
  * and all of R2, so its bookRuku stays "R1-R2".
+ *
+ * Para 9 ends at Al-Anfal 37, so the bookmark's R5 (38-40) has no row of its own. Al-Anfal's
+ * fifth ruku really runs 38-44; the bookmark cuts it at 41 to keep juz 10 whole. Para 10's
+ * opening recording takes the ruku entire, so those three ayat head para 10 instead, inside
+ * its R1 — the same shape as Ali 'Imran 92 at the head of para 4.
+ *
+ * Para 11 opens at At-Tawbah 94, not the bookmark's 93, so nothing covers its R1 as printed.
+ * At-Tawbah's ruku runs 90-99 and the bookmark cuts it at the juz edge; para 10's closing
+ * recording carries 93, so 93 sits at the tail of para 10 and para 11 opens inside R1.
  */
-const DELIBERATE = new Set(["3|Ali 'Imran|R10", "7|Al-Ma'idah|R1"]);
+const DELIBERATE = new Set([
+  "3|Ali 'Imran|R10", "7|Al-Ma'idah|R1", "9|Al-Anfal|R5", "11|At-Tawbah|R1"
+]);
 
 /** Compare surah names on letters only, after resolving known spelling differences. */
 const norm = (s) => (SURAH_ALIAS[s] || s).replace(/[^a-z]/gi, "").toLowerCase();

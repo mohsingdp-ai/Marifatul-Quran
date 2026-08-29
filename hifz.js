@@ -59,8 +59,13 @@
       if (sep < 0) return;
       var para = key.slice(0, sep);
       var nums = rukuNumbers(key.slice(sep + 1));
-      if (nums.length < 2) return; // single rukus need no lookup; they match by name
-      for (var n = nums[0]; n <= nums[nums.length - 1]; n++) coverage[para + ":" + n] = key;
+      /* Single rukus usually match by name, but not when only the label changed — dropping a
+         "+" leaves "9:R18+" pointing at a ruku that is still there under "9:R18". Map them
+         too, without letting one shadow a merged key that already claims the number. */
+      for (var n = nums[0]; n <= nums[nums.length - 1]; n++) {
+        var slot = para + ":" + n;
+        if (nums.length > 1 || !(slot in coverage)) coverage[slot] = key;
+      }
     });
 
     var folded = {}; // target key -> list of source entries

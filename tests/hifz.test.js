@@ -198,3 +198,25 @@ test("migrateKeys does not mutate the input map", () => {
   assert.ok(map["19:R5"]);
   assert.ok(!map["19:R5-R6"]);
 });
+
+test("migrateKeys follows a single ruku whose label lost its '+' suffix", () => {
+  // data.js dropped the "+" from "R18+" once para 9 stopped running past its printed range.
+  const res = Hifz.migrateKeys(
+    { "9:R18+": { s: "memorized", rev: true, at: "2026-08-01" } },
+    new Set(["9:R18"])
+  );
+  assert.strictEqual(res.migrated, 1);
+  assert.deepStrictEqual(res.unmatched, []);
+  assert.strictEqual(res.merged["9:R18"].s, "memorized");
+  assert.strictEqual(res.merged["9:R18"].rev, true);
+  assert.strictEqual(res.merged["9:R18+"], undefined);
+});
+
+test("migrateKeys still prefers a merged key over a same-numbered single one", () => {
+  // "19:R5" must fold into the merge, not shadow it, whichever order the Set iterates.
+  for (const valid of [new Set(["19:R5-R6", "19:R5x"]), new Set(["19:R5x", "19:R5-R6"])]) {
+    const res = Hifz.migrateKeys({ "19:R5": { s: "memorized", rev: false, at: "d" } }, valid);
+    assert.strictEqual(res.merged["19:R5-R6"].s, "learning", "half a merge is learning");
+    assert.strictEqual(res.merged["19:R5x"], undefined);
+  }
+});

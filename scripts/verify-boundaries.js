@@ -43,11 +43,25 @@
  * undivided, so this edge falls mid-ruku wherever it is placed and the recitation decides
  * where. Para 6's closing recording carries 82 through to its end; para 7's opens on 83.
  * This source marks 82 as juz 7; the boundary here follows the recordings instead.
+ *
+ * Para 9 ends at Al-Anfal 37 and para 10 opens at 38. Al-Anfal's fifth ruku runs 38-44
+ * undivided and straddles the juz edge, which falls at 41; the bookmark splits the ruku
+ * there to keep the juz whole. Para 10's opening recording takes the ruku entire, so the
+ * para edge follows the ruku and 38-40 sit at the head of para 10 rather than the tail of
+ * para 9. This is the wider of the two departures here — three ayat, not one.
+ *
+ * Para 10 ends at At-Tawbah 93 and para 11 opens at 94. At-Tawbah's ruku runs 90-99
+ * undivided and the juz edge falls at 93, so the bookmark cuts the ruku there. Para 10's
+ * closing recording carries 93; para 11's opens on 94.
  */
 const SETTLED = [
   /Ali 'Imran 9[12]/,
   /P[67] (opens|closes) at Al-Ma'idah 8[23]/,
-  /P6 R10-R11 Al-Ma'idah .*78–82/
+  /P6 R10-R11 Al-Ma'idah .*78–82/,
+  /P(9|10) (opens|closes) at Al-Anfal (37|38)/,
+  /P10 R1 Al-Anfal 38–44/,
+  /P(10|11) (opens|closes) at At-Tawbah (93|94)/,
+  /P10 R11-R12 At-Tawbah .*90–93/
 ];
 const fs = require("fs");
 const path = require("path");
