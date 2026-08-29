@@ -320,7 +320,7 @@ const QURAN_DATA = [
   { para: 19, rukuInPara: "R17", bookRuku: "R2", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "15–31", audioUrl: "audio/19/19__R17__An-Naml.opus" },
   { para: 19, rukuInPara: "R18", bookRuku: "R3", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "32–44", audioUrl: "audio/19/19__R18__An-Naml.opus" },
   { para: 19, rukuInPara: "R19", bookRuku: "R4", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "45–55", audioUrl: "audio/19/19__R19__An-Naml.opus" },
-  { para: 20, rukuInPara: "R1", bookRuku: "R1", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "56–58", audioUrl: "audio/20/20__R1__An-Naml.opus" },
+  { para: 20, rukuInPara: "R1", bookRuku: "R1", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "56–58", audioUrl: "" },
   { para: 20, rukuInPara: "R2", bookRuku: "R2", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "59–66", audioUrl: "audio/20/20__R2__An-Naml.opus" },
   { para: 20, rukuInPara: "R3", bookRuku: "R3", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "67–82", audioUrl: "audio/20/20__R3__An-Naml.opus" },
   { para: 20, rukuInPara: "R4", bookRuku: "R4", surah: "An-Naml", surahNumber: 27, surahArabic: "النمل", verses: "83–93", audioUrl: "audio/20/20__R4__An-Naml.opus" },

@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v11";
+const CACHE = "mq-v12";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -161,7 +161,23 @@ const AUDIO_EVICT = [
   "./audio/6/6__R13__Al-Ma'idah.opus",
   // An-Nisa R1 was re-cut (8:10 -> 5:46) and re-exported over the same URL, so a client
   // holding the old take would keep playing the sections that were meant to come out.
-  "./audio/5/5__R1__An-Nisa.opus"
+  "./audio/5/5__R1__An-Nisa.opus",
+  // Para 20's recordings sat one ruku early: every slot from R2 on carried the previous
+  // ruku's lecture. The URLs did not change, only what is behind them, so any client that
+  // downloaded them holds the wrong lecture. R1 and R17 are gone entirely.
+  "./audio/20/20__R2__An-Naml.opus",
+  "./audio/20/20__R3__An-Naml.opus",
+  "./audio/20/20__R4__An-Naml.opus",
+  "./audio/20/20__R5__Al-Qasas.opus",
+  "./audio/20/20__R6__Al-Qasas.opus",
+  "./audio/20/20__R7__Al-Qasas.opus",
+  "./audio/20/20__R8__Al-Qasas.opus",
+  "./audio/20/20__R9__Al-Qasas.opus",
+  "./audio/20/20__R10__Al-Qasas.opus",
+  "./audio/20/20__R11__Al-Qasas.opus",
+  "./audio/20/20__R12__Al-Qasas.opus",
+  "./audio/20/20__R1__An-Naml.opus",
+  "./audio/20/20__R17__Al-'Ankabut.opus"
 ];
 
 function evictCorrectedAudio() {
