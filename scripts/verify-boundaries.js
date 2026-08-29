@@ -57,6 +57,10 @@
  * Para 20 ends at Al-'Ankabut 44 and para 21 opens at 45. Al-'Ankabut's ruku runs 45-51 and
  * the juz edge falls at 46, so the bookmark cuts a single ayah off that ruku's head to keep
  * the juz whole. Both sides now sit on a complete ruku instead.
+ *
+ * Para 19 ends at An-Naml 59 and para 20 opens at 60. An-Naml's fourth ruku runs 45-58 and
+ * the juz edge falls at 56, so the bookmark cuts it there; para 19's closing lecture runs on
+ * through 59 and para 20's opens at 60, and the paras follow the recordings.
  */
 const SETTLED = [
   /Ali 'Imran 9[12]/,
@@ -67,7 +71,9 @@ const SETTLED = [
   /P(10|11) (opens|closes) at At-Tawbah (93|94)/,
   /P10 R11-R12 At-Tawbah .*90–93/,
   /P(20|21) (opens|closes) at Al-'Ankabut (44|45)/,
-  /P21 R1 Al-'Ankabut 45–51/
+  /P21 R1 Al-'Ankabut 45–51/,
+  /P(19|20) (opens|closes) at An-Naml (59|60)/,
+  /P19 R4-R5 An-Naml .*59–59/
 ];
 const fs = require("fs");
 const path = require("path");

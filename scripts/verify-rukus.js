@@ -58,10 +58,16 @@ const SURAH_ALIAS = { "As-Saf": "As-Saff" };
  * Para 20 ends at Al-'Ankabut 44, so the bookmark's R5 (45-45) — a lone ayah split off a
  * ruku that really runs 45-51 — has no row of its own. Ayah 45 heads para 21 instead, where
  * it completes that ruku.
+ *
+ * Para 19 now closes on An-Naml 59 and para 20 opens on 60, so the bookmark's para-20 R1
+ * (56-58) and R2 (59-66) have no rows. An-Naml's fourth ruku runs 45-58 and its fifth 59-66;
+ * the bookmark cuts the fourth at the juz edge and renumbers from R1 in para 20, so para 19's
+ * closing row spans a ruku this para's listing cannot name. It says "R4-R5" after the real
+ * division, which is why R5 is recorded here too.
  */
 const DELIBERATE = new Set([
   "3|Ali 'Imran|R10", "7|Al-Ma'idah|R1", "9|Al-Anfal|R5", "11|At-Tawbah|R1",
-  "20|Al-'Ankabut|R5"
+  "20|Al-'Ankabut|R5", "19|An-Naml|R5", "20|An-Naml|R1", "20|An-Naml|R2"
 ]);
 
 /** Compare surah names on letters only, after resolving known spelling differences. */
@@ -126,12 +132,20 @@ function main() {
            in DELIBERATE — a row merely naming the label is a real mislabelling. */
         const seen = bookLabel.split("-");
         const unseen = row.bookRuku.split("-").filter((l) => !seen.includes(l));
+        const entryFor = (label) =>
+          entries.find((x) => x.label === label && norm(x.surah) === norm(row.surah));
+        const recorded = (label) => DELIBERATE.has(`${para}|${row.surah}|${label}`);
         const opensInside = (label) => {
-          const e = entries.find((x) => x.label === label && norm(x.surah) === norm(row.surah));
-          return !!e && e.start < start && e.end >= start &&
-            DELIBERATE.has(`${para}|${row.surah}|${label}`);
+          const e = entryFor(label);
+          return !!e && e.start < start && e.end >= start && recorded(label);
         };
-        const onPurpose = unseen.length > 0 && unseen.every(opensInside);
+        /* The bookmark restarts at R1 every para, so a row running past this para's last
+           printed ruku names one this listing does not hold at all — the next para's listing
+           owns it. Excuse that only when it is recorded, never on a label that is simply
+           absent. */
+        const runsPastListing = (label) => !entryFor(label) && recorded(label);
+        const onPurpose = unseen.length > 0 &&
+          unseen.every((l) => opensInside(l) || runsPastListing(l));
         if (onPurpose) {
           /* Reported here, so the MISSING pass below does not name it a second time. */
           unseen.forEach((l) => covered.add(`${norm(row.surah)}:${l}`));
