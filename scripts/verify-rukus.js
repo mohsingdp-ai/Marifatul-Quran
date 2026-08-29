@@ -40,8 +40,13 @@ const SURAH_ALIAS = { "As-Saf": "As-Saff" };
  * Para 3 ends with Ali 'Imran 92 on its own, but juz 4 begins at 92 ("لن تنالوا البر"),
  * Ali 'Imran's tenth ruku runs 92-101 undivided, and para 4's opening recording contains 92
  * before moving into 93. The bookmark is the odd one out, so 92 sits at the head of para 4.
+ *
+ * Para 7 opens at Al-Ma'idah 83, not the bookmark's 82, so the row picks book R1 up without
+ * its first ayah. Al-Ma'idah's ninth ruku runs 78-86 undivided, para 6's closing recording
+ * carries 82 through to its end, and para 7's opens on 83. The row still spans part of R1
+ * and all of R2, so its bookRuku stays "R1-R2".
  */
-const DELIBERATE = new Set(["3|Ali 'Imran|R10"]);
+const DELIBERATE = new Set(["3|Ali 'Imran|R10", "7|Al-Ma'idah|R1"]);
 
 /** Compare surah names on letters only, after resolving known spelling differences. */
 const norm = (s) => (SURAH_ALIAS[s] || s).replace(/[^a-z]/gi, "").toLowerCase();
@@ -99,7 +104,25 @@ function main() {
       if (!row.bookRuku) {
         findings.NOLABEL.push(`P${para} "${row.rukuInPara}" ${row.surah} ${row.verses}`);
       } else if (bookLabel !== row.bookRuku) {
-        findings.LABEL.push(`P${para} bookRuku "${row.bookRuku}" ${row.surah} ${row.verses} → book calls this "${bookLabel}"`);
+        /* A row that opens part-way through a book ruku carries it without its first ayah,
+           so `inside` never sees it and the label reads short. Excuse that only where the
+           book ruku really does straddle this row's first ayah AND the departure is recorded
+           in DELIBERATE — a row merely naming the label is a real mislabelling. */
+        const seen = bookLabel.split("-");
+        const unseen = row.bookRuku.split("-").filter((l) => !seen.includes(l));
+        const opensInside = (label) => {
+          const e = entries.find((x) => x.label === label && norm(x.surah) === norm(row.surah));
+          return !!e && e.start < start && e.end >= start &&
+            DELIBERATE.has(`${para}|${row.surah}|${label}`);
+        };
+        const onPurpose = unseen.length > 0 && unseen.every(opensInside);
+        if (onPurpose) {
+          /* Reported here, so the MISSING pass below does not name it a second time. */
+          unseen.forEach((l) => covered.add(`${norm(row.surah)}:${l}`));
+          intended.push(`P${para} ${row.surah} ${row.verses} — opens inside ${unseen.join(", ")}, on purpose`);
+        } else {
+          findings.LABEL.push(`P${para} bookRuku "${row.bookRuku}" ${row.surah} ${row.verses} → book calls this "${bookLabel}"`);
+        }
       }
     }
 

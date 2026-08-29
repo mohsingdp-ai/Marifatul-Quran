@@ -38,8 +38,17 @@
  * undivided, para 4's opening recording contains 92 before moving into 93, and 92 is the
  * commonly quoted start of juz 4. This source marks 92 as juz 3; the boundary here follows
  * the recitation and the ruku division instead. Confirmed against the printed division.
+ *
+ * Para 6 ends at Al-Ma'idah 82 and para 7 opens at 83. Al-Ma'idah's ninth ruku runs 78-86
+ * undivided, so this edge falls mid-ruku wherever it is placed and the recitation decides
+ * where. Para 6's closing recording carries 82 through to its end; para 7's opens on 83.
+ * This source marks 82 as juz 7; the boundary here follows the recordings instead.
  */
-const SETTLED = [/Ali 'Imran 9[12]/];
+const SETTLED = [
+  /Ali 'Imran 9[12]/,
+  /P[67] (opens|closes) at Al-Ma'idah 8[23]/,
+  /P6 R10-R11 Al-Ma'idah .*78–82/
+];
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
