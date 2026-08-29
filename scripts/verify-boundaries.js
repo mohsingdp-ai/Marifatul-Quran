@@ -53,6 +53,10 @@
  * Para 10 ends at At-Tawbah 93 and para 11 opens at 94. At-Tawbah's ruku runs 90-99
  * undivided and the juz edge falls at 93, so the bookmark cuts the ruku there. Para 10's
  * closing recording carries 93; para 11's opens on 94.
+ *
+ * Para 20 ends at Al-'Ankabut 44 and para 21 opens at 45. Al-'Ankabut's ruku runs 45-51 and
+ * the juz edge falls at 46, so the bookmark cuts a single ayah off that ruku's head to keep
+ * the juz whole. Both sides now sit on a complete ruku instead.
  */
 const SETTLED = [
   /Ali 'Imran 9[12]/,
@@ -61,7 +65,9 @@ const SETTLED = [
   /P(9|10) (opens|closes) at Al-Anfal (37|38)/,
   /P10 R1 Al-Anfal 38–44/,
   /P(10|11) (opens|closes) at At-Tawbah (93|94)/,
-  /P10 R11-R12 At-Tawbah .*90–93/
+  /P10 R11-R12 At-Tawbah .*90–93/,
+  /P(20|21) (opens|closes) at Al-'Ankabut (44|45)/,
+  /P21 R1 Al-'Ankabut 45–51/
 ];
 const fs = require("fs");
 const path = require("path");

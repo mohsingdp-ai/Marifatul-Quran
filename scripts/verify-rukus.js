@@ -54,9 +54,14 @@ const SURAH_ALIAS = { "As-Saf": "As-Saff" };
  * Para 11 opens at At-Tawbah 94, not the bookmark's 93, so nothing covers its R1 as printed.
  * At-Tawbah's ruku runs 90-99 and the bookmark cuts it at the juz edge; para 10's closing
  * recording carries 93, so 93 sits at the tail of para 10 and para 11 opens inside R1.
+ *
+ * Para 20 ends at Al-'Ankabut 44, so the bookmark's R5 (45-45) — a lone ayah split off a
+ * ruku that really runs 45-51 — has no row of its own. Ayah 45 heads para 21 instead, where
+ * it completes that ruku.
  */
 const DELIBERATE = new Set([
-  "3|Ali 'Imran|R10", "7|Al-Ma'idah|R1", "9|Al-Anfal|R5", "11|At-Tawbah|R1"
+  "3|Ali 'Imran|R10", "7|Al-Ma'idah|R1", "9|Al-Anfal|R5", "11|At-Tawbah|R1",
+  "20|Al-'Ankabut|R5"
 ]);
 
 /** Compare surah names on letters only, after resolving known spelling differences. */
