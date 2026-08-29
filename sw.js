@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v12";
+const CACHE = "mq-v13";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -177,7 +177,17 @@ const AUDIO_EVICT = [
   "./audio/20/20__R11__Al-Qasas.opus",
   "./audio/20/20__R12__Al-Qasas.opus",
   "./audio/20/20__R1__An-Naml.opus",
-  "./audio/20/20__R17__Al-'Ankabut.opus"
+  "./audio/20/20__R17__Al-'Ankabut.opus",
+  // Para 21 had the same fault from R13 on: each slot carried the previous ruku's lecture.
+  // Same URLs, different contents, so a cached copy is the wrong lecture. R19 is gone — its
+  // three ayat are the tail of a ruku the next para records.
+  "./audio/21/21__R13__As-Sajdah.opus",
+  "./audio/21/21__R14__As-Sajdah.opus",
+  "./audio/21/21__R15__As-Sajdah.opus",
+  "./audio/21/21__R16__Al-Ahzab.opus",
+  "./audio/21/21__R17__Al-Ahzab.opus",
+  "./audio/21/21__R18__Al-Ahzab.opus",
+  "./audio/21/21__R19__Al-Ahzab.opus"
 ];
 
 function evictCorrectedAudio() {
