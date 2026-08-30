@@ -1001,6 +1001,7 @@
     restoreTableViewState(viewState);
     tableRenderedPara = String(paraSelect.value);
     if (paraInUrl !== null && paraInUrl !== tableRenderedPara) syncParaInUrl(true);
+    syncParaStepButtons();
     if (!willResume) {
       var a = mqPlayback.el;
       var gi = mqPlayback.activeGlobalIndex;
@@ -2474,7 +2475,38 @@
 
   paraSelect.addEventListener("change", function () {
     renderTable({ scrollBasePara: tableRenderedPara });
+    syncParaStepButtons();
   });
+
+  /**
+   * Step one para at a time. `paraSelect` only lists paras that survive the current filter,
+   * so stepping walks the visible options rather than 1..30 -- otherwise "next" could land
+   * on a para the dropdown will not show.
+   */
+  var paraPrevBtn = document.getElementById("para-prev");
+  var paraNextBtn = document.getElementById("para-next");
+
+  function syncParaStepButtons() {
+    if (!paraPrevBtn || !paraNextBtn) return;
+    var opts = Array.prototype.slice.call(paraSelect.options);
+    var at = opts.findIndex(function (o) { return o.value === paraSelect.value; });
+    paraPrevBtn.disabled = at <= 0;
+    paraNextBtn.disabled = at < 0 || at >= opts.length - 1;
+  }
+
+  function stepPara(delta) {
+    var opts = Array.prototype.slice.call(paraSelect.options);
+    var at = opts.findIndex(function (o) { return o.value === paraSelect.value; });
+    var next = opts[at + delta];
+    if (!next) return;
+    var basePara = tableRenderedPara;
+    paraSelect.value = next.value;
+    renderTable({ scrollBasePara: basePara });
+    syncParaStepButtons();
+  }
+
+  if (paraPrevBtn) paraPrevBtn.addEventListener("click", function () { stepPara(-1); });
+  if (paraNextBtn) paraNextBtn.addEventListener("click", function () { stepPara(1); });
 
   tbody.addEventListener("click", function (e) {
     var btn = e.target.closest ? e.target.closest(".verses-toggle") : null;

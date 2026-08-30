@@ -38,6 +38,9 @@
       <div class="toolbar-top">
         <div class="controls-left">
           <label for="para-select">Para (Juz)</label>
+          <button type="button" class="btn-para-step" id="para-prev" aria-label="Previous Para" title="Previous Para">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
           <select id="para-select" aria-label="Select Para">
             <option value="1" selected>Para 1</option>
             <option value="2">Para 2</option>
@@ -70,6 +73,9 @@
             <option value="29">Para 29</option>
             <option value="30">Para 30</option>
           </select>
+          <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
           <div class="toolbar-volume-wrap" title="Volume">
             <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
             <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
