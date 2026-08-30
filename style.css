@@ -1419,6 +1419,8 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   border-radius: var(--radius);
   background: var(--row-white);
   padding: 0.85rem 1.1rem 0.7rem;
+  margin-bottom: 8px;
+  margin-top: 4px;
 }
 
 .ayat-head {
@@ -2193,7 +2195,7 @@ tr.playing .audio-progress::-moz-range-thumb {
     background: var(--playing-bg) !important;
     border: 2px solid var(--teal-accent) !important;
   }
-  
+
 .ruku-table tbody tr {
   background: var(--row-white) !important;
 }
@@ -2386,14 +2388,14 @@ tr.playing .audio-progress::-moz-range-thumb {
     height: 42px;
     min-width: 38px;
     min-height: 38px;
-    
+
   }
 
 .audio-seek-btn svg{
     width: 28px;
-    height: 28px;    
+    height: 28px;
   }
-  
+
   .audio-seek-back-btn {
     order: 0;
   }
@@ -3032,5 +3034,154 @@ html[data-theme="dark"] .mq-guide-caption {
   .mq-guide-caption {
     left: 12px;
     right: 12px;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Ruku card                                                           */
+/* Mirrors the native app's RukuCard: one header line — play, a title  */
+/* block, then share and download — with seek, speed and progress only */
+/* on the track that is playing. The table this replaces labelled every */
+/* field and left every row's full transport on screen at once, which   */
+/* cost most of a phone viewport per ruku. Cards at every width now, as */
+/* the native app has no table to fall back to.                         */
+/* ------------------------------------------------------------------ */
+.table-wrapper {
+  overflow-x: visible;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ruku-table,
+.ruku-table tbody {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.ruku-table thead { display: none; }
+
+.ruku-table tbody tr[data-global-index] {
+  display: grid;
+  /* Two text lines, not four: the surah, its ayat and the hifz pill share one line under
+     the ruku number, the way the now-playing strip stacks its title over its detail. */
+  grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "play ruku   ruku   ruku wa dl"
+    "play arabic verses hifz wa dl"
+    "tx   tx     tx     tx   tx dl";
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+  padding: 0.5rem 0.7rem;
+  margin: 0 0 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--row-white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+.ruku-table tbody tr[data-global-index].playing {
+  border-color: var(--teal-accent);
+  background: var(--playing-bg) !important;
+}
+
+/* A card is one surface: the cells stop being boxes and just place text. */
+.ruku-table tbody tr[data-global-index] > td {
+  display: block;
+  padding: 0;
+  border: none;
+  white-space: normal;
+  min-width: 0;
+}
+
+.ruku-table tbody td::before { content: none !important; }
+
+/* The native card carries the Arabic surah name only. Specificity has to match the
+   `> td` rule above, which would otherwise put these back to block. */
+.ruku-table tbody tr[data-global-index] > td.col-surah { display: none; }
+
+.ruku-table .col-ruku {
+  grid-area: ruku;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruku-table .col-surah-arabic {
+  grid-area: arabic;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--teal-accent);
+  text-align: left;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ruku-table .col-verses {
+  grid-area: verses;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  margin-left: 0.5rem;
+}
+
+.ruku-table .col-hifz {
+  grid-area: hifz;
+  justify-self: start;
+  min-width: 0;
+  margin-left: 0.15rem;
+}
+
+/* Let the cell's children become items of the row's grid, so the play button
+   leads the header while the transport drops to its own line. */
+.ruku-table tbody tr[data-global-index] > td.col-audio { display: contents; }
+
+.ruku-table .audio-play-btn { grid-area: play; }
+.ruku-table .audio-share-wa-btn { grid-area: wa; }
+.ruku-table .audio-offline-btn { grid-area: dl; }
+
+/* Rows with nothing to play still need their cell's children placed. */
+.ruku-table .no-recording,
+.ruku-table .path-not-found { grid-area: play; white-space: nowrap; }
+.ruku-table .audio-retry-btn { grid-area: wa; }
+
+.ruku-table .audio-controls {
+  grid-area: tx;
+  display: none;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ruku-table tbody tr.playing .audio-controls { display: flex; }
+
+.ruku-table .action-cell { grid-column: 1 / -1; margin-top: 0.5rem; }
+
+/* Ayat panel spans the card it belongs to. */
+.ruku-table tbody tr.ayat-row { display: block; }
+.ruku-table tbody tr.ayat-row > td.ayat-cell { display: block; padding: 0; }
+.ruku-table tbody tr[data-global-index].has-ayat-open {
+  margin-bottom: 0;
+  /*border-bottom-left-radius: 0;*/
+  /*border-bottom-right-radius: 0;*/
+}
+
+/* Narrow phones cannot fit the pill on the detail line beside play, share and download —
+   the surah name gets ellipsised to nothing and the pill still lands under the buttons.
+   Give it its own line there; wider screens keep the two-line card. */
+@media (max-width: 520px) {
+  .ruku-table tbody tr[data-global-index] {
+    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "play ruku   ruku   wa dl"
+      "play arabic verses wa dl"
+      "play hifz   hifz   wa dl"
+      "tx   tx     tx     tx tx";
   }
 }

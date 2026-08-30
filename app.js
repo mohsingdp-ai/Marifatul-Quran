@@ -1113,8 +1113,11 @@
       });
     });
 
+    // The card puts play, share and download on the header line and keeps `wrap` for the
+    // transport, which only the playing row shows. They are siblings in the cell so the
+    // row's grid can place each one; see "Ruku card" in style.css.
+    audioCell.appendChild(playBtn);
     wrap.appendChild(seekBackBtn);
-    wrap.appendChild(playBtn);
     wrap.appendChild(seekFwdBtn);
     wrap.appendChild(timeCurrent);
     progressWrap.appendChild(progress);
@@ -1250,8 +1253,8 @@
     });
 
     var offlineBtn = buildOfflineBtn(src);
-    wrap.appendChild(offlineBtn);
-    wrap.appendChild(buildWhatsAppShareBtn(row, src));
+    audioCell.appendChild(buildWhatsAppShareBtn(row, src));
+    audioCell.appendChild(offlineBtn);
 
     audioCell.appendChild(wrap);
 
