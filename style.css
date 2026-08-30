@@ -15,7 +15,9 @@
   --border: #d0d8d8;
   --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-  --radius: 8px;
+  /* One radius for every surface: toolbar, ayat panel, ruku card. 12px reads softer than
+     the 8px the table-era layout used, and matches the cards it now sits beside. */
+  --radius: 12px;
   /* Theme extras (light defaults) */
   --page-bg: #eef4f4;
   --modal-bg: #ffffff;
@@ -206,7 +208,9 @@ body {
   width: 100%;
   min-width: 0;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  /* Same 0.85rem gutter as the cards below, so the para row, the strip under it and every
+     ruku title share one left edge down the page. */
+  padding: 0.7rem 0.85rem;
   border-bottom: 1px solid var(--border);
   background: var(--row-gray);
   border-radius: var(--radius) var(--radius) 0 0;
@@ -220,7 +224,7 @@ body {
   width: 100%;
   min-width: 0;
   gap: 0.5rem;
-  padding: 0.45rem 0.7rem;
+  padding: 0.55rem 0.85rem;
   border-radius: 0 0 var(--radius) var(--radius);
 }
 
@@ -1523,13 +1527,13 @@ html[data-hifz="off"] .col-hifz {
 .hifz-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.28rem 0.6rem 0.28rem 0.5rem;
+  gap: 0.35rem;
+  padding: 0.22rem 0.55rem 0.22rem 0.45rem;
   border-radius: 999px;
   border: 1px solid transparent;
   background: var(--muted-chip-bg);
   color: var(--text-muted);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   cursor: pointer;
@@ -1550,8 +1554,8 @@ html[data-hifz="off"] .col-hifz {
 
 /* Leading dot glyph */
 .hifz-pill-dot {
-  width: 0.55rem;
-  height: 0.55rem;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
   background: currentColor;
   flex: 0 0 auto;
@@ -1577,10 +1581,16 @@ html[data-hifz="off"] .col-hifz {
 }
 
 /* Per-Para memorization meter (signature element) */
+/* The meter floated on the page background while the toolbar above it and the cards
+   below it were both surfaces, which read as a gap rather than a section. */
 .hifz-meter {
   max-width: 1100px;
-  margin: 0 auto;
-  padding: 0.7rem 1rem 0.55rem;
+  margin: 0 auto 0.7rem;
+  padding: 0.7rem 0.85rem 0.6rem;
+  background: var(--row-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
 .hifz-meter-head {
@@ -2259,6 +2269,16 @@ tr.playing .audio-progress::-moz-range-thumb {
     padding: 5px;
   }
 
+  /* A step between the desktop 1.75rem and the 1.3rem the smallest phones get, so the
+     masthead scales down with the page instead of in one jump. */
+  .header {
+    padding: 1rem 1rem 0.9rem;
+  }
+
+  .header h1 {
+    font-size: 1.45rem;
+  }
+
   .table-wrapper {
     overflow-x: visible;
   }
@@ -2386,11 +2406,13 @@ tr.playing .audio-progress::-moz-range-thumb {
     order: 5;
   } */
 
+  /* 52px was right when this button sat inside the transport row; leading a card it
+     just pushed the two text lines off to the side. 44px is still a full touch target. */
   .audio-play-btn {
-    width: 52px;
-    height: 52px;
-    min-width: 52px;
-    min-height: 52px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
     order: 1;
   }
 
@@ -2506,12 +2528,12 @@ tr.playing .audio-progress::-moz-range-thumb {
 /* Very small phones */
 @media (max-width: 380px) {
   .header h1 {
-    font-size: 1.2rem;
+    font-size: 1.3rem;
   }
 
   .toolbar-top,
   .toolbar-bottom {
-    padding: 0.6rem 0.65rem;
+    padding: 0.6rem 0.85rem;
   }
 
   /* Label, chevron, select, chevron come to a couple of pixels wider than a 320px
@@ -3107,23 +3129,27 @@ html[data-theme="dark"] .mq-guide-caption {
      the ruku number, the way the now-playing strip stacks its title over its detail. */
   grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "play ruku   ruku   ruku wa dl"
+    "play ruku   ruku   act  wa dl"
     "play arabic verses hifz wa dl"
-    "tx   tx     tx     tx   tx dl";
+    "tx   tx     tx     tx   tx tx";
   align-items: center;
-  column-gap: 0.6rem;
-  row-gap: 0.1rem;
-  padding: 0.5rem 0.7rem;
-  margin: 0 0 0.6rem;
+  column-gap: 0.7rem;
+  row-gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  margin: 0 0 0.55rem;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--row-white);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Playing: the gold of the transport button, run down the edge of the card, so the active
+   ruku is findable mid-scroll without reading a word of it. Inset rather than a border,
+   so nothing in the grid shifts when it appears. */
 .ruku-table tbody tr[data-global-index].playing {
   border-color: var(--teal-accent);
   background: var(--playing-bg) !important;
+  box-shadow: inset 3px 0 0 var(--arabic-gold), var(--shadow-sm);
 }
 
 /* A card is one surface: the cells stop being boxes and just place text. */
@@ -3141,9 +3167,12 @@ html[data-theme="dark"] .mq-guide-caption {
    `> td` rule above, which would otherwise put these back to block. */
 .ruku-table tbody tr[data-global-index] > td.col-surah { display: none; }
 
+/* Three voices in the card and no more: the ruku states it, the surah answers in gold,
+   everything else stays muted until it is worth reading. */
 .ruku-table .col-ruku {
   grid-area: ruku;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
   font-weight: 600;
   color: var(--text-primary);
   overflow: hidden;
@@ -3153,9 +3182,12 @@ html[data-theme="dark"] .mq-guide-caption {
 
 .ruku-table .col-surah-arabic {
   grid-area: arabic;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
   font-weight: 500;
-  color: var(--teal-accent);
+  /* Gold, not accent teal: teal means "this does something" everywhere else in the card,
+     and a surah name does nothing. It answers the header's gold rule instead. */
+  color: var(--arabic-gold);
   text-align: left;
   min-width: 0;
   overflow: hidden;
@@ -3165,10 +3197,11 @@ html[data-theme="dark"] .mq-guide-caption {
 
 .ruku-table .col-verses {
   grid-area: verses;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
   color: var(--text-muted);
   white-space: nowrap;
-  margin-left: 0.5rem;
+  margin-left: 0.4rem;
 }
 
 .ruku-table .col-hifz {
@@ -3186,9 +3219,44 @@ html[data-theme="dark"] .mq-guide-caption {
 .ruku-table .audio-share-wa-btn { grid-area: wa; }
 .ruku-table .audio-offline-btn { grid-area: dl; }
 
+/* Share and download are secondary: at rest they are their glyph and nothing else, and
+   only take a ring on hover or focus. Two bordered circles per card, times a screenful of
+   cards, was most of the chrome in the list. The saved and in-progress states keep theirs,
+   since there the ring is the state. */
+.ruku-table .audio-share-wa-btn:not(:hover):not(:focus-visible),
+.ruku-table .audio-offline-btn:not(:hover):not(:focus-visible):not(.is-saved):not(.is-saving) {
+  border-color: transparent;
+  background: transparent;
+}
+
 /* Rows with nothing to play still need their cell's children placed. */
 .ruku-table .no-recording,
 .ruku-table .path-not-found { grid-area: play; white-space: nowrap; }
+
+/* A card with no recording put a text chip where every other card has its play button,
+   which started its title at a different left edge than the cards above and below it.
+   The button's footprint instead, so the column stays true down the list. The words stay
+   in the DOM at font-size 0 — invisible, still read out. */
+.ruku-table .no-recording {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px dashed var(--border);
+  border-radius: 50%;
+  background: transparent;
+  font-size: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ruku-table .no-recording::before {
+  content: "—";
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
 .ruku-table .audio-retry-btn { grid-area: wa; }
 
 .ruku-table .audio-controls {
@@ -3200,7 +3268,39 @@ html[data-theme="dark"] .mq-guide-caption {
 
 .ruku-table tbody tr.playing .audio-controls { display: flex; }
 
-.ruku-table .action-cell { grid-column: 1 / -1; margin-top: 0.5rem; }
+/* Two lines while playing, not three: the controls and the clock share one, the scrubber
+   takes the next. The progress bar's 100% flex basis was breaking the line before the
+   duration, which left the total time stranded on a line of its own. */
+.ruku-table .audio-time-duration { order: 10; }
+
+.ruku-table .audio-time-current {
+  margin-left: auto;
+}
+
+.ruku-table .audio-time-current::after {
+  content: "/";
+  margin: 0 0.3rem;
+  opacity: 0.45;
+}
+
+/* Secondary to the 44px play button that opened the row. */
+.ruku-table .audio-seek-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.ruku-table .audio-seek-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Admin-only. On its own full-width line it added a third row to every card in the list;
+   it shares the title's line now, above the hifz pill it belongs beside. */
+.ruku-table .action-cell { grid-area: act; justify-self: start; align-self: center; }
+.ruku-table .validate-label { margin-top: 0; }
+.ruku-table .validate-label span { font-size: 0.7rem; padding: 2px 8px; white-space: nowrap; }
 
 /* Ayat panel spans the card it belongs to. */
 .ruku-table tbody tr.ayat-row { display: block; }
@@ -3211,16 +3311,21 @@ html[data-theme="dark"] .mq-guide-caption {
   /*border-bottom-right-radius: 0;*/
 }
 
-/* Narrow phones cannot fit the pill on the detail line beside play, share and download —
-   the surah name gets ellipsised to nothing and the pill still lands under the buttons.
-   Give it its own line there; wider screens keep the two-line card. */
-@media (max-width: 520px) {
+/* The narrowest phones cannot fit the pill on the detail line beside play, share and
+   download — the surah name gets ellipsised and the pill lands under the buttons. Give it
+   its own line there; everything else keeps the two-line card.
+
+   The line held at 520px while the play button was 52px and the two secondary buttons
+   each carried a 1.5px ring. Measured with the longest surah name in the data (المنافقون)
+   the two-line card now clears 320px by a single pixel and 375px comfortably, so the
+   fallback moves down to the phones that genuinely need it. */
+@media (max-width: 360px) {
   .ruku-table tbody tr[data-global-index] {
     grid-template-columns: auto auto minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "play ruku   ruku   wa dl"
-      "play arabic verses wa dl"
-      "play hifz   hifz   wa dl"
-      "tx   tx     tx     tx tx";
+      "play ruku   ruku   wa  dl"
+      "play arabic verses wa  dl"
+      "play hifz   hifz   act act"
+      "tx   tx     tx     tx  tx";
   }
 }
