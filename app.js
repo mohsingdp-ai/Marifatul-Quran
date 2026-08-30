@@ -205,8 +205,24 @@
   }
 
   function applyStoredMapPosition(globalIndex, a) {
+    // A preloaded element is handed over the instant after load(), before it has metadata, and
+    // the seek used to be lost there — the track then opened at 0:00 however it was meant to
+    // open. readyState is what has to be asked: load() does not clear `duration` synchronously,
+    // so the element still reports the LENGTH OF THE PREVIOUS TRACK, which passes every check
+    // duration can answer while the seek itself is quietly discarded by the load in flight.
+    // Wait for the metadata and seek then, unless the listener has moved on in the meantime.
+    if (a.readyState < 1 || !a.duration || !isFinite(a.duration) || a.duration <= 0) {
+      a.addEventListener("loadedmetadata", function once() {
+        a.removeEventListener("loadedmetadata", once);
+        if (mqPlayback.activeGlobalIndex === globalIndex) applyStoredMapPosition(globalIndex, a);
+      });
+      return;
+    }
     var t = getSavedPositionForIndex(globalIndex);
-    if (t == null || !a.duration || !isFinite(a.duration) || a.duration <= 0) return;
+    // Nothing saved: open on the dars rather than on the branding that precedes it. A saved
+    // position still wins, so picking a track back up lands where it was left.
+    if (t == null) t = trackWindow(globalIndex, a).start;
+    if (t == null) return;
     var end = Math.max(0, a.duration - 0.4);
     var clamped = Math.min(Math.max(0, t), end);
     if (clamped < 0.35) return;
@@ -710,7 +726,7 @@
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
     entry.ayahs.forEach(function (a) {
-      html += "<p class=\"ayat-item\">" + escapeHtml(a.text) +
+      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" + escapeHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
     });
     html += "</div>";
@@ -748,6 +764,125 @@
       expandedAyat[key] = true;
     }
     syncAyatRows();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Following the recitation — which ayah is being said right now, and   */
+  /* which stretch of the file is the dars rather than the talk round it. */
+  /* Times live in timings.js; a ruku missing from it behaves as before.  */
+  /* ------------------------------------------------------------------ */
+
+  /** timings.js entry for a ruku, or null while it has not been aligned. */
+  function getRukuTimings(row) {
+    if (typeof QURAN_TIMINGS === "undefined" || !row) return null;
+    return QURAN_TIMINGS[ayatKeyFor(row)] || null;
+  }
+
+  /**
+   * The stretch of a recording that is the dars, as {start, end, span}.
+   *
+   * These lectures open with up to three minutes of course branding before the first ayah and
+   * close on announcements after the last, so the file and the lesson are not the same thing.
+   * Everything the player shows — the bar, both time labels, where a drag lands — is measured
+   * inside this window, so a recording that starts talking at 2:48 still reads as 0:00. A trim
+   * that does not describe a real span is ignored and the file plays whole.
+   */
+  function trackWindow(globalIndex, a) {
+    var dur = a && a.duration && isFinite(a.duration) ? a.duration : 0;
+    var t = getRukuTimings(data[globalIndex]);
+    var start = t && t.trim ? Math.max(0, t.trim.start) : 0;
+    var end = t && t.trim ? t.trim.end : dur;
+    if (dur > 0) end = Math.min(end, dur);
+    if (!(end > start + 1)) {
+      start = 0;
+      end = dur;
+    }
+    return { start: start, end: end, span: Math.max(0, end - start) };
+  }
+
+  /**
+   * The dars window of whatever is playing, for the handlers that hold only the element and
+   * not its row -- the Media Session actions and the keyboard shortcuts. With nothing playing
+   * it reports the whole file, which is what those paths did before there was a window.
+   */
+  function activeWindow(a) {
+    var gi = mqPlayback.activeGlobalIndex;
+    if (gi == null || !a) {
+      var dur = a && a.duration && isFinite(a.duration) ? a.duration : 0;
+      return { start: 0, end: dur, span: dur };
+    }
+    return trackWindow(gi, a);
+  }
+
+  /**
+   * The ayah being recited at `t` seconds, or null before the first one arrives.
+   *
+   * An ayah holds until the next one starts rather than for some measured length, which is
+   * also what covers the ayat the aligner could not place: the one before it stays lit while
+   * the shaykh works through them, which is what he is doing.
+   */
+  function recitingAyahAt(timings, entry, t) {
+    if (!timings || !timings.ayahs || !timings.ayahs.length) return null;
+    var found = null;
+    for (var i = 0; i < timings.ayahs.length; i++) {
+      if (timings.ayahs[i][1] > t) break;
+      found = timings.ayahs[i][0];
+    }
+    // Before the first ayah the aligner could place, but past the point the dars begins: he is
+    // reciting the ayat that come before it, so light the first one of the ruku. This is what
+    // covers the muqatta'at — الٓمٓ is a single trigram, far too common a one to be located in a
+    // transcript this rough, so Al-Baqarah's ayah 1 is never placed and would otherwise sit
+    // dark while it is being recited.
+    if (found == null && entry && entry.ayahs.length && timings.trim && t >= timings.trim.start) {
+      found = entry.ayahs[0].n;
+    }
+    return found;
+  }
+
+  /** "<globalIndex>|<ayah>" currently lit, so the DOM is only touched when it changes. */
+  var recitingKey = null;
+
+  function clearReciting() {
+    var lit = tbody.querySelectorAll(".ayat-item.is-reciting");
+    for (var i = 0; i < lit.length; i++) lit[i].classList.remove("is-reciting");
+    recitingKey = null;
+  }
+
+  /** Follow the recitation down the panel, but only while the reader is looking at it. */
+  function keepRecitingInView(el) {
+    var panel = el.closest ? el.closest(".ayat-panel") : null;
+    if (!panel) return;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var box = panel.getBoundingClientRect();
+    if (box.bottom < 0 || box.top > vh) return;   // panel is off screen: leave the page alone
+    var r = el.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= vh) return;     // already readable
+    // The highlight itself honours prefers-reduced-motion in style.css; the scroll that
+    // follows it has to agree, or the setting buys nothing.
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ block: "center", behavior: still ? "auto" : "smooth" });
+  }
+
+  function syncReciting(globalIndex, t) {
+    var row = data[globalIndex];
+    var n = recitingAyahAt(getRukuTimings(row), getRukuAyat(row), t);
+    var key = n == null ? null : globalIndex + "|" + n;
+    var panel = n == null ? null : document.getElementById(ayatPanelId(globalIndex));
+    var el = panel && panel.querySelector(".ayat-item[data-ayah=\"" + n + "\"]");
+    // Not merely "has the ayah changed?". renderTable() rebuilds the panel from scratch on
+    // search, para navigation and the recorded-only toggle, and the new rows come back without
+    // the class while `recitingKey` still matches -- so the ayah would go dark until the next
+    // one began, which in these lectures can be a minute away. Re-apply whenever the element
+    // that ought to be lit is not.
+    if (key === recitingKey && (el == null || el.classList.contains("is-reciting"))) return;
+    clearReciting();
+    if (n == null) return;
+    // Panel not rendered yet: leave the key unset so the next tick tries again rather than
+    // recording a highlight that was never applied.
+    if (!el) return;
+    recitingKey = key;
+    el.classList.add("is-reciting");
+    keepRecitingInView(el);
   }
 
   /** Reveal the ayat of the track that just started, closing the one playback opened before it. */
@@ -1096,7 +1231,7 @@
     seekBackBtn.addEventListener("click", function () {
       prepareMqTrack(globalIndex, row, src).then(function () {
         var a = mqPlayback.el;
-        if (a) a.currentTime = Math.max(0, a.currentTime - 5);
+        if (a) a.currentTime = Math.max(trackWindow(globalIndex, a).start, a.currentTime - 5);
       });
     });
 
@@ -1109,7 +1244,7 @@
     seekFwdBtn.addEventListener("click", function () {
       prepareMqTrack(globalIndex, row, src).then(function () {
         var a = mqPlayback.el;
-        if (a) a.currentTime = Math.min(a.duration || a.currentTime, a.currentTime + 5);
+        if (a) a.currentTime = Math.min(trackWindow(globalIndex, a).end || a.currentTime, a.currentTime + 5);
       });
     });
 
@@ -1157,7 +1292,8 @@
       prepareMqTrack(globalIndex, row, src).then(function () {
         var a = mqPlayback.el;
         if (a && a.duration && isFinite(a.duration)) {
-          a.currentTime = (pct / 100) * a.duration;
+          var win = trackWindow(globalIndex, a);
+          a.currentTime = win.start + (pct / 100) * win.span;
         }
       });
     }
@@ -1167,8 +1303,8 @@
       var pct = pctFromEvent(e);
       var a = mqPlayback.el;
       if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
-        var sec = (pct / 100) * a.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
+        var sec = (pct / 100) * trackWindow(globalIndex, a).span;
+        hoverTime.textContent = formatTime(sec) + " / " + formatTime(trackWindow(globalIndex, a).span);
         hoverTime.style.left = pct + "%";
         hoverTime.classList.add("is-visible");
         if (seeking) seekToPct(pct);
@@ -1226,8 +1362,8 @@
       seekToPct(pct);
       var a = mqPlayback.el;
       if (mqPlayback.activeGlobalIndex === globalIndex && a && a.duration && isFinite(a.duration)) {
-        var sec = (pct / 100) * a.duration;
-        hoverTime.textContent = formatTime(sec) + " / " + formatTime(a.duration);
+        var sec = (pct / 100) * trackWindow(globalIndex, a).span;
+        hoverTime.textContent = formatTime(sec) + " / " + formatTime(trackWindow(globalIndex, a).span);
         hoverTime.style.left = pct + "%";
         hoverTime.classList.add("is-visible");
       }
@@ -1286,11 +1422,15 @@
           a.currentTime = t;
           savePositionForIndex(globalIndex, t, dur);
           if (dur > 0) {
-            var pct = (t / dur) * 100;
+            // Window coordinates, like timeupdate uses. Changing speed while paused is not
+            // followed by a timeupdate to correct this, so getting it wrong here sticks.
+            var win = trackWindow(globalIndex, a);
+            var into = Math.min(Math.max(0, t - win.start), win.span);
+            var pct = win.span > 0 ? (into / win.span) * 100 : 0;
             progress.value = pct;
             progress.style.setProperty("--progress", pct + "%");
-            timeCurrent.textContent = formatTime(t);
-            timeDuration.textContent = formatTime(dur);
+            timeCurrent.textContent = formatTime(into);
+            timeDuration.textContent = formatTime(win.span);
             var toolbarFill = document.getElementById("toolbar-progress-fill");
             if (toolbarFill) toolbarFill.style.width = pct + "%";
           } else {
@@ -2005,11 +2145,14 @@
     a.addEventListener("ended", function () {
       var pbMode = getPlaybackMode();
       if (pbMode === "loop") {
-        a.currentTime = 0;
+        // The start of the dars, not of the file. Restarting at zero replays the branding
+        // this feature exists to skip -- 2:48 of it on para 1's R6.
+        a.currentTime = activeWindow(a).start;
         a.play();
         return;
       }
       stopMediaSessionKeepalive();
+      clearReciting();
       var gi = mqPlayback.activeGlobalIndex;
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els) {
@@ -2033,20 +2176,40 @@
       schedulePersistPlayback();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
+      if (!a.duration || !isFinite(a.duration)) return;
+
+      var win = trackWindow(gi, a);
+      // End where the dars ends rather than where the file does, so the closing announcements
+      // never play. Seeking to the end of the file is what raises `ended`, and with it the
+      // rest of the finish-a-track path — repeat, play next, clear the saved position.
+      if (win.end < a.duration - 0.05 && a.currentTime >= win.end) {
+        if (!a.paused) {
+          a.currentTime = a.duration;
+          return;
+        }
+        // Paused. `ended` only fires during playback, so jumping to EOF here would strand the
+        // progress bar and the time labels on whatever they last showed. Pin to the end of the
+        // dars instead and let the rest of this handler paint it.
+        if (a.currentTime > win.end) a.currentTime = win.end;
+      }
+      syncReciting(gi, a.currentTime);
+
       var els = getRowControlsByGlobalIndex(gi);
-      if (!els || !a.duration || !isFinite(a.duration)) return;
-      var pct = (a.currentTime / a.duration) * 100;
+      if (!els) return;
+      var into = Math.min(Math.max(0, a.currentTime - win.start), win.span);
+      var pct = win.span > 0 ? (into / win.span) * 100 : 0;
       els.progress.value = pct;
       els.progress.style.setProperty("--progress", pct + "%");
-      els.timeCurrent.textContent = formatTime(a.currentTime);
+      els.timeCurrent.textContent = formatTime(into);
+      els.timeDuration.textContent = formatTime(win.span);
       var toolbarFill = document.getElementById("toolbar-progress-fill");
       if (toolbarFill) toolbarFill.style.width = pct + "%";
       if ("mediaSession" in navigator && navigator.mediaSession.setPositionState) {
         try {
           navigator.mediaSession.setPositionState({
-            duration: a.duration,
+            duration: win.span,
             playbackRate: a.playbackRate || 1,
-            position: a.currentTime
+            position: into
           });
         } catch (e) { /* ignore */ }
       }
@@ -2056,7 +2219,7 @@
       var gi = mqPlayback.activeGlobalIndex;
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els && a.duration && isFinite(a.duration)) {
-        els.timeDuration.textContent = formatTime(a.duration);
+        els.timeDuration.textContent = formatTime(trackWindow(gi, a).span);
       }
       if (gi != null && a.paused) pulseMediaSessionIfActive();
     });
@@ -2334,28 +2497,35 @@
 
       navigator.mediaSession.setActionHandler("play", function () { audio.play(); });
       navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); });
+      // Everything below works in the dars window, because that is the only thing the OS was
+      // ever told about: the timeupdate handler reports position and duration window-relative,
+      // so the scrubber hands back a window offset and the skip buttons must stop at the
+      // window's edges. Left absolute, "seek to the middle" landed a whole intro early.
       navigator.mediaSession.setActionHandler("stop", function () {
         audio.pause();
-        audio.currentTime = 0;
+        audio.currentTime = activeWindow(audio).start;
       });
       navigator.mediaSession.setActionHandler("seekbackward", function (details) {
         var offset = (details && details.seekOffset) ? details.seekOffset : 10;
-        audio.currentTime = Math.max(0, audio.currentTime - offset);
+        audio.currentTime = Math.max(activeWindow(audio).start, audio.currentTime - offset);
       });
       navigator.mediaSession.setActionHandler("seekforward", function (details) {
         var offset = (details && details.seekOffset) ? details.seekOffset : 10;
-        audio.currentTime = Math.min(audio.duration || audio.currentTime, audio.currentTime + offset);
+        var win = activeWindow(audio);
+        audio.currentTime = Math.min(win.end || audio.currentTime, audio.currentTime + offset);
       });
       navigator.mediaSession.setActionHandler("seekto", function (details) {
         if (!details || typeof details.seekTime !== "number") return;
-        audio.currentTime = details.seekTime;
+        var win = activeWindow(audio);
+        audio.currentTime = Math.min(win.end, win.start + Math.max(0, details.seekTime));
       });
       if (audio.duration && isFinite(audio.duration)) {
         try {
+          var win = activeWindow(audio);
           navigator.mediaSession.setPositionState({
-            duration: audio.duration,
+            duration: win.span,
             playbackRate: audio.playbackRate || 1,
-            position: audio.currentTime
+            position: Math.min(Math.max(0, audio.currentTime - win.start), win.span)
           });
         } catch (e) { /* ignore */ }
       }
@@ -3094,11 +3264,12 @@
       if (!currentPlayingAudio) return;
       e.preventDefault();
       var offset = 5;
+      var win = activeWindow(currentPlayingAudio);
       if (e.key === "ArrowLeft") {
-        currentPlayingAudio.currentTime = Math.max(0, currentPlayingAudio.currentTime - offset);
+        currentPlayingAudio.currentTime = Math.max(win.start, currentPlayingAudio.currentTime - offset);
       } else {
         currentPlayingAudio.currentTime = Math.min(
-          currentPlayingAudio.duration || currentPlayingAudio.currentTime,
+          win.end || currentPlayingAudio.currentTime,
           currentPlayingAudio.currentTime + offset
         );
       }
