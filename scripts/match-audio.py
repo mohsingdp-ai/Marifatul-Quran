@@ -22,6 +22,13 @@ ASR's spelling mistakes and the difference between Uthmani orthography and plain
 Output per recording: the best-matching ruku, its margin over the runner-up, and whether
 that agrees with data.js. Low margin means "could not tell", not "data.js is wrong".
 
+That question -- "does this file hold the ruku its row claims?" -- passes cleanly when a row
+claims LESS than its file holds, so it cannot see a lecture that runs on past the row's last
+ayah. Para 21's closing row was filed as Al-Ahzab 21-27 while its recording ran to 30, and a
+clean run said nothing. So each file is also heard at the END, scored against this para's
+rukus and the next para's; a tail landing beyond the row's last ayah is reported as RUNS PAST.
+Use --tail 0 to skip that second pass.
+
 Transcripts are cached under .cache/asr/, so re-runs and wider --window retries are cheap.
 """
 import argparse, hashlib, json, os, re, subprocess, sys, unicodedata
@@ -108,13 +115,36 @@ def transcribe(model, audio: Path, window: int, model_name: str, batch: int = 0,
                                   "text": text}))
     return text
 
+def transcribe_tail(model, audio: Path, secs: int, model_name: str, batch: int = 0) -> str:
+    """Transcribe the closing `secs` of a recording, to hear where the lecture actually stops."""
+    total = audio_seconds(audio)
+    start = int(max(0, total - secs))
+    key = hashlib.md5(f"TAIL|{audio}|{start}|{secs}|{model_name}".encode()).hexdigest()
+    cached = CACHE / f"{key}.json"
+    if cached.exists():
+        return json.loads(cached.read_text())["text"]
+
+    CACHE.mkdir(parents=True, exist_ok=True)
+    wav = CACHE / f"{key}.wav"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", str(start), "-t", str(secs),
+                    "-i", str(audio), "-ar", "16000", "-ac", "1", str(wav)], check=True)
+    try:
+        kwargs = {"language": "ar", "beam_size": 1, "vad_filter": True,
+                  "condition_on_previous_text": False, "no_repeat_ngram_size": 4}
+        if batch > 0:
+            kwargs["batch_size"] = batch
+        segments, _ = model.transcribe(str(wav), **kwargs)
+        text = " ".join(s.text for s in segments)
+    finally:
+        wav.unlink(missing_ok=True)
+    cached.write_text(json.dumps({"audio": str(audio), "tail": secs, "text": text}))
+    return text
+
 # ---------------------------------------------------------------- scoring
 
-def score_para(ctx: dict, para: int, transcripts: dict) -> list:
-    """For each recording in the para, rank that para's rukus by IDF-weighted overlap."""
-    entries = ctx["book"][str(para)]
+def _weighted(ctx: dict, entries: list):
+    """Shingle set per entry, plus the IDF that weights fragments by how rare they are."""
     ruku_sets = [shingles(ruku_text(ctx, e)) for e in entries]
-
     df = {}
     for s in ruku_sets:
         for g in s:
@@ -122,20 +152,45 @@ def score_para(ctx: dict, para: int, transcripts: dict) -> list:
     total = max(len(ruku_sets), 1)
     # A fragment in every ruku carries no information; one in a single ruku carries the most.
     idf = {g: (total / c) ** 0.5 - 1.0 for g, c in df.items()}
+    return ruku_sets, idf
 
-    results = []
-    for url, text in transcripts.items():
-        heard = shingles(text)
-        ranked = []
-        for e, s in zip(entries, ruku_sets):
-            if not s:
-                ranked.append((0.0, e)); continue
-            hit = sum(idf.get(g, 0.0) for g in (heard & s))
-            norm = sum(idf.get(g, 0.0) for g in s) ** 0.5 or 1.0
-            ranked.append((hit / norm, e))
-        ranked.sort(key=lambda x: -x[0])
-        results.append((url, ranked))
-    return results
+
+def _rank(entries: list, ruku_sets: list, idf: dict, text: str) -> list:
+    heard = shingles(text)
+    ranked = []
+    for e, s in zip(entries, ruku_sets):
+        if not s:
+            ranked.append((0.0, e)); continue
+        hit = sum(idf.get(g, 0.0) for g in (heard & s))
+        norm = sum(idf.get(g, 0.0) for g in s) ** 0.5 or 1.0
+        ranked.append((hit / norm, e))
+    ranked.sort(key=lambda x: -x[0])
+    return ranked
+
+
+def score_para(ctx: dict, para: int, transcripts: dict) -> list:
+    """For each recording in the para, rank that para's rukus by IDF-weighted overlap."""
+    entries = ctx["book"][str(para)]
+    ruku_sets, idf = _weighted(ctx, entries)
+    return [(url, _rank(entries, ruku_sets, idf, text)) for url, text in transcripts.items()]
+
+
+def score_tails(ctx: dict, para: int, tails: dict) -> list:
+    """Rank each recording's closing minutes against this para's rukus and the next para's.
+
+    The next para has to be in the running: a lecture that overruns its para edge lands on a
+    ruku this para's list does not contain, and without it the tail can only pick the nearest
+    wrong answer from home.
+    """
+    entries = ctx["book"][str(para)] + ctx["book"].get(str(para + 1), [])
+    ruku_sets, idf = _weighted(ctx, entries)
+    return [(url, _rank(entries, ruku_sets, idf, text)) for url, text in tails.items()]
+
+
+def last_ayah_claimed(row: dict) -> int:
+    """Highest ayah the row's `verses` names, across both halves of a merged row."""
+    nums = [int(n) for n in re.findall(r"\d+", row.get("verses", ""))]
+    return max(nums) if nums else 0
 
 # ---------------------------------------------------------------- main
 
@@ -153,8 +208,12 @@ def main() -> int:
                     help="int8 | int8_float16 | float16 (default: int8 on cpu, float16 on cuda)")
     ap.add_argument("--batch", type=int, default=0,
                     help="batch VAD chunks per forward pass; 8-16 is a large speedup on GPU, 0 = off")
+    ap.add_argument("--tail", type=int, default=240,
+                    help="also hear the last N seconds of each file and report a lecture that "
+                         "runs past its row's last ayah; 0 skips this second pass")
     ap.add_argument("--margin", type=float, default=0.15,
-                    help="best must beat runner-up by this ratio to count as decided")
+                    help="how far a tail must beat the row's own rukus before RUNS PAST is "
+                         "reported; a closing lecture has both in earshot, so small leads are noise")
     args = ap.parse_args()
 
     ctx = load_context()
@@ -174,10 +233,10 @@ def main() -> int:
     print(f"model={args.model} device={args.device} compute={compute} batch={args.batch or 'off'}",
           file=sys.stderr)
 
-    agree = disagree = unsure = 0
+    agree = disagree = unsure = runs_past = 0
     for para in paras:
         rows = [r for r in ctx["rows"] if r["para"] == para]
-        transcripts = {}
+        transcripts, tails = {}, {}
         for i, r in enumerate(rows, 1):
             # Some rukus have no recording yet; an empty audioUrl would resolve to ROOT.
             if not r["audioUrl"]:
@@ -200,8 +259,32 @@ def main() -> int:
                     batch = 0 if batch <= 2 else batch // 2
                     print(f"      out of VRAM; retrying with batch={batch or 'off'}",
                           file=sys.stderr, flush=True)
+            if args.tail > 0:
+                tails[r["audioUrl"]] = transcribe_tail(model, audio, args.tail, args.model, batch)
 
         by_url = {r["audioUrl"]: r for r in rows}
+
+        # A tail that lands past the row's last ayah, and beats every candidate the row does
+        # cover, means the lecture kept going -- the row understates its own recording.
+        overruns = {}
+        for url, ranked in (score_tails(ctx, para, tails) if tails else []):
+            row = by_url[url]
+            end, sn = last_ayah_claimed(row), row["surahNumber"]
+            top_score, top = ranked[0]
+            past_claim = bool(top["surahNumber"]) and (
+                top["surahNumber"] > sn or (top["surahNumber"] == sn and top["start"] > end))
+            if not past_claim:
+                continue          # the tail still sits inside what the row claims
+            # A closing lecture ends with the row's own ruku still in earshot, so the lead
+            # over it is slim even when the overrun is real -- Al-Ahzab 21-30 leads by ~30%.
+            # But an unrelated ruku can edge ahead by a few percent on noise alone, which is
+            # what Saba 46-54 did against Fatir. Require the lead to clear --margin.
+            within = next((sc for sc, e in ranked
+                           if e["surahNumber"] == sn and e["start"] <= end), 0.0)
+            lead = (top_score - within) / top_score if top_score > 0 else 0.0
+            if lead >= args.margin:
+                overruns[url] = (top_score, top, within)
+
         print(f"\n===== Para {para} =====")
         print(f"{'recording':32} {'data.js says':16} {'audio sounds like':22} {'margin':>7}  verdict")
         for url, ranked in score_para(ctx, para, transcripts):
@@ -233,9 +316,16 @@ def main() -> int:
             elif kind == "disagree": disagree += 1
             else: unsure += 1
             print(f"{Path(url).name[:31]:32} {claim[:15]:16} {heard[:21]:22} {margin:7.2f}  {verdict}")
+            over = overruns.get(url)
+            if over:
+                score, entry, within = over
+                lead = f"{score:.2f} vs {within:.2f}"
+                print(f"{'':32} {'':16} tail is {entry['surah']} {entry['start']}-{entry['end']}"
+                      f"  << RUNS PAST ayah {last_ayah_claimed(row)}  ({lead})")
+                runs_past += 1
 
-    print(f"\nconsistent {agree}   suspect {disagree}   weak {unsure}")
-    return 1 if disagree else 0
+    print(f"\nconsistent {agree}   suspect {disagree}   weak {unsure}   runs past {runs_past}")
+    return 1 if (disagree or runs_past) else 0
 
 if __name__ == "__main__":
     sys.exit(main())
