@@ -28,6 +28,29 @@
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
   /** When opening `?para=&ruku=`, scroll to that ruku after the first table render. */
   var pendingRukuHighlightFromUrl = null;
+  /** Para last written to the address bar, so the URL is only rewritten when it changes. */
+  var paraInUrl = null;
+
+  /**
+   * Keep `?para=` in step with the dropdown, so a reload or a copied address lands on the
+   * para being read. replaceState rather than push: changing para is not a navigation step,
+   * and Back should still leave the app rather than walk the paras in reverse.
+   *
+   * `dropRuku` clears an inbound deep link's `ruku`, which named a row in the para just
+   * left. The first sync passes false so a shared ?para=&ruku= link survives being opened.
+   */
+  function syncParaInUrl(dropRuku) {
+    paraInUrl = String(paraSelect.value);
+    if (!window.history || !history.replaceState) return;
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.set("para", paraInUrl);
+      if (dropRuku) u.searchParams.delete("ruku");
+      history.replaceState(history.state, "", u.pathname + u.search + u.hash);
+    } catch (err) {
+      /* No history API: the app still works, the address bar just does not follow. */
+    }
+  }
 
   if (!tbody || typeof QURAN_DATA === "undefined") return;
 
@@ -977,6 +1000,7 @@
     tbody.appendChild(fragment);
     restoreTableViewState(viewState);
     tableRenderedPara = String(paraSelect.value);
+    if (paraInUrl !== null && paraInUrl !== tableRenderedPara) syncParaInUrl(true);
     if (!willResume) {
       var a = mqPlayback.el;
       var gi = mqPlayback.activeGlobalIndex;
@@ -3503,6 +3527,7 @@
         }
       }
     }
+    syncParaInUrl(false);
     var ti = document.getElementById("toolbar-transport-icon");
     if (ti) ti.innerHTML = PLAY_SVG;
   })();
