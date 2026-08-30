@@ -81,6 +81,24 @@
             <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
           </div>
         </div>
+      </div>
+      <div class="toolbar-bottom">
+        <div class="toolbar-now-playing" id="toolbar-now-playing" aria-live="polite">
+          <button type="button" class="btn-toolbar-transport" id="toolbar-play-pause-btn" disabled title="Play or pause" aria-label="Play or pause">
+            <span id="toolbar-transport-icon" class="toolbar-transport-icon"></span>
+          </button>
+          <span class="toolbar-now-playing-badge" id="toolbar-now-playing-badge" hidden></span>
+          <div class="toolbar-now-playing-text">
+            <span class="toolbar-now-playing-title" id="toolbar-now-playing-title">No track selected</span>
+            <span class="toolbar-now-playing-meta" id="toolbar-now-playing-meta">Play a recording from the list below.</span>
+          </div>
+          <button type="button" class="btn-toolbar-locate" id="goto-playing-btn" title="Scroll to current track in the list" aria-label="Scroll to current track in list" disabled>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+          </button>
+          <div class="toolbar-progress-bar" id="toolbar-progress-bar">
+            <div class="toolbar-progress-fill" id="toolbar-progress-fill"></div>
+          </div>
+        </div>
         <div class="toolbar-menu-wrap">
           <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -106,24 +124,6 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
               Settings
             </button>
-          </div>
-        </div>
-      </div>
-      <div class="toolbar-bottom">
-        <div class="toolbar-now-playing" id="toolbar-now-playing" aria-live="polite">
-          <button type="button" class="btn-toolbar-transport" id="toolbar-play-pause-btn" disabled title="Play or pause" aria-label="Play or pause">
-            <span id="toolbar-transport-icon" class="toolbar-transport-icon"></span>
-          </button>
-          <span class="toolbar-now-playing-badge" id="toolbar-now-playing-badge" hidden></span>
-          <div class="toolbar-now-playing-text">
-            <span class="toolbar-now-playing-title" id="toolbar-now-playing-title">No track selected</span>
-            <span class="toolbar-now-playing-meta" id="toolbar-now-playing-meta">Play a recording from the list below.</span>
-          </div>
-          <button type="button" class="btn-toolbar-locate" id="goto-playing-btn" title="Scroll to current track in the list" aria-label="Scroll to current track in list" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-          </button>
-          <div class="toolbar-progress-bar" id="toolbar-progress-bar">
-            <div class="toolbar-progress-fill" id="toolbar-progress-fill"></div>
           </div>
         </div>
       </div>
