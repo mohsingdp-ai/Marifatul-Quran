@@ -193,11 +193,18 @@ body {
   overflow: visible;
 }
 
+/* Both rows carry an explicit width because they are flex items of a column toolbar and
+   would otherwise stretch to the widest of the two -- and the now-playing strip's
+   min-content is wider than a 320px screen, which dragged the para row out with it,
+   pushed its second chevron past the edge and left the page scrolling sideways. With a
+   width of their own they take the toolbar's, and their children shrink inside it. */
 .toolbar-top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
+  min-width: 0;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
@@ -210,6 +217,8 @@ body {
   flex-wrap: wrap;
   align-items: stretch;
   justify-content: space-between;
+  width: 100%;
+  min-width: 0;
   gap: 0.5rem;
   padding: 0.45rem 0.7rem;
   border-radius: 0 0 var(--radius) var(--radius);
@@ -2501,6 +2510,34 @@ tr.playing .audio-progress::-moz-range-thumb {
   .toolbar-top,
   .toolbar-bottom {
     padding: 0.6rem 0.65rem;
+  }
+
+  /* Label, chevron, select, chevron come to a couple of pixels wider than a 320px
+     viewport leaves, so the second chevron drops onto a line of its own. Hold the four
+     on one line and let the select -- the only one of them that can give -- take
+     whatever the fixed items leave. */
+  .controls-left {
+    flex: 1;
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+  }
+
+  .controls-left label {
+    flex-shrink: 0;
+  }
+
+  .controls-left select {
+    flex: 1;
+    min-width: 0;
+    padding-right: 1.6rem;
+    padding-left: 0.5rem;
+  }
+
+  /* Narrower, and as tall as the select they sit either side of. */
+  .btn-para-step {
+    width: 34px;
+    height: 44px;
   }
 
   .btn-toolbar-locate {
