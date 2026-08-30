@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v13";
+const CACHE = "mq-v14";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -187,7 +187,11 @@ const AUDIO_EVICT = [
   "./audio/21/21__R16__Al-Ahzab.opus",
   "./audio/21/21__R17__Al-Ahzab.opus",
   "./audio/21/21__R18__Al-Ahzab.opus",
-  "./audio/21/21__R19__Al-Ahzab.opus"
+  "./audio/21/21__R19__Al-Ahzab.opus",
+  // Byte copies of their siblings that no row referenced; dropped, so a client holding them
+  // is holding a URL that no longer exists.
+  "./audio/22/22__R6__Al-Ahzab.opus",
+  "./audio/22/22__R19__Ya-Sin.opus"
 ];
 
 function evictCorrectedAudio() {
