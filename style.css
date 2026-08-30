@@ -244,9 +244,11 @@ body {
   box-sizing: border-box;
   background: var(--row-white);
   border-top: 1px solid var(--border);
-  /*border-radius: var(--radius) var(--radius) 0 0;*/
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.22);
-  /*padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));*/
+  /* bottom: 0 puts the bar *under* the home indicator or gesture bar on the phones that
+     have one, which swallows the lower part of the strip -- the progress line first, then
+     the transport. The inset is 0 everywhere else, so this costs those screens nothing. */
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
   animation: toolbar-dock-in 0.18s ease;
 }
 
