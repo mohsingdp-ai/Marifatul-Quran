@@ -58,6 +58,10 @@
  * the juz edge falls at 46, so the bookmark cuts a single ayah off that ruku's head to keep
  * the juz whole. Both sides now sit on a complete ruku instead.
  *
+ * Para 22 ends at Ya-Sin 21 and para 23 opens at 22. Ya-Sin's second ruku runs 13-32 and the
+ * juz edge falls at 28, so this edge sits mid-ruku either way; the recordings break at 21,
+ * and the paras follow them. Six ayat off the juz, the widest departure recorded here.
+ *
  * Para 19 ends at An-Naml 59 and para 20 opens at 60. An-Naml's fourth ruku runs 45-58 and
  * the juz edge falls at 56, so the bookmark cuts it there; para 19's closing lecture runs on
  * through 59 and para 20's opens at 60, and the paras follow the recordings.
@@ -73,7 +77,9 @@ const SETTLED = [
   /P(20|21) (opens|closes) at Al-'Ankabut (44|45)/,
   /P21 R1 Al-'Ankabut 45–51/,
   /P(19|20) (opens|closes) at An-Naml (59|60)/,
-  /P19 R4-R5 An-Naml .*59–59/
+  /P19 R4-R5 An-Naml .*59–59/,
+  /P(22|23) (opens|closes) at Ya-Sin (21|22)/,
+  /P23 R1 Ya-Sin 22–32/
 ];
 const fs = require("fs");
 const path = require("path");
