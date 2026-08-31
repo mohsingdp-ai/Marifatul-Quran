@@ -29,11 +29,19 @@ let checks = 0, fails = [];
 for (const key of Object.keys(T)) {
   const t = T[key], entry = V[key];
   const nums = entry.ayahs.map(a => a.n);
-  // 1. at each ayah's own moment (+0.5s) that ayah is lit
-  for (const [n, sec] of t.ayahs) {
+  // 1. at a moment inside each ayah's own span, that ayah is lit
+  for (let i = 0; i < t.ayahs.length; i++) {
+    const [n, sec] = t.ayahs[i];
+    const next = i + 1 < t.ayahs.length ? t.ayahs[i + 1][1] : Infinity;
+    // Inside the span, not a flat +0.5s. Two placements can land closer than half a second --
+    // 27|R13 has 0.39s between ayat 73 and 74, because Ar-Rahman's refrain recurs 31 times and
+    // so anchors almost nothing -- and a fixed probe steps over the first of them and reports
+    // the lookup as broken when what is actually true is that the data is tight. Whether two
+    // ayat are implausibly close is a question about the timings, and verify-timings.js asks it.
+    const probe = Math.min(sec + 0.5, (sec + next) / 2);
     checks++;
-    const got = recitingAyahAt(t, entry, sec + 0.5);
-    if (got !== n) fails.push(`${key} ayah ${n} at ${sec}+0.5 -> ${got}`);
+    const got = recitingAyahAt(t, entry, probe);
+    if (got !== n) fails.push(`${key} ayah ${n} at ${probe.toFixed(2)} -> ${got}`);
   }
   // 2. it stays lit right up to the next ayah
   for (let i = 0; i < t.ayahs.length - 1; i++) {

@@ -63,6 +63,11 @@ const WEAK_MIN = 4;     // placements needed before a ruku has a median worth co
 const PACE_OFF = 2.5;   // how far off the ruku's own pace an ayah may be before it is doubtful
 const PACE_MIN = 4;     // ayat needed before a ruku has a pace worth comparing against
 const LONG_TAIL = 0.55; // share that may follow the last ayah before the trim looks too long
+// Two ayat cannot really be recited this close together when every word of each is translated
+// before the next begins, so a gap this small means one of them drifted. It happens where an
+// ayah is too repeated to anchor anything: Ar-Rahman's refrain recurs 31 times, max_rep
+// discounts it to nothing, and 27|R13's ayah 73 settled 2s late, half a second from ayah 74.
+const TIGHT = 2.0;      // seconds below which adjacent placements are too close to be real
 
 /** The aligner's own working files, which carry the far side of each boundary. Optional. */
 function loadBounds() {
@@ -188,9 +193,14 @@ function main() {
     // flagging it would bury the gaps that do mean a missed ayah.
     const span = end - start;
     const gaps = [];
+    const tight = [];
     let widest = 0;
     let widestAt = 0;
     for (let i = 1; i < t.ayahs.length; i++) {
+      if (t.ayahs[i][1] - t.ayahs[i - 1][1] < TIGHT) {
+        tight.push(`${t.ayahs[i - 1][0]} and ${t.ayahs[i][0]} are ` +
+          `${(t.ayahs[i][1] - t.ayahs[i - 1][1]).toFixed(1)}s apart`);
+      }
       gaps.push(t.ayahs[i][1] - t.ayahs[i - 1][1]);
       if (t.ayahs[i][1] - t.ayahs[i - 1][1] > widest) {
         widest = t.ayahs[i][1] - t.ayahs[i - 1][1];
@@ -208,6 +218,7 @@ function main() {
           ` against ${Math.round(usual)}s usual here`);
       }
     }
+    if (tight.length) notes.push(`too close to be real: ${tight.join(", ")}`);
     // Needs at least two ayat to mean anything: a ruku of one ayah — An-Nisa 23 is one — spends
     // its whole dars after that ayah begins by definition, and reports 98% every time.
     if (t.ayahs.length > 1 && span > 0) {
