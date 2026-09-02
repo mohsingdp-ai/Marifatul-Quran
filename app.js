@@ -15,7 +15,7 @@
     document.documentElement.setAttribute("data-theme", t);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", t === "dark" ? "#0a1111" : "#0d4f4f");
+      meta.setAttribute("content", t === "dark" ? "#062a2a" : "#0a3d3d");
     }
   }
 
@@ -23,6 +23,70 @@
 
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
+
+  /** The 30 paras by the words they open with, as they are known across South Asia. The
+      Arabic is the mushaf's own spelling, lifted from the Uthmani text in verses.js. */
+  var PARA_NAMES = [
+    ["الٓمٓ", "Alif Lam Mim"], ["سَيَقُولُ", "Sayaqul"], ["تِلْكَ ٱلرُّسُلُ", "Tilka r-Rusul"],
+    ["لَن تَنَالُوا۟", "Lan Tanalu"], ["وَٱلْمُحْصَنَٰتُ", "Wal Muhsanat"], ["لَّا يُحِبُّ ٱللَّهُ", "La Yuhibbullah"],
+    ["وَإِذَا سَمِعُوا۟", "Wa Idha Sami'u"], ["وَلَوْ أَنَّنَا", "Wa Law Annana"], ["قَالَ ٱلْمَلَأُ", "Qalal Mala'"],
+    ["وَٱعْلَمُوٓا۟", "Wa'lamu"], ["يَعْتَذِرُونَ", "Ya'tadhirun"], ["وَمَا مِن دَآبَّةٍۢ", "Wa Ma Min Dabbah"],
+    ["وَمَآ أُبَرِّئُ", "Wa Ma Ubarri'u"], ["رُّبَمَا", "Rubama"], ["سُبْحَٰنَ ٱلَّذِىٓ", "Subhanalladhi"],
+    ["قَالَ أَلَمْ", "Qala Alam"], ["ٱقْتَرَبَ لِلنَّاسِ", "Iqtaraba"], ["قَدْ أَفْلَحَ", "Qad Aflaha"],
+    ["وَقَالَ ٱلَّذِينَ", "Wa Qalalladhina"], ["أَمَّنْ خَلَقَ", "Amman Khalaq"], ["ٱتْلُ مَآ أُوحِىَ", "Utlu Ma Uhiya"],
+    ["وَمَن يَقْنُتْ", "Wa Man Yaqnut"], ["وَمَا لِىَ", "Wa Ma Liya"], ["فَمَنْ أَظْلَمُ", "Fa Man Azlam"],
+    ["إِلَيْهِ يُرَدُّ", "Ilayhi Yuraddu"], ["حمٓ", "Ha Mim"], ["قَالَ فَمَا خَطْبُكُمْ", "Qala Fama Khatbukum"],
+    ["قَدْ سَمِعَ ٱللَّهُ", "Qad Sami'allah"], ["تَبَٰرَكَ ٱلَّذِى", "Tabarakalladhi"], ["عَمَّ", "Amma"]
+  ];
+
+  /** Surah names as the mushaf index writes them, with their harakat; data.js carries the
+      bare letters. Keyed by surah number. */
+  var SURAH_NAMES_AR = {
+    1: "ٱلْفَاتِحَة", 2: "ٱلْبَقَرَة", 3: "آلِ عِمْرَان", 4: "ٱلنِّسَاء", 5: "ٱلْمَائِدَة", 6: "ٱلْأَنْعَام",
+    7: "ٱلْأَعْرَاف", 8: "ٱلْأَنْفَال", 9: "ٱلتَّوْبَة", 10: "يُونُس", 11: "هُود", 12: "يُوسُف",
+    13: "ٱلرَّعْد", 14: "إِبْرَاهِيم", 15: "ٱلْحِجْر", 16: "ٱلنَّحْل", 17: "ٱلْإِسْرَاء", 18: "ٱلْكَهْف",
+    19: "مَرْيَم", 20: "طه", 21: "ٱلْأَنْبِيَاء", 22: "ٱلْحَجّ", 23: "ٱلْمُؤْمِنُون", 24: "ٱلنُّور",
+    25: "ٱلْفُرْقَان", 26: "ٱلشُّعَرَاء", 27: "ٱلنَّمْل", 28: "ٱلْقَصَص", 29: "ٱلْعَنكَبُوت", 30: "ٱلرُّوم",
+    31: "لُقْمَان", 32: "ٱلسَّجْدَة", 33: "ٱلْأَحْزَاب", 34: "سَبَإ", 35: "فَاطِر", 36: "يس",
+    37: "ٱلصَّافَّات", 38: "ص", 39: "ٱلزُّمَر", 40: "غَافِر", 41: "فُصِّلَت", 42: "ٱلشُّورَىٰ",
+    43: "ٱلزُّخْرُف", 44: "ٱلدُّخَان", 45: "ٱلْجَاثِيَة", 46: "ٱلْأَحْقَاف", 47: "مُحَمَّد", 48: "ٱلْفَتْح",
+    49: "ٱلْحُجُرَات", 50: "ق", 51: "ٱلذَّارِيَات", 52: "ٱلطُّور", 53: "ٱلنَّجْم", 54: "ٱلْقَمَر",
+    55: "ٱلرَّحْمَٰن", 56: "ٱلْوَاقِعَة", 57: "ٱلْحَدِيد", 58: "ٱلْمُجَادَلَة", 59: "ٱلْحَشْر", 60: "ٱلْمُمْتَحَنَة",
+    61: "ٱلصَّفّ", 62: "ٱلْجُمُعَة", 63: "ٱلْمُنَافِقُون", 64: "ٱلتَّغَابُن", 65: "ٱلطَّلَاق", 66: "ٱلتَّحْرِيم",
+    67: "ٱلْمُلْك", 68: "ٱلْقَلَم", 69: "ٱلْحَاقَّة", 70: "ٱلْمَعَارِج", 71: "نُوح", 72: "ٱلْجِنّ",
+    73: "ٱلْمُزَّمِّل", 74: "ٱلْمُدَّثِّر", 75: "ٱلْقِيَامَة", 76: "ٱلْإِنسَان", 77: "ٱلْمُرْسَلَات", 78: "ٱلنَّبَإ",
+    79: "ٱلنَّازِعَات", 80: "عَبَسَ", 81: "ٱلتَّكْوِير", 82: "ٱلْإِنفِطَار", 83: "ٱلْمُطَفِّفِين", 84: "ٱلْإِنشِقَاق",
+    85: "ٱلْبُرُوج", 86: "ٱلطَّارِق", 87: "ٱلْأَعْلَىٰ", 88: "ٱلْغَاشِيَة", 89: "ٱلْفَجْر", 90: "ٱلْبَلَد",
+    91: "ٱلشَّمْس", 92: "ٱللَّيْل", 93: "ٱلضُّحَىٰ", 94: "ٱلشَّرْح", 95: "ٱلتِّين", 96: "ٱلْعَلَق",
+    97: "ٱلْقَدْر", 98: "ٱلْبَيِّنَة", 99: "ٱلزَّلْزَلَة", 100: "ٱلْعَادِيَات", 101: "ٱلْقَارِعَة", 102: "ٱلتَّكَاثُر",
+    103: "ٱلْعَصْر", 104: "ٱلْهُمَزَة", 105: "ٱلْفِيل", 106: "قُرَيْش", 107: "ٱلْمَاعُون", 108: "ٱلْكَوْثَر",
+    109: "ٱلْكَافِرُون", 110: "ٱلنَّصْر", 111: "ٱلْمَسَد", 112: "ٱلْإِخْلَاص", 113: "ٱلْفَلَق", 114: "ٱلنَّاس"
+  };
+
+  function surahArabic(row) {
+    return SURAH_NAMES_AR[row.surahNumber] || row.surahArabic;
+  }
+
+  function paraName(n) {
+    return PARA_NAMES[Number(n) - 1] || ["", ""];
+  }
+
+  /** The stepper's face: "Para N" over the para's name. */
+  function syncParaFace() {
+    var num = document.getElementById("para-picker-num");
+    var name = document.getElementById("para-picker-name");
+    if (!num || !name) return;
+    var n = paraSelect.value;
+    num.textContent = "Para " + n;
+    name.textContent = paraName(n)[0];
+    name.title = paraName(n)[1];
+  }
+
+  // The native list shows the names too.
+  Array.prototype.forEach.call(paraSelect.options, function (opt) {
+    var nm = paraName(opt.value)[0];
+    if (nm) opt.textContent = "Para " + opt.value + " \u00b7 " + nm;
+  });
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
   /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
@@ -93,11 +157,6 @@
   var GITHUB_BRANCH = "v4";
 
   // Hover tooltip: show audio path
-  var pathTooltip = document.createElement("div");
-  pathTooltip.className = "ruku-path-tooltip";
-  pathTooltip.setAttribute("aria-hidden", "true");
-  document.body.appendChild(pathTooltip);
-  var activeTooltipRow = null;
 
   function buildParaIndex(rows) {
     var index = {};
@@ -302,7 +361,6 @@
 
   /* ===================== Hifz (memorization) tracking ===================== */
   var HIFZ_STORAGE_KEY = "hifz_status";
-  var HIFZ_LABELS = { "": "Not started", learning: "Learning", memorized: "Memorized" };
   var hifzAllKeysCache = null;
   var hifzValidKeysCache = null;
 
@@ -368,12 +426,24 @@
    * Offer a break between the groups while keeping each range intact, so the column is only
    * as wide as it needs to be.
    */
-  function versesHtml(text) {
+  function versesHtml(text, trailingHtml) {
+    var parts = versesParts(text);
+    return parts.map(function (g, i) {
+      var last = i === parts.length - 1;
+      return "<span class=\"verses-part\">" + escapeHtml(g) + (last ? (trailingHtml || "") : "") + "</span>";
+    }).join("<span class=\"verses-sep\">\u00b7</span>");
+  }
+
+  /** "(1-30)(31-40)" -> ["1-30", "31-40"]; a plain range stays as one part. */
+  function versesParts(text) {
     var groups = String(text).match(/\([^)]*\)/g);
-    if (!groups) return "<span class=\"verses-part\">" + escapeHtml(text) + "</span>";
-    return groups.map(function (g) {
-      return "<span class=\"verses-part\">" + escapeHtml(g) + "</span>";
-    }).join("<wbr>");
+    if (!groups) return [String(text)];
+    return groups.map(function (g) { return g.replace(/^\(|\)$/g, ""); });
+  }
+
+  /** Verse ranges as prose: "1-30 · 31-40". */
+  function versesText(text) {
+    return versesParts(text).join(" \u00b7 ");
   }
 
   /**
@@ -386,7 +456,8 @@
     var map = getHifzMap();
     if (!Object.keys(map).length) return;
     var res = Hifz.migrateKeys(map, hifzValidKeySet());
-    if (res.migrated) saveHifzMap(res.merged);
+    var norm = Hifz.normalizeMap(res.merged);
+    if (res.migrated || norm.changed) saveHifzMap(norm.map);
   }
   function todayISO() {
     var d = new Date();
@@ -395,104 +466,84 @@
       String(d.getDate()).padStart(2, "0");
   }
 
-  /** Advance a ruku's progress state (tap). Persists and returns the new entry (or null). */
-  function hifzTap(para, ruku) {
+  /** Star on or off for a ruku. Persists and returns the new entry (or null). */
+  function hifzSetMemorized(para, ruku, on) {
     var map = getHifzMap();
     var key = Hifz.keyFor(para, ruku);
-    var cur = map[key] ? map[key].s : undefined;
-    var next = Hifz.cycleStatus(cur);
-    if (next === undefined) {
-      delete map[key];
-    } else {
-      var wasRevise = map[key] && map[key].rev && next === "memorized";
-      map[key] = { s: next, rev: !!wasRevise, at: todayISO() };
-    }
+    var next = Hifz.setMemorized(map[key], on, todayISO());
+    if (next) map[key] = next; else delete map[key];
     saveHifzMap(map);
-    return map[key] || null;
+    return next;
   }
 
-  /** Toggle needs-revision on a memorized ruku (long-press / right-click). */
-  function hifzToggleRevision(para, ruku) {
+  /** One more full listen of a ruku. Persists and returns the new entry. */
+  function hifzRecordPlay(para, ruku) {
     var map = getHifzMap();
     var key = Hifz.keyFor(para, ruku);
-    var entry = map[key];
-    if (!entry || entry.s !== "memorized") return entry || null;
-    var updated = Hifz.applyRevisionToggle(entry);
-    updated.at = todayISO();
-    map[key] = updated;
+    map[key] = Hifz.recordPlay(map[key], todayISO());
     saveHifzMap(map);
-    return updated;
+    return map[key];
   }
 
-  function paintHifzPill(pill, entry) {
-    var state = entry ? entry.s : "";
-    var revise = !!(entry && entry.rev);
-    pill.dataset.state = state;
-    pill.dataset.revise = revise ? "true" : "false";
-    var label = revise ? "Revise" : HIFZ_LABELS[state];
-    pill.querySelector(".hifz-pill-label").textContent = label;
-    pill.setAttribute("aria-label",
-      "Memorization: " + label + ". Tap to advance, hold to flag for revision.");
-    pill.setAttribute("title", "Tap to advance · Hold to flag for revision");
+  /* A check in a circle: hollow until the ruku is memorized, then filled. */
+  var MEMORIZED_OFF_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 7.58L10 14.17l-3.59-3.58L5 12l5 5 8-8zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>';
+  var MEMORIZED_ON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
+  var LISTENS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>';
+
+  /** Push an entry onto a card's memorized mark and listen count. */
+  function paintHifzControls(wrap, entry) {
+    var mark = wrap.querySelector(".hifz-mark");
+    var playsEl = wrap.querySelector(".hifz-plays");
+    var on = Hifz.isMemorized(entry);
+    var n = Hifz.plays(entry);
+    var label = Hifz.playsLabel(n);
+    mark.innerHTML = on ? MEMORIZED_ON_SVG : MEMORIZED_OFF_SVG;
+    mark.setAttribute("aria-pressed", on ? "true" : "false");
+    mark.setAttribute("aria-label", on ? "Memorized. Tap to unmark." : "Not memorized. Tap to mark as memorized.");
+    mark.title = on ? "Memorized" : "Mark as memorized";
+    playsEl.hidden = !n;
+    playsEl.querySelector(".hifz-plays-count").textContent = label;
+    var listened = "Listened " + label + (n === 1 ? " time" : " times") + " in full";
+    playsEl.setAttribute("aria-label", listened);
+    playsEl.title = listened;
   }
 
-  function buildHifzPill(row) {
+  /** A check to mark a ruku memorized, and how many times its recording has been heard through. */
+  function buildHifzControls(row) {
     var para = row.para, ruku = row.rukuInPara;
-    var pill = document.createElement("button");
-    pill.type = "button";
-    pill.className = "hifz-pill";
-    var dot = document.createElement("span");
-    dot.className = "hifz-pill-dot";
-    dot.setAttribute("aria-hidden", "true");
-    var label = document.createElement("span");
-    label.className = "hifz-pill-label";
-    pill.appendChild(dot);
-    pill.appendChild(label);
+    var wrap = document.createElement("div");
+    wrap.className = "hifz-controls";
 
-    var map = getHifzMap();
-    paintHifzPill(pill, map[Hifz.keyFor(para, ruku)]);
+    var mark = document.createElement("button");
+    mark.type = "button";
+    mark.className = "hifz-mark";
 
-    var longPressTimer = null;
-    var longPressed = false;
+    var playsEl = document.createElement("span");
+    playsEl.className = "hifz-plays";
+    playsEl.innerHTML = LISTENS_SVG + '<span class="hifz-plays-count"></span>';
 
-    function doTap() {
-      var entry = hifzTap(para, ruku);
-      paintHifzPill(pill, entry);
+    wrap.appendChild(mark);
+    wrap.appendChild(playsEl);
+    paintHifzControls(wrap, getHifzMap()[Hifz.keyFor(para, ruku)]);
+
+    mark.addEventListener("click", function () {
+      var on = mark.getAttribute("aria-pressed") !== "true";
+      paintHifzControls(wrap, hifzSetMemorized(para, ruku, on));
       renderHifzMeter();
-    }
-    function doRevision() {
-      var entry = hifzToggleRevision(para, ruku);
-      paintHifzPill(pill, entry);
-      renderHifzMeter();
-    }
-
-    pill.addEventListener("pointerdown", function () {
-      longPressed = false;
-      longPressTimer = setTimeout(function () {
-        longPressed = true;
-        doRevision();
-      }, 450);
-    });
-    function cancelLongPress() {
-      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-    }
-    pill.addEventListener("pointerup", cancelLongPress);
-    pill.addEventListener("pointerleave", cancelLongPress);
-    pill.addEventListener("pointercancel", cancelLongPress);
-
-    pill.addEventListener("click", function () {
-      if (longPressed) { longPressed = false; return; }
-      doTap();
-    });
-    pill.addEventListener("contextmenu", function (e) {
-      e.preventDefault();
-      doRevision();
-    });
-    pill.addEventListener("keydown", function (e) {
-      if (e.key === "r" || e.key === "R") { e.preventDefault(); doRevision(); }
     });
 
-    return pill;
+    return wrap;
+  }
+
+  /** A recording reached its end: one more listen for its ruku, on the card and the meter. */
+  function countListen(gi) {
+    if (gi == null || !data[gi] || !getHifzEnabled()) return;
+    var row = data[gi];
+    var entry = hifzRecordPlay(row.para, row.rukuInPara);
+    var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+    var wrap = tr && tr.querySelector(".hifz-controls");
+    if (wrap) paintHifzControls(wrap, entry);
+    renderHifzMeter();
   }
 
   function renderHifzMeter() {
@@ -503,9 +554,10 @@
     var p = Hifz.computeParaProgress(map, para, rukusForPara(para));
     var overall = Hifz.computeOverall(map, hifzAllKeys());
 
-    document.getElementById("hifz-meter-para").textContent = "Para " + para;
+    document.getElementById("hifz-meter-para").textContent =
+      p.memorized + " of " + p.total + " rukus memorized";
     document.getElementById("hifz-meter-total").textContent =
-      overall.memorized + " / " + overall.total + " memorized";
+      overall.memorized + " / " + overall.total + " overall";
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
     var fill = document.getElementById("hifz-meter-fill");
@@ -523,15 +575,7 @@
       span.textContent = text;
       counts.appendChild(span);
     }
-    addCount("memorized", p.memorized, p.memorized + "/" + p.total + " memorized");
-    addCount("learning", p.learning, p.learning + " learning");
-    addCount("revise", p.revise, p.revise + " to revise");
-    if (!p.memorized && !p.learning) {
-      var span = document.createElement("span");
-      span.className = "hifz-count";
-      span.textContent = "No progress in this Para yet";
-      counts.appendChild(span);
-    }
+    addCount("listened", p.listened, p.listened + " of " + p.total + " listened in full");
   }
 
   function exportHifz() {
@@ -700,7 +744,7 @@
     var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
       "<div class=\"ayat-head\">" +
         "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
-          row.surahNumber + ":" + escapeHtml(row.verses) + "</span>" +
+          row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
         "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
       "</div>";
 
@@ -715,7 +759,7 @@
     });
     html += "</div>";
 
-    html += "<p class=\"ayat-source\">Uthmani script</p></div>";
+    html += "</div>";
 
     td.innerHTML = html;
     tr.appendChild(td);
@@ -847,30 +891,44 @@
     var tr = document.createElement("tr");
     tr.dataset.globalIndex = globalIndex;
 
-    var rukuLabel = rukuDisplay(row) + " (Para " + row.para + ")";
-    var surahArabicCell = row.surahNumber + " " + row.surahArabic;
+    // Three lines: the surah in both scripts with its number, then para and ruku, then ayat.
+    var surahLine =
+      "<span class=\"card-arabic\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(row.surahArabic) + "</span>" +
+      "<span class=\"card-sep\">\u00b7</span>" +
+      "<span class=\"card-surah\">" + escapeHtml(row.surah) + "</span>" +
+      "<span class=\"card-sep\">\u00b7</span>" +
+      "<span class=\"card-num\">" + escapeHtml(String(row.surahNumber)) + "</span>";
+    // Two titles, one shown per width: the surah on a wide screen, "Para N · R1–R2" on a phone.
+    var rukuTag = escapeHtml(String(rukuDisplay(row)).replace(/-/g, "\u2013"));
+    var rukuLine =
+      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span></span>" +
+      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + "</span>";
+    // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
+    var surahArabicCell =
+      "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
+      "<span class=\"surah-ar\" lang=\"ar\">" + escapeHtml(surahArabic(row)) + "</span>";
     var audioSrc = getAudioSrc(row, globalIndex);
-    var savedPath = normalizeAudioPath(row.audioUrl);
     var hasAyat = !!getRukuAyat(row);
+    var ayahLabel = "<span class=\"verses-label\">Ayah</span>";
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
         "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
-        versesHtml(row.verses) + AYAT_CHEVRON_SVG + "</button>"
-      : versesHtml(row.verses);
+        AYAT_BOOK_SVG + ayahLabel + versesHtml(row.verses, AYAT_CHEVRON_SVG) + "</button>"
+      : "<span class=\"verses-plain\">" + ayahLabel + versesHtml(row.verses) + "</span>";
 
     if (hasAyat && isAyatOpen(row)) tr.classList.add("has-ayat-open");
 
     tr.innerHTML =
       "<td class=\"col-hifz hifz-cell\" data-label=\"Hifz\"></td>" +
-      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
-      "<td class=\"col-surah\" data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
+      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + rukuLine + "</td>" +
+      "<td class=\"col-surah\" data-label=\"Surah\">" + surahLine + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
-      "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
+      "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + surahArabicCell + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
       (showActions ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
     var hifzCell = tr.querySelector(".hifz-cell");
-    if (hifzCell) hifzCell.appendChild(buildHifzPill(row));
+    if (hifzCell) hifzCell.appendChild(buildHifzControls(row));
 
     var audioCell = tr.querySelector(".audio-cell");
     var actionCell = showActions ? tr.querySelector(".action-cell") : null;
@@ -889,7 +947,6 @@
       buildValidateControl(actionCell, row);
     }
 
-    tr.dataset.pathText = savedPath || "(No recording)";
     return tr;
   }
 
@@ -1068,13 +1125,14 @@
 
     if (filtered.length === 0) {
       var emptyTr = document.createElement("tr");
-      emptyTr.innerHTML = "<td colspan=\"7\" style=\"text-align:center;padding:1rem;color:#555;\">No recordings in this Para</td>";
+      emptyTr.innerHTML = "<td colspan=\"7\" class=\"table-empty\">No recordings in this Para</td>";
       fragment.appendChild(emptyTr);
     }
 
     tbody.appendChild(fragment);
     restoreTableViewState(viewState);
     tableRenderedPara = String(paraSelect.value);
+    syncParaFace();
     if (paraInUrl !== null && paraInUrl !== tableRenderedPara) syncParaInUrl(true);
     syncParaStepButtons();
     if (!willResume) {
@@ -1093,13 +1151,6 @@
       syncToolbarTransport();
     }
     renderHifzMeter();
-  }
-
-  function positionPathTooltip(tr) {
-    var rect = tr.getBoundingClientRect();
-    pathTooltip.style.left = rect.left + "px";
-    pathTooltip.style.top = (rect.top - 6) + "px";
-    pathTooltip.style.transform = "translateY(-100%)";
   }
 
   function buildAudioPlayer(tr, audioCell, row, globalIndex, src, clearPlayingFn, playbackResume) {
@@ -1411,11 +1462,12 @@
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
   var WHATSAPP_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2.005c-5.52 0-10 4.48-10 10.002 0 1.76.46 3.47 1.34 4.98L2.05 22l5.08-1.34c1.46.8 3.12 1.23 4.91 1.23 5.52 0 10-4.48 10-10.002 0-2.67-1.04-5.18-2.93-7.07a9.95 9.95 0 0 0-7.07-2.893zm.03 17.92c-1.5 0-2.97-.4-4.25-1.15l-.3-.18-3.18.84.85-3.11-.2-.31a7.764 7.764 0 0 1-1.2-4.12c0-4.28 3.47-7.75 7.75-7.75 2.07 0 4.02.81 5.48 2.28a7.684 7.684 0 0 1 2.25 5.47c-.01 4.28-3.48 7.76-7.75 7.76zm4.26-4.51c-.24-.12-1.43-.7-1.66-.78-.22-.08-.39-.12-.56.12-.17.24-.64.78-.79.94-.15.16-.3.18-.54.06-.24-.12-1.02-.37-1.95-1.2-.72-.64-1.2-1.43-1.34-1.67-.15-.24-.02-.37.11-.49.12-.12.24-.27.37-.4.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.53-1.26-.73-1.73-.19-.46-.39-.39-.53-.41h-.45c-.15 0-.4.06-.61.3-.21.24-.81.79-.81 1.92s.83 2.23.94 2.39c.12.16 1.62 2.48 3.93 3.48.55.23.98.37 1.31.47.55.18 1.05.16 1.44.09.44-.07 1.42-.58 1.62-1.14.21-.56.21-1.03.15-1.13-.06-.1-.22-.16-.46-.28z"/></svg>';
+  var AYAT_BOOK_SVG = '<svg class="verses-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>';
   var AYAT_CHEVRON_SVG = '<svg class="verses-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
-  var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
-  var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.5 8A10 10 0 1 0 19.6 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">+5</text></svg>';
+  var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
+  var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.5 8A10 10 0 1 0 19.6 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">+5</text></svg>';
 
   function resolveUrl(url) {
     var a = document.createElement("a");
@@ -1869,51 +1921,58 @@
   }
 
   /* ----------------------------------------------------------------- */
-  /* Docked mini-player — once a track is loaded and the toolbar has    */
-  /* scrolled off the top, the now-playing strip pins to the bottom of  */
-  /* the viewport so playback stays controllable while the reader       */
-  /* scrolls through an open ayat panel. It is the same element with    */
-  /* the same ids throughout, so every sync path keeps working.         */
+  /* Docked mini-player -- while a track is loaded and the card that owns  */
+  /* it is out of view, the now-playing strip pins to the bottom of the   */
+  /* viewport so playback stays controllable. While the card itself is on */
+  /* screen the strip stays hidden: the card already shows everything the */
+  /* strip would. Same element, same ids throughout, so every sync path   */
+  /* keeps working.                                                       */
   /* ----------------------------------------------------------------- */
   var toolbarBottom = document.querySelector(".toolbar-bottom");
-  var toolbarDockSpacer = document.getElementById("toolbar-dock-spacer");
-  var toolbarDockSentinel = document.getElementById("toolbar-dock-sentinel");
-  /** True while the toolbar's place in the page sits above the viewport. */
-  var toolbarScrolledOff = false;
+  /** The active track's card, as far as the observer is concerned. */
+  var dockedRow = null;
+  var dockedRowOffscreen = false;
+  var dockObserver = typeof IntersectionObserver === "function"
+    ? new IntersectionObserver(function (entries) {
+        var entry = entries[entries.length - 1];
+        if (entry.target !== dockedRow) return;
+        dockedRowOffscreen = entry.intersectionRatio < 0.5;
+        applyToolbarDock();
+      }, { threshold: [0, 0.5, 1] })
+    : null;
 
   function toolbarHasTrack() {
     var shell = document.getElementById("toolbar-now-playing");
     return !!shell && (shell.classList.contains("is-playing") || shell.classList.contains("is-paused"));
   }
 
-  function syncToolbarDock() {
-    if (!toolbarBottom || !toolbarDockSpacer) return;
-    var wantDocked = toolbarScrolledOff && toolbarHasTrack();
+  function applyToolbarDock() {
+    if (!toolbarBottom) return;
+    // No card to watch (the track belongs to another para): the bar is the only control left.
+    var wantDocked = toolbarHasTrack() && (!dockedRow || dockedRowOffscreen);
     if (wantDocked === toolbarBottom.classList.contains("is-docked")) return;
-    if (wantDocked) {
-      // Measure while the strip is still in flow so the spacer fills exactly
-      // the gap it leaves and the rows below it do not jump.
-      toolbarDockSpacer.style.height = toolbarBottom.offsetHeight + "px";
-      toolbarDockSpacer.classList.add("is-active");
-      toolbarBottom.classList.add("is-docked");
-      document.body.classList.add("has-docked-player");
-    } else {
-      toolbarBottom.classList.remove("is-docked");
-      document.body.classList.remove("has-docked-player");
-      toolbarDockSpacer.classList.remove("is-active");
-      toolbarDockSpacer.style.height = "";
-    }
+    toolbarBottom.classList.toggle("is-docked", wantDocked);
+    document.body.classList.toggle("has-docked-player", wantDocked);
   }
 
-  // The sentinel sits just below the toolbar and never moves (the spacer keeps
-  // the toolbar's height constant), so observing it cannot feed back on itself.
-  if (toolbarDockSentinel && typeof IntersectionObserver === "function") {
-    new IntersectionObserver(function (entries) {
-      var entry = entries[entries.length - 1];
-      // Gone off the *top*, not merely still below the fold.
-      toolbarScrolledOff = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-      syncToolbarDock();
-    }).observe(toolbarDockSentinel);
+  /** Point the observer at the active track's card (rows are rebuilt on every render). */
+  function syncToolbarDock() {
+    var row = toolbarHasTrack() ? tbody.querySelector("tr.playing") : null;
+    if (row !== dockedRow) {
+      if (dockObserver) {
+        if (dockedRow) dockObserver.unobserve(dockedRow);
+        if (row) dockObserver.observe(row);
+      }
+      dockedRow = row;
+      if (row) {
+        var r = row.getBoundingClientRect();
+        var visible = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+        dockedRowOffscreen = visible < r.height * 0.5;
+      } else {
+        dockedRowOffscreen = true;
+      }
+    }
+    applyToolbarDock();
   }
 
   /** Toolbar strip: shows which ruku is active (playing or paused). */
@@ -1946,7 +2005,7 @@
     }
 
     titleEl.textContent = "Para " + row.para + " · Ruku " + rukuDisplay(row);
-    metaEl.textContent = row.surah + " · " + row.verses;
+    metaEl.textContent = row.surah + " · " + versesText(row.verses);
     if (parseInt(paraSelect.value, 10) !== row.para) {
       metaEl.textContent += " · Para " + row.para;
     }
@@ -2079,6 +2138,7 @@
 
     a.addEventListener("ended", function () {
       var pbMode = getPlaybackMode();
+      countListen(mqPlayback.activeGlobalIndex);
       if (pbMode === "loop") {
         a.currentTime = 0;
         a.play();
@@ -2595,29 +2655,6 @@
     if (tr) toggleAyat(tr.dataset.globalIndex);
   });
 
-  tbody.addEventListener("mouseover", function (e) {
-    // Ayat rows carry no recording path, so they get no path tooltip.
-    var tr = e.target.closest("tr:not(.ayat-row)");
-    if (!tr || !tbody.contains(tr) || tr === activeTooltipRow) return;
-    activeTooltipRow = tr;
-    pathTooltip.textContent = tr.dataset.pathText || "(No recording)";
-    pathTooltip.classList.add("is-visible");
-    positionPathTooltip(tr);
-  });
-
-  tbody.addEventListener("mouseout", function (e) {
-    var tr = e.target.closest("tr");
-    if (!tr || tr !== activeTooltipRow) return;
-    var related = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest("tr") : null;
-    if (related === tr) return;
-    activeTooltipRow = null;
-    pathTooltip.classList.remove("is-visible");
-  });
-
-  tbody.addEventListener("mousemove", function () {
-    if (activeTooltipRow) positionPathTooltip(activeTooltipRow);
-  });
-
   // GitHub API config (used for file upload)
 
   function getGitHubToken() {
@@ -2867,20 +2904,29 @@
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsBackdrop.addEventListener("click", closeSettings);
 
-  /* Toolbar three-dot menu */
-  var toolbarMenuBtn = document.getElementById("toolbar-menu-btn");
+  /* Three-dot menu: one dropdown, opened from the app bar or from the docked bar. The
+     dropdown moves under whichever button opened it, so it drops from the app bar and
+     rises from the docked bar. */
+  var toolbarMenuBtns = [document.getElementById("toolbar-menu-btn"), document.getElementById("dock-menu-btn")]
+    .filter(Boolean);
   var toolbarMenuDropdown = document.getElementById("toolbar-menu-dropdown");
   function closeToolbarMenu() {
-    if (toolbarMenuDropdown) {
-      toolbarMenuDropdown.classList.remove("is-open");
-      if (toolbarMenuBtn) toolbarMenuBtn.setAttribute("aria-expanded", "false");
-    }
+    if (!toolbarMenuDropdown) return;
+    toolbarMenuDropdown.classList.remove("is-open");
+    toolbarMenuBtns.forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
   }
-  if (toolbarMenuBtn && toolbarMenuDropdown) {
-    toolbarMenuBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var open = toolbarMenuDropdown.classList.toggle("is-open");
-      toolbarMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (toolbarMenuDropdown) {
+    toolbarMenuBtns.forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var wrap = btn.parentNode;
+        var wasOpen = toolbarMenuDropdown.classList.contains("is-open") && toolbarMenuDropdown.parentNode === wrap;
+        closeToolbarMenu();
+        if (wasOpen) return;
+        if (toolbarMenuDropdown.parentNode !== wrap) wrap.appendChild(toolbarMenuDropdown);
+        toolbarMenuDropdown.classList.add("is-open");
+        btn.setAttribute("aria-expanded", "true");
+      });
     });
     toolbarMenuDropdown.addEventListener("click", function () {
       closeToolbarMenu();
@@ -3673,8 +3719,8 @@
     },
     {
       title: "Track memorization (Hifz)",
-      body: "Tap the Hifz pill on a ruku to mark it as memorized — tap again to flag it for revision. The bar above the list shows your progress for this Para.",
-      selector: "#ruku-tbody .hifz-pill",
+      body: "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
+      selector: "#ruku-tbody .hifz-mark",
     },
   ];
 

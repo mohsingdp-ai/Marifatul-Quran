@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0d4f4f",
-  "theme_color": "#0d4f4f",
+  "theme_color": "#062a2a",
   "lang": "en",
   "icons": [
     {
@@ -22,5 +22,12 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://mohsingdp-ai.github.io/Marifatul-Quran/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false
 }

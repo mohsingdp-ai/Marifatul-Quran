@@ -16,7 +16,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d4f4f">
+  <meta name="theme-color" content="#062a2a">
 
   <!-- iOS home-screen support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,18 +29,58 @@
 <body>
   <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
   <header class="header">
-    <h1>Marifatul Quran</h1>
-    <p class="subtitle">Ruku Recordings</p>
+    <div class="header-brand">
+      <img class="header-logo" src="icon-192.png" width="44" height="44" alt="" aria-hidden="true">
+      <div class="header-text">
+        <h1>Marifatul Quran</h1>
+        <p class="subtitle">Ruku Recordings</p>
+      </div>
+    </div>
+    <!-- Install lives in the app bar as well as the menu; the same script drives both. -->
+    <div class="header-install-wrap" id="install-header-wrap">
+      <button type="button" class="btn-toolbar-menu header-install" id="install-header-btn" aria-label="Install app" title="Install this app on your phone">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 1.5h8a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-15a3 3 0 0 1 3-3zm-1 3h10v13H7z"/><path d="M12 6.75v5.5M9.6 10.2 12 12.6l2.4-2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="20" r="1.1" fill="currentColor" opacity="0.55"/></svg>
+      </button>
+      <span class="header-install-badge" aria-hidden="true">New</span>
+    </div>
+    <div class="toolbar-menu-wrap header-menu">
+      <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
+      </button>
+      <div class="toolbar-menu-dropdown" id="toolbar-menu-dropdown">
+        <button type="button" class="toolbar-menu-item" id="download-para-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download para
+        </button>
+        <button type="button" class="toolbar-menu-item" id="install-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Install app
+        </button>
+        <button type="button" class="toolbar-menu-item" id="share-bulk-links-btn" title="Select rukus as tiles, then copy or share title + player link text (opaque link when available)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Share rukus
+        </button>
+        <button type="button" class="toolbar-menu-item" id="show-guide-btn" title="Replay the first-run guided walkthrough">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Show walkthrough
+        </button>
+        <button type="button" class="toolbar-menu-item" id="settings-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </button>
+      </div>
+    </div>
   </header>
 
   <main class="main">
     <div class="controls toolbar">
       <div class="toolbar-top">
         <div class="controls-left">
-          <label for="para-select">Para (Juz)</label>
+          <label for="para-select" class="sr-only">Para (Juz)</label>
           <button type="button" class="btn-para-step" id="para-prev" aria-label="Previous Para" title="Previous Para">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
+          <div class="para-picker">
           <select id="para-select" aria-label="Select Para">
             <option value="1" selected>Para 1</option>
             <option value="2">Para 2</option>
@@ -73,6 +113,11 @@
             <option value="29">Para 29</option>
             <option value="30">Para 30</option>
           </select>
+          <div class="para-picker-face" aria-hidden="true">
+            <span class="para-picker-num" id="para-picker-num">Para 1</span>
+            <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
+          </div>
+          </div>
           <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -99,40 +144,15 @@
             <div class="toolbar-progress-fill" id="toolbar-progress-fill"></div>
           </div>
         </div>
-        <div class="toolbar-menu-wrap">
-          <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
+        <!-- The same menu as the app bar's, reachable while the bar is docked; the dropdown
+             moves to whichever button opened it. -->
+        <div class="toolbar-menu-wrap dock-menu">
+          <button type="button" class="btn-toolbar-menu" id="dock-menu-btn" aria-label="Menu" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
-          <div class="toolbar-menu-dropdown" id="toolbar-menu-dropdown">
-            <button type="button" class="toolbar-menu-item" id="download-para-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download para
-            </button>
-            <button type="button" class="toolbar-menu-item" id="install-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-              Install app
-            </button>
-            <button type="button" class="toolbar-menu-item" id="share-bulk-links-btn" title="Select rukus as tiles, then copy or share title + player link text (opaque link when available)">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              Share rukus
-            </button>
-            <button type="button" class="toolbar-menu-item" id="show-guide-btn" title="Replay the first-run guided walkthrough">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Show walkthrough
-            </button>
-            <button type="button" class="toolbar-menu-item" id="settings-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              Settings
-            </button>
-          </div>
         </div>
       </div>
-      <!-- Holds the gap the now-playing strip leaves behind once it docks to the
-           bottom of the viewport, so the page below does not jump. -->
-      <div class="toolbar-dock-spacer" id="toolbar-dock-spacer" aria-hidden="true"></div>
     </div>
-    <!-- Never moves: docking is triggered when this scrolls above the viewport. -->
-    <div class="toolbar-dock-sentinel" id="toolbar-dock-sentinel" aria-hidden="true"></div>
 
     <div class="hifz-meter" id="hifz-meter" aria-live="polite">
       <div class="hifz-meter-head">
@@ -389,6 +409,7 @@
   <script src="timings.js"></script>
   <script src="hifz.js"></script>
   <script src="app.js"></script>
+  <script src="material.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {
@@ -399,7 +420,23 @@
   <script>
     (function () {
       var btn = document.getElementById("install-btn");
+      var headerWrap = document.getElementById("install-header-wrap");
+      var headerBtn = document.getElementById("install-header-btn");
       var deferred = null;
+      var INSTALLED_KEY = "pwa_installed";
+      function hideInstall() {
+        btn.style.display = "none";
+        if (headerWrap) headerWrap.style.display = "none";
+      }
+      // Once we know the app is installed, keep the buttons away on later visits too --
+      // a browser tab does not know it is running beside an installed copy.
+      function markInstalled() {
+        try { localStorage.setItem(INSTALLED_KEY, "true"); } catch (e) { /* storage off */ }
+        hideInstall();
+      }
+      function rememberedInstalled() {
+        try { return localStorage.getItem(INSTALLED_KEY) === "true"; } catch (e) { return false; }
+      }
       var isReinstall = location.search.indexOf("reinstall=") !== -1;
       var isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
                          window.navigator.standalone === true;
@@ -407,12 +444,23 @@
       // Clean the reinstall param from URL history
       if (isReinstall) {
         history.replaceState(null, "", location.pathname);
+        try { localStorage.removeItem(INSTALLED_KEY); } catch (e) { /* storage off */ }
       }
 
       // Hide install button when running as installed PWA (unless reinstalling)
       if (isStandalone && !isReinstall) {
-        btn.style.display = "none";
+        markInstalled();
         return;
+      }
+      if (rememberedInstalled() && !isReinstall) {
+        hideInstall();
+        return;
+      }
+      // Chrome can say whether this app is installed when the manifest lists itself.
+      if (navigator.getInstalledRelatedApps) {
+        navigator.getInstalledRelatedApps().then(function (apps) {
+          if (apps && apps.length) markInstalled();
+        }).catch(function () { /* not supported here */ });
       }
 
       // Capture native install prompt when browser fires it
@@ -428,7 +476,7 @@
       });
 
       window.addEventListener("appinstalled", function () {
-        btn.style.display = "none";
+        markInstalled();
         deferred = null;
       });
 
@@ -444,6 +492,8 @@
           }
         }, 500);
       }
+
+      if (headerBtn) headerBtn.addEventListener("click", function () { btn.click(); });
 
       btn.addEventListener("click", function () {
         if (deferred) {

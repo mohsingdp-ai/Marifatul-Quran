@@ -1,98 +1,179 @@
-/* Marifatul Quran - Ruku Player - Islamic-themed teal design */
+/* Marifatul Quran - Ruku Player
+   Material Design 3 styling: tonal colour roles, the M3 type scale, tonal elevation with the
+   five M3 shadow levels, state layers on every interactive surface and a ripple on press
+   (material.js). Layout rules the app depends on -- the docked mini-player, the ruku card
+   grid, the share sheet, the 320px fallbacks -- are kept as they were; only the visual
+   language moved. */
 
+/* ================================================================== */
+/* Design tokens                                                       */
+/* ================================================================== */
 :root {
-  --teal-dark: #0d4f4f;
-  --teal-header: #0d5c5c;
-  --teal-accent: #0f7a7a;
-  --teal-light: #e8f5f5;
-  --row-white: #ffffff;
-  --row-gray: #f4f8f8;
-  --text-primary: #1a1a1a;
-  --text-muted: #666;
-  --verse-link: #0a6b6b;
-  --arabic-gold: #8b6914;
-  --playing-bg: #ddf0f0;
-  --border: #d0d8d8;
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
-  /* One radius for every surface: toolbar, ayat panel, ruku card. 12px reads softer than
-     the 8px the table-era layout used, and matches the cards it now sits beside. */
-  --radius: 12px;
-  /* Theme extras (light defaults) */
-  --page-bg: #eef4f4;
-  --modal-bg: #ffffff;
-  --row-hover: #e3eded;
-  --volume-track: #dde4e4;
-  --slider-thumb: #ffffff;
-  --input-border-soft: #ccc;
-  --toggle-track-off: #ccc;
-  --offline-hover-bg: #e8f5f5;
-  --success-bg: #e8f5e9;
-  --success-fg: #2e7d32;
-  --muted-chip-bg: #e8e8e8;
-  --warn-chip-bg: #fef3e0;
-  --warn-chip-fg: #8b4513;
-  --validate-pending-bg: #f5f5f5;
-  --validate-pending-border: #ccc;
-  --validate-pending-fg: #888;
+  color-scheme: light;
+
+  /* --- Colour roles (light). The brand teal, saturated, with gold for the mushaf. --- */
+  --md-primary: #0a7a7a;
+  --md-on-primary: #ffffff;
+  --md-primary-container: #b3eeec;
+  --md-on-primary-container: #002222;
+  --md-secondary: #3f6a69;
+  --md-on-secondary: #ffffff;
+  --md-secondary-container: #cdeceb;
+  --md-on-secondary-container: #0b2b2b;
+  --md-tertiary: #8a6a12;
+  --md-on-tertiary: #ffffff;
+  --md-tertiary-container: #ffe4a6;
+  --md-on-tertiary-container: #2b1d00;
+  --md-error: #b3261e;
+  --md-on-error: #ffffff;
+  --md-error-container: #f9dedc;
+  --md-on-error-container: #410e0b;
+  --md-success: #2e7d32;
+  --md-on-success: #ffffff;
+  --md-success-container: #c8e6c9;
+  --md-on-success-container: #0a2e12;
+  --md-surface: #e9f3f2;
+  --md-surface-dim: #c9dbda;
+  --md-surface-bright: #f7fcfb;
+  --md-surface-container-lowest: #ffffff;
+  --md-surface-container-low: #f2f8f7;
+  --md-surface-container: #dcebea;
+  --md-surface-container-high: #d0e3e2;
+  --md-surface-container-highest: #c3d9d8;
+  --md-on-surface: #0f2424;
+  --md-on-surface-variant: #3d5a59;
+  --md-outline: #6b8c8b;
+  --md-outline-variant: #b5d0cf;
+  --md-inverse-surface: #0f3535;
+  --md-inverse-on-surface: #e6f4f3;
+  --md-inverse-primary: #3ddbd9;
+  --md-scrim: rgba(3, 20, 20, 0.4);
   --wa-color: #128c7e;
-  --wa-hover-bg: #e7fce8;
-  --wa-hover-border: #25d366;
-  --wa-hover-fg: #25d366;
-  --teal-tint-hover: rgba(15, 122, 122, 0.06);
-  --teal-tint-low: rgba(15, 122, 122, 0.05);
-  --admin-badge-bg: #e8f5f5;
-  --tooltip-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-  --loop-active-bg: rgba(15, 122, 122, 0.1);
-  /* Stacked-row labels (mobile); must stay readable on --row-white / --row-gray */
-  --mobile-td-label: var(--teal-header);
+
+  /* The app bar wears the brand: deep teal with the gold rule the original masthead had. */
+  --md-app-bar: linear-gradient(135deg, #0a3d3d 0%, #0d4f4f 45%, #0f6060 100%);
+  --md-on-app-bar: #ffffff;
+  --md-app-bar-subtitle: rgba(255, 255, 255, 0.78);
+
+  /* Surfaces by job. "Raised" is the brightest tone in light and the lightest container in
+     dark, so a raised thing reads as closer in both themes. */
+  --md-card: var(--md-surface-container-lowest);
+  --md-raised: var(--md-surface-container-lowest);
+  --md-panel: var(--md-surface-container-lowest);
+  --md-menu: var(--md-surface-container-lowest);
+  --md-dialog: var(--md-surface-container-low);
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d5a59'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+
+  /* --- Elevation (M3 levels 1-5) --- */
+  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
+  --md-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+  --md-elevation-3: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
+  --md-elevation-4: 0 2px 3px rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.15);
+  --md-elevation-5: 0 4px 4px rgba(0, 0, 0, 0.3), 0 8px 12px 6px rgba(0, 0, 0, 0.15);
+
+  /* --- Shape --- */
+  --md-shape-xs: 4px;
+  --md-shape-sm: 8px;
+  --md-shape-md: 12px;
+  --md-shape-lg: 16px;
+  --md-shape-xl: 28px;
+  --md-shape-full: 9999px;
+
+  /* --- Motion --- */
+  --md-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-easing-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-duration-short: 150ms;
+  --md-duration-medium: 300ms;
+
+  /* --- Type --- */
+  --md-font: "Segoe UI", system-ui, sans-serif;
+  --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+
+  /* Legacy names. Rules written against the old palette (and branches that add to it) keep
+     resolving to the matching M3 role. */
+  --teal-dark: var(--md-on-primary-container);
+  --teal-header: var(--md-primary);
+  --teal-accent: var(--md-primary);
+  --teal-light: var(--md-primary-container);
+  --row-white: var(--md-card);
+  --row-gray: var(--md-surface-container-low);
+  --text-primary: var(--md-on-surface);
+  --text-muted: var(--md-on-surface-variant);
+  --verse-link: var(--md-primary);
+  --arabic-gold: var(--md-tertiary);
+  --playing-bg: var(--md-secondary-container);
+  --border: var(--md-outline-variant);
+  --page-bg: var(--md-surface);
+  --modal-bg: var(--md-dialog);
+  --success-bg: var(--md-success-container);
+  --success-fg: var(--md-on-success-container);
+  --shadow-sm: var(--md-elevation-1);
+  --shadow-md: var(--md-elevation-2);
+  --radius: var(--md-shape-md);
 }
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --teal-dark: #062c2c;
-  --teal-header: #0a3d3d;
-  --teal-accent: #2db4b4;
-  --teal-light: #122828;
-  --row-white: #141c1c;
-  --row-gray: #101818;
-  --text-primary: #e8f2f2;
-  --text-muted: #8fa8a8;
-  --verse-link: #5fd4d4;
-  --arabic-gold: #d4b85c;
-  --playing-bg: #0f2c2c;
-  --border: #2a3c3c;
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.35);
-  --shadow-md: 0 4px 20px rgba(0,0,0,0.45);
-  --page-bg: #0a1111;
-  --modal-bg: #121a1a;
-  --row-hover: #1a2828;
-  --volume-track: #2a3838;
-  --slider-thumb: #e8f2f2;
-  --input-border-soft: #4a5c5c;
-  --toggle-track-off: #3d4f4f;
-  --offline-hover-bg: #153030;
-  --success-bg: #153520;
-  --success-fg: #7dd87d;
-  --muted-chip-bg: #222c2c;
-  --warn-chip-bg: #2c2418;
-  --warn-chip-fg: #e0b878;
-  --validate-pending-bg: #1a2222;
-  --validate-pending-border: #4a5c5c;
-  --validate-pending-fg: #88aaaa;
+  --md-primary: #3ddbd9;
+  --md-on-primary: #003636;
+  --md-primary-container: #0f5e5e;
+  --md-on-primary-container: #a9f6f4;
+  --md-secondary: #8fd3ce;
+  --md-on-secondary: #0d3535;
+  --md-secondary-container: #145050;
+  --md-on-secondary-container: #d3f7f5;
+  --md-tertiary: #edc65c;
+  --md-on-tertiary: #3f2e00;
+  --md-tertiary-container: #6a4f0a;
+  --md-on-tertiary-container: #ffe7ab;
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+  --md-success: #8fd695;
+  --md-on-success: #00390f;
+  --md-success-container: #1f5225;
+  --md-on-success-container: #b7f1b9;
+  --md-surface: #071515;
+  --md-surface-dim: #071515;
+  --md-surface-bright: #1f4242;
+  --md-surface-container-lowest: #030e0e;
+  --md-surface-container-low: #0b1f1f;
+  --md-surface-container: #0f2828;
+  --md-surface-container-high: #153434;
+  --md-surface-container-highest: #1c4040;
+  --md-on-surface: #e4f3f2;
+  --md-on-surface-variant: #a3c2c1;
+  --md-outline: #5b8281;
+  --md-outline-variant: #244848;
+  --md-inverse-surface: #e4f3f2;
+  --md-inverse-on-surface: #0f2a2a;
+  --md-inverse-primary: #0a7a7a;
+  --md-scrim: rgba(0, 0, 0, 0.55);
   --wa-color: #5fd4b4;
-  --wa-hover-bg: #153528;
-  --wa-hover-border: #3dbc6e;
-  --wa-hover-fg: #5ee085;
-  --teal-tint-hover: rgba(45, 180, 180, 0.12);
-  --teal-tint-low: rgba(45, 180, 180, 0.08);
-  --admin-badge-bg: #153030;
-  --tooltip-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
-  --loop-active-bg: rgba(45, 180, 180, 0.18);
-  /* Bright enough vs --row-white / --row-gray cards (teal-header is too dark here) */
-  --mobile-td-label: var(--verse-link);
+
+  --md-app-bar: linear-gradient(135deg, #062a2a 0%, #0a3d3d 50%, #0d4f4f 100%);
+  --md-on-app-bar: #ffffff;
+  --md-app-bar-subtitle: rgba(255, 255, 255, 0.75);
+
+  --md-card: var(--md-surface-container);
+  --md-raised: var(--md-surface-container-high);
+  --md-panel: var(--md-surface-container-low);
+  --md-menu: var(--md-surface-container-high);
+  --md-dialog: #123030;
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3c2c1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+
+  /* Shadows carry less in the dark; tone does the lifting. */
+  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
+  --md-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 2px 6px 2px rgba(0, 0, 0, 0.3);
+  --md-elevation-3: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
+  --md-elevation-4: 0 2px 3px rgba(0, 0, 0, 0.5), 0 6px 10px 4px rgba(0, 0, 0, 0.3);
+  --md-elevation-5: 0 4px 4px rgba(0, 0, 0, 0.5), 0 8px 12px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* ================================================================== */
+/* Base                                                                */
+/* ================================================================== */
 * {
   box-sizing: border-box;
 }
@@ -103,129 +184,328 @@ html {
 
 body {
   margin: 0;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  background: var(--page-bg);
-  color: var(--text-primary);
+  font-family: var(--md-font);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
+  background: var(--md-surface);
+  color: var(--md-on-surface);
   min-height: 100vh;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.header {
-  background: linear-gradient(135deg, #0a3d3d 0%, var(--teal-dark) 40%, #0f6060 100%);
-  color: white;
-  padding: 1.25rem 1.5rem 1.1rem;
-  text-align: center;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+button,
+input,
+select {
+  font-family: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* One focus ring for everything, shown only to keyboard users. */
+:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
+}
+
+/* --- Ripple (material.js appends a .md-ripple to the pressed control) --- */
+.md-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.14;
+  transform: scale(0);
+  pointer-events: none;
+  animation: md-ripple 520ms var(--md-easing-standard) forwards;
+}
+
+@keyframes md-ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Every control the ripple can land in clips it to its own shape. */
+.btn,
+.btn-para-step,
+.btn-toolbar-transport,
+.btn-toolbar-locate,
+.btn-toolbar-menu,
+.toolbar-menu-item,
+.audio-play-btn,
+.audio-seek-btn,
+.audio-speed-btn,
+.audio-offline-btn,
+.audio-share-wa-btn,
+.audio-retry-btn,
+.hifz-mark,
+.verses-toggle,
+.share-bulk-links-tile,
+.settings-role-btn,
+.modal-close-btn,
+.mq-guide-next,
+.mq-guide-skip {
   position: relative;
   overflow: hidden;
 }
 
+/* ================================================================== */
+/* Top app bar                                                         */
+/* ================================================================== */
+.header {
+  position: relative;
+  background: var(--md-app-bar);
+  color: var(--md-on-app-bar);
+  padding: 0.8rem 1.5rem 0.9rem;
+  box-shadow: var(--md-elevation-2);
+}
+
+/* The gold rule the original masthead carried: the one warm line above a teal page. */
 .header::after {
   content: "";
   position: absolute;
-  bottom: 0;
   left: 0;
   right: 0;
+  bottom: 0;
   height: 3px;
-  background: linear-gradient(90deg, transparent, var(--arabic-gold), transparent);
+  background: linear-gradient(90deg, transparent, var(--md-tertiary), transparent);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  /* Clear of the overflow menu at the right, symmetrically, so the title stays centred. */
+  padding: 0 48px;
+}
+
+.header-logo {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--md-shape-md);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16), var(--md-elevation-1);
+}
+
+.header-text {
+  min-width: 0;
+  text-align: left;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header .subtitle {
-  margin: 0.3rem 0 0;
-  font-size: 0.8rem;
-  opacity: 0.8;
-  letter-spacing: 0.04em;
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  color: var(--md-app-bar-subtitle);
+}
+
+/* Overflow menu lives in the app bar, where every Material app keeps it. */
+.header .header-menu {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  /* The transform scopes the dropdown's z-index to this wrapper, so the wrapper itself
+     must sit above the page's positioned buttons or they paint through the open menu. */
+  z-index: 60;
+}
+
+.header .btn-toolbar-menu {
+  color: var(--md-on-app-bar);
+}
+
+.header .btn-toolbar-menu:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--md-on-app-bar);
+}
+
+/* Install, in the app bar's corner, with a "New" sticker on it until the app is installed. */
+.header .header-install-wrap {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.header-install-badge {
+  position: absolute;
+  top: -3px;
+  right: -9px;
+  padding: 1px 5px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+  font-size: 0.5625rem;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transform: rotate(-8deg);
+  box-shadow: 0 0 0 2px #0a3d3d;
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .main {
   width: 100%;
-  max-width: 1200px;
-  padding: 1.25rem 1.5rem 2rem;
-  overflow-x: auto;
+  max-width: 860px;
+  padding: 0.75rem 1rem 2.5rem;
   box-sizing: border-box;
   margin: 0 auto;
 }
 
+/* ================================================================== */
+/* Toolbar: para picker + now-playing strip                            */
+/* ================================================================== */
 .controls {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
 }
 
-.controls label {
-  font-weight: 500;
-  color: var(--text-primary);
+
+/* The para picker: a face with the number and the para's name, and the native select laid
+   invisibly over it so taps, keyboard and the walkthrough spotlight all still hit a real
+   <select>. */
+.para-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+  min-width: 10.5rem;
+  border-left: 1px solid var(--md-outline-variant);
+  border-right: 1px solid var(--md-outline-variant);
+  transition: background-color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
 }
 
-.controls select {
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
-  font-size: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--row-white);
-  color: var(--text-primary);
+.para-picker::after {
+  content: "";
+  position: absolute;
+  right: 0.45rem;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin-top: -11px;
+  background: var(--md-select-chevron) no-repeat center / 22px 22px;
+  pointer-events: none;
+}
+
+.para-picker:hover {
+  background-color: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
+}
+
+.para-picker:focus-within {
+  box-shadow: inset 0 0 0 2px var(--md-primary);
+}
+
+.controls .para-picker select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  opacity: 0;
   cursor: pointer;
   touch-action: manipulation;
+  font-size: 1rem;
 }
 
-.controls select:focus {
+.controls .para-picker select:focus {
   outline: none;
-  border-color: var(--teal-accent);
-  box-shadow: 0 0 0 2px rgba(15, 122, 122, 0.2);
+}
+
+.para-picker-face {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0.3rem 2.1rem 0.35rem 1rem;
+  pointer-events: none;
+}
+
+.para-picker-num {
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-on-surface-variant);
+}
+
+/* The name in gold, the way the surah names are drawn on the cards. */
+.para-picker-name {
+  font-family: "Traditional Arabic", "Scheherazade New", serif;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--md-tertiary);
+  direction: rtl;
+  unicode-bidi: isolate;
+  white-space: nowrap;
 }
 
 .toolbar {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  background: var(--row-white);
+  background: transparent;
   padding: 0;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border);
+  border-radius: 0;
   overflow: visible;
 }
 
-/* Both rows carry an explicit width because they are flex items of a column toolbar and
-   would otherwise stretch to the widest of the two -- and the now-playing strip's
-   min-content is wider than a 320px screen, which dragged the para row out with it,
-   pushed its second chevron past the edge and left the page scrolling sideways. With a
-   width of their own they take the toolbar's, and their children shrink inside it. */
 .toolbar-top {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   min-width: 0;
-  gap: 0.75rem;
-  /* Same 0.85rem gutter as the cards below, so the para row, the strip under it and every
-     ruku title share one left edge down the page. */
-  padding: 0.7rem 0.85rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--row-gray);
-  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 0.15rem 0 0;
 }
 
+/* The now-playing strip has no place at rest: the active card shows all of it. It appears
+   only docked, once that card has scrolled out of view. */
 .toolbar-bottom {
-  display: flex;
-  flex-wrap: wrap;
+  display: none;
   align-items: stretch;
   justify-content: space-between;
   width: 100%;
   min-width: 0;
   gap: 0.5rem;
-  padding: 0.55rem 0.85rem;
-  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 /* ------------------------------------------------------------------ */
@@ -237,8 +517,9 @@ body {
 /* its position changes, so every sync path keeps working.             */
 /* ------------------------------------------------------------------ */
 .toolbar-bottom.is-docked {
+  display: flex;
   position: fixed;
-  padding: 8px;
+  padding: 8px 10px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -246,14 +527,14 @@ body {
   margin: 0 auto;
   max-width: 1200px;
   box-sizing: border-box;
-  background: var(--row-white);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.22);
+  background: var(--md-surface-container-high);
+  border-radius: var(--md-shape-lg) var(--md-shape-lg) 0 0;
+  box-shadow: var(--md-elevation-3);
   /* bottom: 0 puts the bar *under* the home indicator or gesture bar on the phones that
      have one, which swallows the lower part of the strip -- the progress line first, then
      the transport. The inset is 0 everywhere else, so this costs those screens nothing. */
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  animation: toolbar-dock-in 0.18s ease;
+  animation: toolbar-dock-in var(--md-duration-medium) var(--md-easing-emphasized);
 }
 
 /* The strip is width-capped in the toolbar to sit beside the menu; docked it
@@ -267,66 +548,69 @@ body {
   to { transform: translateY(0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .toolbar-bottom.is-docked {
-    animation: none;
-  }
-}
-
-/* Reserves the docked strip's in-flow height so the page does not jump. */
-.toolbar-dock-spacer {
-  display: none;
-}
-
-.toolbar-dock-spacer.is-active {
-  display: block;
-}
-
-.toolbar-dock-sentinel {
-  height: 0;
-}
-
 /* Keeps the last ayah clear of the docked bar. */
 body.has-docked-player {
   padding-bottom: calc(env(safe-area-inset-bottom) + 5.5rem);
 }
 
-/* Step the selected Para by one, mirroring the native toolbar's chevrons. The dropdown
-   alone means 30 options to hunt through to move one para; these are the common move. */
-.btn-para-step {
+/* --- Icon buttons (M3 standard): 40px, no chrome at rest, a state layer on hover. --- */
+.btn-para-step,
+.btn-toolbar-locate,
+.btn-toolbar-menu,
+.modal-close-btn {
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--row-white);
-  color: var(--teal-accent);
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  color: var(--md-on-surface-variant);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
 }
 
-.btn-para-step:hover:not(:disabled) {
-  background: var(--teal-tint-low);
-  border-color: var(--teal-accent);
+.btn-para-step:hover:not(:disabled),
+.btn-toolbar-locate:hover:not(:disabled),
+.btn-toolbar-menu:hover:not(:disabled),
+.modal-close-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-surface-variant) 8%, transparent);
+  color: var(--md-on-surface);
 }
 
-.btn-para-step:disabled {
-  opacity: 0.4;
-  color: var(--text-muted);
+.btn-para-step:disabled,
+.btn-toolbar-locate:disabled {
+  color: color-mix(in srgb, var(--md-on-surface) 38%, transparent);
   cursor: not-allowed;
 }
 
-.controls-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+/* Step the selected Para by one, mirroring the native toolbar's chevrons. The dropdown
+   alone means 30 options to hunt through to move one para; these are the common move. */
+.btn-para-step {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+  color: var(--md-primary);
 }
+
+.btn-para-step:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
+  color: var(--md-primary);
+}
+
+.controls-left {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-full);
+  background: var(--md-raised);
+  overflow: hidden;
+}
+
 
 .mq-audio-host {
   position: absolute;
@@ -343,67 +627,63 @@ body.has-docked-player {
   max-width: 32rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.3rem 0.45rem;
-  padding-bottom: 8px;
-  border-radius: 10px;
-  background: var(--row-gray);
-  border: 1px solid var(--border);
+  gap: 0.6rem;
+  padding: 0.4rem 0.55rem;
+  padding-bottom: 10px;
+  border-radius: var(--md-shape-md);
+  background: var(--md-raised);
   overflow: hidden;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: background var(--md-duration-medium) var(--md-easing-standard);
 }
 
-.toolbar-now-playing.is-playing {
-  border-color: rgba(15, 122, 122, 0.45);
-  background: var(--playing-bg);
-}
-
+.toolbar-now-playing.is-playing,
 .toolbar-now-playing.is-paused {
-  border-color: rgba(154, 117, 32, 0.35);
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
 }
 
 .toolbar-now-playing-badge {
   flex-shrink: 0;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 0.2rem 0.45rem;
-  border-radius: 6px;
-  line-height: 1.2;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--md-shape-full);
 }
 
 .toolbar-now-playing-badge.is-live {
-  background: var(--teal-accent);
-  color: white;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
 
 .toolbar-now-playing-badge.is-paused-state {
-  background: rgba(154, 117, 32, 0.2);
-  color: var(--arabic-gold);
+  background: var(--md-tertiary-container);
+  color: var(--md-on-tertiary-container);
 }
 
+/* Linear progress along the strip's foot. */
 .toolbar-progress-bar {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 0 0 10px 10px;
+  height: 4px;
+  background: color-mix(in srgb, var(--md-primary) 18%, transparent);
   overflow: hidden;
 }
 
 .toolbar-progress-fill {
   height: 100%;
   width: 0%;
-  background: var(--teal-accent);
-  border-radius: 0 0 10px 10px;
+  background: var(--md-primary);
+  border-radius: 0 2px 2px 0;
   transition: width 0.3s linear;
 }
 
 .toolbar-now-playing.is-paused .toolbar-progress-fill {
-  background: var(--arabic-gold);
+  background: var(--md-tertiary);
 }
 
 .toolbar-now-playing-text {
@@ -415,57 +695,75 @@ body.has-docked-player {
 }
 
 .toolbar-now-playing-title {
-  font-size: 0.85rem;
-  line-height: 1.25;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--md-on-surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.toolbar-now-playing.is-playing .toolbar-now-playing-title,
+.toolbar-now-playing.is-paused .toolbar-now-playing-title {
+  color: var(--md-on-secondary-container);
 }
 
 .toolbar-now-playing-meta {
-  font-size: 0.72rem;
-  line-height: 1.25;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface-variant);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.toolbar-now-playing.is-playing .toolbar-now-playing-meta,
+.toolbar-now-playing.is-paused .toolbar-now-playing-meta {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 78%, transparent);
+}
+
+/* Filled icon button: the strip's transport. */
 .btn-toolbar-transport {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
   border: none;
-  border-radius: 50%;
-  background: linear-gradient(145deg, var(--teal-accent), var(--teal-dark));
-  color: white;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(13, 79, 79, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: background var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .btn-toolbar-transport:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 3px 12px rgba(13, 79, 79, 0.45);
+  background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
+  box-shadow: var(--md-elevation-1);
 }
 
 .btn-toolbar-transport:disabled {
-  opacity: 0.35;
+  background: color-mix(in srgb, var(--md-on-surface) 12%, transparent);
+  color: color-mix(in srgb, var(--md-on-surface) 38%, transparent);
   cursor: not-allowed;
   box-shadow: none;
 }
 
 .toolbar-now-playing.is-playing .btn-toolbar-transport,
 .toolbar-now-playing.is-paused .btn-toolbar-transport {
-  background: linear-gradient(145deg, var(--arabic-gold), #6b5010);
-  box-shadow: 0 2px 10px rgba(139, 105, 20, 0.35);
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+}
+
+.toolbar-now-playing.is-playing .btn-toolbar-transport:hover:not(:disabled),
+.toolbar-now-playing.is-paused .btn-toolbar-transport:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-tertiary) 8%, var(--md-tertiary));
 }
 
 .toolbar-transport-icon {
@@ -480,30 +778,14 @@ body.has-docked-player {
 }
 
 .btn-toolbar-locate {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--row-white);
-  color: var(--teal-accent);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  width: 36px;
+  height: 36px;
+  color: var(--md-primary);
 }
 
 .btn-toolbar-locate:hover:not(:disabled) {
-  background: var(--teal-tint-low);
-  border-color: var(--teal-accent);
-}
-
-.btn-toolbar-locate:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
+  color: var(--md-primary);
 }
 
 .toolbar-btn-group {
@@ -523,81 +805,73 @@ body.has-docked-player {
 
 /* Docked at the foot of the screen there is no room below the button, so the menu opens
    upward instead. */
-.toolbar-bottom.is-docked .toolbar-menu-dropdown {
+.toolbar-bottom .toolbar-menu-dropdown {
   top: auto;
   bottom: calc(100% + 6px);
+  transform-origin: bottom right;
 }
 
-.btn-toolbar-menu {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--row-white);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.btn-toolbar-menu:hover {
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-  background: var(--teal-tint-low);
-}
-
+/* --- Menu --- */
 .toolbar-menu-dropdown {
   display: none;
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
-  min-width: 180px;
-  background: var(--row-white);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  box-shadow: var(--shadow-md);
+  min-width: 200px;
+  padding: 0.5rem 0;
+  background: var(--md-menu);
+  border-radius: var(--md-shape-sm);
+  box-shadow: var(--md-elevation-2);
   z-index: 50;
   overflow: hidden;
+  transform-origin: top right;
 }
 
 .toolbar-menu-dropdown.is-open {
   display: block;
+  animation: md-menu-in var(--md-duration-short) var(--md-easing-emphasized);
+}
+
+@keyframes md-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .toolbar-menu-item {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
   width: 100%;
-  padding: 0.7rem 1rem;
+  min-height: 48px;
+  padding: 0 1rem;
   border: none;
   background: none;
-  color: var(--text-primary);
-  font-size: 0.88rem;
+  color: var(--md-on-surface);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
   text-align: left;
-  transition: background 0.12s ease;
+  transition: background var(--md-duration-short) var(--md-easing-standard);
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 .toolbar-menu-item:hover {
-  background: var(--teal-tint-hover);
-  color: var(--teal-accent);
-}
-
-.toolbar-menu-item + .toolbar-menu-item {
-  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
 }
 
 .toolbar-menu-item svg {
   flex-shrink: 0;
-  opacity: 0.7;
+  width: 20px;
+  height: 20px;
+  color: var(--md-on-surface-variant);
 }
 
 .btn-toolbar {
@@ -605,27 +879,25 @@ body.has-docked-player {
   align-items: center;
   justify-content: center;
   min-height: 40px;
-  padding: 0 1rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  border-radius: 10px;
+  padding: 0 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--md-shape-full);
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+  transition: background var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
   white-space: nowrap;
 }
 
 .btn-toolbar--primary {
-  background: var(--teal-accent);
-  color: white;
-  box-shadow: 0 1px 4px rgba(15, 122, 122, 0.28);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
 
 .btn-toolbar--primary:hover:not(:disabled) {
-  background: var(--teal-header);
-  box-shadow: 0 2px 8px rgba(15, 122, 122, 0.35);
+  background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
+  box-shadow: var(--md-elevation-1);
 }
 
 .btn-toolbar--primary:disabled {
@@ -635,106 +907,106 @@ body.has-docked-player {
 }
 
 .btn-toolbar--ghost {
-  background: var(--row-white);
-  color: var(--text-primary);
-  border-color: var(--border);
+  background: transparent;
+  color: var(--md-primary);
+  border-color: var(--md-outline);
 }
 
 .btn-toolbar--ghost:hover {
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-  background: var(--teal-tint-low);
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
 }
 
+/* ================================================================== */
+/* Buttons                                                             */
+/* Base .btn is the tonal button; variants map onto filled, outlined,  */
+/* and error-tonal. All pill-shaped, 40px tall, label-large.           */
+/* ================================================================== */
 .btn {
-  padding: 0.5rem 0.85rem;
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   font-weight: 500;
-  border-radius: 6px;
-  cursor: pointer;
+  letter-spacing: 0.01em;
   border: 1px solid transparent;
-  transition: all 0.15s ease;
+  border-radius: var(--md-shape-full);
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  line-height: 1.4;
 }
 
-.btn-primary {
-  background: var(--teal-accent);
-  color: white;
-  box-shadow: 0 1px 4px rgba(15,122,122,0.25);
+.btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-secondary-container) 8%, var(--md-secondary-container));
+  box-shadow: var(--md-elevation-1);
 }
 
-.btn-primary:hover {
-  background: var(--teal-header);
-  box-shadow: 0 2px 8px rgba(15,122,122,0.35);
+.btn:disabled {
+  background: color-mix(in srgb, var(--md-on-surface) 12%, transparent);
+  color: color-mix(in srgb, var(--md-on-surface) 38%, transparent);
+  border-color: transparent;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
-.btn-secondary {
-  background: var(--teal-header);
-  color: white;
-  box-shadow: 0 1px 4px rgba(13,79,79,0.2);
+.btn-primary,
+.btn-secondary,
+.btn-offline-para {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
 
-.btn-secondary:hover {
-  background: var(--teal-dark);
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-offline-para:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
+  box-shadow: var(--md-elevation-1);
 }
 
 .btn-danger {
-  background: #c62828;
-  color: white;
-  box-shadow: 0 1px 4px rgba(198,40,40,0.2);
+  background: var(--md-error-container);
+  color: var(--md-on-error-container);
 }
 
-.btn-danger:hover {
-  background: #b71c1c;
-}
-
-.btn-offline-para {
-  background: var(--teal-accent);
-  color: white;
-  box-shadow: 0 1px 4px rgba(15,122,122,0.25);
-}
-
-.btn-offline-para:hover {
-  background: var(--teal-dark);
-  box-shadow: 0 2px 8px rgba(15,122,122,0.35);
-}
-
-.btn-offline-para:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-  box-shadow: none;
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-error-container) 8%, var(--md-error-container));
 }
 
 .btn-install {
-  background: linear-gradient(135deg, #9a7520, #8b6914);
-  color: white;
-  box-shadow: 0 1px 4px rgba(139,105,20,0.3);
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
 }
 
-.btn-install:hover {
-  background: linear-gradient(135deg, #a67c18, #9a7520);
-  box-shadow: 0 2px 8px rgba(139,105,20,0.4);
+.btn-install:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-tertiary) 8%, var(--md-tertiary));
 }
 
 .btn-outline {
   background: transparent;
-  color: var(--teal-accent);
-  border-color: var(--teal-accent);
+  color: var(--md-primary);
+  border-color: var(--md-outline);
 }
 
-.btn-outline:hover {
-  background: rgba(15, 122, 122, 0.1);
+.btn-outline:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
+  box-shadow: none;
 }
 
 .btn-sm {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.82rem;
+  min-height: 36px;
+  padding: 0 1rem;
+  font-size: 0.8125rem;
 }
 
-
-/* Modal */
+/* ================================================================== */
+/* Dialogs                                                             */
+/* ================================================================== */
 .modal {
   position: fixed;
   inset: 0;
@@ -745,7 +1017,7 @@ body.has-docked-player {
   padding: 1rem;
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0.2s, opacity 0.2s;
+  transition: visibility var(--md-duration-medium), opacity var(--md-duration-medium) var(--md-easing-standard);
 }
 
 .modal.is-open {
@@ -756,77 +1028,14 @@ body.has-docked-player {
 .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-}
-
-/* Persistent upload / recording status (dismiss only; no auto-hide) */
-.upload-status-banner {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 150;
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  font-size: 0.9rem;
-  line-height: 1.35;
-  color: var(--text-primary);
-  background: var(--row-white);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
-}
-
-.upload-status-banner-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.upload-status-banner--progress {
-  border-top-color: var(--teal-accent);
-  background: var(--teal-light);
-}
-
-.upload-status-banner--success {
-  border-top-color: var(--success-fg);
-  background: var(--success-bg);
-}
-
-.upload-status-banner--error {
-  border-top-color: #c62828;
-  background: #ffebee;
-  color: #b71c1c;
-}
-
-html[data-theme="dark"] .upload-status-banner {
-  background: var(--modal-bg);
-  color: var(--text-primary);
-  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
-}
-
-html[data-theme="dark"] .upload-status-banner--progress {
-  background: rgba(15, 122, 122, 0.22);
-  border-top-color: var(--teal-accent);
-}
-
-html[data-theme="dark"] .upload-status-banner--success {
-  background: rgba(46, 125, 50, 0.2);
-  border-top-color: var(--success-fg);
-}
-
-html[data-theme="dark"] .upload-status-banner--error {
-  background: rgba(198, 40, 40, 0.22);
-  color: #ffcdd2;
-  border-top-color: #ef5350;
+  background: var(--md-scrim);
 }
 
 .modal-content {
   position: relative;
-  background: var(--modal-bg);
-  border-radius: 12px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+  background: var(--md-dialog);
+  border-radius: var(--md-shape-xl);
+  box-shadow: var(--md-elevation-3);
   max-width: 440px;
   width: 100%;
   max-height: 90vh;
@@ -834,21 +1043,91 @@ html[data-theme="dark"] .upload-status-banner--error {
   padding: 0;
   display: flex;
   flex-direction: column;
+  transform: scale(0.94);
+  transition: transform var(--md-duration-medium) var(--md-easing-emphasized);
+}
+
+.modal.is-open .modal-content {
+  transform: scale(1);
 }
 
 .modal-content-wide {
   max-width: min(560px, 96vw);
 }
 
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1rem 0.75rem 1.5rem;
+}
+
 .modal-title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: white;
-  background: linear-gradient(135deg, var(--teal-dark), var(--teal-header));
-  padding: 1rem 1.25rem;
-  border-radius: 12px 12px 0 0;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--md-on-surface);
+}
+
+/* Persistent upload / recording status — a snackbar (dismiss only; no auto-hide) */
+.upload-status-banner {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  z-index: 150;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 600px;
+  min-height: 48px;
+  margin: 0 auto;
+  padding: 0.4rem 0.5rem 0.4rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--md-inverse-on-surface);
+  background: var(--md-inverse-surface);
+  border-radius: var(--md-shape-xs);
+  box-shadow: var(--md-elevation-3);
+}
+
+.upload-status-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.upload-status-banner .btn {
+  min-height: 36px;
+  background: transparent;
+  color: var(--md-inverse-primary);
+  box-shadow: none;
+}
+
+.upload-status-banner .btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-inverse-primary) 8%, transparent);
+  box-shadow: none;
+}
+
+.upload-status-banner--success {
+  background: var(--md-success);
+  color: var(--md-on-success);
+}
+
+.upload-status-banner--success .btn {
+  color: var(--md-on-success);
+}
+
+.upload-status-banner--error {
+  background: var(--md-error);
+  color: var(--md-on-error);
+}
+
+.upload-status-banner--error .btn {
+  color: var(--md-on-error);
 }
 
 .row-form .form-row {
@@ -859,16 +1138,37 @@ html[data-theme="dark"] .upload-status-banner--error {
   display: block;
   font-weight: 500;
   margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
+/* Outlined text fields */
 .row-form input[type="text"],
-.row-form input[type="number"] {
+.row-form input[type="number"],
+.settings-admin-section input[type="password"] {
   width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  min-height: 48px;
+  padding: 0 1rem;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-xs);
   font-size: 1rem;
+  line-height: 1.5rem;
+  background: transparent;
+  color: var(--md-on-surface);
+  transition: border-color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
+}
+
+.row-form input[type="text"]:hover,
+.row-form input[type="number"]:hover,
+.settings-admin-section input[type="password"]:hover {
+  border-color: var(--md-on-surface);
+}
+
+.row-form input[type="text"]:focus,
+.row-form input[type="number"]:focus,
+.settings-admin-section input[type="password"]:focus {
+  outline: none;
+  border-color: var(--md-primary);
+  box-shadow: inset 0 0 0 1px var(--md-primary);
 }
 
 .row-form input[type="file"] {
@@ -878,8 +1178,8 @@ html[data-theme="dark"] .upload-status-banner--error {
 
 /* Audio drop zone (click or drag & drop) */
 .audio-drop-zone {
-  border: 2px dashed var(--border);
-  border-radius: 10px;
+  border: 2px dashed var(--md-outline-variant);
+  border-radius: var(--md-shape-md);
   padding: 1.25rem 1rem;
   text-align: center;
   cursor: pointer;
@@ -889,8 +1189,8 @@ html[data-theme="dark"] .upload-status-banner--error {
 
 .audio-drop-zone:hover,
 .audio-drop-zone.dragover {
-  border-color: var(--teal-accent);
-  background: rgba(15, 122, 122, 0.06);
+  border-color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
 }
 
 .audio-drop-zone input[type="file"] {
@@ -910,36 +1210,35 @@ html[data-theme="dark"] .upload-status-banner--error {
 
 .audio-drop-zone-text {
   margin: 0;
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  font-size: 0.875rem;
+  color: var(--md-on-surface-variant);
 }
 
 .audio-file-info {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  background: var(--row-gray);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-sm);
 }
 
 .audio-file-name {
   display: block;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 500;
+  color: var(--md-on-surface);
   word-break: break-all;
 }
 
 .audio-file-meta {
   display: block;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  color: var(--md-on-surface-variant);
   margin-top: 0.25rem;
 }
 
 .form-hint {
   display: block;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--md-on-surface-variant);
   margin-top: 0.25rem;
 }
 
@@ -948,13 +1247,13 @@ html[data-theme="dark"] .upload-status-banner--error {
   border: none;
   padding: 0;
   font-size: inherit;
-  color: var(--teal-accent);
+  color: var(--md-primary);
   text-decoration: underline;
   cursor: pointer;
 }
 
 .btn-link:hover {
-  color: var(--teal-header);
+  color: var(--md-on-primary-container);
 }
 
 .modal-actions {
@@ -965,7 +1264,7 @@ html[data-theme="dark"] .upload-status-banner--error {
 
 /* Share-Para WhatsApp wizard (one ruku per send) */
 .share-para-wa-modal-body {
-  padding: 1rem 1.25rem 1.25rem;
+  padding: 0.25rem 1.5rem 1.5rem;
   overflow-y: auto;
   max-height: min(420px, 55vh);
 }
@@ -976,26 +1275,16 @@ html[data-theme="dark"] .upload-status-banner--error {
   white-space: pre-wrap;
   word-break: break-word;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.82rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
-  background: rgba(15, 122, 122, 0.12);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-primary);
-}
-
-html[data-theme="light"] .share-para-wa-preview {
-  background: #f0f4f4;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-sm);
+  color: var(--md-on-surface);
 }
 
 .share-para-wa-actions {
   margin-top: 1rem;
   flex-wrap: wrap;
-}
-
-.share-para-wa-actions .btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
 }
 
 .share-para-file-actions {
@@ -1034,7 +1323,7 @@ html[data-theme="light"] .share-para-wa-preview {
   min-height: 0;
   max-height: none;
   overflow: hidden;
-  padding: 0.75rem 1rem 0.9rem;
+  padding: 0.5rem 1.5rem 1rem;
 }
 
 #share-bulk-links-modal .share-bulk-links-body.share-para-wa-modal-body {
@@ -1064,48 +1353,15 @@ html[data-theme="light"] .share-para-wa-preview {
 }
 
 .share-bulk-pill-btn {
-  min-height: 2.5rem;
-  padding: 0.45rem 1rem;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  letter-spacing: 0.02em;
-  border-radius: 999px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-
-.share-bulk-pill-btn.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.share-bulk-pill-btn:disabled {
-  opacity: 0.45;
-  transform: none;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.share-bulk-pill-btn.btn-outline {
-  background: var(--row-white);
-  border-width: 1.5px;
-}
-
-html[data-theme="dark"] .share-bulk-pill-btn.btn-outline {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-  border-color: rgba(45, 180, 180, 0.55);
-}
-
-html[data-theme="dark"] .share-bulk-pill-btn.btn-outline:hover:not(:disabled) {
-  background: var(--teal-tint-low);
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
+  min-height: 40px;
 }
 
 .share-bulk-links-count {
-  font-size: 0.82rem;
-  color: var(--text-muted);
+  font-size: 0.8125rem;
+  color: var(--md-on-surface-variant);
   margin-left: auto;
   font-weight: 500;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -1119,42 +1375,41 @@ html[data-theme="dark"] .share-bulk-pill-btn.btn-outline:hover:not(:disabled) {
   grid-auto-rows: min-content;
   align-items: start;
   gap: 0.65rem;
-  padding: 0.5rem 0.15rem 0.5rem 0;
+  padding: 0.35rem 0.15rem 0.5rem 0;
   border: none;
   border-radius: 0;
   background: transparent;
   -webkit-overflow-scrolling: touch;
 }
 
+/* Selectable outlined cards; selection fills with the secondary container and a check. */
 .share-bulk-links-tile {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.35rem;
+  gap: 0.3rem;
   width: 100%;
   min-height: 0;
   height: auto;
-  padding: 0.85rem 0.65rem 0.75rem;
+  padding: 0.9rem 0.65rem 0.8rem;
   margin: 0;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: var(--row-white);
-  color: var(--text-primary);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-shape-md);
+  background: var(--md-raised);
+  color: var(--md-on-surface);
   font-family: inherit;
   font-size: 0.8125rem;
   line-height: 1.45;
   text-align: center;
   cursor: pointer;
-  overflow: visible;
   box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s, transform 0.1s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: border-color var(--md-duration-short), box-shadow var(--md-duration-short), background var(--md-duration-short), transform 0.1s;
 }
 
 .share-bulk-links-tile:hover {
-  border-color: rgba(15, 122, 122, 0.45);
-  background: rgba(15, 122, 122, 0.06);
+  background: color-mix(in srgb, var(--md-on-surface) 6%, var(--md-raised));
+  box-shadow: var(--md-elevation-1);
 }
 
 .share-bulk-links-tile:active {
@@ -1162,24 +1417,42 @@ html[data-theme="dark"] .share-bulk-pill-btn.btn-outline:hover:not(:disabled) {
 }
 
 .share-bulk-links-tile.is-selected {
-  border-color: var(--teal-accent);
-  background: rgba(15, 122, 122, 0.14);
-  box-shadow: 0 0 0 1px rgba(15, 122, 122, 0.25);
+  border-color: var(--md-primary);
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.share-bulk-links-tile.is-selected::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--md-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center / 11px 11px;
+}
+
+html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23003737' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");
 }
 
 .share-bulk-links-tile-key {
-  font-weight: 700;
+  font-weight: 500;
   font-size: 1rem;
-  line-height: 1.25;
-  color: var(--teal-header);
-  letter-spacing: 0.02em;
+  line-height: 1.5rem;
+  color: var(--md-primary);
+  letter-spacing: 0.01em;
   flex-shrink: 0;
+}
+
+.share-bulk-links-tile.is-selected .share-bulk-links-tile-key {
+  color: var(--md-on-secondary-container);
 }
 
 .share-bulk-links-tile-surah {
   font-size: 0.8125rem;
   line-height: 1.45;
-  color: var(--text-primary);
   word-break: break-word;
   overflow-wrap: anywhere;
   hyphens: auto;
@@ -1189,9 +1462,14 @@ html[data-theme="dark"] .share-bulk-pill-btn.btn-outline:hover:not(:disabled) {
 
 .share-bulk-links-tile-verses {
   font-size: 0.75rem;
-  line-height: 1.35;
-  color: var(--text-muted);
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface-variant);
   flex-shrink: 0;
+}
+
+.share-bulk-links-tile.is-selected .share-bulk-links-tile-verses {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 75%, transparent);
 }
 
 #share-bulk-links-modal .share-bulk-links-footer.share-para-wa-actions {
@@ -1206,54 +1484,11 @@ html[data-theme="dark"] .share-bulk-pill-btn.btn-outline:hover:not(:disabled) {
 #share-bulk-links-modal .share-bulk-footer-btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 2.75rem;
-  padding: 0.5rem 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.02em;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-#share-bulk-links-modal .share-bulk-footer-btn.btn-primary {
-  box-shadow: 0 2px 10px rgba(15, 122, 122, 0.35);
-}
-
-#share-bulk-links-modal .share-bulk-footer-btn.btn-primary:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-#share-bulk-links-modal .share-bulk-footer-btn.btn-outline {
-  border-width: 1.5px;
-  background: var(--row-white);
-}
-
-html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outline {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-primary);
-  border-color: rgba(45, 180, 180, 0.55);
-}
-
-html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outline:hover:not(:disabled) {
-  background: var(--teal-tint-low);
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-}
-
-#share-bulk-links-modal .share-bulk-footer-btn:disabled {
-  opacity: 0.45;
-  transform: none;
-  cursor: not-allowed;
-  box-shadow: none;
+  min-height: 44px;
 }
 
 #share-bulk-links-modal .share-bulk-btn-icon {
   flex-shrink: 0;
-  opacity: 0.95;
 }
 
 @media (max-width: 380px) {
@@ -1267,87 +1502,39 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   }
 }
 
+/* ================================================================== */
+/* Ruku list                                                           */
+/* The markup is still a <table>; the "Ruku card" section further down */
+/* lays every row out as a card, at every width.                       */
+/* ================================================================== */
 .table-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  background: var(--row-white);
+  overflow-x: visible;
   min-width: 0;
-  border: 1px solid var(--border);
-  margin-top: 1rem;
+  margin-top: 0.75rem;
 }
 
 .ruku-table {
   width: 100%;
-  min-width: 560px;
+  min-width: 0;
   border-collapse: collapse;
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   table-layout: auto;
 }
 
 .ruku-table thead {
-  background: linear-gradient(135deg, var(--teal-dark) 0%, var(--teal-header) 100%);
-  color: white;
+  display: none;
 }
 
-.ruku-table th {
-  padding: 0.8rem 1rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-
-.ruku-table tbody tr {
-  border-bottom: 1px solid var(--border);
-}
-
-.ruku-table tbody tr.row-even {
-  background: var(--row-gray);
-}
-
-.ruku-table tbody tr.row-odd {
-  background: var(--row-white);
-}
-
-.ruku-table tbody tr:not(.ayat-row):hover {
-  background: var(--row-hover) !important;
-}
-
-.ruku-table tbody tr.playing {
-  background: var(--playing-bg) !important;
-  box-shadow: inset 3px 0 0 var(--teal-accent);
-}
-
-/* Current track while paused: keep highlight, no “live” pulse on the button */
-.ruku-table tbody tr.playing.audio-paused {
-  box-shadow: inset 3px 0 0 rgba(15, 122, 122, 0.55);
-}
-
-.ruku-table td {
-  padding: 0.65rem 1rem;
-  vertical-align: middle;
-  text-align: left;
-  white-space: nowrap;
-}
-
-/* Ruku # column: one line, left-aligned */
-.ruku-table .col-ruku {
-  min-width: 8rem;
-}
-
-/* Surah name: one line */
-.ruku-table .col-surah {
-  min-width: 7rem;
+.table-empty {
+  display: block;
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--md-on-surface-variant);
 }
 
 .ruku-table .col-verses {
-  min-width: 4rem;
-  color: var(--verse-link);
+  color: var(--md-primary);
   font-weight: 500;
   /* A merged row's "(243-248)(249-252)" may wrap between its groups; each range itself
      stays on one line via .verses-part. Without this the longest value in a para dictates
@@ -1356,21 +1543,44 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 }
 
 .verses-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   white-space: nowrap;
 }
 
-.ruku-table .col-surah-arabic {
-  min-width: 6rem;
-  text-align: right;
-  direction: rtl;
-  font-family: "Traditional Arabic", "Scheherazade New", serif;
-  color: var(--arabic-gold);
-  font-size: 1.1rem;
+/* Phone title is "Para N · R1–R2"; the surah-led title waits for a wide screen. */
+.ruku-title-wide {
+  display: none;
 }
 
-.ruku-table .col-audio {
-  text-align: left;
-  min-width: 280px;
+/* Verse ranges read "Ayah 1–30 · 31–40" on a phone; the wide screen drops the word and
+   shows the book glyph instead. */
+.ruku-table .col-verses .verses-toggle-icon {
+  display: none;
+}
+
+.verses-plain .verses-label,
+.verses-plain .verses-sep {
+  margin-right: 0.3em;
+}
+
+.verses-plain .verses-sep {
+  margin-left: 0.3em;
+}
+
+/* The ruku is a tag after the surah, and never breaks inside its own hyphen. */
+.col-ruku-tag {
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface-variant);
+  margin-left: 0.35rem;
+}
+
+.ruku-table tr.playing .col-ruku-tag {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 80%, transparent);
 }
 
 /* ============ Ayat panel (verses of a ruku) ============ */
@@ -1382,31 +1592,41 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   /* The parts of a merged row's range are flex items here, so they only wrap if the flex
      container lets them; without this one long value widens the column for the whole para. */
   flex-wrap: wrap;
-  gap: 0.3rem;
-  padding: 0.15rem 0.4rem;
-  margin: -0.15rem -0.4rem;
-  border: none;
-  border-radius: 6px;
-  background: none;
+  gap: 0.15rem 0.3rem;
+  min-height: 28px;
+  padding: 0.15rem 0.55rem 0.15rem 0.5rem;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-shape-sm);
+  background: transparent;
   font: inherit;
-  color: var(--verse-link);
-  font-weight: 600;
+  color: var(--md-primary);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
+  transition: background var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
 }
+
+.verses-toggle[aria-expanded="true"] {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-color: transparent;
+}
+
+.verses-toggle-icon {
+  flex: none;
+  opacity: 0.85;
+}
+
 
 .verses-toggle:hover {
-  background: var(--teal-tint-hover);
-}
-
-.verses-toggle:focus-visible {
-  outline: 2px solid var(--teal-accent);
-  outline-offset: 1px;
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
 }
 
 .verses-toggle-chevron {
   flex: none;
-  opacity: 0.75;
-  transition: transform 0.18s ease;
+  margin-left: -0.1rem;
+  opacity: 0.8;
+  transition: transform var(--md-duration-short) var(--md-easing-standard);
 }
 
 .verses-toggle[aria-expanded="true"] .verses-toggle-chevron {
@@ -1420,22 +1640,23 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
 
 .ruku-table tbody tr.ayat-row {
   background: transparent !important;
-  border-bottom: 1px solid var(--border);
 }
 
 .ruku-table tbody td.ayat-cell {
-  padding: 0 1rem 0.9rem;
+  padding: 0;
   white-space: normal;
 }
 
+/* Outlined card for reading. */
 .ayat-panel {
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--teal-accent);
-  border-radius: var(--radius);
-  background: var(--row-white);
-  padding: 0.85rem 1.1rem 0.7rem;
-  margin-bottom: 8px;
-  margin-top: 4px;
+  border-radius: 0 0 var(--md-shape-md) var(--md-shape-md);
+  background: var(--md-panel);
+  box-shadow: var(--md-elevation-1);
+  /* The card above casts the same shadow; clipping each one's shadow at the seam makes the
+     two rows read as one surface. */
+  clip-path: inset(0 -12px -12px -12px);
+  padding: 0.9rem 1rem 1rem;
+  margin: 0 0 0.75rem;
 }
 
 .ayat-head {
@@ -1444,36 +1665,46 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.ayat-item.is-reciting + .ayat-item {
+  margin-top: 0.35rem;
 }
 
 .ayat-head-surah {
-  font-size: 0.85rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--verse-link);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--md-primary);
 }
 
 .ayat-head-count {
   font-size: 0.75rem;
-  color: var(--text-muted);
+  line-height: 1rem;
+  letter-spacing: 0.03em;
+  color: var(--md-on-surface-variant);
 }
 
 .ayat-basmala {
   text-align: center;
-  font-size: 1.6rem;
+  /* One ligature glyph, as wide as a phone: it scales with the viewport below 1.6rem. */
+  font-size: min(1.6rem, 6.5vw);
   line-height: 1.6;
-  color: var(--arabic-gold);
+  white-space: nowrap;
+  overflow-x: clip;
+  color: var(--md-tertiary);
   margin-bottom: 0.35rem;
 }
 
 .ayat-body {
-  font-family: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  font-family: var(--md-font-arabic);
   font-size: 1.6rem;
   line-height: 2.15;
-  color: var(--text-primary);
+  color: var(--md-on-surface);
   text-align: justify;
   text-align-last: right;
 }
@@ -1486,38 +1717,23 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   margin-bottom: 0;
 }
 
-/* The ayah being recited right now.
-   A wash behind the words rather than a colour on them: at this size, recolouring the Arabic
-   changes how the script reads, and the point is to say "here", not to restyle the text. The
-   gold rule down the leading edge is what the eye actually lands on when the panel scrolls. */
+/* The ayah being recited right now (set by the timings feature). A wash behind the words
+   rather than a colour on them: at this size, recolouring the Arabic changes how the script
+   reads, and the point is to say "here", not to restyle the text. */
 .ayat-item.is-reciting {
-  background: color-mix(in srgb, var(--arabic-gold) 14%, transparent);
-  box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--arabic-gold) 14%, transparent);
-  border-radius: 0.2rem;
-  border-inline-start: 2px solid var(--arabic-gold);
+  background: color-mix(in srgb, var(--md-tertiary) 14%, transparent);
+  box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--md-tertiary) 14%, transparent);
+  border-radius: var(--md-shape-xs);
+  border-inline-start: 2px solid var(--md-tertiary);
   padding-inline-start: 0.45rem;
   margin-inline-start: -0.65rem;
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Browsers without color-mix get a flat tint instead of nothing. */
-@supports not (background: color-mix(in srgb, red 10%, transparent)) {
-  .ayat-item.is-reciting {
-    background: rgba(212, 184, 92, 0.14);
-    box-shadow: 0 0 0 0.35rem rgba(212, 184, 92, 0.14);
-  }
-}
-
 .ayat-item.is-reciting .ayat-num {
-  background: var(--arabic-gold);
-  color: var(--row-white);
-  border-color: var(--arabic-gold);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ayat-item.is-reciting {
-    transition: none;
-  }
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+  border-color: var(--md-tertiary);
 }
 
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
@@ -1529,27 +1745,24 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   height: 1.7em;
   margin: 0 0.3em;
   padding: 0 0.25em;
-  border: 1px solid var(--arabic-gold);
+  border: 1px solid var(--md-tertiary);
   border-radius: 50%;
-  font-size: 0.62em;
+  font-size: 0.6em;
   line-height: 1;
-  color: var(--arabic-gold);
+  color: var(--md-tertiary);
   vertical-align: middle;
 }
 
 .ayat-source {
   margin: 0.6rem 0 0;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--md-on-surface-variant);
 }
 
 /* ============ Hifz (memorization) ============ */
-.ruku-table .col-hifz {
-  min-width: 6.5rem;
-  width: 6.5rem;
-}
 
 /* Hifz tracking disabled: hide the meter and the whole Hifz column. */
 html[data-hifz="off"] .hifz-meter,
@@ -1557,129 +1770,173 @@ html[data-hifz="off"] .col-hifz {
   display: none;
 }
 
-/* Status pill on each ruku row */
-.hifz-pill {
+/* Per-card hifz: a check to mark a ruku memorized, and how many times its recording has
+   been heard through. The check is an icon button; the count a quiet label beside it. */
+.hifz-controls {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.22rem 0.55rem 0.22rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--muted-chip-bg);
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  gap: 0.15rem;
+}
+
+.hifz-mark {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. */
+  color: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
   cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
+}
+
+.hifz-mark:hover {
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  color: color-mix(in srgb, var(--md-on-surface) 55%, transparent);
+}
+
+.hifz-mark:active {
+  transform: scale(0.88);
+}
+
+/* Memorized: the circle fills in the success green. */
+.hifz-mark[aria-pressed="true"] {
+  color: var(--md-success);
+}
+
+.hifz-mark[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--md-success) 14%, transparent);
+}
+
+.hifz-mark svg {
+  display: block;
+  pointer-events: none;
+}
+
+.hifz-plays {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 24px;
+  padding: 0 0.5rem 0 0.4rem;
+  border-radius: var(--md-shape-full);
+  background: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
+  color: var(--md-on-surface-variant);
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
 }
 
-.hifz-pill:hover { filter: brightness(0.97); }
-.hifz-pill:active { transform: scale(0.95); }
-
-.hifz-pill:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--page-bg), 0 0 0 4px var(--teal-accent);
+.hifz-plays[hidden] {
+  display: none;
 }
 
-/* Leading dot glyph */
-.hifz-pill-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-  flex: 0 0 auto;
+.hifz-plays svg {
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
-.hifz-pill[data-state="learning"] {
-  background: var(--warn-chip-bg);
-  color: var(--warn-chip-fg);
+.ruku-table tr.playing .hifz-mark:not([aria-pressed="true"]) {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 45%, transparent);
 }
 
-.hifz-pill[data-state="memorized"] {
-  background: var(--success-bg);
-  color: var(--success-fg);
-}
-
-/* Needs-revision: memorized green + gold ring + gold dot */
-.hifz-pill[data-revise="true"] {
-  border-color: var(--arabic-gold);
-  box-shadow: inset 0 0 0 1px var(--arabic-gold);
-}
-.hifz-pill[data-revise="true"] .hifz-pill-dot {
-  background: var(--arabic-gold);
+.ruku-table tr.playing .hifz-plays {
+  background: color-mix(in srgb, var(--md-on-secondary-container) 10%, transparent);
+  color: var(--md-on-secondary-container);
 }
 
 /* Per-Para memorization meter (signature element) */
-/* The meter floated on the page background while the toolbar above it and the cards
-   below it were both surfaces, which read as a gap rather than a section. */
 .hifz-meter {
-  max-width: 1100px;
-  margin: 0 auto 0.7rem;
-  padding: 0.7rem 0.85rem 0.6rem;
-  background: var(--row-white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  margin: 0 0 0.75rem;
+  padding: 0.6rem 0.9rem 0.65rem;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-md);
 }
 
+/* Each label stays whole; on a narrow phone the overall count drops to its own line,
+   still flush right, rather than either sentence breaking in the middle. */
 .hifz-meter-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.1rem 0.75rem;
   margin-bottom: 0.4rem;
 }
 
-.hifz-meter-para {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
+.hifz-meter-para,
+.hifz-meter-total {
+  white-space: nowrap;
 }
 
 .hifz-meter-total {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.hifz-meter-para {
+  font-weight: 500;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
+  color: var(--md-on-surface);
+}
+
+.hifz-meter-total {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.03em;
+  color: var(--md-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
 
+/* Linear progress indicator */
 .hifz-meter-bar {
-  height: 8px;
-  border-radius: 999px;
-  background: var(--volume-track);
+  height: 6px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-highest);
   overflow: hidden;
 }
 
 .hifz-meter-fill {
   height: 100%;
   width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--teal-accent), var(--success-fg));
-  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  transition: width 0.35s var(--md-easing-emphasized);
 }
 
 .hifz-meter-counts {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.45rem;
-  min-height: 1.2rem;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.hifz-meter-counts:empty {
+  display: none;
 }
 
 .hifz-count {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.74rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: var(--md-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
+
 .hifz-count::before {
   content: "";
   width: 0.5rem;
@@ -1687,16 +1944,15 @@ html[data-hifz="off"] .col-hifz {
   border-radius: 50%;
   background: currentColor;
 }
-.hifz-count[data-kind="memorized"] { color: var(--success-fg); }
-.hifz-count[data-kind="learning"] { color: var(--warn-chip-fg); }
-.hifz-count[data-kind="revise"] { color: var(--arabic-gold); }
+
+.hifz-count[data-kind="listened"] { color: var(--md-primary); }
 
 /* Export / import / reset buttons */
 .hifz-actions-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
 }
 
 .audio-cell audio {
@@ -1707,6 +1963,9 @@ html[data-hifz="off"] .col-hifz {
   pointer-events: none;
 }
 
+/* ================================================================== */
+/* Transport                                                           */
+/* ================================================================== */
 .audio-controls {
   display: flex;
   align-items: center;
@@ -1717,52 +1976,54 @@ html[data-hifz="off"] .col-hifz {
   max-width: 360px;
 }
 
+/* Filled icon button, 44px: the one thing a card is for. */
 .audio-play-btn {
   position: relative;
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: none;
-  border-radius: 50%;
-  background: linear-gradient(145deg, var(--teal-accent), var(--teal-dark));
-  color: white;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   touch-action: manipulation;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  box-shadow: 0 2px 10px rgba(13, 79, 79, 0.35);
+  transition: background var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-standard);
+}
+
+.audio-play-btn svg {
+  width: 22px;
+  height: 22px;
 }
 
 .audio-play-btn:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 16px rgba(13, 79, 79, 0.45);
-  background: linear-gradient(145deg, #10888a, var(--teal-dark));
+  background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
+  box-shadow: var(--md-elevation-2);
 }
 
 .audio-play-btn:active {
-  transform: scale(0.93);
-}
-
-.audio-play-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(15, 122, 122, 0.35), 0 2px 8px rgba(13, 79, 79, 0.3);
+  transform: scale(0.94);
 }
 
 tr.playing .audio-play-btn {
-  background: linear-gradient(145deg, var(--arabic-gold), #6b5010);
-  box-shadow: 0 0 0 3px rgba(139, 105, 20, 0.2), 0 3px 12px rgba(139, 105, 20, 0.4);
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+}
+
+tr.playing .audio-play-btn:hover {
+  background: color-mix(in srgb, var(--md-on-tertiary) 8%, var(--md-tertiary));
 }
 
 tr.playing:not(.audio-paused) .audio-play-btn {
-  animation: playing-pulse 2s ease-in-out infinite;
+  animation: playing-pulse 2s var(--md-easing-standard) infinite;
 }
 
 tr.playing.audio-paused .audio-play-btn {
   animation: none;
-  opacity: 0.95;
 }
 
 /* Loading state: shown while the audio is fetching/buffering before it can play.
@@ -1781,13 +2042,13 @@ tr.playing.audio-paused .audio-play-btn {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-top-color: currentColor;
   border-radius: 50%;
-  animation: audio-spin 0.7s linear infinite;
+  animation: audio-spin 0.8s linear infinite;
 }
 
 @keyframes audio-spin {
@@ -1795,17 +2056,20 @@ tr.playing.audio-paused .audio-play-btn {
 }
 
 @keyframes playing-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(15,122,122,0.2), 0 3px 12px rgba(13,79,79,0.4); }
-  50%       { box-shadow: 0 0 0 5px rgba(15,122,122,0.15), 0 3px 14px rgba(13,79,79,0.35); }
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-tertiary) 45%, transparent); }
+  70% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-tertiary) 0%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-tertiary) 0%, transparent); }
 }
 
 .audio-time {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
   min-width: 2.5rem;
-  letter-spacing: 0.02em;
 }
 
 .audio-progress-wrap {
@@ -1827,219 +2091,167 @@ tr.playing.audio-paused .audio-play-btn {
   z-index: 1;
 }
 
+/* Plain tooltip for the scrub position. */
 .audio-hover-time {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 6px);
   transform: translateX(-50%);
-  padding: 0.35rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  background: var(--teal-dark);
-  color: white;
-  border-radius: 6px;
+  background: var(--md-inverse-surface);
+  color: var(--md-inverse-on-surface);
+  border-radius: var(--md-shape-xs);
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.12s ease, transform 0.1s ease;
+  transition: opacity 0.12s ease;
   z-index: 3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.audio-hover-time::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--teal-dark);
 }
 
 .audio-hover-time.is-visible {
   opacity: 1;
 }
 
+/* M3 slider: a rounded track, the played side in primary, and a round thumb ringed in the
+   card's colour so it stands off the track. `--track-gap` is the surface the slider sits on;
+   the playing card sets it. */
 .audio-progress {
   --progress: 0%;
+  --track-h: 6px;
+  --thumb: 16px;
+  --track-gap: var(--md-secondary-container);
   width: 100%;
-  height: 6px;
+  height: var(--thumb);
   -webkit-appearance: none;
   appearance: none;
-  background: var(--volume-track);
-  border-radius: 3px;
+  background: transparent;
   cursor: pointer;
-  transition: height 0.15s ease;
+  margin: 0;
 }
 
-.audio-progress-wrap:hover .audio-progress {
-  height: 8px;
+.audio-progress::-webkit-slider-runnable-track {
+  height: var(--track-h);
+  border-radius: var(--md-shape-full);
+  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) 100%);
+}
+
+.audio-progress::-moz-range-track {
+  height: var(--track-h);
+  border-radius: var(--md-shape-full);
+  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) 100%);
 }
 
 .audio-progress::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--track-h) - var(--thumb)) / 2);
+  border: 2px solid var(--track-gap);
   border-radius: 50%;
-  background: var(--slider-thumb);
+  background: var(--md-primary);
+  box-shadow: var(--md-elevation-1);
   cursor: pointer;
-  border: 3px solid var(--teal-accent);
-  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-
-.audio-progress-wrap:hover .audio-progress::-webkit-slider-thumb {
-  transform: scale(1.25);
-  box-shadow: 0 0 0 4px rgba(15, 122, 122, 0.15), 0 2px 8px rgba(13, 79, 79, 0.3);
-  border-color: var(--teal-dark);
 }
 
 .audio-progress::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 2px solid var(--track-gap);
   border-radius: 50%;
-  background: var(--slider-thumb);
+  background: var(--md-primary);
+  box-shadow: var(--md-elevation-1);
   cursor: pointer;
-  border: 3px solid var(--teal-accent);
-  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.audio-progress-wrap:hover .audio-progress::-moz-range-thumb {
-  transform: scale(1.25);
-  box-shadow: 0 0 0 4px rgba(15, 122, 122, 0.15), 0 2px 8px rgba(13, 79, 79, 0.3);
-  border-color: var(--teal-dark);
-}
-
-.audio-progress::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--teal-accent) 0%, var(--teal-accent) var(--progress), var(--volume-track) var(--progress), var(--volume-track) 100%);
-  transition: height 0.15s ease;
-}
-
-.audio-progress-wrap:hover .audio-progress::-webkit-slider-runnable-track {
-  height: 8px;
-}
-
-.audio-progress::-moz-range-track {
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--teal-accent) 0%, var(--teal-accent) var(--progress), var(--volume-track) var(--progress), var(--volume-track) 100%);
-  transition: height 0.15s ease;
-}
-
-.audio-progress-wrap:hover .audio-progress::-moz-range-track {
-  height: 8px;
-}
-
-/* Playing state glow on thumb */
-tr.playing .audio-progress::-webkit-slider-thumb {
-  border-color: var(--teal-dark);
-  box-shadow: 0 0 0 4px rgba(15, 122, 122, 0.2), 0 2px 8px rgba(13, 79, 79, 0.35);
-}
-
-tr.playing .audio-progress::-moz-range-thumb {
-  border-color: var(--teal-dark);
-  box-shadow: 0 0 0 4px rgba(15, 122, 122, 0.2), 0 2px 8px rgba(13, 79, 79, 0.35);
-}
-
+/* Outlined chip: playback speed */
 .audio-speed-btn {
   flex-shrink: 0;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.68rem;
-  font-weight: 700;
+  height: 28px;
+  padding: 0 0.6rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
-  border: 1.5px solid var(--border);
-  border-radius: 20px;
-  background: var(--row-white);
-  color: var(--text-muted);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-sm);
+  background: transparent;
+  color: var(--md-on-surface-variant);
   cursor: pointer;
-  transition: all 0.15s ease;
-  min-width: 2.2rem;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
+  min-width: 2.4rem;
   text-align: center;
-  line-height: 1.4;
-  letter-spacing: 0.01em;
 }
 
 .audio-speed-btn:hover {
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-  background: var(--teal-tint-low);
+  background: color-mix(in srgb, var(--md-on-surface-variant) 8%, transparent);
+  color: var(--md-on-surface);
 }
 
-.audio-offline-btn {
+/* Standard icon buttons: save offline, share, seek */
+.audio-offline-btn,
+.audio-share-wa-btn,
+.audio-seek-btn {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   padding: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 50%;
-  background: var(--row-white);
-  color: var(--text-muted);
-  font-size: 0.75rem;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  color: var(--md-on-surface-variant);
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  touch-action: manipulation;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-standard);
 }
 
-.audio-offline-btn:hover {
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-  background: var(--offline-hover-bg);
+.audio-offline-btn:hover,
+.audio-seek-btn:hover {
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
+  color: var(--md-primary);
+}
+
+.audio-seek-btn:active {
+  transform: scale(0.92);
+}
+
+.audio-offline-btn svg {
+  width: 20px;
+  height: 20px;
 }
 
 .audio-offline-btn.is-saving {
   pointer-events: none;
-  opacity: 0.7;
   animation: pulse-save 1s infinite;
 }
 
 .audio-offline-btn.is-saved {
-  border-color: var(--success-fg);
-  color: var(--success-fg);
-  background: var(--success-bg);
-  font-weight: 700;
+  color: var(--md-on-success-container);
+  background: var(--md-success-container);
   cursor: default;
 }
 
 .audio-share-wa-btn {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 50%;
-  background: var(--row-white);
   color: var(--wa-color);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
 }
 
 .audio-share-wa-btn:hover {
-  border-color: var(--wa-hover-border);
-  color: var(--wa-hover-fg);
-  background: var(--wa-hover-bg);
-}
-
-.audio-share-wa-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.25);
+  background: color-mix(in srgb, var(--wa-color) 10%, transparent);
 }
 
 .audio-share-wa-btn svg {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   pointer-events: none;
 }
@@ -2050,36 +2262,8 @@ tr.playing .audio-progress::-moz-range-thumb {
 }
 
 @keyframes pulse-save {
-  0%, 100% { opacity: 0.7; }
+  0%, 100% { opacity: 0.8; }
   50% { opacity: 0.4; }
-}
-
-.audio-seek-btn {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 50%;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  touch-action: manipulation;
-}
-
-.audio-seek-btn:hover {
-  border-color: var(--teal-accent);
-  color: var(--teal-accent);
-  background: var(--teal-tint-hover);
-}
-
-.audio-seek-btn:active {
-  background: var(--teal-light);
-  transform: scale(0.9);
 }
 
 .audio-loop-btn {
@@ -2087,26 +2271,26 @@ tr.playing .audio-progress::-moz-range-thumb {
   width: 28px;
   height: 28px;
   padding: 0;
-  border: 1.5px solid var(--border);
-  border-radius: 4px;
-  background: var(--row-white);
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-xs);
+  background: transparent;
   cursor: pointer;
   font-size: 0.8rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
-  opacity: 0.5;
+  transition: all var(--md-duration-short) var(--md-easing-standard);
+  opacity: 0.6;
 }
 
 .audio-loop-btn:hover {
-  border-color: var(--teal-accent);
-  opacity: 0.8;
+  border-color: var(--md-primary);
+  opacity: 0.9;
 }
 
 .audio-loop-btn.active {
-  border-color: var(--teal-accent);
-  background: var(--loop-active-bg);
+  border-color: var(--md-primary);
+  background: color-mix(in srgb, var(--md-primary) 12%, transparent);
   opacity: 1;
 }
 
@@ -2152,54 +2336,57 @@ tr.playing .audio-progress::-moz-range-thumb {
 .validate-label span {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
-  border-radius: 12px;
-  border: 1.5px solid var(--validate-pending-border);
-  background: var(--validate-pending-bg);
-  color: var(--validate-pending-fg);
+  height: 28px;
+  padding: 0 0.6rem;
+  border-radius: var(--md-shape-sm);
+  border: 1px solid var(--md-outline-variant);
+  background: transparent;
+  color: var(--md-on-surface-variant);
   font-size: 0.75rem;
   font-weight: 500;
+  letter-spacing: 0.03em;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 .validate-label.validated span {
-  border-color: var(--success-fg);
-  background: var(--success-bg);
-  color: var(--success-fg);
+  border-color: transparent;
+  background: var(--md-success-container);
+  color: var(--md-on-success-container);
 }
 
 .audio-cell .no-recording {
   display: inline-block;
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  background: var(--muted-chip-bg);
-  border-radius: 4px;
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface-container-highest);
+  border-radius: var(--md-shape-xs);
 }
 
 .audio-cell .path-not-found {
   display: inline-block;
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
-  color: var(--warn-chip-fg);
-  background: var(--warn-chip-bg);
-  border-radius: 4px;
+  color: var(--md-on-error-container);
+  background: var(--md-error-container);
+  border-radius: var(--md-shape-xs);
 }
 
 .audio-cell .audio-retry-btn {
   margin-left: 0.4rem;
-  padding: 0.25rem 0.6rem;
+  min-height: 32px;
+  padding: 0 0.8rem;
   font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--teal-accent);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--md-primary);
   background: none;
-  border: 1px solid var(--teal-accent);
-  border-radius: 4px;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-full);
   cursor: pointer;
 }
 
 .audio-cell .audio-retry-btn:hover:not(:disabled) {
-  background: var(--teal-tint-hover);
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
 }
 
 .audio-cell .audio-retry-btn:disabled {
@@ -2207,85 +2394,23 @@ tr.playing .audio-progress::-moz-range-thumb {
   cursor: default;
 }
 
-/* Hover tooltip: audio path */
-.ruku-path-tooltip {
-  position: fixed;
-  z-index: 999;
-  max-width: 420px;
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
-  font-family: ui-monospace, monospace;
-  color: var(--text-primary);
-  background: var(--row-white);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--tooltip-shadow);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  word-break: break-all;
-}
-
-.ruku-path-tooltip.is-visible {
-  opacity: 1;
-}
-
-/* Hide row path tooltip on touch/mobile devices */
-@media (hover: none), (pointer: coarse) {
-  .ruku-path-tooltip {
-    display: none !important;
-  }
-}
-
-/* Mobile and small screens */
+/* ================================================================== */
+/* Mobile and small screens                                            */
+/* ================================================================== */
 @media (max-width: 768px) {
-
-  .table-wrapper{
-    box-shadow: none;
-    background: transparent;
-    border: none;
-  }
-
-  tr.playing {
-    background: var(--playing-bg) !important;
-    border: 2px solid var(--teal-accent) !important;
-  }
-
-.ruku-table tbody tr {
-  background: var(--row-white) !important;
-}
-
-
   .header {
-    padding: 1rem 1rem;
+    padding: 0.7rem 1rem 0.75rem;
+  }
+
+  .header-logo {
+    width: 40px;
+    height: 40px;
   }
 
   .header h1 {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
   }
 
-  .header .subtitle {
-    font-size: 0.9rem;
-  }
-
-  .main {
-    padding: 0.75rem 1rem;
-  }
-
-  .controls {
-    margin-bottom: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .controls label {
-    font-size: 0.9rem;
-  }
-
-  .controls select {
-    padding: 0.6rem 2rem 0.6rem 0.75rem;
-    font-size: 1rem;
-    min-height: 44px;
-  }
 
   .toolbar-bottom {
     flex-direction: row;
@@ -2297,127 +2422,13 @@ tr.playing .audio-progress::-moz-range-thumb {
   }
 }
 
-/* Mobile: transpose table into stacked cards */
 @media (max-width: 640px) {
   .main {
-    padding: 5px;
-  }
-
-  /* A step between the desktop 1.75rem and the 1.3rem the smallest phones get, so the
-     masthead scales down with the page instead of in one jump. */
-  .header {
-    padding: 1rem 1rem 0.9rem;
-  }
-
-  .header h1 {
-    font-size: 1.45rem;
-  }
-
-  .table-wrapper {
-    overflow-x: visible;
-  }
-
-  .ruku-table {
-    font-size: 0.9rem;
-    min-width: 0;
-    display: block;
-  }
-
-  .ruku-table thead {
-    display: none;
-  }
-
-  .ruku-table tbody {
-    display: block;
-  }
-
-  .ruku-table tbody tr {
-    display: block;
-    margin-bottom: 0.75rem;
-    padding: 0.9rem 1rem;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--row-white) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  }
-
-  .ruku-table tbody tr.row-even {
-    background: var(--row-gray);
-  }
-
-  .ruku-table tbody tr.row-odd {
-    background: var(--row-white);
-  }
-
-  .ruku-table tbody tr.playing {
-    background: var(--playing-bg) !important;
-    border-color: var(--teal-accent);
-    box-shadow: 0 2px 12px rgba(15,122,122,0.15);
-  }
-
-  .ruku-table tbody td {
-    display: block;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
-    white-space: normal;
-    min-width: 0;
-  }
-
-  .ruku-table tbody td:last-child {
-    border-bottom: none;
-    padding-top: 0.75rem;
-  }
-
-  .ruku-table tbody td::before {
-    content: attr(data-label);
-    display: block;
-    font-weight: 700;
-    color: var(--mobile-td-label);
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 0.25rem;
-  }
-
-  .ruku-table .col-surah-arabic {
-    text-align: right;
-    direction: rtl;
-  }
-
-  .ruku-table .col-audio::before {
-    margin-bottom: 0.5rem;
-  }
-
-  .ruku-table .col-audio .audio-controls {
-    min-width: 0;
-    max-width: none;
-    width: 100%;
-  }
-
-  /* Card layout: the ayat panel is its own block tucked under the track card. */
-  .ruku-table tbody tr.has-ayat-open {
-    margin-bottom: 0.35rem;
-  }
-
-  .ruku-table tbody tr.ayat-row {
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    box-shadow: none;
-  }
-
-  .ruku-table tbody td.ayat-cell {
-    padding: 0;
-    border-bottom: none;
-  }
-
-  .ruku-table tbody td.ayat-cell::before {
-    content: none;
+    padding: 8px;
   }
 
   .ayat-panel {
-    border-radius: 10px;
-    padding: 0.75rem 0.9rem 0.6rem;
+    padding: 0.8rem 0.95rem 0.65rem;
   }
 
   .ayat-body {
@@ -2432,99 +2443,26 @@ tr.playing .audio-progress::-moz-range-thumb {
     align-items: center;
   }
 
-  /* .audio-offline-btn {
-    order: 4;
-  }
-
-  .audio-share-wa-btn {
-    order: 5;
-  } */
-
-  /* 52px was right when this button sat inside the transport row; leading a card it
-     just pushed the two text lines off to the side. 44px is still a full touch target. */
-  .audio-play-btn {
-    width: 44px;
-    height: 44px;
-    min-width: 44px;
-    min-height: 44px;
-    order: 1;
-  }
-
   .audio-seek-btn {
     width: 42px;
     height: 42px;
     min-width: 38px;
     min-height: 38px;
-
   }
 
-.audio-seek-btn svg{
+  .audio-seek-btn svg {
     width: 28px;
     height: 28px;
-  }
-
-  .audio-seek-back-btn {
-    order: 0;
-  }
-
-  .audio-seek-fwd-btn {
-    order: 2;
-  }
-
-  .audio-speed-btn {
-    order: 3;
-  }
-
-  .audio-time-current {
-    order: 10;
-    font-size: 0.85rem;
-    min-width: 2.25rem;
   }
 
   .audio-progress-wrap {
-    order: 11;
-    flex: 1 1 100%;
-    width: 100%;
-    min-width: 0;
     min-height: 44px;
   }
 
-  .audio-time-duration {
-    order: 12;
-    font-size: 0.85rem;
-    min-width: 2.25rem;
-  }
-
+  /* A fatter track and a bigger thumb for thumbs. */
   .audio-progress {
-    height: 16px;
-  }
-
-  .audio-progress-wrap:hover .audio-progress {
-    height: 16px;
-  }
-
-  .audio-progress::-webkit-slider-runnable-track {
-    height: 16px;
-    border-radius: 8px;
-  }
-
-  .audio-progress::-moz-range-track {
-    height: 16px;
-    border-radius: 8px;
-  }
-
-  .audio-progress::-webkit-slider-thumb {
-    width: 28px;
-    height: 28px;
-  }
-
-  .audio-progress::-moz-range-thumb {
-    width: 28px;
-    height: 28px;
-  }
-
-  .ruku-table .col-surah-arabic {
-    font-size: 1rem;
+    --track-h: 8px;
+    --thumb: 22px;
   }
 
   .modal {
@@ -2542,6 +2480,7 @@ tr.playing .audio-progress::-moz-range-thumb {
     border-radius: 0;
     display: flex;
     flex-direction: column;
+    transform: none;
   }
 
   .modal-header {
@@ -2562,7 +2501,7 @@ tr.playing .audio-progress::-moz-range-thumb {
 /* Very small phones */
 @media (max-width: 380px) {
   .header h1 {
-    font-size: 1.3rem;
+    font-size: 1.125rem;
   }
 
   .toolbar-top,
@@ -2570,32 +2509,12 @@ tr.playing .audio-progress::-moz-range-thumb {
     padding: 0.6rem 0.85rem;
   }
 
-  /* Label, chevron, select, chevron come to a couple of pixels wider than a 320px
-     viewport leaves, so the second chevron drops onto a line of its own. Hold the four
-     on one line and let the select -- the only one of them that can give -- take
-     whatever the fixed items leave. */
-  .controls-left {
-    flex: 1;
-    min-width: 0;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
+  .para-picker {
+    min-width: 8.5rem;
   }
 
-  .controls-left label {
-    flex-shrink: 0;
-  }
-
-  .controls-left select {
-    flex: 1;
-    min-width: 0;
-    padding-right: 1.6rem;
-    padding-left: 0.5rem;
-  }
-
-  /* Narrower, and as tall as the select they sit either side of. */
-  .btn-para-step {
-    width: 34px;
-    height: 44px;
+  .para-picker-face {
+    padding-left: 0.75rem;
   }
 
   .btn-toolbar-locate {
@@ -2603,104 +2522,65 @@ tr.playing .audio-progress::-moz-range-thumb {
     height: 32px;
   }
 
-  .ruku-table tbody tr {
-    padding: 0.75rem;
-  }
-
-  .ruku-table tbody td {
-    padding: 0.4rem 0;
-  }
-
   .ruku-table {
     font-size: 0.85rem;
   }
 }
 
-/* Settings modal */
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg, var(--teal-dark), var(--teal-header));
-  padding: 1rem 1.25rem;
-}
-
-.modal-header .modal-title {
-  background: none;
-  padding: 0;
-  border-radius: 0;
-}
-
-.modal-close-btn {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.15);
-  color: white;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
+/* ================================================================== */
+/* Settings dialog                                                     */
+/* ================================================================== */
 .settings-form {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: 0.5rem 0;
+  padding: 0 0 0.5rem;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
 .settings-group {
-  padding: 0;
+  padding: 0 0 0.35rem;
 }
 
+.settings-group + .settings-group {
+  border-top: 1px solid var(--md-outline-variant);
+  margin-top: 0.25rem;
+}
+
+/* List subheader */
 .settings-group-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
+  padding: 0.85rem 1.5rem 0.25rem;
   font-size: 0.75rem;
-  font-weight: 700;
+  line-height: 1rem;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--teal-accent);
-  background: var(--row-gray);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.settings-group:first-child .settings-group-header {
-  border-top: none;
+  letter-spacing: 0.08em;
+  color: var(--md-primary);
 }
 
 .settings-group-header svg {
-  opacity: 0.7;
+  width: 16px;
+  height: 16px;
 }
 
 .settings-row {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.7rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.settings-group .settings-row:last-child {
-  border-bottom: none;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
 }
 
 .settings-row label {
   font-weight: 500;
-  font-size: 0.88rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
+  color: var(--md-on-surface);
 }
 
 .settings-row-inline {
@@ -2710,69 +2590,83 @@ tr.playing .audio-progress::-moz-range-thumb {
   gap: 0.75rem;
 }
 
+/* --- Segmented buttons --- */
 .settings-role-group {
   display: flex;
-  gap: 0.5rem;
 }
 
-.settings-role-btn {
+.settings-role-group .settings-role-btn {
   flex: 1;
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--border);
-  background: var(--row-white);
-  color: var(--text-primary);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  min-height: 40px;
+  padding: 0 0.75rem;
+  margin-left: -1px;
+  border: 1px solid var(--md-outline);
+  border-radius: 0;
+  background: transparent;
+  color: var(--md-on-surface);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  box-shadow: none;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
 }
 
-.settings-role-btn:hover {
-  border-color: var(--teal-accent);
+.settings-role-group .settings-role-btn:first-child {
+  margin-left: 0;
+  border-radius: var(--md-shape-full) 0 0 var(--md-shape-full);
 }
 
-.settings-role-btn.active {
-  background: var(--teal-accent);
-  color: white;
-  border-color: var(--teal-accent);
+.settings-role-group .settings-role-btn:last-child {
+  border-radius: 0 var(--md-shape-full) var(--md-shape-full) 0;
+}
+
+.settings-role-group .settings-role-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  box-shadow: none;
+}
+
+.settings-role-group .settings-role-btn.active,
+.settings-role-group .settings-role-btn.active:hover:not(:disabled) {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  z-index: 1;
+}
+
+/* Selected segment carries a check, as the spec draws it. */
+.settings-role-group .settings-role-btn.active::before {
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
 }
 
 .settings-role-badge {
   display: inline-block;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--md-shape-sm);
   font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--row-gray);
-  color: var(--text-muted);
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  background: var(--md-surface-container-highest);
+  color: var(--md-on-surface-variant);
   align-self: flex-start;
 }
 
 .settings-role-badge.admin {
-  background: var(--admin-badge-bg);
-  color: var(--teal-accent);
-}
-
-.settings-admin-section input[type="password"] {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 1rem;
-  background: var(--row-white);
-  color: var(--text-primary);
-}
-
-.settings-admin-section input[type="password"]:focus {
-  outline: none;
-  border-color: var(--teal-accent);
-  box-shadow: 0 0 0 2px rgba(15, 122, 122, 0.2);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
 }
 
 .settings-section-title {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 500;
+  color: var(--md-on-surface-variant);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -2780,10 +2674,13 @@ tr.playing .audio-progress::-moz-range-thumb {
 .settings-toggle-label {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
+  min-height: 32px;
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
   user-select: none;
 }
 
@@ -2793,9 +2690,10 @@ tr.playing .audio-progress::-moz-range-thumb {
 
 .settings-hint {
   margin: 0;
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.35;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface-variant);
 }
 
 .settings-toggle-label input[type="checkbox"] {
@@ -2805,35 +2703,74 @@ tr.playing .audio-progress::-moz-range-thumb {
   height: 0;
 }
 
+/* --- Switch (52x32; the handle grows from 16px to 24px and gains a check when on) --- */
 .settings-toggle-switch {
   flex-shrink: 0;
-  width: 40px;
-  height: 22px;
-  background: var(--toggle-track-off);
-  border-radius: 11px;
   position: relative;
-  transition: background 0.2s;
+  width: 52px;
+  height: 32px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-highest);
+  border: 2px solid var(--md-outline);
+  box-sizing: border-box;
+  transition: background var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
 }
 
 .settings-toggle-switch::after {
   content: "";
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  background: var(--slider-thumb);
+  top: 50%;
+  left: 6px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  transition: transform 0.2s;
+  background: var(--md-outline);
+  transition: transform var(--md-duration-short) var(--md-easing-emphasized), width var(--md-duration-short) var(--md-easing-standard), height var(--md-duration-short) var(--md-easing-standard), margin var(--md-duration-short) var(--md-easing-standard), left var(--md-duration-short) var(--md-easing-standard), background var(--md-duration-short) var(--md-easing-standard);
+}
+
+/* Check glyph, laid over the handle's "on" position. */
+.settings-toggle-switch::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 28px;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  z-index: 1;
+  background: var(--md-on-primary-container);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+  opacity: 0;
+  transition: opacity var(--md-duration-short) var(--md-easing-standard);
+}
+
+.settings-toggle-label:hover .settings-toggle-switch::after {
+  background: var(--md-on-surface-variant);
 }
 
 .settings-toggle-label input:checked + .settings-toggle-switch {
-  background: var(--teal-accent);
+  background: var(--md-primary);
+  border-color: var(--md-primary);
 }
 
 .settings-toggle-label input:checked + .settings-toggle-switch::after {
-  transform: translateX(18px);
+  width: 24px;
+  height: 24px;
+  margin-top: -12px;
+  left: 2px;
+  transform: translateX(22px);
+  background: var(--md-on-primary);
+}
+
+.settings-toggle-label input:checked + .settings-toggle-switch::before {
+  opacity: 1;
+}
+
+.settings-toggle-label input:focus-visible + .settings-toggle-switch {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 2px;
 }
 
 .settings-playback-row {
@@ -2852,13 +2789,23 @@ tr.playing .audio-progress::-moz-range-thumb {
 }
 
 .settings-speed-select {
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  border: 1px solid var(--input-border-soft);
-  font-size: 0.85rem;
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 36px;
+  padding: 0 2rem 0 0.75rem;
+  border-radius: var(--md-shape-sm);
+  border: 1px solid var(--md-outline);
+  font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--row-white);
-  color: var(--text-primary);
+  background: transparent var(--md-select-chevron) no-repeat right 0.35rem center / 20px 20px;
+  color: var(--md-on-surface);
+}
+
+.settings-speed-select:focus {
+  outline: none;
+  border-color: var(--md-primary);
+  box-shadow: inset 0 0 0 1px var(--md-primary);
 }
 
 .toolbar-volume-wrap {
@@ -2872,142 +2819,120 @@ tr.playing .audio-progress::-moz-range-thumb {
   user-select: none;
 }
 
+/* --- Sliders (volume) --- */
+.toolbar-volume-range,
+.settings-volume-range {
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  margin: 0;
+}
+
 .toolbar-volume-range {
   width: 5.5rem;
   max-width: 28vw;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--volume-track);
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.toolbar-volume-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--slider-thumb);
-  border: 2px solid var(--teal-accent);
-  box-shadow: 0 1px 4px rgba(13, 79, 79, 0.3);
-  cursor: pointer;
-}
-
-.toolbar-volume-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--slider-thumb);
-  border: 2px solid var(--teal-accent);
-  box-shadow: 0 1px 4px rgba(13, 79, 79, 0.3);
-  cursor: pointer;
-}
-
-.toolbar-volume-range::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 3px;
-  background: var(--volume-track);
-}
-
-.toolbar-volume-range::-moz-range-track {
-  height: 4px;
-  border-radius: 3px;
-  background: var(--volume-track);
-}
-
-.settings-volume-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .settings-volume-range {
   flex: 1;
   min-width: 140px;
   max-width: 260px;
-  height: 6px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--volume-track);
-  border-radius: 3px;
-  cursor: pointer;
 }
 
+.toolbar-volume-range::-webkit-slider-runnable-track,
+.settings-volume-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-highest);
+}
+
+.toolbar-volume-range::-moz-range-track,
+.settings-volume-range::-moz-range-track {
+  height: 4px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-highest);
+}
+
+.settings-volume-range::-moz-range-progress {
+  height: 4px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary);
+}
+
+.toolbar-volume-range::-webkit-slider-thumb,
 .settings-volume-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
   border-radius: 50%;
-  background: var(--slider-thumb);
+  border: none;
+  background: var(--md-primary);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-primary) 12%, transparent);
+  transition: box-shadow var(--md-duration-short) var(--md-easing-standard);
   cursor: pointer;
-  border: 2px solid var(--teal-accent);
-  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
 }
 
+.toolbar-volume-range::-moz-range-thumb,
 .settings-volume-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: var(--slider-thumb);
+  border: none;
+  background: var(--md-primary);
   cursor: pointer;
-  border: 2px solid var(--teal-accent);
-  box-shadow: 0 1px 6px rgba(13, 79, 79, 0.35);
 }
 
-.settings-volume-range::-webkit-slider-runnable-track {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--volume-track);
+.settings-volume-range:hover::-webkit-slider-thumb {
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-primary) 12%, transparent);
 }
 
-.settings-volume-range::-moz-range-track {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--volume-track);
+.settings-volume-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .settings-volume-value {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--teal-accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--md-primary);
   min-width: 2.75rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .settings-download-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .download-all-status {
-  font-size: 0.85rem;
-  color: var(--teal-accent);
-  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--md-primary);
+  font-weight: 500;
 }
 
 .settings-actions {
   margin-top: 0;
-  padding: 0.75rem 1.25rem;
+  padding: 0.75rem 1.5rem 1.25rem;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0.5rem;
-  border-top: 1px solid var(--border);
-  background: var(--row-gray);
-  border-radius: 0 0 12px 12px;
 }
 
 .settings-actions .btn {
   min-height: 40px;
   min-width: 80px;
-  font-size: 0.8rem;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
 }
 
 /* ------------------------------------------------------------------ */
@@ -3026,11 +2951,11 @@ tr.playing .audio-progress::-moz-range-thumb {
    the overlay root still receives the advance tap. */
 .mq-guide-spotlight {
   position: absolute;
-  border: 2.5px solid var(--teal-accent);
-  border-radius: 14px;
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.76);
+  border: 2px solid var(--md-primary);
+  border-radius: var(--md-shape-lg);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
   pointer-events: none;
-  transition: top 0.18s ease, left 0.18s ease, width 0.18s ease, height 0.18s ease;
+  transition: top 0.18s var(--md-easing-standard), left 0.18s var(--md-easing-standard), width 0.18s var(--md-easing-standard), height 0.18s var(--md-easing-standard);
 }
 
 /* Full-screen SVG layer for the caption→target arrow. */
@@ -3043,14 +2968,14 @@ tr.playing .audio-progress::-moz-range-thumb {
   overflow: visible;
 }
 .mq-guide-arrow-line {
-  stroke: var(--arabic-gold);
+  stroke: var(--md-tertiary);
   stroke-width: 3;
   stroke-linecap: round;
   fill: none;
 }
 .mq-guide-arrow-head {
-  fill: var(--arabic-gold);
-  stroke: var(--arabic-gold);
+  fill: var(--md-tertiary);
+  stroke: var(--md-tertiary);
   stroke-width: 3;
   stroke-linejoin: round;
 }
@@ -3061,68 +2986,77 @@ tr.playing .audio-progress::-moz-range-thumb {
   right: 16px;
   max-width: 520px;
   margin: 0 auto;
-  background: var(--modal-bg);
-  border: 1px solid rgba(15, 122, 122, 0.5);
-  border-radius: 14px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-  padding: 16px 18px;
+  background: var(--md-dialog);
+  border-radius: var(--md-shape-xl);
+  box-shadow: var(--md-elevation-3);
+  padding: 20px 24px;
   pointer-events: auto;
   cursor: pointer;
 }
-html[data-theme="dark"] .mq-guide-caption {
-  border-color: rgba(45, 180, 180, 0.5);
-}
 
 .mq-guide-step-label {
-  color: var(--teal-accent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  color: var(--md-primary);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .mq-guide-title {
   margin: 6px 0 6px;
-  color: var(--text-primary);
-  font-size: 1.12rem;
-  font-weight: 700;
+  color: var(--md-on-surface);
+  font-size: 1.375rem;
+  line-height: 1.75rem;
+  font-weight: 400;
 }
 .mq-guide-body {
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  line-height: 1.45;
+  color: var(--md-on-surface-variant);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.01em;
 }
 .mq-guide-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 14px;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 18px;
 }
 .mq-guide-skip {
+  min-height: 40px;
+  padding: 0 0.75rem;
   border: none;
+  border-radius: var(--md-shape-full);
   background: none;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: var(--md-primary);
+  font-size: 0.875rem;
   font-weight: 500;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  padding: 6px 8px;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  transition: background var(--md-duration-short) var(--md-easing-standard);
+}
+.mq-guide-skip:hover {
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
 }
 .mq-guide-next {
+  min-height: 40px;
   border: none;
-  background: var(--teal-accent);
-  color: #fff;
-  font-size: 0.92rem;
-  font-weight: 700;
-  border-radius: 20px;
-  padding: 9px 22px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border-radius: var(--md-shape-full);
+  padding: 0 24px;
   cursor: pointer;
   touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
+  transition: background var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
 }
 .mq-guide-next:hover {
-  filter: brightness(1.08);
+  background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
+  box-shadow: var(--md-elevation-1);
 }
 
 @media (max-width: 560px) {
@@ -3141,13 +3075,6 @@ html[data-theme="dark"] .mq-guide-caption {
 /* cost most of a phone viewport per ruku. Cards at every width now, as */
 /* the native app has no table to fall back to.                         */
 /* ------------------------------------------------------------------ */
-.table-wrapper {
-  overflow-x: visible;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
-
 .ruku-table,
 .ruku-table tbody {
   display: block;
@@ -3155,35 +3082,40 @@ html[data-theme="dark"] .mq-guide-caption {
   min-width: 0;
 }
 
-.ruku-table thead { display: none; }
-
+/* Elevated card. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Two text lines, not four: the surah, its ayat and the hifz pill share one line under
-     the ruku number, the way the now-playing strip stacks its title over its detail. */
-  grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
+  /* Phone first: one column at the right holds share, download and the star, in that order,
+     each on its own line beside the title, the surah and the ayat chip. The listen count
+     sits to the star's left so the star lines up under the two icons. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "play ruku   ruku   act  wa dl"
-    "play arabic verses hifz wa dl"
-    "tx   tx     tx     tx   tx tx";
+    "play ruku   ruku   wa"
+    "play arabic arabic dl"
+    "play verses verses hifz"
+    "tx   tx     tx     tx";
   align-items: center;
-  column-gap: 0.7rem;
-  row-gap: 0.15rem;
-  padding: 0.7rem 0.85rem;
-  margin: 0 0 0.55rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--row-white);
-  box-shadow: var(--shadow-sm);
+  column-gap: 0.6rem;
+  row-gap: 0;
+  padding: 0.55rem 0.7rem 0.55rem 0.75rem;
+  margin: 0 0 0.75rem;
+  border: none;
+  border-radius: var(--md-shape-md);
+  background: var(--md-card);
+  box-shadow: var(--md-elevation-1);
+  transition: background var(--md-duration-medium) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
 }
 
-/* Playing: the gold of the transport button, run down the edge of the card, so the active
-   ruku is findable mid-scroll without reading a word of it. Inset rather than a border,
-   so nothing in the grid shifts when it appears. */
+.ruku-table tbody tr[data-global-index]:not(.playing):hover {
+  box-shadow: var(--md-elevation-2);
+}
+
+/* Playing: the secondary container, the way a selected list item is drawn; the gold of the
+   transport button marks it from across the room. Nothing in the grid shifts. */
 .ruku-table tbody tr[data-global-index].playing {
-  border-color: var(--teal-accent);
-  background: var(--playing-bg) !important;
-  box-shadow: inset 3px 0 0 var(--arabic-gold), var(--shadow-sm);
+  background: var(--md-secondary-container) !important;
+  color: var(--md-on-secondary-container);
+  box-shadow: var(--md-elevation-2);
 }
 
 /* A card is one surface: the cells stop being boxes and just place text. */
@@ -3205,44 +3137,107 @@ html[data-theme="dark"] .mq-guide-caption {
    everything else stays muted until it is worth reading. */
 .ruku-table .col-ruku {
   grid-area: ruku;
-  font-size: 0.95rem;
-  line-height: 1.35;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--md-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.ruku-table .col-surah-arabic {
+.ruku-table tr.playing .col-ruku {
+  color: var(--md-on-secondary-container);
+}
+
+/* `> td` above sets every cell to block; this one lays its two spans out as a row. */
+.ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
   grid-area: arabic;
+  /* Name then number on a phone ("النبأ · 78"); the wide screen flips them below. */
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-family: "Traditional Arabic", "Scheherazade New", serif;
   font-size: 0.9rem;
   line-height: 1.4;
   font-weight: 500;
   /* Gold, not accent teal: teal means "this does something" everywhere else in the card,
-     and a surah name does nothing. It answers the header's gold rule instead. */
-  color: var(--arabic-gold);
-  text-align: left;
+     and a surah name does nothing. */
+  color: var(--md-tertiary);
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Harakat rise above and dip below the letters; nothing here may clip them. */
+.ruku-table .surah-ar {
+  unicode-bidi: isolate;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.ruku-table .surah-ar::after {
+  content: " \00b7";
 }
 
 .ruku-table .col-verses {
   grid-area: verses;
-  font-size: 0.8rem;
-  line-height: 1.4;
-  color: var(--text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  color: var(--md-on-surface-variant);
   white-space: nowrap;
-  margin-left: 0.4rem;
+}
+
+/* The icon column sets the row height on a phone. At 32px the rows hug the title, the surah
+   and the chip instead of floating each in a band of air; the 20px glyphs still sit 12px
+   apart. */
+.ruku-table .audio-share-wa-btn,
+.ruku-table .audio-offline-btn,
+.ruku-table .hifz-mark {
+  width: 32px;
+  height: 32px;
+}
+
+.ruku-table .hifz-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ruku-table .col-verses .verses-toggle {
+  font-size: 0.8125rem;
+}
+
+.ruku-table tr.playing .col-verses {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 80%, transparent);
+}
+
+.ruku-table tr.playing .col-verses .verses-toggle {
+  color: var(--md-on-secondary-container);
 }
 
 .ruku-table .col-hifz {
   grid-area: hifz;
-  justify-self: start;
+  justify-self: end;
+  align-self: center;
   min-width: 0;
-  margin-left: 0.15rem;
+}
+
+.ruku-table .audio-share-wa-btn,
+.ruku-table .audio-offline-btn {
+  justify-self: end;
+}
+
+/* Count first, check last: the check is the item that lines up under the icons. */
+.ruku-table .hifz-controls {
+  flex-direction: row-reverse;
+}
+
+/* Admin-only; on a phone it takes a line of its own after the transport. */
+.ruku-table .action-cell {
+  grid-area: auto;
+  grid-column: 1 / -1;
 }
 
 /* Let the cell's children become items of the row's grid, so the play button
@@ -3252,16 +3247,6 @@ html[data-theme="dark"] .mq-guide-caption {
 .ruku-table .audio-play-btn { grid-area: play; }
 .ruku-table .audio-share-wa-btn { grid-area: wa; }
 .ruku-table .audio-offline-btn { grid-area: dl; }
-
-/* Share and download are secondary: at rest they are their glyph and nothing else, and
-   only take a ring on hover or focus. Two bordered circles per card, times a screenful of
-   cards, was most of the chrome in the list. The saved and in-progress states keep theirs,
-   since there the ring is the state. */
-.ruku-table .audio-share-wa-btn:not(:hover):not(:focus-visible),
-.ruku-table .audio-offline-btn:not(:hover):not(:focus-visible):not(.is-saved):not(.is-saving) {
-  border-color: transparent;
-  background: transparent;
-}
 
 /* Rows with nothing to play still need their cell's children placed. */
 .ruku-table .no-recording,
@@ -3275,7 +3260,7 @@ html[data-theme="dark"] .mq-guide-caption {
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--md-outline);
   border-radius: 50%;
   background: transparent;
   font-size: 0;
@@ -3288,7 +3273,7 @@ html[data-theme="dark"] .mq-guide-caption {
   content: "—";
   font-size: 1rem;
   line-height: 1;
-  color: var(--text-muted);
+  color: var(--md-on-surface-variant);
 }
 
 .ruku-table .audio-retry-btn { grid-area: wa; }
@@ -3296,25 +3281,56 @@ html[data-theme="dark"] .mq-guide-caption {
 .ruku-table .audio-controls {
   grid-area: tx;
   display: none;
-  margin-top: 0.6rem;
+  margin-top: 0.5rem;
   flex-wrap: wrap;
+  max-width: none;
 }
 
 .ruku-table tbody tr.playing .audio-controls { display: flex; }
 
-/* Two lines while playing, not three: the controls and the clock share one, the scrubber
-   takes the next. The progress bar's 100% flex basis was breaking the line before the
-   duration, which left the total time stranded on a line of its own. */
-.ruku-table .audio-time-duration { order: 10; }
-
-.ruku-table .audio-time-current {
-  margin-left: auto;
+/* On the playing card every control speaks in the container's ink. */
+.ruku-table tr.playing .audio-seek-btn,
+.ruku-table tr.playing .audio-speed-btn,
+.ruku-table tr.playing .audio-time,
+.ruku-table tr.playing .audio-share-wa-btn,
+.ruku-table tr.playing .audio-offline-btn:not(.is-saved) {
+  color: var(--md-on-secondary-container);
 }
+
+.ruku-table tr.playing .audio-speed-btn {
+  border-color: color-mix(in srgb, var(--md-on-secondary-container) 40%, transparent);
+}
+
+.ruku-table tr.playing .audio-seek-btn:hover,
+.ruku-table tr.playing .audio-speed-btn:hover {
+  background: color-mix(in srgb, var(--md-on-secondary-container) 8%, transparent);
+}
+
+/* Phone first: seek, seek, speed and the clock share a line, the scrubber takes the next.
+   The clock is one unit, "1:21 / 8:00", pushed to the right of the controls. */
+.ruku-table .audio-seek-back-btn { order: 0; }
+.ruku-table .audio-seek-fwd-btn { order: 1; }
+.ruku-table .audio-speed-btn { order: 2; }
+.ruku-table .audio-time-current { order: 3; margin-left: auto; }
+.ruku-table .audio-time-duration { order: 4; }
+.ruku-table .audio-progress-wrap { order: 5; flex: 1 1 100%; width: 100%; min-width: 0; }
 
 .ruku-table .audio-time-current::after {
   content: "/";
   margin: 0 0.3rem;
   opacity: 0.45;
+}
+
+.ruku-table .audio-time-current,
+.ruku-table .audio-time-duration {
+  min-width: 0;
+}
+
+/* Room for one line: the scrubber sits between the controls and the clock. */
+@media (min-width: 641px) {
+  .ruku-table .audio-progress-wrap { order: 3; flex: 1 1 0; width: auto; min-width: 120px; }
+  .ruku-table .audio-time-current { order: 4; margin-left: 0.25rem; }
+  .ruku-table .audio-time-duration { order: 5; }
 }
 
 /* Secondary to the 44px play button that opened the row. */
@@ -3332,34 +3348,109 @@ html[data-theme="dark"] .mq-guide-caption {
 
 /* Admin-only. On its own full-width line it added a third row to every card in the list;
    it shares the title's line now, above the hifz pill it belongs beside. */
-.ruku-table .action-cell { grid-area: act; justify-self: start; align-self: center; }
+.ruku-table .action-cell { justify-self: start; align-self: center; }
 .ruku-table .validate-label { margin-top: 0; }
-.ruku-table .validate-label span { font-size: 0.7rem; padding: 2px 8px; white-space: nowrap; }
+.ruku-table .validate-label span { font-size: 0.7rem; height: 24px; padding: 0 8px; white-space: nowrap; }
 
 /* Ayat panel spans the card it belongs to. */
 .ruku-table tbody tr.ayat-row { display: block; }
 .ruku-table tbody tr.ayat-row > td.ayat-cell { display: block; padding: 0; }
 .ruku-table tbody tr[data-global-index].has-ayat-open {
   margin-bottom: 0;
-  /*border-bottom-left-radius: 0;*/
-  /*border-bottom-right-radius: 0;*/
+  border-radius: var(--md-shape-md) var(--md-shape-md) 0 0;
+  clip-path: inset(-12px -12px 0 -12px);
 }
 
-/* The narrowest phones cannot fit the pill on the detail line beside play, share and
-   download — the surah name gets ellipsised and the pill lands under the buttons. Give it
-   its own line there; everything else keeps the two-line card.
+.ruku-table tbody tr[data-global-index].playing.has-ayat-open {
+  box-shadow: var(--md-elevation-1);
+}
 
-   The line held at 520px while the play button was 52px and the two secondary buttons
-   each carried a 1.5px ring. Measured with the longest surah name in the data (المنافقون)
-   the two-line card now clears 320px by a single pixel and 375px comfortably, so the
-   fallback moves down to the phones that genuinely need it. */
-@media (max-width: 360px) {
+/* Room for two lines: the surah and its ayat share the detail line, and the star with its
+   count sits at the right beside the icons, so every card's star lands on the same column. */
+@media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto auto auto;
     grid-template-areas:
-      "play ruku   ruku   wa  dl"
-      "play arabic verses wa  dl"
-      "play hifz   hifz   act act"
-      "tx   tx     tx     tx  tx";
+      "play ruku   ruku   act hifz wa dl"
+      "play arabic verses act hifz wa dl"
+      "tx   tx     tx     tx  tx   tx tx";
+    column-gap: 0.7rem;
+    row-gap: 0.2rem;
+    padding: 0.75rem 0.85rem;
+  }
+
+  /* The check spans both rows like the icons, so check, share and download sit inline. */
+  .ruku-table .col-hifz {
+    justify-self: end;
+    align-self: center;
+  }
+
+  /* Wide screen: surah-led title, "78 النبأ", and "1–30 · 31–40" behind the book glyph. */
+  .ruku-title-wide {
+    display: inline;
+  }
+
+  .ruku-title-narrow {
+    display: none;
+  }
+
+  .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
+    flex-direction: row;
+  }
+
+  .ruku-table .surah-ar::after {
+    content: none;
+  }
+
+  .ruku-table .col-verses .verses-label {
+    display: none;
+  }
+
+  .ruku-table .col-verses .verses-toggle-icon {
+    display: block;
+  }
+
+  .ruku-table .action-cell {
+    grid-area: act;
+    grid-column: auto;
+    justify-self: end;
+  }
+
+  .ruku-table .col-verses {
+    margin-left: 0.4rem;
+  }
+
+  .ruku-table .audio-share-wa-btn,
+  .ruku-table .audio-offline-btn,
+  .ruku-table .hifz-mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .ruku-table .hifz-mark svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* ================================================================== */
+/* Reduced motion                                                      */
+/* ================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .toolbar-bottom.is-docked,
+  .toolbar-menu-dropdown.is-open {
+    animation: none;
+  }
+
+  .md-ripple {
+    display: none;
   }
 }
