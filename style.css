@@ -327,6 +327,9 @@ button {
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  /* The transform scopes the dropdown's z-index to this wrapper, so the wrapper itself
+     must sit above the page's positioned buttons or they paint through the open menu. */
+  z-index: 60;
 }
 
 .header .btn-toolbar-menu {
