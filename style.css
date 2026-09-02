@@ -1682,15 +1682,16 @@ html[data-hifz="off"] .col-hifz {
   border: none;
   border-radius: var(--md-shape-full);
   background: transparent;
-  color: var(--md-on-surface-variant);
+  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. */
+  color: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
   cursor: pointer;
   touch-action: manipulation;
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
 }
 
 .hifz-mark:hover {
-  background: color-mix(in srgb, var(--md-success) 10%, transparent);
-  color: var(--md-success);
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  color: color-mix(in srgb, var(--md-on-surface) 55%, transparent);
 }
 
 .hifz-mark:active {
@@ -1738,7 +1739,7 @@ html[data-hifz="off"] .col-hifz {
 }
 
 .ruku-table tr.playing .hifz-mark:not([aria-pressed="true"]) {
-  color: var(--md-on-secondary-container);
+  color: color-mix(in srgb, var(--md-on-secondary-container) 45%, transparent);
 }
 
 .ruku-table tr.playing .hifz-plays {
