@@ -16,7 +16,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d4f4f">
+  <meta name="theme-color" content="#1a2121">
 
   <!-- iOS home-screen support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -29,8 +29,13 @@
 <body>
   <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
   <header class="header">
-    <h1>Marifatul Quran</h1>
-    <p class="subtitle">Ruku Recordings</p>
+    <div class="header-brand">
+      <img class="header-logo" src="icon-192.png" width="44" height="44" alt="" aria-hidden="true">
+      <div class="header-text">
+        <h1>Marifatul Quran</h1>
+        <p class="subtitle">Ruku Recordings</p>
+      </div>
+    </div>
   </header>
 
   <main class="main">
@@ -389,6 +394,7 @@
   <script src="timings.js"></script>
   <script src="hifz.js"></script>
   <script src="app.js"></script>
+  <script src="material.js"></script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {

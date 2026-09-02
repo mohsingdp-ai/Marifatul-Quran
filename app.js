@@ -15,7 +15,7 @@
     document.documentElement.setAttribute("data-theme", t);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", t === "dark" ? "#0a1111" : "#0d4f4f");
+      meta.setAttribute("content", t === "dark" ? "#1a2121" : "#e9efee");
     }
   }
 
@@ -93,11 +93,6 @@
   var GITHUB_BRANCH = "v4";
 
   // Hover tooltip: show audio path
-  var pathTooltip = document.createElement("div");
-  pathTooltip.className = "ruku-path-tooltip";
-  pathTooltip.setAttribute("aria-hidden", "true");
-  document.body.appendChild(pathTooltip);
-  var activeTooltipRow = null;
 
   function buildParaIndex(rows) {
     var index = {};
@@ -850,7 +845,6 @@
     var rukuLabel = rukuDisplay(row) + " (Para " + row.para + ")";
     var surahArabicCell = row.surahNumber + " " + row.surahArabic;
     var audioSrc = getAudioSrc(row, globalIndex);
-    var savedPath = normalizeAudioPath(row.audioUrl);
     var hasAyat = !!getRukuAyat(row);
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
@@ -889,7 +883,6 @@
       buildValidateControl(actionCell, row);
     }
 
-    tr.dataset.pathText = savedPath || "(No recording)";
     return tr;
   }
 
@@ -1068,7 +1061,7 @@
 
     if (filtered.length === 0) {
       var emptyTr = document.createElement("tr");
-      emptyTr.innerHTML = "<td colspan=\"7\" style=\"text-align:center;padding:1rem;color:#555;\">No recordings in this Para</td>";
+      emptyTr.innerHTML = "<td colspan=\"7\" class=\"table-empty\">No recordings in this Para</td>";
       fragment.appendChild(emptyTr);
     }
 
@@ -1093,13 +1086,6 @@
       syncToolbarTransport();
     }
     renderHifzMeter();
-  }
-
-  function positionPathTooltip(tr) {
-    var rect = tr.getBoundingClientRect();
-    pathTooltip.style.left = rect.left + "px";
-    pathTooltip.style.top = (rect.top - 6) + "px";
-    pathTooltip.style.transform = "translateY(-100%)";
   }
 
   function buildAudioPlayer(tr, audioCell, row, globalIndex, src, clearPlayingFn, playbackResume) {
@@ -2593,29 +2579,6 @@
     if (!btn) return;
     var tr = btn.closest("tr[data-global-index]");
     if (tr) toggleAyat(tr.dataset.globalIndex);
-  });
-
-  tbody.addEventListener("mouseover", function (e) {
-    // Ayat rows carry no recording path, so they get no path tooltip.
-    var tr = e.target.closest("tr:not(.ayat-row)");
-    if (!tr || !tbody.contains(tr) || tr === activeTooltipRow) return;
-    activeTooltipRow = tr;
-    pathTooltip.textContent = tr.dataset.pathText || "(No recording)";
-    pathTooltip.classList.add("is-visible");
-    positionPathTooltip(tr);
-  });
-
-  tbody.addEventListener("mouseout", function (e) {
-    var tr = e.target.closest("tr");
-    if (!tr || tr !== activeTooltipRow) return;
-    var related = e.relatedTarget && e.relatedTarget.closest ? e.relatedTarget.closest("tr") : null;
-    if (related === tr) return;
-    activeTooltipRow = null;
-    pathTooltip.classList.remove("is-visible");
-  });
-
-  tbody.addEventListener("mousemove", function () {
-    if (activeTooltipRow) positionPathTooltip(activeTooltipRow);
   });
 
   // GitHub API config (used for file upload)
