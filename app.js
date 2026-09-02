@@ -710,7 +710,7 @@
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
     entry.ayahs.forEach(function (a) {
-      html += "<p class=\"ayat-item\">" + escapeHtml(a.text) +
+      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" + escapeHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
     });
     html += "</div>";
@@ -748,6 +748,81 @@
       expandedAyat[key] = true;
     }
     syncAyatRows();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Following the recitation: which ayah is being said right now.       */
+  /* Times live in timings.js; a ruku missing from it behaves as before.  */
+  /* ------------------------------------------------------------------ */
+
+  /** timings.js entry for a ruku, or null while it has not been aligned. */
+  function getRukuTimings(row) {
+    if (typeof QURAN_TIMINGS === "undefined" || !row) return null;
+    return QURAN_TIMINGS[ayatKeyFor(row)] || null;
+  }
+
+  /**
+   * The ayah being recited at `t` seconds, or null before the first one arrives.
+   *
+   * An ayah holds until the next one starts rather than for some measured length, which is
+   * also what covers the ayat the aligner could not place: the one before it stays lit while
+   * the shaykh works through them, which is what he is doing. Before the first placed ayah
+   * nothing is lit. The recording opens on course branding, and playback of that is left
+   * exactly as it was, so there is nothing to point at until the recitation begins.
+   */
+  function recitingAyahAt(timings, t) {
+    if (!timings || !timings.ayahs || !timings.ayahs.length) return null;
+    var found = null;
+    for (var i = 0; i < timings.ayahs.length; i++) {
+      if (timings.ayahs[i][1] > t) break;
+      found = timings.ayahs[i][0];
+    }
+    return found;
+  }
+
+  /** "<globalIndex>|<ayah>" currently lit, so the DOM is only touched when it changes. */
+  var recitingKey = null;
+
+  function clearReciting() {
+    var lit = tbody.querySelectorAll(".ayat-item.is-reciting");
+    for (var i = 0; i < lit.length; i++) lit[i].classList.remove("is-reciting");
+    recitingKey = null;
+  }
+
+  /** Follow the recitation down the panel, but only while the reader is looking at it. */
+  function keepRecitingInView(el) {
+    var panel = el.closest ? el.closest(".ayat-panel") : null;
+    if (!panel) return;
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var box = panel.getBoundingClientRect();
+    if (box.bottom < 0 || box.top > vh) return;   // panel is off screen: leave the page alone
+    var r = el.getBoundingClientRect();
+    if (r.top >= 0 && r.bottom <= vh) return;     // already readable
+    // The highlight itself honours prefers-reduced-motion in style.css; the scroll that
+    // follows it has to agree, or the setting buys nothing.
+    var still = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ block: "center", behavior: still ? "auto" : "smooth" });
+  }
+
+  function syncReciting(globalIndex, t) {
+    var n = recitingAyahAt(getRukuTimings(data[globalIndex]), t);
+    var key = n == null ? null : globalIndex + "|" + n;
+    var panel = n == null ? null : document.getElementById(ayatPanelId(globalIndex));
+    var el = panel && panel.querySelector(".ayat-item[data-ayah=\"" + n + "\"]");
+    // Not merely "has the ayah changed?". renderTable() rebuilds the panel from scratch on
+    // search, para navigation and the recorded-only toggle, and the new rows come back without
+    // the class while `recitingKey` still matches -- so the ayah would go dark until the next
+    // one began, which in these lectures can be a minute away. Re-apply whenever the element
+    // that ought to be lit is not.
+    if (key === recitingKey && (el == null || el.classList.contains("is-reciting"))) return;
+    clearReciting();
+    if (n == null) return;
+    // Panel not rendered yet: leave the key unset so the next tick tries again rather than
+    // recording a highlight that was never applied.
+    if (!el) return;
+    recitingKey = key;
+    el.classList.add("is-reciting");
+    keepRecitingInView(el);
   }
 
   /** Reveal the ayat of the track that just started, closing the one playback opened before it. */
@@ -2010,6 +2085,7 @@
         return;
       }
       stopMediaSessionKeepalive();
+      clearReciting();
       var gi = mqPlayback.activeGlobalIndex;
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els) {
@@ -2033,6 +2109,7 @@
       schedulePersistPlayback();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
+      syncReciting(gi, a.currentTime);
       var els = getRowControlsByGlobalIndex(gi);
       if (!els || !a.duration || !isFinite(a.duration)) return;
       var pct = (a.currentTime / a.duration) * 100;
