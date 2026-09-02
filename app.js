@@ -421,21 +421,22 @@
     return map[key];
   }
 
-  var STAR_OUTLINE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/></svg>';
-  var STAR_FILLED_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
+  /* A check in a circle: hollow until the ruku is memorized, then filled. */
+  var MEMORIZED_OFF_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.59 7.58L10 14.17l-3.59-3.58L5 12l5 5 8-8zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>';
+  var MEMORIZED_ON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
   var LISTENS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>';
 
-  /** Push an entry onto a card's star and listen count. */
+  /** Push an entry onto a card's memorized mark and listen count. */
   function paintHifzControls(wrap, entry) {
-    var star = wrap.querySelector(".hifz-star");
+    var mark = wrap.querySelector(".hifz-mark");
     var playsEl = wrap.querySelector(".hifz-plays");
     var on = Hifz.isMemorized(entry);
     var n = Hifz.plays(entry);
     var label = Hifz.playsLabel(n);
-    star.innerHTML = on ? STAR_FILLED_SVG : STAR_OUTLINE_SVG;
-    star.setAttribute("aria-pressed", on ? "true" : "false");
-    star.setAttribute("aria-label", on ? "Memorized. Tap to unmark." : "Not memorized. Tap to mark as memorized.");
-    star.title = on ? "Memorized" : "Mark as memorized";
+    mark.innerHTML = on ? MEMORIZED_ON_SVG : MEMORIZED_OFF_SVG;
+    mark.setAttribute("aria-pressed", on ? "true" : "false");
+    mark.setAttribute("aria-label", on ? "Memorized. Tap to unmark." : "Not memorized. Tap to mark as memorized.");
+    mark.title = on ? "Memorized" : "Mark as memorized";
     playsEl.hidden = !n;
     playsEl.querySelector(".hifz-plays-count").textContent = label;
     var listened = "Listened " + label + (n === 1 ? " time" : " times") + " in full";
@@ -443,26 +444,26 @@
     playsEl.title = listened;
   }
 
-  /** A star to mark a ruku memorized, and how many times its recording has been heard through. */
+  /** A check to mark a ruku memorized, and how many times its recording has been heard through. */
   function buildHifzControls(row) {
     var para = row.para, ruku = row.rukuInPara;
     var wrap = document.createElement("div");
     wrap.className = "hifz-controls";
 
-    var star = document.createElement("button");
-    star.type = "button";
-    star.className = "hifz-star";
+    var mark = document.createElement("button");
+    mark.type = "button";
+    mark.className = "hifz-mark";
 
     var playsEl = document.createElement("span");
     playsEl.className = "hifz-plays";
     playsEl.innerHTML = LISTENS_SVG + '<span class="hifz-plays-count"></span>';
 
-    wrap.appendChild(star);
+    wrap.appendChild(mark);
     wrap.appendChild(playsEl);
     paintHifzControls(wrap, getHifzMap()[Hifz.keyFor(para, ruku)]);
 
-    star.addEventListener("click", function () {
-      var on = star.getAttribute("aria-pressed") !== "true";
+    mark.addEventListener("click", function () {
+      var on = mark.getAttribute("aria-pressed") !== "true";
       paintHifzControls(wrap, hifzSetMemorized(para, ruku, on));
       renderHifzMeter();
     });
@@ -3629,8 +3630,8 @@
     },
     {
       title: "Track memorization (Hifz)",
-      body: "Tap the star on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
-      selector: "#ruku-tbody .hifz-star",
+      body: "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
+      selector: "#ruku-tbody .hifz-mark",
     },
   ];
 

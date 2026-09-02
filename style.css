@@ -243,7 +243,7 @@ button {
 .audio-offline-btn,
 .audio-share-wa-btn,
 .audio-retry-btn,
-.hifz-star,
+.hifz-mark,
 .verses-toggle,
 .share-bulk-links-tile,
 .settings-role-btn,
@@ -1663,15 +1663,15 @@ html[data-hifz="off"] .col-hifz {
   display: none;
 }
 
-/* Per-card hifz: a star to mark a ruku memorized, and how many times its recording has
-   been heard through. The star is a 40px icon button; the count a quiet label beside it. */
+/* Per-card hifz: a check to mark a ruku memorized, and how many times its recording has
+   been heard through. The check is an icon button; the count a quiet label beside it. */
 .hifz-controls {
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
 }
 
-.hifz-star {
+.hifz-mark {
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -1688,24 +1688,25 @@ html[data-hifz="off"] .col-hifz {
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
 }
 
-.hifz-star:hover {
-  background: color-mix(in srgb, var(--md-tertiary) 10%, transparent);
-  color: var(--md-tertiary);
+.hifz-mark:hover {
+  background: color-mix(in srgb, var(--md-success) 10%, transparent);
+  color: var(--md-success);
 }
 
-.hifz-star:active {
+.hifz-mark:active {
   transform: scale(0.88);
 }
 
-.hifz-star[aria-pressed="true"] {
-  color: var(--md-tertiary);
+/* Memorized: the circle fills in the success green. */
+.hifz-mark[aria-pressed="true"] {
+  color: var(--md-success);
 }
 
-.hifz-star[aria-pressed="true"]:hover {
-  background: color-mix(in srgb, var(--md-tertiary) 14%, transparent);
+.hifz-mark[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--md-success) 14%, transparent);
 }
 
-.hifz-star svg {
+.hifz-mark svg {
   display: block;
   pointer-events: none;
 }
@@ -1736,7 +1737,7 @@ html[data-hifz="off"] .col-hifz {
   opacity: 0.85;
 }
 
-.ruku-table tr.playing .hifz-star:not([aria-pressed="true"]) {
+.ruku-table tr.playing .hifz-mark:not([aria-pressed="true"]) {
   color: var(--md-on-secondary-container);
 }
 
@@ -3070,12 +3071,12 @@ tr.playing.audio-paused .audio-play-btn {
    apart. */
 .ruku-table .audio-share-wa-btn,
 .ruku-table .audio-offline-btn,
-.ruku-table .hifz-star {
+.ruku-table .hifz-mark {
   width: 32px;
   height: 32px;
 }
 
-.ruku-table .hifz-star svg {
+.ruku-table .hifz-mark svg {
   width: 20px;
   height: 20px;
 }
@@ -3104,7 +3105,7 @@ tr.playing.audio-paused .audio-play-btn {
   justify-self: end;
 }
 
-/* Count first, star last: the star is the item that lines up under the icons. */
+/* Count first, check last: the check is the item that lines up under the icons. */
 .ruku-table .hifz-controls {
   flex-direction: row-reverse;
 }
@@ -3279,12 +3280,12 @@ tr.playing.audio-paused .audio-play-btn {
 
   .ruku-table .audio-share-wa-btn,
   .ruku-table .audio-offline-btn,
-  .ruku-table .hifz-star {
+  .ruku-table .hifz-mark {
     width: 40px;
     height: 40px;
   }
 
-  .ruku-table .hifz-star svg {
+  .ruku-table .hifz-mark svg {
     width: 22px;
     height: 22px;
   }
