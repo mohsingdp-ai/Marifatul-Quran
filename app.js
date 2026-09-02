@@ -513,7 +513,7 @@
     document.getElementById("hifz-meter-para").textContent =
       p.memorized + " of " + p.total + " rukus memorized";
     document.getElementById("hifz-meter-total").textContent =
-      overall.memorized + " / " + overall.total + " in the Quran";
+      overall.memorized + " / " + overall.total + " overall";
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
     var fill = document.getElementById("hifz-meter-fill");

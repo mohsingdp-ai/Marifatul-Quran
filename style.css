@@ -1740,12 +1740,24 @@ html[data-hifz="off"] .col-hifz {
   border-radius: var(--md-shape-md);
 }
 
+/* Each label stays whole; on a narrow phone the overall count drops to its own line,
+   still flush right, rather than either sentence breaking in the middle. */
 .hifz-meter-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.1rem 0.75rem;
   margin-bottom: 0.4rem;
+}
+
+.hifz-meter-para,
+.hifz-meter-total {
+  white-space: nowrap;
+}
+
+.hifz-meter-total {
+  margin-left: auto;
 }
 
 .hifz-meter-para {
@@ -2952,13 +2964,14 @@ tr.playing.audio-paused .audio-play-btn {
 /* Elevated card. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Phone first: the title, then the surah and its ayat, then the hifz chip on a line of
-     its own, with share and download beside the first two. */
+  /* Phone first: the title, then the surah with its hifz chip, then the ayat chip on a
+     line of its own so a merged ruku's two ranges never wrap inside it. Share and download
+     sit beside the first two lines. */
   grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
     "play ruku   ruku   wa  dl"
-    "play arabic verses wa  dl"
-    "play hifz   hifz   act act"
+    "play arabic hifz   wa  dl"
+    "play verses verses act act"
     "tx   tx     tx     tx  tx";
   align-items: center;
   column-gap: 0.6rem;
@@ -3041,7 +3054,7 @@ tr.playing.audio-paused .audio-play-btn {
   line-height: 1.25rem;
   color: var(--md-on-surface-variant);
   white-space: nowrap;
-  margin-left: 0.4rem;
+  margin-top: 0.15rem;
 }
 
 .ruku-table .col-verses .verses-toggle {
@@ -3188,6 +3201,30 @@ tr.playing.audio-paused .audio-play-btn {
   box-shadow: var(--md-elevation-1);
 }
 
+/* The narrowest phones: 115px beside the icons is not room for the surah and the hifz chip
+   together, so the ayat chip and the hifz chip each take a full-width line below them, and
+   the admin-only action cell falls to a line of its own after the transport. */
+@media (max-width: 360px) {
+  .ruku-table tbody tr[data-global-index] {
+    grid-template-areas:
+      "play ruku   ruku   wa     dl"
+      "play arabic arabic wa     dl"
+      "play verses verses verses verses"
+      "play hifz   hifz   hifz   hifz"
+      "tx   tx     tx     tx     tx";
+  }
+
+  .ruku-table .col-hifz {
+    margin-left: 0;
+    margin-top: 0.15rem;
+  }
+
+  .ruku-table .action-cell {
+    grid-area: auto;
+    grid-column: 1 / -1;
+  }
+}
+
 /* Room for two lines: the hifz chip joins the detail line. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
@@ -3197,6 +3234,11 @@ tr.playing.audio-paused .audio-play-btn {
       "play arabic verses hifz wa dl"
       "tx   tx     tx     tx   tx tx";
     column-gap: 0.7rem;
+  }
+
+  .ruku-table .col-verses {
+    margin-top: 0;
+    margin-left: 0.4rem;
   }
 }
 
