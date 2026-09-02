@@ -341,23 +341,12 @@ button {
   color: var(--md-on-app-bar);
 }
 
-/* Install: starts in the app bar's corner and stays pinned there as the page scrolls, with
-   a "New" sticker on its corner, until the app is installed. */
+/* Install, in the app bar's corner, with a "New" sticker on it until the app is installed. */
 .header .header-install-wrap {
-  position: fixed;
+  position: absolute;
   left: 0.5rem;
-  top: calc(env(safe-area-inset-top) + 14px);
-  z-index: 80;
-}
-
-/* The brand's teal behind it, so it reads once it floats over the page. */
-.header .header-install {
-  background: #0d4f4f;
-  box-shadow: var(--md-elevation-2);
-}
-
-.header .header-install:hover:not(:disabled) {
-  background: #0f6060;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .header-install-badge {
