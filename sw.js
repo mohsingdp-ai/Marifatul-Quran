@@ -133,6 +133,7 @@ const STATIC = [
   "./app.js",
   "./data.js",
   "./verses.js",
+  "./timings.js",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"

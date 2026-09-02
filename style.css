@@ -1486,6 +1486,40 @@ html[data-theme="dark"] #share-bulk-links-modal .share-bulk-footer-btn.btn-outli
   margin-bottom: 0;
 }
 
+/* The ayah being recited right now.
+   A wash behind the words rather than a colour on them: at this size, recolouring the Arabic
+   changes how the script reads, and the point is to say "here", not to restyle the text. The
+   gold rule down the leading edge is what the eye actually lands on when the panel scrolls. */
+.ayat-item.is-reciting {
+  background: color-mix(in srgb, var(--arabic-gold) 14%, transparent);
+  box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--arabic-gold) 14%, transparent);
+  border-radius: 0.2rem;
+  border-inline-start: 2px solid var(--arabic-gold);
+  padding-inline-start: 0.45rem;
+  margin-inline-start: -0.65rem;
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Browsers without color-mix get a flat tint instead of nothing. */
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  .ayat-item.is-reciting {
+    background: rgba(212, 184, 92, 0.14);
+    box-shadow: 0 0 0 0.35rem rgba(212, 184, 92, 0.14);
+  }
+}
+
+.ayat-item.is-reciting .ayat-num {
+  background: var(--arabic-gold);
+  color: var(--row-white);
+  border-color: var(--arabic-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ayat-item.is-reciting {
+    transition: none;
+  }
+}
+
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
   display: inline-flex;
