@@ -243,7 +243,7 @@ button {
 .audio-offline-btn,
 .audio-share-wa-btn,
 .audio-retry-btn,
-.hifz-pill,
+.hifz-star,
 .verses-toggle,
 .share-bulk-links-tile,
 .settings-role-btn,
@@ -1663,73 +1663,86 @@ html[data-hifz="off"] .col-hifz {
   display: none;
 }
 
-/* Status chip on each ruku card (M3 assist chip: 8px corners, outlined at rest) */
-.hifz-pill {
+/* Per-card hifz: a star to mark a ruku memorized, and how many times its recording has
+   been heard through. The star is a 40px icon button; the count a quiet label beside it. */
+.hifz-controls {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  height: 28px;
-  padding: 0 0.7rem 0 0.6rem;
-  border-radius: var(--md-shape-sm);
-  border: 1px solid var(--md-outline-variant);
+  gap: 0.15rem;
+}
+
+.hifz-star {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--md-shape-full);
   background: transparent;
+  color: var(--md-on-surface-variant);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
+}
+
+.hifz-star:hover {
+  background: color-mix(in srgb, var(--md-tertiary) 10%, transparent);
+  color: var(--md-tertiary);
+}
+
+.hifz-star:active {
+  transform: scale(0.88);
+}
+
+.hifz-star[aria-pressed="true"] {
+  color: var(--md-tertiary);
+}
+
+.hifz-star[aria-pressed="true"]:hover {
+  background: color-mix(in srgb, var(--md-tertiary) 14%, transparent);
+}
+
+.hifz-star svg {
+  display: block;
+  pointer-events: none;
+}
+
+.hifz-plays {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 24px;
+  padding: 0 0.5rem 0 0.4rem;
+  border-radius: var(--md-shape-full);
+  background: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
   color: var(--md-on-surface-variant);
   font-size: 0.75rem;
   line-height: 1;
   font-weight: 500;
   letter-spacing: 0.03em;
-  cursor: pointer;
-  user-select: none;
-  -webkit-user-select: none;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard), transform 0.08s ease;
 }
 
-.hifz-pill:hover {
-  background: color-mix(in srgb, var(--md-on-surface-variant) 8%, transparent);
+.hifz-plays[hidden] {
+  display: none;
 }
 
-.hifz-pill:active {
-  transform: scale(0.96);
+.hifz-plays svg {
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
-/* Leading dot glyph */
-.hifz-pill-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-  flex: 0 0 auto;
+.ruku-table tr.playing .hifz-star:not([aria-pressed="true"]) {
+  color: var(--md-on-secondary-container);
 }
 
-.hifz-pill[data-state="learning"] {
-  background: var(--md-tertiary-container);
-  color: var(--md-on-tertiary-container);
-  border-color: transparent;
-}
-
-.hifz-pill[data-state="learning"]:hover {
-  background: color-mix(in srgb, var(--md-on-tertiary-container) 8%, var(--md-tertiary-container));
-}
-
-.hifz-pill[data-state="memorized"] {
-  background: var(--md-success-container);
-  color: var(--md-on-success-container);
-  border-color: transparent;
-}
-
-.hifz-pill[data-state="memorized"]:hover {
-  background: color-mix(in srgb, var(--md-on-success-container) 8%, var(--md-success-container));
-}
-
-/* Needs-revision: memorized green + gold ring + gold dot */
-.hifz-pill[data-revise="true"] {
-  border-color: var(--md-tertiary);
-  box-shadow: inset 0 0 0 1px var(--md-tertiary);
-}
-
-.hifz-pill[data-revise="true"] .hifz-pill-dot {
-  background: var(--md-tertiary);
+.ruku-table tr.playing .hifz-plays {
+  background: color-mix(in srgb, var(--md-on-secondary-container) 10%, transparent);
+  color: var(--md-on-secondary-container);
 }
 
 /* Per-Para memorization meter (signature element) */
@@ -1823,11 +1836,7 @@ html[data-hifz="off"] .col-hifz {
   background: currentColor;
 }
 
-.hifz-count[data-kind="memorized"] { color: var(--md-success); }
-.hifz-count[data-kind="learning"] { color: var(--md-tertiary); }
-.hifz-count[data-kind="revise"] { color: var(--md-tertiary); }
-
-html[data-theme="light"] .hifz-count[data-kind="memorized"] { color: var(--md-on-success-container); }
+.hifz-count[data-kind="listened"] { color: var(--md-primary); }
 
 /* Export / import / reset buttons */
 .hifz-actions-row {
@@ -3073,7 +3082,7 @@ tr.playing.audio-paused .audio-play-btn {
   grid-area: hifz;
   justify-self: start;
   min-width: 0;
-  margin-left: 0.15rem;
+  margin-left: -0.5rem;
 }
 
 /* Let the cell's children become items of the row's grid, so the play button
@@ -3215,8 +3224,8 @@ tr.playing.audio-paused .audio-play-btn {
   }
 
   .ruku-table .col-hifz {
-    margin-left: 0;
-    margin-top: 0.15rem;
+    margin-left: -0.5rem;
+    margin-top: 0;
   }
 
   .ruku-table .action-cell {

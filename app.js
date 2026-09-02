@@ -297,7 +297,6 @@
 
   /* ===================== Hifz (memorization) tracking ===================== */
   var HIFZ_STORAGE_KEY = "hifz_status";
-  var HIFZ_LABELS = { "": "Not started", learning: "Learning", memorized: "Memorized" };
   var hifzAllKeysCache = null;
   var hifzValidKeysCache = null;
 
@@ -393,7 +392,8 @@
     var map = getHifzMap();
     if (!Object.keys(map).length) return;
     var res = Hifz.migrateKeys(map, hifzValidKeySet());
-    if (res.migrated) saveHifzMap(res.merged);
+    var norm = Hifz.normalizeMap(res.merged);
+    if (res.migrated || norm.changed) saveHifzMap(norm.map);
   }
   function todayISO() {
     var d = new Date();
@@ -402,104 +402,83 @@
       String(d.getDate()).padStart(2, "0");
   }
 
-  /** Advance a ruku's progress state (tap). Persists and returns the new entry (or null). */
-  function hifzTap(para, ruku) {
+  /** Star on or off for a ruku. Persists and returns the new entry (or null). */
+  function hifzSetMemorized(para, ruku, on) {
     var map = getHifzMap();
     var key = Hifz.keyFor(para, ruku);
-    var cur = map[key] ? map[key].s : undefined;
-    var next = Hifz.cycleStatus(cur);
-    if (next === undefined) {
-      delete map[key];
-    } else {
-      var wasRevise = map[key] && map[key].rev && next === "memorized";
-      map[key] = { s: next, rev: !!wasRevise, at: todayISO() };
-    }
+    var next = Hifz.setMemorized(map[key], on, todayISO());
+    if (next) map[key] = next; else delete map[key];
     saveHifzMap(map);
-    return map[key] || null;
+    return next;
   }
 
-  /** Toggle needs-revision on a memorized ruku (long-press / right-click). */
-  function hifzToggleRevision(para, ruku) {
+  /** One more full listen of a ruku. Persists and returns the new entry. */
+  function hifzRecordPlay(para, ruku) {
     var map = getHifzMap();
     var key = Hifz.keyFor(para, ruku);
-    var entry = map[key];
-    if (!entry || entry.s !== "memorized") return entry || null;
-    var updated = Hifz.applyRevisionToggle(entry);
-    updated.at = todayISO();
-    map[key] = updated;
+    map[key] = Hifz.recordPlay(map[key], todayISO());
     saveHifzMap(map);
-    return updated;
+    return map[key];
   }
 
-  function paintHifzPill(pill, entry) {
-    var state = entry ? entry.s : "";
-    var revise = !!(entry && entry.rev);
-    pill.dataset.state = state;
-    pill.dataset.revise = revise ? "true" : "false";
-    var label = revise ? "Revise" : HIFZ_LABELS[state];
-    pill.querySelector(".hifz-pill-label").textContent = label;
-    pill.setAttribute("aria-label",
-      "Memorization: " + label + ". Tap to advance, hold to flag for revision.");
-    pill.setAttribute("title", "Tap to advance · Hold to flag for revision");
+  var STAR_OUTLINE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z"/></svg>';
+  var STAR_FILLED_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
+  var LISTENS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1c-4.97 0-9 4.03-9 9v7c0 1.66 1.34 3 3 3h3v-8H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-4v8h3c1.66 0 3-1.34 3-3v-7c0-4.97-4.03-9-9-9z"/></svg>';
+
+  /** Push an entry onto a card's star and listen count. */
+  function paintHifzControls(wrap, entry) {
+    var star = wrap.querySelector(".hifz-star");
+    var playsEl = wrap.querySelector(".hifz-plays");
+    var on = Hifz.isMemorized(entry);
+    var n = Hifz.plays(entry);
+    var label = Hifz.playsLabel(n);
+    star.innerHTML = on ? STAR_FILLED_SVG : STAR_OUTLINE_SVG;
+    star.setAttribute("aria-pressed", on ? "true" : "false");
+    star.setAttribute("aria-label", on ? "Memorized. Tap to unmark." : "Not memorized. Tap to mark as memorized.");
+    star.title = on ? "Memorized" : "Mark as memorized";
+    playsEl.hidden = !n;
+    playsEl.querySelector(".hifz-plays-count").textContent = label;
+    var listened = "Listened " + label + (n === 1 ? " time" : " times") + " in full";
+    playsEl.setAttribute("aria-label", listened);
+    playsEl.title = listened;
   }
 
-  function buildHifzPill(row) {
+  /** A star to mark a ruku memorized, and how many times its recording has been heard through. */
+  function buildHifzControls(row) {
     var para = row.para, ruku = row.rukuInPara;
-    var pill = document.createElement("button");
-    pill.type = "button";
-    pill.className = "hifz-pill";
-    var dot = document.createElement("span");
-    dot.className = "hifz-pill-dot";
-    dot.setAttribute("aria-hidden", "true");
-    var label = document.createElement("span");
-    label.className = "hifz-pill-label";
-    pill.appendChild(dot);
-    pill.appendChild(label);
+    var wrap = document.createElement("div");
+    wrap.className = "hifz-controls";
 
-    var map = getHifzMap();
-    paintHifzPill(pill, map[Hifz.keyFor(para, ruku)]);
+    var star = document.createElement("button");
+    star.type = "button";
+    star.className = "hifz-star";
 
-    var longPressTimer = null;
-    var longPressed = false;
+    var playsEl = document.createElement("span");
+    playsEl.className = "hifz-plays";
+    playsEl.innerHTML = LISTENS_SVG + '<span class="hifz-plays-count"></span>';
 
-    function doTap() {
-      var entry = hifzTap(para, ruku);
-      paintHifzPill(pill, entry);
+    wrap.appendChild(star);
+    wrap.appendChild(playsEl);
+    paintHifzControls(wrap, getHifzMap()[Hifz.keyFor(para, ruku)]);
+
+    star.addEventListener("click", function () {
+      var on = star.getAttribute("aria-pressed") !== "true";
+      paintHifzControls(wrap, hifzSetMemorized(para, ruku, on));
       renderHifzMeter();
-    }
-    function doRevision() {
-      var entry = hifzToggleRevision(para, ruku);
-      paintHifzPill(pill, entry);
-      renderHifzMeter();
-    }
-
-    pill.addEventListener("pointerdown", function () {
-      longPressed = false;
-      longPressTimer = setTimeout(function () {
-        longPressed = true;
-        doRevision();
-      }, 450);
-    });
-    function cancelLongPress() {
-      if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-    }
-    pill.addEventListener("pointerup", cancelLongPress);
-    pill.addEventListener("pointerleave", cancelLongPress);
-    pill.addEventListener("pointercancel", cancelLongPress);
-
-    pill.addEventListener("click", function () {
-      if (longPressed) { longPressed = false; return; }
-      doTap();
-    });
-    pill.addEventListener("contextmenu", function (e) {
-      e.preventDefault();
-      doRevision();
-    });
-    pill.addEventListener("keydown", function (e) {
-      if (e.key === "r" || e.key === "R") { e.preventDefault(); doRevision(); }
     });
 
-    return pill;
+    return wrap;
+  }
+
+  /** A recording reached its end: one more listen for its ruku, on the card and the meter. */
+  function countListen(gi) {
+    if (gi == null || !data[gi] || !getHifzEnabled()) return;
+    var row = data[gi];
+    var entry = hifzRecordPlay(row.para, row.rukuInPara);
+    var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
+    var wrap = tr && tr.querySelector(".hifz-controls");
+    if (wrap) paintHifzControls(wrap, entry);
+    renderHifzMeter();
   }
 
   function renderHifzMeter() {
@@ -531,9 +510,7 @@
       span.textContent = text;
       counts.appendChild(span);
     }
-    addCount("memorized", p.memorized, p.memorized + "/" + p.total + " memorized");
-    addCount("learning", p.learning, p.learning + " learning");
-    addCount("revise", p.revise, p.revise + " to revise");
+    addCount("listened", p.listened, p.listened + " of " + p.total + " listened in full");
   }
 
   function exportHifz() {
@@ -871,7 +848,7 @@
       (showActions ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
     var hifzCell = tr.querySelector(".hifz-cell");
-    if (hifzCell) hifzCell.appendChild(buildHifzPill(row));
+    if (hifzCell) hifzCell.appendChild(buildHifzControls(row));
 
     var audioCell = tr.querySelector(".audio-cell");
     var actionCell = showActions ? tr.querySelector(".action-cell") : null;
@@ -2080,6 +2057,7 @@
 
     a.addEventListener("ended", function () {
       var pbMode = getPlaybackMode();
+      countListen(mqPlayback.activeGlobalIndex);
       if (pbMode === "loop") {
         a.currentTime = 0;
         a.play();
@@ -3651,8 +3629,8 @@
     },
     {
       title: "Track memorization (Hifz)",
-      body: "Tap the Hifz pill on a ruku to mark it as memorized — tap again to flag it for revision. The bar above the list shows your progress for this Para.",
-      selector: "#ruku-tbody .hifz-pill",
+      body: "Tap the star on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
+      selector: "#ruku-tbody .hifz-star",
     },
   ];
 

@@ -8,7 +8,7 @@
   var HOSTS = [
     ".btn", ".btn-para-step", ".btn-toolbar-transport", ".btn-toolbar-locate", ".btn-toolbar-menu",
     ".toolbar-menu-item", ".audio-play-btn", ".audio-seek-btn", ".audio-speed-btn", ".audio-offline-btn",
-    ".audio-share-wa-btn", ".audio-retry-btn", ".hifz-pill", ".verses-toggle", ".share-bulk-links-tile",
+    ".audio-share-wa-btn", ".audio-retry-btn", ".hifz-star", ".verses-toggle", ".share-bulk-links-tile",
     ".settings-role-btn", ".modal-close-btn", ".mq-guide-next", ".mq-guide-skip"
   ].join(",");
 
