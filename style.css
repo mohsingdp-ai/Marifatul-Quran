@@ -2973,15 +2973,16 @@ tr.playing.audio-paused .audio-play-btn {
 /* Elevated card. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Phone first: the title, then the surah with its hifz chip, then the ayat chip on a
-     line of its own so a merged ruku's two ranges never wrap inside it. Share and download
-     sit beside the first two lines. */
-  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+  /* Phone first: share above download in one column at the right, the star and its listen
+     count tucked against them, and the ayat chip on a line of its own so a merged ruku's
+     two ranges never wrap inside it. One icon column instead of two is what lets the surah
+     and the star share a line on a 320px screen. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "play ruku   ruku   wa  dl"
-    "play arabic hifz   wa  dl"
-    "play verses verses act act"
-    "tx   tx     tx     tx  tx";
+    "play ruku   ruku   wa"
+    "play arabic hifz   dl"
+    "play verses verses verses"
+    "tx   tx     tx     tx";
   align-items: center;
   column-gap: 0.6rem;
   row-gap: 0.2rem;
@@ -3080,9 +3081,14 @@ tr.playing.audio-paused .audio-play-btn {
 
 .ruku-table .col-hifz {
   grid-area: hifz;
-  justify-self: start;
+  justify-self: end;
   min-width: 0;
-  margin-left: -0.5rem;
+}
+
+/* Admin-only; on a phone it takes a line of its own after the transport. */
+.ruku-table .action-cell {
+  grid-area: auto;
+  grid-column: 1 / -1;
 }
 
 /* Let the cell's children become items of the row's grid, so the play button
@@ -3193,7 +3199,7 @@ tr.playing.audio-paused .audio-play-btn {
 
 /* Admin-only. On its own full-width line it added a third row to every card in the list;
    it shares the title's line now, above the hifz pill it belongs beside. */
-.ruku-table .action-cell { grid-area: act; justify-self: start; align-self: center; }
+.ruku-table .action-cell { justify-self: start; align-self: center; }
 .ruku-table .validate-label { margin-top: 0; }
 .ruku-table .validate-label span { font-size: 0.7rem; height: 24px; padding: 0 8px; white-space: nowrap; }
 
@@ -3210,31 +3216,7 @@ tr.playing.audio-paused .audio-play-btn {
   box-shadow: var(--md-elevation-1);
 }
 
-/* The narrowest phones: 115px beside the icons is not room for the surah and the hifz chip
-   together, so the ayat chip and the hifz chip each take a full-width line below them, and
-   the admin-only action cell falls to a line of its own after the transport. */
-@media (max-width: 360px) {
-  .ruku-table tbody tr[data-global-index] {
-    grid-template-areas:
-      "play ruku   ruku   wa     dl"
-      "play arabic arabic wa     dl"
-      "play verses verses verses verses"
-      "play hifz   hifz   hifz   hifz"
-      "tx   tx     tx     tx     tx";
-  }
-
-  .ruku-table .col-hifz {
-    margin-left: -0.5rem;
-    margin-top: 0;
-  }
-
-  .ruku-table .action-cell {
-    grid-area: auto;
-    grid-column: 1 / -1;
-  }
-}
-
-/* Room for two lines: the hifz chip joins the detail line. */
+/* Room for two lines: the star joins the detail line and the icons sit side by side. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
     grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
@@ -3243,6 +3225,16 @@ tr.playing.audio-paused .audio-play-btn {
       "play arabic verses hifz wa dl"
       "tx   tx     tx     tx   tx tx";
     column-gap: 0.7rem;
+  }
+
+  .ruku-table .col-hifz {
+    justify-self: start;
+    margin-left: -0.5rem;
+  }
+
+  .ruku-table .action-cell {
+    grid-area: act;
+    grid-column: auto;
   }
 
   .ruku-table .col-verses {
