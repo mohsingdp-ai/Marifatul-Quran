@@ -1462,6 +1462,26 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   white-space: nowrap;
 }
 
+/* Phone title is "Para N · R1–R2"; the surah-led title waits for a wide screen. */
+.ruku-title-wide {
+  display: none;
+}
+
+/* Verse ranges read "Ayah 1–30 · 31–40" on a phone; the wide screen drops the word and
+   shows the book glyph instead. */
+.ruku-table .col-verses .verses-toggle-icon {
+  display: none;
+}
+
+.verses-plain .verses-label,
+.verses-plain .verses-sep {
+  margin-right: 0.3em;
+}
+
+.verses-plain .verses-sep {
+  margin-left: 0.3em;
+}
+
 /* The ruku is a tag after the surah, and never breaks inside its own hyphen. */
 .col-ruku-tag {
   white-space: nowrap;
@@ -3041,8 +3061,15 @@ tr.playing.audio-paused .audio-play-btn {
   color: var(--md-on-secondary-container);
 }
 
-.ruku-table .col-surah-arabic {
+/* `> td` above sets every cell to block; this one lays its two spans out as a row. */
+.ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
   grid-area: arabic;
+  /* Name then number on a phone ("النبأ · 78"); the wide screen flips them below. */
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 0.3rem;
   font-family: "Traditional Arabic", "Scheherazade New", serif;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -3050,13 +3077,18 @@ tr.playing.audio-paused .audio-play-btn {
   /* Gold, not accent teal: teal means "this does something" everywhere else in the card,
      and a surah name does nothing. */
   color: var(--md-tertiary);
-  text-align: left;
-  direction: rtl;
-  unicode-bidi: plaintext;
   min-width: 0;
+  white-space: nowrap;
+}
+
+.ruku-table .surah-ar {
+  unicode-bidi: isolate;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.ruku-table .surah-ar::after {
+  content: " \00b7";
 }
 
 .ruku-table .col-verses {
@@ -3242,31 +3274,49 @@ tr.playing.audio-paused .audio-play-btn {
   box-shadow: var(--md-elevation-1);
 }
 
-/* The narrowest phones share the ayat line with the star and its count; without the book
-   glyph a merged ruku's two ranges still fit on one line there. */
-@media (max-width: 360px) {
-  .verses-toggle-icon {
-    display: none;
-  }
-}
-
 /* Room for two lines: the surah and its ayat share the detail line, and the star with its
    count sits at the right beside the icons, so every card's star lands on the same column. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
-    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto auto;
+    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto auto auto;
     grid-template-areas:
-      "play ruku   ruku   act  wa dl"
-      "play arabic verses hifz wa dl"
-      "tx   tx     tx     tx   tx tx";
+      "play ruku   ruku   act hifz wa dl"
+      "play arabic verses act hifz wa dl"
+      "tx   tx     tx     tx  tx   tx tx";
     column-gap: 0.7rem;
     row-gap: 0.2rem;
     padding: 0.75rem 0.85rem;
   }
 
+  /* The check spans both rows like the icons, so check, share and download sit inline. */
   .ruku-table .col-hifz {
     justify-self: end;
-    margin-right: 0.25rem;
+    align-self: center;
+  }
+
+  /* Wide screen: surah-led title, "78 النبأ", and "1–30 · 31–40" behind the book glyph. */
+  .ruku-title-wide {
+    display: inline;
+  }
+
+  .ruku-title-narrow {
+    display: none;
+  }
+
+  .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
+    flex-direction: row;
+  }
+
+  .ruku-table .surah-ar::after {
+    content: none;
+  }
+
+  .ruku-table .col-verses .verses-label {
+    display: none;
+  }
+
+  .ruku-table .col-verses .verses-toggle-icon {
+    display: block;
   }
 
   .ruku-table .action-cell {

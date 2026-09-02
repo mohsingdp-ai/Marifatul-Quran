@@ -366,8 +366,8 @@
     var parts = versesParts(text);
     return parts.map(function (g, i) {
       var last = i === parts.length - 1;
-      return "<span class=\"verses-part\">" + escapeHtml(g) + (last ? (trailingHtml || "") : ",") + "</span>";
-    }).join(" ");
+      return "<span class=\"verses-part\">" + escapeHtml(g) + (last ? (trailingHtml || "") : "") + "</span>";
+    }).join("<span class=\"verses-sep\">\u00b7</span>");
   }
 
   /** "(1-30)(31-40)" -> ["1-30", "31-40"]; a plain range stays as one part. */
@@ -377,9 +377,9 @@
     return groups.map(function (g) { return g.replace(/^\(|\)$/g, ""); });
   }
 
-  /** Verse ranges as prose: "1-30, 31-40". */
+  /** Verse ranges as prose: "1-30 · 31-40". */
   function versesText(text) {
-    return versesParts(text).join(", ");
+    return versesParts(text).join(" \u00b7 ");
   }
 
   /**
@@ -827,24 +827,39 @@
     var tr = document.createElement("tr");
     tr.dataset.globalIndex = globalIndex;
 
-    var rukuLabel = escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + escapeHtml(rukuDisplay(row)) + "</span>";
-    var surahArabicCell = row.surahNumber + " " + row.surahArabic;
+    // Three lines: the surah in both scripts with its number, then para and ruku, then ayat.
+    var surahLine =
+      "<span class=\"card-arabic\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(row.surahArabic) + "</span>" +
+      "<span class=\"card-sep\">\u00b7</span>" +
+      "<span class=\"card-surah\">" + escapeHtml(row.surah) + "</span>" +
+      "<span class=\"card-sep\">\u00b7</span>" +
+      "<span class=\"card-num\">" + escapeHtml(String(row.surahNumber)) + "</span>";
+    // Two titles, one shown per width: the surah on a wide screen, "Para N · R1–R2" on a phone.
+    var rukuTag = escapeHtml(String(rukuDisplay(row)).replace(/-/g, "\u2013"));
+    var rukuLine =
+      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span></span>" +
+      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + "</span>";
+    // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
+    var surahArabicCell =
+      "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
+      "<span class=\"surah-ar\" lang=\"ar\">" + escapeHtml(row.surahArabic) + "</span>";
     var audioSrc = getAudioSrc(row, globalIndex);
     var hasAyat = !!getRukuAyat(row);
+    var ayahLabel = "<span class=\"verses-label\">Ayah</span>";
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
         "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
-        AYAT_BOOK_SVG + versesHtml(row.verses, AYAT_CHEVRON_SVG) + "</button>"
-      : versesHtml(row.verses);
+        AYAT_BOOK_SVG + ayahLabel + versesHtml(row.verses, AYAT_CHEVRON_SVG) + "</button>"
+      : "<span class=\"verses-plain\">" + ayahLabel + versesHtml(row.verses) + "</span>";
 
     if (hasAyat && isAyatOpen(row)) tr.classList.add("has-ayat-open");
 
     tr.innerHTML =
       "<td class=\"col-hifz hifz-cell\" data-label=\"Hifz\"></td>" +
-      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + rukuLabel + "</td>" +
-      "<td class=\"col-surah\" data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
+      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + rukuLine + "</td>" +
+      "<td class=\"col-surah\" data-label=\"Surah\">" + surahLine + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
-      "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
+      "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + surahArabicCell + "</td>" +
       "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
       (showActions ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
 
