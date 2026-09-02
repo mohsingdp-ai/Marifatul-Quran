@@ -814,6 +814,14 @@ body.has-docked-player {
   align-self: center;
 }
 
+/* Docked at the foot of the screen there is no room below the button, so the menu opens
+   upward instead. */
+.toolbar-bottom .toolbar-menu-dropdown {
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform-origin: bottom right;
+}
+
 /* --- Menu --- */
 .toolbar-menu-dropdown {
   display: none;

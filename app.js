@@ -2904,20 +2904,29 @@
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsBackdrop.addEventListener("click", closeSettings);
 
-  /* Toolbar three-dot menu */
-  var toolbarMenuBtn = document.getElementById("toolbar-menu-btn");
+  /* Three-dot menu: one dropdown, opened from the app bar or from the docked bar. The
+     dropdown moves under whichever button opened it, so it drops from the app bar and
+     rises from the docked bar. */
+  var toolbarMenuBtns = [document.getElementById("toolbar-menu-btn"), document.getElementById("dock-menu-btn")]
+    .filter(Boolean);
   var toolbarMenuDropdown = document.getElementById("toolbar-menu-dropdown");
   function closeToolbarMenu() {
-    if (toolbarMenuDropdown) {
-      toolbarMenuDropdown.classList.remove("is-open");
-      if (toolbarMenuBtn) toolbarMenuBtn.setAttribute("aria-expanded", "false");
-    }
+    if (!toolbarMenuDropdown) return;
+    toolbarMenuDropdown.classList.remove("is-open");
+    toolbarMenuBtns.forEach(function (b) { b.setAttribute("aria-expanded", "false"); });
   }
-  if (toolbarMenuBtn && toolbarMenuDropdown) {
-    toolbarMenuBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      var open = toolbarMenuDropdown.classList.toggle("is-open");
-      toolbarMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  if (toolbarMenuDropdown) {
+    toolbarMenuBtns.forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var wrap = btn.parentNode;
+        var wasOpen = toolbarMenuDropdown.classList.contains("is-open") && toolbarMenuDropdown.parentNode === wrap;
+        closeToolbarMenu();
+        if (wasOpen) return;
+        if (toolbarMenuDropdown.parentNode !== wrap) wrap.appendChild(toolbarMenuDropdown);
+        toolbarMenuDropdown.classList.add("is-open");
+        btn.setAttribute("aria-expanded", "true");
+      });
     });
     toolbarMenuDropdown.addEventListener("click", function () {
       closeToolbarMenu();
