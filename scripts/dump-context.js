@@ -1,7 +1,12 @@
 /**
  * Dump data.js + verses.js + the bookmark's ruku list as one JSON blob on stdout, so
- * non-JS tools (scripts/match-audio.py) can read the project's data without reimplementing
- * the parsing. Run: node scripts/dump-context.js
+ * non-JS tools (scripts/match-audio.py, scripts/align-ayat.py) can read the project's data
+ * without reimplementing the parsing. Run: node scripts/dump-context.js
+ *
+ * `ayat` is text by surah and ayah number, which is what a whole-ruku match needs. `verses`
+ * is verses.js untouched, keyed "<para>|<rukuInPara>": the aligner needs the ayah LIST of a
+ * ruku, in the order and grouping the panel renders, and that grouping is lost once the
+ * text is flattened by surah.
  */
 const fs = require("fs");
 const path = require("path");
@@ -47,4 +52,4 @@ for (const line of xml.split("\n")) {
   });
 }
 
-process.stdout.write(JSON.stringify({ rows, ayat, book }));
+process.stdout.write(JSON.stringify({ rows, ayat, book, verses }));

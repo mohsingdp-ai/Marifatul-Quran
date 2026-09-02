@@ -3,3 +3,6 @@
 
 # Cached Whisper transcripts (scripts/match-audio.py)
 .cache/
+
+# Byproduct of importing scripts/match-audio.py from scripts/align-ayat.py
+__pycache__/
