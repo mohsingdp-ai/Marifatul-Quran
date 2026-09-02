@@ -3065,12 +3065,19 @@ tr.playing.audio-paused .audio-play-btn {
   white-space: nowrap;
 }
 
-/* The icon column sets the row height on a phone; 36px keeps three rows to a medium card. */
+/* The icon column sets the row height on a phone. At 32px the rows hug the title, the surah
+   and the chip instead of floating each in a band of air; the 20px glyphs still sit 12px
+   apart. */
 .ruku-table .audio-share-wa-btn,
 .ruku-table .audio-offline-btn,
 .ruku-table .hifz-star {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+}
+
+.ruku-table .hifz-star svg {
+  width: 20px;
+  height: 20px;
 }
 
 .ruku-table .col-verses .verses-toggle {
@@ -3275,6 +3282,11 @@ tr.playing.audio-paused .audio-play-btn {
   .ruku-table .hifz-star {
     width: 40px;
     height: 40px;
+  }
+
+  .ruku-table .hifz-star svg {
+    width: 22px;
+    height: 22px;
   }
 }
 
