@@ -416,9 +416,19 @@
       var headerWrap = document.getElementById("install-header-wrap");
       var headerBtn = document.getElementById("install-header-btn");
       var deferred = null;
+      var INSTALLED_KEY = "pwa_installed";
       function hideInstall() {
         btn.style.display = "none";
         if (headerWrap) headerWrap.style.display = "none";
+      }
+      // Once we know the app is installed, keep the buttons away on later visits too --
+      // a browser tab does not know it is running beside an installed copy.
+      function markInstalled() {
+        try { localStorage.setItem(INSTALLED_KEY, "true"); } catch (e) { /* storage off */ }
+        hideInstall();
+      }
+      function rememberedInstalled() {
+        try { return localStorage.getItem(INSTALLED_KEY) === "true"; } catch (e) { return false; }
       }
       var isReinstall = location.search.indexOf("reinstall=") !== -1;
       var isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
@@ -427,12 +437,23 @@
       // Clean the reinstall param from URL history
       if (isReinstall) {
         history.replaceState(null, "", location.pathname);
+        try { localStorage.removeItem(INSTALLED_KEY); } catch (e) { /* storage off */ }
       }
 
       // Hide install button when running as installed PWA (unless reinstalling)
       if (isStandalone && !isReinstall) {
+        markInstalled();
+        return;
+      }
+      if (rememberedInstalled() && !isReinstall) {
         hideInstall();
         return;
+      }
+      // Chrome can say whether this app is installed when the manifest lists itself.
+      if (navigator.getInstalledRelatedApps) {
+        navigator.getInstalledRelatedApps().then(function (apps) {
+          if (apps && apps.length) markInstalled();
+        }).catch(function () { /* not supported here */ });
       }
 
       // Capture native install prompt when browser fires it
@@ -448,7 +469,7 @@
       });
 
       window.addEventListener("appinstalled", function () {
-        hideInstall();
+        markInstalled();
         deferred = null;
       });
 
