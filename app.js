@@ -363,12 +363,24 @@
    * Offer a break between the groups while keeping each range intact, so the column is only
    * as wide as it needs to be.
    */
-  function versesHtml(text) {
+  function versesHtml(text, trailingHtml) {
+    var parts = versesParts(text);
+    return parts.map(function (g, i) {
+      var last = i === parts.length - 1;
+      return "<span class=\"verses-part\">" + escapeHtml(g) + (last ? (trailingHtml || "") : ",") + "</span>";
+    }).join(" ");
+  }
+
+  /** "(1-30)(31-40)" -> ["1-30", "31-40"]; a plain range stays as one part. */
+  function versesParts(text) {
     var groups = String(text).match(/\([^)]*\)/g);
-    if (!groups) return "<span class=\"verses-part\">" + escapeHtml(text) + "</span>";
-    return groups.map(function (g) {
-      return "<span class=\"verses-part\">" + escapeHtml(g) + "</span>";
-    }).join("<wbr>");
+    if (!groups) return [String(text)];
+    return groups.map(function (g) { return g.replace(/^\(|\)$/g, ""); });
+  }
+
+  /** Verse ranges as prose: "1-30, 31-40". */
+  function versesText(text) {
+    return versesParts(text).join(", ");
   }
 
   /**
@@ -498,9 +510,10 @@
     var p = Hifz.computeParaProgress(map, para, rukusForPara(para));
     var overall = Hifz.computeOverall(map, hifzAllKeys());
 
-    document.getElementById("hifz-meter-para").textContent = "Para " + para;
+    document.getElementById("hifz-meter-para").textContent =
+      p.memorized + " of " + p.total + " rukus memorized";
     document.getElementById("hifz-meter-total").textContent =
-      overall.memorized + " / " + overall.total + " memorized";
+      overall.memorized + " / " + overall.total + " in the Quran";
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
     var fill = document.getElementById("hifz-meter-fill");
@@ -521,12 +534,6 @@
     addCount("memorized", p.memorized, p.memorized + "/" + p.total + " memorized");
     addCount("learning", p.learning, p.learning + " learning");
     addCount("revise", p.revise, p.revise + " to revise");
-    if (!p.memorized && !p.learning) {
-      var span = document.createElement("span");
-      span.className = "hifz-count";
-      span.textContent = "No progress in this Para yet";
-      counts.appendChild(span);
-    }
   }
 
   function exportHifz() {
@@ -695,7 +702,7 @@
     var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
       "<div class=\"ayat-head\">" +
         "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
-          row.surahNumber + ":" + escapeHtml(row.verses) + "</span>" +
+          row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
         "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
       "</div>";
 
@@ -710,7 +717,7 @@
     });
     html += "</div>";
 
-    html += "<p class=\"ayat-source\">Uthmani script</p></div>";
+    html += "</div>";
 
     td.innerHTML = html;
     tr.appendChild(td);
@@ -842,21 +849,21 @@
     var tr = document.createElement("tr");
     tr.dataset.globalIndex = globalIndex;
 
-    var rukuLabel = rukuDisplay(row) + " (Para " + row.para + ")";
+    var rukuLabel = escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + escapeHtml(rukuDisplay(row)) + "</span>";
     var surahArabicCell = row.surahNumber + " " + row.surahArabic;
     var audioSrc = getAudioSrc(row, globalIndex);
     var hasAyat = !!getRukuAyat(row);
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
         "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
-        versesHtml(row.verses) + AYAT_CHEVRON_SVG + "</button>"
+        AYAT_BOOK_SVG + versesHtml(row.verses, AYAT_CHEVRON_SVG) + "</button>"
       : versesHtml(row.verses);
 
     if (hasAyat && isAyatOpen(row)) tr.classList.add("has-ayat-open");
 
     tr.innerHTML =
       "<td class=\"col-hifz hifz-cell\" data-label=\"Hifz\"></td>" +
-      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + escapeHtml(rukuLabel) + "</td>" +
+      "<td class=\"col-ruku\" data-label=\"Ruku #\">" + rukuLabel + "</td>" +
       "<td class=\"col-surah\" data-label=\"Surah\">" + escapeHtml(row.surah) + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
       "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + escapeHtml(surahArabicCell) + "</td>" +
@@ -1397,11 +1404,12 @@
   var AUDIO_CACHE = "mq-audio";
   var DOWNLOAD_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="m12 16l-5-5l1.4-1.45l2.6 2.6V4h2v8.15l2.6-2.6L17 11zm-6 4q-.825 0-1.412-.587T4 18v-3h2v3h12v-3h2v3q0 .825-.587 1.413T18 20z"/></svg>';
   var WHATSAPP_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2.005c-5.52 0-10 4.48-10 10.002 0 1.76.46 3.47 1.34 4.98L2.05 22l5.08-1.34c1.46.8 3.12 1.23 4.91 1.23 5.52 0 10-4.48 10-10.002 0-2.67-1.04-5.18-2.93-7.07a9.95 9.95 0 0 0-7.07-2.893zm.03 17.92c-1.5 0-2.97-.4-4.25-1.15l-.3-.18-3.18.84.85-3.11-.2-.31a7.764 7.764 0 0 1-1.2-4.12c0-4.28 3.47-7.75 7.75-7.75 2.07 0 4.02.81 5.48 2.28a7.684 7.684 0 0 1 2.25 5.47c-.01 4.28-3.48 7.76-7.75 7.76zm4.26-4.51c-.24-.12-1.43-.7-1.66-.78-.22-.08-.39-.12-.56.12-.17.24-.64.78-.79.94-.15.16-.3.18-.54.06-.24-.12-1.02-.37-1.95-1.2-.72-.64-1.2-1.43-1.34-1.67-.15-.24-.02-.37.11-.49.12-.12.24-.27.37-.4.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.53-1.26-.73-1.73-.19-.46-.39-.39-.53-.41h-.45c-.15 0-.4.06-.61.3-.21.24-.81.79-.81 1.92s.83 2.23.94 2.39c.12.16 1.62 2.48 3.93 3.48.55.23.98.37 1.31.47.55.18 1.05.16 1.44.09.44-.07 1.42-.58 1.62-1.14.21-.56.21-1.03.15-1.13-.06-.1-.22-.16-.46-.28z"/></svg>';
+  var AYAT_BOOK_SVG = '<svg class="verses-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>';
   var AYAT_CHEVRON_SVG = '<svg class="verses-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
-  var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
-  var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.5 8A10 10 0 1 0 19.6 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">+5</text></svg>';
+  var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
+  var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.5 8A10 10 0 1 0 19.6 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">+5</text></svg>';
 
   function resolveUrl(url) {
     var a = document.createElement("a");
@@ -1855,51 +1863,58 @@
   }
 
   /* ----------------------------------------------------------------- */
-  /* Docked mini-player — once a track is loaded and the toolbar has    */
-  /* scrolled off the top, the now-playing strip pins to the bottom of  */
-  /* the viewport so playback stays controllable while the reader       */
-  /* scrolls through an open ayat panel. It is the same element with    */
-  /* the same ids throughout, so every sync path keeps working.         */
+  /* Docked mini-player -- while a track is loaded and the card that owns  */
+  /* it is out of view, the now-playing strip pins to the bottom of the   */
+  /* viewport so playback stays controllable. While the card itself is on */
+  /* screen the strip stays hidden: the card already shows everything the */
+  /* strip would. Same element, same ids throughout, so every sync path   */
+  /* keeps working.                                                       */
   /* ----------------------------------------------------------------- */
   var toolbarBottom = document.querySelector(".toolbar-bottom");
-  var toolbarDockSpacer = document.getElementById("toolbar-dock-spacer");
-  var toolbarDockSentinel = document.getElementById("toolbar-dock-sentinel");
-  /** True while the toolbar's place in the page sits above the viewport. */
-  var toolbarScrolledOff = false;
+  /** The active track's card, as far as the observer is concerned. */
+  var dockedRow = null;
+  var dockedRowOffscreen = false;
+  var dockObserver = typeof IntersectionObserver === "function"
+    ? new IntersectionObserver(function (entries) {
+        var entry = entries[entries.length - 1];
+        if (entry.target !== dockedRow) return;
+        dockedRowOffscreen = entry.intersectionRatio < 0.5;
+        applyToolbarDock();
+      }, { threshold: [0, 0.5, 1] })
+    : null;
 
   function toolbarHasTrack() {
     var shell = document.getElementById("toolbar-now-playing");
     return !!shell && (shell.classList.contains("is-playing") || shell.classList.contains("is-paused"));
   }
 
-  function syncToolbarDock() {
-    if (!toolbarBottom || !toolbarDockSpacer) return;
-    var wantDocked = toolbarScrolledOff && toolbarHasTrack();
+  function applyToolbarDock() {
+    if (!toolbarBottom) return;
+    // No card to watch (the track belongs to another para): the bar is the only control left.
+    var wantDocked = toolbarHasTrack() && (!dockedRow || dockedRowOffscreen);
     if (wantDocked === toolbarBottom.classList.contains("is-docked")) return;
-    if (wantDocked) {
-      // Measure while the strip is still in flow so the spacer fills exactly
-      // the gap it leaves and the rows below it do not jump.
-      toolbarDockSpacer.style.height = toolbarBottom.offsetHeight + "px";
-      toolbarDockSpacer.classList.add("is-active");
-      toolbarBottom.classList.add("is-docked");
-      document.body.classList.add("has-docked-player");
-    } else {
-      toolbarBottom.classList.remove("is-docked");
-      document.body.classList.remove("has-docked-player");
-      toolbarDockSpacer.classList.remove("is-active");
-      toolbarDockSpacer.style.height = "";
-    }
+    toolbarBottom.classList.toggle("is-docked", wantDocked);
+    document.body.classList.toggle("has-docked-player", wantDocked);
   }
 
-  // The sentinel sits just below the toolbar and never moves (the spacer keeps
-  // the toolbar's height constant), so observing it cannot feed back on itself.
-  if (toolbarDockSentinel && typeof IntersectionObserver === "function") {
-    new IntersectionObserver(function (entries) {
-      var entry = entries[entries.length - 1];
-      // Gone off the *top*, not merely still below the fold.
-      toolbarScrolledOff = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-      syncToolbarDock();
-    }).observe(toolbarDockSentinel);
+  /** Point the observer at the active track's card (rows are rebuilt on every render). */
+  function syncToolbarDock() {
+    var row = toolbarHasTrack() ? tbody.querySelector("tr.playing") : null;
+    if (row !== dockedRow) {
+      if (dockObserver) {
+        if (dockedRow) dockObserver.unobserve(dockedRow);
+        if (row) dockObserver.observe(row);
+      }
+      dockedRow = row;
+      if (row) {
+        var r = row.getBoundingClientRect();
+        var visible = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+        dockedRowOffscreen = visible < r.height * 0.5;
+      } else {
+        dockedRowOffscreen = true;
+      }
+    }
+    applyToolbarDock();
   }
 
   /** Toolbar strip: shows which ruku is active (playing or paused). */
@@ -1932,7 +1947,7 @@
     }
 
     titleEl.textContent = "Para " + row.para + " · Ruku " + rukuDisplay(row);
-    metaEl.textContent = row.surah + " · " + row.verses;
+    metaEl.textContent = row.surah + " · " + versesText(row.verses);
     if (parseInt(paraSelect.value, 10) !== row.para) {
       metaEl.textContent += " · Para " + row.para;
     }

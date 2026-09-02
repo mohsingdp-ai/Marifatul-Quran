@@ -283,6 +283,8 @@ button {
   gap: 0.9rem;
   max-width: 1200px;
   margin: 0 auto;
+  /* Clear of the overflow menu at the right, symmetrically, so the title stays centred. */
+  padding: 0 48px;
 }
 
 .header-logo {
@@ -319,10 +321,39 @@ button {
   color: var(--md-app-bar-subtitle);
 }
 
+/* Overflow menu lives in the app bar, where every Material app keeps it. */
+.header .header-menu {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.header .btn-toolbar-menu {
+  color: var(--md-on-app-bar);
+}
+
+.header .btn-toolbar-menu:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--md-on-app-bar);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .main {
   width: 100%;
-  max-width: 1200px;
-  padding: 1rem 1.5rem 2.5rem;
+  max-width: 860px;
+  padding: 0.75rem 1rem 2.5rem;
   box-sizing: border-box;
   margin: 0 auto;
 }
@@ -331,89 +362,71 @@ button {
 /* Toolbar: para picker + now-playing strip                            */
 /* ================================================================== */
 .controls {
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
 }
 
-.controls label {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--md-on-surface-variant);
-}
 
-/* Outlined dropdown field. */
 .controls select {
   -webkit-appearance: none;
   appearance: none;
-  min-height: 40px;
-  padding: 0 2.25rem 0 0.9rem;
-  font-size: 0.9375rem;
+  min-height: 44px;
+  min-width: 8.5rem;
+  padding: 0 2.2rem 0 1.1rem;
+  font-size: 1rem;
   line-height: 1.25rem;
   font-weight: 500;
   letter-spacing: 0.01em;
-  border: 1px solid var(--md-outline);
-  border-radius: var(--md-shape-sm);
-  background: var(--md-raised) var(--md-select-chevron) no-repeat right 0.5rem center / 22px 22px;
+  border: none;
+  border-left: 1px solid var(--md-outline-variant);
+  border-right: 1px solid var(--md-outline-variant);
+  border-radius: 0;
+  background: transparent var(--md-select-chevron) no-repeat right 0.55rem center / 22px 22px;
   color: var(--md-on-surface);
   cursor: pointer;
   touch-action: manipulation;
-  transition: border-color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
+  transition: background-color var(--md-duration-short) var(--md-easing-standard);
 }
 
 .controls select:hover {
-  border-color: var(--md-on-surface);
+  background-color: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
 }
 
 .controls select:focus {
   outline: none;
-  border-color: var(--md-primary);
-  box-shadow: inset 0 0 0 1px var(--md-primary);
+  box-shadow: inset 0 0 0 2px var(--md-primary);
 }
 
 .toolbar {
   flex-direction: column;
   align-items: stretch;
   gap: 0;
-  background: var(--md-surface-container);
+  background: transparent;
   padding: 0;
-  border-radius: var(--md-shape-lg);
+  border-radius: 0;
   overflow: visible;
 }
 
-/* Both rows carry an explicit width because they are flex items of a column toolbar and
-   would otherwise stretch to the widest of the two -- and the now-playing strip's
-   min-content is wider than a 320px screen, which dragged the para row out with it,
-   pushed its second chevron past the edge and left the page scrolling sideways. With a
-   width of their own they take the toolbar's, and their children shrink inside it. */
 .toolbar-top {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
   min-width: 0;
-  gap: 0.75rem;
-  /* Same 0.85rem gutter as the cards below, so the para row, the strip under it and every
-     ruku title share one left edge down the page. */
-  padding: 0.75rem 0.85rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
-  border-radius: var(--md-shape-lg) var(--md-shape-lg) 0 0;
+  padding: 0.15rem 0 0;
 }
 
+/* The now-playing strip has no place at rest: the active card shows all of it. It appears
+   only docked, once that card has scrolled out of view. */
 .toolbar-bottom {
-  display: flex;
-  flex-wrap: wrap;
+  display: none;
   align-items: stretch;
   justify-content: space-between;
   width: 100%;
   min-width: 0;
   gap: 0.5rem;
-  padding: 0.6rem 0.85rem;
-  border-radius: 0 0 var(--md-shape-lg) var(--md-shape-lg);
 }
 
 /* ------------------------------------------------------------------ */
@@ -425,6 +438,7 @@ button {
 /* its position changes, so every sync path keeps working.             */
 /* ------------------------------------------------------------------ */
 .toolbar-bottom.is-docked {
+  display: flex;
   position: fixed;
   padding: 8px 10px;
   left: 0;
@@ -453,19 +467,6 @@ button {
 @keyframes toolbar-dock-in {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
-}
-
-/* Reserves the docked strip's in-flow height so the page does not jump. */
-.toolbar-dock-spacer {
-  display: none;
-}
-
-.toolbar-dock-spacer.is-active {
-  display: block;
-}
-
-.toolbar-dock-sentinel {
-  height: 0;
 }
 
 /* Keeps the last ayah clear of the docked bar. */
@@ -511,6 +512,9 @@ body.has-docked-player {
 /* Step the selected Para by one, mirroring the native toolbar's chevrons. The dropdown
    alone means 30 options to hunt through to move one para; these are the common move. */
 .btn-para-step {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
   color: var(--md-primary);
 }
 
@@ -520,15 +524,14 @@ body.has-docked-player {
 }
 
 .controls-left {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-full);
+  background: var(--md-raised);
+  overflow: hidden;
 }
 
-.controls-left label {
-  margin-right: 0.25rem;
-}
 
 .mq-audio-host {
   position: absolute;
@@ -719,14 +722,6 @@ body.has-docked-player {
   /* The strip stretches to fill the bar; the menu should sit centred beside it, not
      stretch to match its height. */
   align-self: center;
-}
-
-/* Docked at the foot of the screen there is no room below the button, so the menu opens
-   upward instead. */
-.toolbar-bottom.is-docked .toolbar-menu-dropdown {
-  top: auto;
-  bottom: calc(100% + 6px);
-  transform-origin: bottom right;
 }
 
 /* --- Menu --- */
@@ -1461,7 +1456,24 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .verses-part {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   white-space: nowrap;
+}
+
+/* The ruku is a tag after the surah, and never breaks inside its own hyphen. */
+.col-ruku-tag {
+  white-space: nowrap;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--md-on-surface-variant);
+  margin-left: 0.35rem;
+}
+
+.ruku-table tr.playing .col-ruku-tag {
+  color: color-mix(in srgb, var(--md-on-secondary-container) 80%, transparent);
 }
 
 /* ============ Ayat panel (verses of a ruku) ============ */
@@ -1473,19 +1485,31 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   /* The parts of a merged row's range are flex items here, so they only wrap if the flex
      container lets them; without this one long value widens the column for the whole para. */
   flex-wrap: wrap;
-  gap: 0.3rem;
-  padding: 0.2rem 0.4rem;
-  margin: -0.2rem -0.4rem;
-  border: none;
-  border-radius: var(--md-shape-full);
-  background: none;
+  gap: 0.15rem 0.3rem;
+  min-height: 28px;
+  padding: 0.15rem 0.55rem 0.15rem 0.5rem;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--md-shape-sm);
+  background: transparent;
   font: inherit;
   color: var(--md-primary);
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background var(--md-duration-short) var(--md-easing-standard);
+  transition: background var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
 }
+
+.verses-toggle[aria-expanded="true"] {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-color: transparent;
+}
+
+.verses-toggle-icon {
+  flex: none;
+  opacity: 0.85;
+}
+
 
 .verses-toggle:hover {
   background: color-mix(in srgb, var(--md-primary) 8%, transparent);
@@ -1493,6 +1517,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .verses-toggle-chevron {
   flex: none;
+  margin-left: -0.1rem;
   opacity: 0.8;
   transition: transform var(--md-duration-short) var(--md-easing-standard);
 }
@@ -1517,11 +1542,14 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 /* Outlined card for reading. */
 .ayat-panel {
-  border: 1px solid var(--md-outline-variant);
-  border-radius: var(--md-shape-md);
+  border-radius: 0 0 var(--md-shape-md) var(--md-shape-md);
   background: var(--md-panel);
-  padding: 0.9rem 1.25rem 0.75rem;
-  margin: 6px 0 0.75rem;
+  box-shadow: var(--md-elevation-1);
+  /* The card above casts the same shadow; clipping each one's shadow at the seam makes the
+     two rows read as one surface. */
+  clip-path: inset(0 -12px -12px -12px);
+  padding: 0.9rem 1rem 1rem;
+  margin: 0 0 0.75rem;
 }
 
 .ayat-head {
@@ -1533,6 +1561,10 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.ayat-item.is-reciting + .ayat-item {
+  margin-top: 0.35rem;
 }
 
 .ayat-head-surah {
@@ -1552,8 +1584,11 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .ayat-basmala {
   text-align: center;
-  font-size: 1.6rem;
+  /* One ligature glyph, as wide as a phone: it scales with the viewport below 1.6rem. */
+  font-size: min(1.6rem, 6.5vw);
   line-height: 1.6;
+  white-space: nowrap;
+  overflow-x: clip;
   color: var(--md-tertiary);
   margin-bottom: 0.35rem;
 }
@@ -1700,10 +1735,9 @@ html[data-hifz="off"] .col-hifz {
 /* Per-Para memorization meter (signature element) */
 .hifz-meter {
   margin: 0 0 0.75rem;
-  padding: 0.8rem 1rem 0.75rem;
-  background: var(--md-card);
+  padding: 0.6rem 0.9rem 0.65rem;
+  background: var(--md-surface-container-low);
   border-radius: var(--md-shape-md);
-  box-shadow: var(--md-elevation-1);
 }
 
 .hifz-meter-head {
@@ -1711,13 +1745,13 @@ html[data-hifz="off"] .col-hifz {
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .hifz-meter-para {
   font-weight: 500;
-  font-size: 1rem;
-  line-height: 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
   letter-spacing: 0.01em;
   color: var(--md-on-surface);
 }
@@ -1750,8 +1784,11 @@ html[data-hifz="off"] .col-hifz {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem 0.9rem;
-  margin-top: 0.55rem;
-  min-height: 1rem;
+  margin-top: 0.5rem;
+}
+
+.hifz-meter-counts:empty {
+  display: none;
 }
 
 .hifz-count {
@@ -1949,16 +1986,16 @@ tr.playing.audio-paused .audio-play-btn {
   opacity: 1;
 }
 
-/* M3 slider: a tall rounded track, the played side in primary, and a slim bar for a handle
-   with a gap of card colour either side of it. `--track-gap` is the surface the slider sits
-   on; the playing card sets it. */
+/* M3 slider: a rounded track, the played side in primary, and a round thumb ringed in the
+   card's colour so it stands off the track. `--track-gap` is the surface the slider sits on;
+   the playing card sets it. */
 .audio-progress {
   --progress: 0%;
-  --track-h: 12px;
-  --thumb-h: 30px;
+  --track-h: 6px;
+  --thumb: 16px;
   --track-gap: var(--md-secondary-container);
   width: 100%;
-  height: var(--track-h);
+  height: var(--thumb);
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -1969,35 +2006,35 @@ tr.playing.audio-paused .audio-play-btn {
 .audio-progress::-webkit-slider-runnable-track {
   height: var(--track-h);
   border-radius: var(--md-shape-full);
-  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 22%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 22%, transparent) 100%);
+  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) 100%);
 }
 
 .audio-progress::-moz-range-track {
   height: var(--track-h);
   border-radius: var(--md-shape-full);
-  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 22%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 22%, transparent) 100%);
+  background: linear-gradient(to right, var(--md-primary) 0%, var(--md-primary) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) var(--progress), color-mix(in srgb, var(--md-primary) 24%, transparent) 100%);
 }
 
 .audio-progress::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 4px;
-  height: var(--thumb-h);
-  margin-top: calc((var(--track-h) - var(--thumb-h)) / 2);
-  border: none;
-  border-radius: 2px;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--track-h) - var(--thumb)) / 2);
+  border: 2px solid var(--track-gap);
+  border-radius: 50%;
   background: var(--md-primary);
-  box-shadow: 0 0 0 5px var(--track-gap);
+  box-shadow: var(--md-elevation-1);
   cursor: pointer;
 }
 
 .audio-progress::-moz-range-thumb {
-  width: 4px;
-  height: var(--thumb-h);
-  border: none;
-  border-radius: 2px;
+  width: var(--thumb);
+  height: var(--thumb);
+  border: 2px solid var(--track-gap);
+  border-radius: 50%;
   background: var(--md-primary);
-  box-shadow: 0 0 0 5px var(--track-gap);
+  box-shadow: var(--md-elevation-1);
   cursor: pointer;
 }
 
@@ -2244,18 +2281,6 @@ tr.playing.audio-paused .audio-play-btn {
     font-size: 1.25rem;
   }
 
-  .main {
-    padding: 0.75rem 1rem;
-  }
-
-  .controls {
-    margin-bottom: 0.85rem;
-    flex-wrap: wrap;
-  }
-
-  .controls select {
-    min-height: 44px;
-  }
 
   .toolbar-bottom {
     flex-direction: row;
@@ -2300,42 +2325,14 @@ tr.playing.audio-paused .audio-play-btn {
     height: 28px;
   }
 
-  .audio-seek-back-btn {
-    order: 0;
-  }
-
-  .audio-seek-fwd-btn {
-    order: 2;
-  }
-
-  .audio-speed-btn {
-    order: 3;
-  }
-
-  .audio-time-current {
-    order: 10;
-    font-size: 0.8125rem;
-    min-width: 2.25rem;
-  }
-
   .audio-progress-wrap {
-    order: 11;
-    flex: 1 1 100%;
-    width: 100%;
-    min-width: 0;
     min-height: 44px;
   }
 
-  .audio-time-duration {
-    order: 12;
-    font-size: 0.8125rem;
-    min-width: 2.25rem;
-  }
-
-  /* A fatter track and a taller handle for thumbs. */
+  /* A fatter track and a bigger thumb for thumbs. */
   .audio-progress {
-    --track-h: 16px;
-    --thumb-h: 36px;
+    --track-h: 8px;
+    --thumb: 22px;
   }
 
   .modal {
@@ -2382,34 +2379,9 @@ tr.playing.audio-paused .audio-play-btn {
     padding: 0.6rem 0.85rem;
   }
 
-  /* Label, chevron, select, chevron come to a couple of pixels wider than a 320px
-     viewport leaves, so the second chevron drops onto a line of its own. Hold the four
-     on one line and let the select -- the only one of them that can give -- take
-     whatever the fixed items leave. */
-  .controls-left {
-    flex: 1;
-    min-width: 0;
-    flex-wrap: nowrap;
-    gap: 0.35rem;
-  }
-
-  .controls-left label {
-    flex-shrink: 0;
-    margin-right: 0;
-  }
-
-  .controls-left select {
-    flex: 1;
-    min-width: 0;
-    padding-right: 1.7rem;
-    padding-left: 0.5rem;
-    background-position: right 0.25rem center;
-  }
-
-  /* Narrower, and as tall as the select they sit either side of. */
-  .btn-para-step {
-    width: 34px;
-    height: 44px;
+  .controls select {
+    min-width: 7rem;
+    padding-left: 0.8rem;
   }
 
   .btn-toolbar-locate {
@@ -2980,15 +2952,16 @@ tr.playing.audio-paused .audio-play-btn {
 /* Elevated card. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Two text lines, not four: the surah, its ayat and the hifz pill share one line under
-     the ruku number, the way the now-playing strip stacks its title over its detail. */
-  grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
+  /* Phone first: the title, then the surah and its ayat, then the hifz chip on a line of
+     its own, with share and download beside the first two. */
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "play ruku   ruku   act  wa dl"
-    "play arabic verses hifz wa dl"
-    "tx   tx     tx     tx   tx tx";
+    "play ruku   ruku   wa  dl"
+    "play arabic verses wa  dl"
+    "play hifz   hifz   act act"
+    "tx   tx     tx     tx  tx";
   align-items: center;
-  column-gap: 0.7rem;
+  column-gap: 0.6rem;
   row-gap: 0.2rem;
   padding: 0.75rem 0.85rem;
   margin: 0 0 0.6rem;
@@ -3156,19 +3129,31 @@ tr.playing.audio-paused .audio-play-btn {
   background: color-mix(in srgb, var(--md-on-secondary-container) 8%, transparent);
 }
 
-/* Two lines while playing, not three: the controls and the clock share one, the scrubber
-   takes the next. The progress bar's 100% flex basis was breaking the line before the
-   duration, which left the total time stranded on a line of its own. */
-.ruku-table .audio-time-duration { order: 10; }
-
-.ruku-table .audio-time-current {
-  margin-left: auto;
-}
+/* Phone first: seek, seek, speed and the clock share a line, the scrubber takes the next.
+   The clock is one unit, "1:21 / 8:00", pushed to the right of the controls. */
+.ruku-table .audio-seek-back-btn { order: 0; }
+.ruku-table .audio-seek-fwd-btn { order: 1; }
+.ruku-table .audio-speed-btn { order: 2; }
+.ruku-table .audio-time-current { order: 3; margin-left: auto; }
+.ruku-table .audio-time-duration { order: 4; }
+.ruku-table .audio-progress-wrap { order: 5; flex: 1 1 100%; width: 100%; min-width: 0; }
 
 .ruku-table .audio-time-current::after {
   content: "/";
   margin: 0 0.3rem;
   opacity: 0.45;
+}
+
+.ruku-table .audio-time-current,
+.ruku-table .audio-time-duration {
+  min-width: 0;
+}
+
+/* Room for one line: the scrubber sits between the controls and the clock. */
+@media (min-width: 641px) {
+  .ruku-table .audio-progress-wrap { order: 3; flex: 1 1 0; width: auto; min-width: 120px; }
+  .ruku-table .audio-time-current { order: 4; margin-left: 0.25rem; }
+  .ruku-table .audio-time-duration { order: 5; }
 }
 
 /* Secondary to the 44px play button that opened the row. */
@@ -3195,26 +3180,23 @@ tr.playing.audio-paused .audio-play-btn {
 .ruku-table tbody tr.ayat-row > td.ayat-cell { display: block; padding: 0; }
 .ruku-table tbody tr[data-global-index].has-ayat-open {
   margin-bottom: 0;
+  border-radius: var(--md-shape-md) var(--md-shape-md) 0 0;
+  clip-path: inset(-12px -12px 0 -12px);
 }
 
-/* The narrowest phones cannot fit the pill on the detail line beside play, share and
-   download — the surah name gets ellipsised and the pill lands under the buttons. Give it
-   its own line there; everything else keeps the two-line card. */
-@media (max-width: 360px) {
-  .ruku-table tbody tr[data-global-index] {
-    column-gap: 0.55rem;
-    grid-template-columns: auto auto minmax(0, 1fr) auto auto;
-    grid-template-areas:
-      "play ruku   ruku   wa  dl"
-      "play arabic verses wa  dl"
-      "play hifz   hifz   act act"
-      "tx   tx     tx     tx  tx";
-  }
+.ruku-table tbody tr[data-global-index].playing.has-ayat-open {
+  box-shadow: var(--md-elevation-1);
+}
 
-  .ruku-table .audio-share-wa-btn,
-  .ruku-table .audio-offline-btn {
-    width: 36px;
-    height: 36px;
+/* Room for two lines: the hifz chip joins the detail line. */
+@media (min-width: 641px) {
+  .ruku-table tbody tr[data-global-index] {
+    grid-template-columns: auto minmax(0, auto) auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "play ruku   ruku   act  wa dl"
+      "play arabic verses hifz wa dl"
+      "tx   tx     tx     tx   tx tx";
+    column-gap: 0.7rem;
   }
 }
 
