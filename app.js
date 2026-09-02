@@ -24,18 +24,48 @@
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
 
-  /** The 30 paras by the words they open with, as they are known across South Asia. */
+  /** The 30 paras by the words they open with, as they are known across South Asia. The
+      Arabic is the mushaf's own spelling, lifted from the Uthmani text in verses.js. */
   var PARA_NAMES = [
-    ["الم", "Alif Lam Mim"], ["سيقول", "Sayaqul"], ["تلك الرسل", "Tilka r-Rusul"], ["لن تنالوا", "Lan Tanalu"],
-    ["والمحصنات", "Wal Muhsanat"], ["لا يحب الله", "La Yuhibbullah"], ["وإذا سمعوا", "Wa Idha Sami'u"],
-    ["ولو أننا", "Wa Law Annana"], ["قال الملأ", "Qalal Mala'"], ["واعلموا", "Wa'lamu"], ["يعتذرون", "Ya'tadhirun"],
-    ["وما من دابة", "Wa Ma Min Dabbah"], ["وما أبرئ", "Wa Ma Ubarri'u"], ["ربما", "Rubama"],
-    ["سبحان الذي", "Subhanalladhi"], ["قال ألم", "Qala Alam"], ["اقترب للناس", "Iqtaraba"], ["قد أفلح", "Qad Aflaha"],
-    ["وقال الذين", "Wa Qalalladhina"], ["أمن خلق", "Amman Khalaq"], ["اتل ما أوحي", "Utlu Ma Uhiya"],
-    ["ومن يقنت", "Wa Man Yaqnut"], ["وما لي", "Wa Ma Liya"], ["فمن أظلم", "Fa Man Azlam"], ["إليه يرد", "Ilayhi Yuraddu"],
-    ["حم", "Ha Mim"], ["قال فما خطبكم", "Qala Fama Khatbukum"], ["قد سمع الله", "Qad Sami'allah"],
-    ["تبارك الذي", "Tabarakalladhi"], ["عم", "Amma"]
+    ["الٓمٓ", "Alif Lam Mim"], ["سَيَقُولُ", "Sayaqul"], ["تِلْكَ ٱلرُّسُلُ", "Tilka r-Rusul"],
+    ["لَن تَنَالُوا۟", "Lan Tanalu"], ["وَٱلْمُحْصَنَٰتُ", "Wal Muhsanat"], ["لَّا يُحِبُّ ٱللَّهُ", "La Yuhibbullah"],
+    ["وَإِذَا سَمِعُوا۟", "Wa Idha Sami'u"], ["وَلَوْ أَنَّنَا", "Wa Law Annana"], ["قَالَ ٱلْمَلَأُ", "Qalal Mala'"],
+    ["وَٱعْلَمُوٓا۟", "Wa'lamu"], ["يَعْتَذِرُونَ", "Ya'tadhirun"], ["وَمَا مِن دَآبَّةٍۢ", "Wa Ma Min Dabbah"],
+    ["وَمَآ أُبَرِّئُ", "Wa Ma Ubarri'u"], ["رُّبَمَا", "Rubama"], ["سُبْحَٰنَ ٱلَّذِىٓ", "Subhanalladhi"],
+    ["قَالَ أَلَمْ", "Qala Alam"], ["ٱقْتَرَبَ لِلنَّاسِ", "Iqtaraba"], ["قَدْ أَفْلَحَ", "Qad Aflaha"],
+    ["وَقَالَ ٱلَّذِينَ", "Wa Qalalladhina"], ["أَمَّنْ خَلَقَ", "Amman Khalaq"], ["ٱتْلُ مَآ أُوحِىَ", "Utlu Ma Uhiya"],
+    ["وَمَن يَقْنُتْ", "Wa Man Yaqnut"], ["وَمَا لِىَ", "Wa Ma Liya"], ["فَمَنْ أَظْلَمُ", "Fa Man Azlam"],
+    ["إِلَيْهِ يُرَدُّ", "Ilayhi Yuraddu"], ["حمٓ", "Ha Mim"], ["قَالَ فَمَا خَطْبُكُمْ", "Qala Fama Khatbukum"],
+    ["قَدْ سَمِعَ ٱللَّهُ", "Qad Sami'allah"], ["تَبَٰرَكَ ٱلَّذِى", "Tabarakalladhi"], ["عَمَّ", "Amma"]
   ];
+
+  /** Surah names as the mushaf index writes them, with their harakat; data.js carries the
+      bare letters. Keyed by surah number. */
+  var SURAH_NAMES_AR = {
+    1: "ٱلْفَاتِحَة", 2: "ٱلْبَقَرَة", 3: "آلِ عِمْرَان", 4: "ٱلنِّسَاء", 5: "ٱلْمَائِدَة", 6: "ٱلْأَنْعَام",
+    7: "ٱلْأَعْرَاف", 8: "ٱلْأَنْفَال", 9: "ٱلتَّوْبَة", 10: "يُونُس", 11: "هُود", 12: "يُوسُف",
+    13: "ٱلرَّعْد", 14: "إِبْرَاهِيم", 15: "ٱلْحِجْر", 16: "ٱلنَّحْل", 17: "ٱلْإِسْرَاء", 18: "ٱلْكَهْف",
+    19: "مَرْيَم", 20: "طه", 21: "ٱلْأَنْبِيَاء", 22: "ٱلْحَجّ", 23: "ٱلْمُؤْمِنُون", 24: "ٱلنُّور",
+    25: "ٱلْفُرْقَان", 26: "ٱلشُّعَرَاء", 27: "ٱلنَّمْل", 28: "ٱلْقَصَص", 29: "ٱلْعَنكَبُوت", 30: "ٱلرُّوم",
+    31: "لُقْمَان", 32: "ٱلسَّجْدَة", 33: "ٱلْأَحْزَاب", 34: "سَبَإ", 35: "فَاطِر", 36: "يس",
+    37: "ٱلصَّافَّات", 38: "ص", 39: "ٱلزُّمَر", 40: "غَافِر", 41: "فُصِّلَت", 42: "ٱلشُّورَىٰ",
+    43: "ٱلزُّخْرُف", 44: "ٱلدُّخَان", 45: "ٱلْجَاثِيَة", 46: "ٱلْأَحْقَاف", 47: "مُحَمَّد", 48: "ٱلْفَتْح",
+    49: "ٱلْحُجُرَات", 50: "ق", 51: "ٱلذَّارِيَات", 52: "ٱلطُّور", 53: "ٱلنَّجْم", 54: "ٱلْقَمَر",
+    55: "ٱلرَّحْمَٰن", 56: "ٱلْوَاقِعَة", 57: "ٱلْحَدِيد", 58: "ٱلْمُجَادَلَة", 59: "ٱلْحَشْر", 60: "ٱلْمُمْتَحَنَة",
+    61: "ٱلصَّفّ", 62: "ٱلْجُمُعَة", 63: "ٱلْمُنَافِقُون", 64: "ٱلتَّغَابُن", 65: "ٱلطَّلَاق", 66: "ٱلتَّحْرِيم",
+    67: "ٱلْمُلْك", 68: "ٱلْقَلَم", 69: "ٱلْحَاقَّة", 70: "ٱلْمَعَارِج", 71: "نُوح", 72: "ٱلْجِنّ",
+    73: "ٱلْمُزَّمِّل", 74: "ٱلْمُدَّثِّر", 75: "ٱلْقِيَامَة", 76: "ٱلْإِنسَان", 77: "ٱلْمُرْسَلَات", 78: "ٱلنَّبَإ",
+    79: "ٱلنَّازِعَات", 80: "عَبَسَ", 81: "ٱلتَّكْوِير", 82: "ٱلْإِنفِطَار", 83: "ٱلْمُطَفِّفِين", 84: "ٱلْإِنشِقَاق",
+    85: "ٱلْبُرُوج", 86: "ٱلطَّارِق", 87: "ٱلْأَعْلَىٰ", 88: "ٱلْغَاشِيَة", 89: "ٱلْفَجْر", 90: "ٱلْبَلَد",
+    91: "ٱلشَّمْس", 92: "ٱللَّيْل", 93: "ٱلضُّحَىٰ", 94: "ٱلشَّرْح", 95: "ٱلتِّين", 96: "ٱلْعَلَق",
+    97: "ٱلْقَدْر", 98: "ٱلْبَيِّنَة", 99: "ٱلزَّلْزَلَة", 100: "ٱلْعَادِيَات", 101: "ٱلْقَارِعَة", 102: "ٱلتَّكَاثُر",
+    103: "ٱلْعَصْر", 104: "ٱلْهُمَزَة", 105: "ٱلْفِيل", 106: "قُرَيْش", 107: "ٱلْمَاعُون", 108: "ٱلْكَوْثَر",
+    109: "ٱلْكَافِرُون", 110: "ٱلنَّصْر", 111: "ٱلْمَسَد", 112: "ٱلْإِخْلَاص", 113: "ٱلْفَلَق", 114: "ٱلنَّاس"
+  };
+
+  function surahArabic(row) {
+    return SURAH_NAMES_AR[row.surahNumber] || row.surahArabic;
+  }
 
   function paraName(n) {
     return PARA_NAMES[Number(n) - 1] || ["", ""];
@@ -876,7 +906,7 @@
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
-      "<span class=\"surah-ar\" lang=\"ar\">" + escapeHtml(row.surahArabic) + "</span>";
+      "<span class=\"surah-ar\" lang=\"ar\">" + escapeHtml(surahArabic(row)) + "</span>";
     var audioSrc = getAudioSrc(row, globalIndex);
     var hasAyat = !!getRukuAyat(row);
     var ayahLabel = "<span class=\"verses-label\">Ayah</span>";

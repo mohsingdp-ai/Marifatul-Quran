@@ -403,8 +403,8 @@ button {
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 48px;
-  min-width: 10rem;
+  min-height: 52px;
+  min-width: 10.5rem;
   border-left: 1px solid var(--md-outline-variant);
   border-right: 1px solid var(--md-outline-variant);
   transition: background-color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
@@ -468,8 +468,8 @@ button {
 /* The name in gold, the way the surah names are drawn on the cards. */
 .para-picker-name {
   font-family: "Traditional Arabic", "Scheherazade New", serif;
-  font-size: 1.2rem;
-  line-height: 1.25;
+  font-size: 1.25rem;
+  line-height: 1.5;
   color: var(--md-tertiary);
   direction: rtl;
   unicode-bidi: isolate;
@@ -3160,10 +3160,11 @@ tr.playing.audio-paused .audio-play-btn {
   white-space: nowrap;
 }
 
+/* Harakat rise above and dip below the letters; nothing here may clip them. */
 .ruku-table .surah-ar {
   unicode-bidi: isolate;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .ruku-table .surah-ar::after {
