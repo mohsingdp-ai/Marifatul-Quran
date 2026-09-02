@@ -11,53 +11,58 @@
 :root {
   color-scheme: light;
 
-  /* --- Colour roles (light). Teal seed; gold tertiary for the mushaf details. --- */
-  --md-primary: #006a6a;
+  /* --- Colour roles (light). The brand teal, saturated, with gold for the mushaf. --- */
+  --md-primary: #0a7a7a;
   --md-on-primary: #ffffff;
-  --md-primary-container: #6ff7f6;
-  --md-on-primary-container: #002020;
-  --md-secondary: #4a6363;
+  --md-primary-container: #b3eeec;
+  --md-on-primary-container: #002222;
+  --md-secondary: #3f6a69;
   --md-on-secondary: #ffffff;
-  --md-secondary-container: #cce8e7;
-  --md-on-secondary-container: #051f1f;
-  --md-tertiary: #7b5800;
+  --md-secondary-container: #cdeceb;
+  --md-on-secondary-container: #0b2b2b;
+  --md-tertiary: #8a6a12;
   --md-on-tertiary: #ffffff;
-  --md-tertiary-container: #ffdf9e;
-  --md-on-tertiary-container: #271900;
-  --md-error: #ba1a1a;
+  --md-tertiary-container: #ffe4a6;
+  --md-on-tertiary-container: #2b1d00;
+  --md-error: #b3261e;
   --md-on-error: #ffffff;
-  --md-error-container: #ffdad6;
-  --md-on-error-container: #410002;
+  --md-error-container: #f9dedc;
+  --md-on-error-container: #410e0b;
   --md-success: #2e7d32;
   --md-on-success: #ffffff;
   --md-success-container: #c8e6c9;
   --md-on-success-container: #0a2e12;
-  --md-surface: #f4fbfa;
-  --md-surface-dim: #d5dbda;
-  --md-surface-bright: #f4fbfa;
+  --md-surface: #e9f3f2;
+  --md-surface-dim: #c9dbda;
+  --md-surface-bright: #f7fcfb;
   --md-surface-container-lowest: #ffffff;
-  --md-surface-container-low: #eff5f4;
-  --md-surface-container: #e9efee;
-  --md-surface-container-high: #e3e9e8;
-  --md-surface-container-highest: #dde4e3;
-  --md-on-surface: #161d1d;
-  --md-on-surface-variant: #3f4948;
-  --md-outline: #6f7978;
-  --md-outline-variant: #bec9c8;
-  --md-inverse-surface: #2b3231;
-  --md-inverse-on-surface: #ecf2f1;
-  --md-inverse-primary: #4cdada;
-  --md-scrim: rgba(0, 0, 0, 0.32);
+  --md-surface-container-low: #f2f8f7;
+  --md-surface-container: #dcebea;
+  --md-surface-container-high: #d0e3e2;
+  --md-surface-container-highest: #c3d9d8;
+  --md-on-surface: #0f2424;
+  --md-on-surface-variant: #3d5a59;
+  --md-outline: #6b8c8b;
+  --md-outline-variant: #b5d0cf;
+  --md-inverse-surface: #0f3535;
+  --md-inverse-on-surface: #e6f4f3;
+  --md-inverse-primary: #3ddbd9;
+  --md-scrim: rgba(3, 20, 20, 0.4);
   --wa-color: #128c7e;
+
+  /* The app bar wears the brand: deep teal with the gold rule the original masthead had. */
+  --md-app-bar: linear-gradient(135deg, #0a3d3d 0%, #0d4f4f 45%, #0f6060 100%);
+  --md-on-app-bar: #ffffff;
+  --md-app-bar-subtitle: rgba(255, 255, 255, 0.78);
 
   /* Surfaces by job. "Raised" is the brightest tone in light and the lightest container in
      dark, so a raised thing reads as closer in both themes. */
   --md-card: var(--md-surface-container-lowest);
   --md-raised: var(--md-surface-container-lowest);
   --md-panel: var(--md-surface-container-lowest);
-  --md-menu: var(--md-surface-container);
-  --md-dialog: var(--md-surface-container-high);
-  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233f4948'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --md-menu: var(--md-surface-container-lowest);
+  --md-dialog: var(--md-surface-container-low);
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d5a59'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
   /* --- Elevation (M3 levels 1-5) --- */
   --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
@@ -109,18 +114,18 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --md-primary: #4cdada;
-  --md-on-primary: #003737;
-  --md-primary-container: #004f4f;
-  --md-on-primary-container: #6ff7f6;
-  --md-secondary: #b0cccb;
-  --md-on-secondary: #1b3534;
-  --md-secondary-container: #324b4b;
-  --md-on-secondary-container: #cce8e7;
-  --md-tertiary: #f0bd4a;
-  --md-on-tertiary: #402d00;
-  --md-tertiary-container: #5c4200;
-  --md-on-tertiary-container: #ffdf9e;
+  --md-primary: #3ddbd9;
+  --md-on-primary: #003636;
+  --md-primary-container: #0f5e5e;
+  --md-on-primary-container: #a9f6f4;
+  --md-secondary: #8fd3ce;
+  --md-on-secondary: #0d3535;
+  --md-secondary-container: #145050;
+  --md-on-secondary-container: #d3f7f5;
+  --md-tertiary: #edc65c;
+  --md-on-tertiary: #3f2e00;
+  --md-tertiary-container: #6a4f0a;
+  --md-on-tertiary-container: #ffe7ab;
   --md-error: #ffb4ab;
   --md-on-error: #690005;
   --md-error-container: #93000a;
@@ -129,30 +134,34 @@ html[data-theme="dark"] {
   --md-on-success: #00390f;
   --md-success-container: #1f5225;
   --md-on-success-container: #b7f1b9;
-  --md-surface: #0e1514;
-  --md-surface-dim: #0e1514;
-  --md-surface-bright: #343a3a;
-  --md-surface-container-lowest: #090f0f;
-  --md-surface-container-low: #161d1d;
-  --md-surface-container: #1a2121;
-  --md-surface-container-high: #252b2b;
-  --md-surface-container-highest: #2f3636;
-  --md-on-surface: #dde4e3;
-  --md-on-surface-variant: #bec9c8;
-  --md-outline: #889392;
-  --md-outline-variant: #3f4948;
-  --md-inverse-surface: #dde4e3;
-  --md-inverse-on-surface: #2b3231;
-  --md-inverse-primary: #006a6a;
-  --md-scrim: rgba(0, 0, 0, 0.5);
+  --md-surface: #071515;
+  --md-surface-dim: #071515;
+  --md-surface-bright: #1f4242;
+  --md-surface-container-lowest: #030e0e;
+  --md-surface-container-low: #0b1f1f;
+  --md-surface-container: #0f2828;
+  --md-surface-container-high: #153434;
+  --md-surface-container-highest: #1c4040;
+  --md-on-surface: #e4f3f2;
+  --md-on-surface-variant: #a3c2c1;
+  --md-outline: #5b8281;
+  --md-outline-variant: #244848;
+  --md-inverse-surface: #e4f3f2;
+  --md-inverse-on-surface: #0f2a2a;
+  --md-inverse-primary: #0a7a7a;
+  --md-scrim: rgba(0, 0, 0, 0.55);
   --wa-color: #5fd4b4;
+
+  --md-app-bar: linear-gradient(135deg, #062a2a 0%, #0a3d3d 50%, #0d4f4f 100%);
+  --md-on-app-bar: #ffffff;
+  --md-app-bar-subtitle: rgba(255, 255, 255, 0.75);
 
   --md-card: var(--md-surface-container);
   --md-raised: var(--md-surface-container-high);
   --md-panel: var(--md-surface-container-low);
   --md-menu: var(--md-surface-container-high);
-  --md-dialog: var(--md-surface-container-high);
-  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23bec9c8'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --md-dialog: #123030;
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3c2c1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
   /* Shadows carry less in the dark; tone does the lifting. */
   --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
@@ -249,9 +258,22 @@ button {
 /* Top app bar                                                         */
 /* ================================================================== */
 .header {
-  background: var(--md-surface-container);
-  color: var(--md-on-surface);
-  padding: 0.8rem 1.5rem 0.85rem;
+  position: relative;
+  background: var(--md-app-bar);
+  color: var(--md-on-app-bar);
+  padding: 0.8rem 1.5rem 0.9rem;
+  box-shadow: var(--md-elevation-2);
+}
+
+/* The gold rule the original masthead carried: the one warm line above a teal page. */
+.header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--md-tertiary), transparent);
 }
 
 .header-brand {
@@ -268,7 +290,7 @@ button {
   width: 44px;
   height: 44px;
   border-radius: var(--md-shape-md);
-  box-shadow: var(--md-elevation-1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16), var(--md-elevation-1);
 }
 
 .header-text {
@@ -294,7 +316,7 @@ button {
   font-weight: 500;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--md-on-surface-variant);
+  color: var(--md-app-bar-subtitle);
 }
 
 .main {
