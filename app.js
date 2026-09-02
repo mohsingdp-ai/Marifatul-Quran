@@ -23,6 +23,40 @@
 
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
+
+  /** The 30 paras by the words they open with, as they are known across South Asia. */
+  var PARA_NAMES = [
+    ["الم", "Alif Lam Mim"], ["سيقول", "Sayaqul"], ["تلك الرسل", "Tilka r-Rusul"], ["لن تنالوا", "Lan Tanalu"],
+    ["والمحصنات", "Wal Muhsanat"], ["لا يحب الله", "La Yuhibbullah"], ["وإذا سمعوا", "Wa Idha Sami'u"],
+    ["ولو أننا", "Wa Law Annana"], ["قال الملأ", "Qalal Mala'"], ["واعلموا", "Wa'lamu"], ["يعتذرون", "Ya'tadhirun"],
+    ["وما من دابة", "Wa Ma Min Dabbah"], ["وما أبرئ", "Wa Ma Ubarri'u"], ["ربما", "Rubama"],
+    ["سبحان الذي", "Subhanalladhi"], ["قال ألم", "Qala Alam"], ["اقترب للناس", "Iqtaraba"], ["قد أفلح", "Qad Aflaha"],
+    ["وقال الذين", "Wa Qalalladhina"], ["أمن خلق", "Amman Khalaq"], ["اتل ما أوحي", "Utlu Ma Uhiya"],
+    ["ومن يقنت", "Wa Man Yaqnut"], ["وما لي", "Wa Ma Liya"], ["فمن أظلم", "Fa Man Azlam"], ["إليه يرد", "Ilayhi Yuraddu"],
+    ["حم", "Ha Mim"], ["قال فما خطبكم", "Qala Fama Khatbukum"], ["قد سمع الله", "Qad Sami'allah"],
+    ["تبارك الذي", "Tabarakalladhi"], ["عم", "Amma"]
+  ];
+
+  function paraName(n) {
+    return PARA_NAMES[Number(n) - 1] || ["", ""];
+  }
+
+  /** The stepper's face: "Para N" over the para's name. */
+  function syncParaFace() {
+    var num = document.getElementById("para-picker-num");
+    var name = document.getElementById("para-picker-name");
+    if (!num || !name) return;
+    var n = paraSelect.value;
+    num.textContent = "Para " + n;
+    name.textContent = paraName(n)[0];
+    name.title = paraName(n)[1];
+  }
+
+  // The native list shows the names too.
+  Array.prototype.forEach.call(paraSelect.options, function (opt) {
+    var nm = paraName(opt.value)[0];
+    if (nm) opt.textContent = "Para " + opt.value + " \u00b7 " + nm;
+  });
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
   /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
@@ -1068,6 +1102,7 @@
     tbody.appendChild(fragment);
     restoreTableViewState(viewState);
     tableRenderedPara = String(paraSelect.value);
+    syncParaFace();
     if (paraInUrl !== null && paraInUrl !== tableRenderedPara) syncParaInUrl(true);
     syncParaStepButtons();
     if (!willResume) {

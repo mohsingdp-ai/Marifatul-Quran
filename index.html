@@ -36,6 +36,13 @@
         <p class="subtitle">Ruku Recordings</p>
       </div>
     </div>
+    <!-- Install lives in the app bar as well as the menu; the same script drives both. -->
+    <div class="header-install-wrap" id="install-header-wrap">
+      <button type="button" class="btn-toolbar-menu header-install" id="install-header-btn" aria-label="Install app" title="Install this app on your phone">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7"/><path d="M9.2 11.2 12 14l2.8-2.8"/><path d="M10.5 18.5h3"/></svg>
+      </button>
+      <span class="header-install-badge" aria-hidden="true">New</span>
+    </div>
     <div class="toolbar-menu-wrap header-menu">
       <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
@@ -73,6 +80,7 @@
           <button type="button" class="btn-para-step" id="para-prev" aria-label="Previous Para" title="Previous Para">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
+          <div class="para-picker">
           <select id="para-select" aria-label="Select Para">
             <option value="1" selected>Para 1</option>
             <option value="2">Para 2</option>
@@ -105,6 +113,11 @@
             <option value="29">Para 29</option>
             <option value="30">Para 30</option>
           </select>
+          <div class="para-picker-face" aria-hidden="true">
+            <span class="para-picker-num" id="para-picker-num">Para 1</span>
+            <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
+          </div>
+          </div>
           <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
@@ -400,7 +413,13 @@
   <script>
     (function () {
       var btn = document.getElementById("install-btn");
+      var headerWrap = document.getElementById("install-header-wrap");
+      var headerBtn = document.getElementById("install-header-btn");
       var deferred = null;
+      function hideInstall() {
+        btn.style.display = "none";
+        if (headerWrap) headerWrap.style.display = "none";
+      }
       var isReinstall = location.search.indexOf("reinstall=") !== -1;
       var isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
                          window.navigator.standalone === true;
@@ -412,7 +431,7 @@
 
       // Hide install button when running as installed PWA (unless reinstalling)
       if (isStandalone && !isReinstall) {
-        btn.style.display = "none";
+        hideInstall();
         return;
       }
 
@@ -429,7 +448,7 @@
       });
 
       window.addEventListener("appinstalled", function () {
-        btn.style.display = "none";
+        hideInstall();
         deferred = null;
       });
 
@@ -445,6 +464,8 @@
           }
         }, 500);
       }
+
+      if (headerBtn) headerBtn.addEventListener("click", function () { btn.click(); });
 
       btn.addEventListener("click", function () {
         if (deferred) {
