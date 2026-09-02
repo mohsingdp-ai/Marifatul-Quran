@@ -460,16 +460,21 @@ button {
 
 /* --- The list --- */
 .para-menu {
+  --para-menu-w: min(18rem, calc(100vw - 2rem));
   position: absolute;
   top: calc(100% + 8px);
+  /* Centred with a negative margin, not a transform: the open animation animates transform
+     and would drop the centring for its first frames, leaving the list half off screen. */
   left: 50%;
-  /* `translate`, not `transform`: the open animation animates transform and would drop
-     the centring for its first frames, leaving the list half off screen. */
-  translate: -50% 0;
+  margin-left: calc(var(--para-menu-w) / -2);
   z-index: 60;
-  width: min(18rem, calc(100vw - 2rem));
+  width: var(--para-menu-w);
   max-height: min(60vh, 26rem);
   overflow-y: auto;
+  overflow-x: hidden;
+  /* A thin bar in the list's own colours, not the platform's grey one. */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--md-on-surface) 25%, transparent) transparent;
   padding: 0.4rem 0;
   background: var(--md-menu);
   border-radius: var(--md-shape-sm);
@@ -481,6 +486,19 @@ button {
 
 .para-menu[hidden] {
   display: none;
+}
+
+.para-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.para-menu::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--md-on-surface) 25%, transparent);
+  border-radius: var(--md-shape-full);
+}
+
+.para-menu::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .para-menu-item {
