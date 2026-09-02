@@ -690,11 +690,20 @@ body.has-docked-player {
 
 /* Step the selected Para by one, mirroring the native toolbar's chevrons. The dropdown
    alone means 30 options to hunt through to move one para; these are the common move. */
+/* As tall as the pill they cap, so their highlight fills the rounded end top to bottom. The
+   focus ring is drawn inset for the same reason: an outline would box the curve. */
 .btn-para-step {
   width: 44px;
-  height: 44px;
+  height: auto;
+  min-height: 44px;
+  align-self: stretch;
   border-radius: 0;
   color: var(--md-primary);
+}
+
+.btn-para-step:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--md-primary);
 }
 
 .btn-para-step:hover:not(:disabled) {
