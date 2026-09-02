@@ -2973,15 +2973,14 @@ tr.playing.audio-paused .audio-play-btn {
 /* Elevated card. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Phone first: share above download in one column at the right, the star and its listen
-     count tucked against them, and the ayat chip on a line of its own so a merged ruku's
-     two ranges never wrap inside it. One icon column instead of two is what lets the surah
-     and the star share a line on a 320px screen. */
+  /* Phone first: one column at the right holds share, download and the star, in that order,
+     each on its own line beside the title, the surah and the ayat chip. The listen count
+     sits to the star's left so the star lines up under the two icons. */
   grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
     "play ruku   ruku   wa"
-    "play arabic hifz   dl"
-    "play verses verses verses"
+    "play arabic arabic dl"
+    "play verses verses hifz"
     "tx   tx     tx     tx";
   align-items: center;
   column-gap: 0.6rem;
@@ -3082,7 +3081,18 @@ tr.playing.audio-paused .audio-play-btn {
 .ruku-table .col-hifz {
   grid-area: hifz;
   justify-self: end;
+  align-self: center;
   min-width: 0;
+}
+
+.ruku-table .audio-share-wa-btn,
+.ruku-table .audio-offline-btn {
+  justify-self: end;
+}
+
+/* Count first, star last: the star is the item that lines up under the icons. */
+.ruku-table .hifz-controls {
+  flex-direction: row-reverse;
 }
 
 /* Admin-only; on a phone it takes a line of its own after the transport. */
@@ -3216,6 +3226,14 @@ tr.playing.audio-paused .audio-play-btn {
   box-shadow: var(--md-elevation-1);
 }
 
+/* The narrowest phones share the ayat line with the star and its count; without the book
+   glyph a merged ruku's two ranges still fit on one line there. */
+@media (max-width: 360px) {
+  .verses-toggle-icon {
+    display: none;
+  }
+}
+
 /* Room for two lines: the star joins the detail line and the icons sit side by side. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
@@ -3230,6 +3248,10 @@ tr.playing.audio-paused .audio-play-btn {
   .ruku-table .col-hifz {
     justify-self: start;
     margin-left: -0.5rem;
+  }
+
+  .ruku-table .hifz-controls {
+    flex-direction: row;
   }
 
   .ruku-table .action-cell {
