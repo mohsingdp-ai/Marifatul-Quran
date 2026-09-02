@@ -399,9 +399,9 @@ button {
 }
 
 
-/* The para picker: a face with the number and the para's name, and the native select laid
-   invisibly over it so taps, keyboard and the walkthrough spotlight all still hit a real
-   <select>. */
+/* The para picker: a button showing the number and the para's name, which opens the app's
+   own list below. The native <select> stays in the DOM as the value store but is never
+   shown; its popup could not take the app's palette. */
 .para-picker {
   position: relative;
   display: flex;
@@ -434,29 +434,110 @@ button {
 }
 
 .controls .para-picker select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  border: none;
-  opacity: 0;
-  cursor: pointer;
-  touch-action: manipulation;
-  font-size: 1rem;
-}
-
-.controls .para-picker select:focus {
-  outline: none;
+  display: none;
 }
 
 .para-picker-face {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  width: 100%;
+  min-height: inherit;
+  margin: 0;
   padding: 0.3rem 2.1rem 0.35rem 1rem;
-  pointer-events: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.para-picker-face:focus-visible {
+  outline: none;
+}
+
+/* --- The list --- */
+.para-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  /* `translate`, not `transform`: the open animation animates transform and would drop
+     the centring for its first frames, leaving the list half off screen. */
+  translate: -50% 0;
+  z-index: 60;
+  width: min(18rem, calc(100vw - 2rem));
+  max-height: min(60vh, 26rem);
+  overflow-y: auto;
+  padding: 0.4rem 0;
+  background: var(--md-menu);
+  border-radius: var(--md-shape-sm);
+  box-shadow: var(--md-elevation-3);
+  -webkit-overflow-scrolling: touch;
+  animation: md-menu-in var(--md-duration-short) var(--md-easing-emphasized);
+  transform-origin: top center;
+}
+
+.para-menu[hidden] {
+  display: none;
+}
+
+.para-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 1rem 0 2.1rem;
+  border: none;
+  background: none;
+  color: var(--md-on-surface);
+  font-size: 0.9375rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background var(--md-duration-short) var(--md-easing-standard);
+}
+
+.para-menu-item:hover,
+.para-menu-item:focus-visible {
+  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  outline: none;
+}
+
+.para-menu-item[aria-selected="true"] {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+
+.para-menu-item[aria-selected="true"]::before {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  width: 16px;
+  height: 16px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+.para-menu-item {
+  position: relative;
+}
+
+.para-menu-name {
+  font-family: "Traditional Arabic", "Scheherazade New", serif;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  color: var(--md-tertiary);
+  direction: rtl;
+  unicode-bidi: isolate;
+  white-space: nowrap;
 }
 
 .para-picker-num {
@@ -602,13 +683,22 @@ body.has-docked-player {
   color: var(--md-primary);
 }
 
+/* Not overflow: hidden -- the para list drops out of this pill, so the pill's rounded ends
+   come from its end buttons instead. */
 .controls-left {
   display: inline-flex;
   align-items: stretch;
   border: 1px solid var(--md-outline);
   border-radius: var(--md-shape-full);
   background: var(--md-raised);
-  overflow: hidden;
+}
+
+.controls-left > .btn-para-step:first-of-type {
+  border-radius: var(--md-shape-full) 0 0 var(--md-shape-full);
+}
+
+.controls-left > .btn-para-step:last-of-type {
+  border-radius: 0 var(--md-shape-full) var(--md-shape-full) 0;
 }
 
 

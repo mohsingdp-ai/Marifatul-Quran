@@ -2904,6 +2904,87 @@
   settingsCloseBtn.addEventListener("click", closeSettings);
   settingsBackdrop.addEventListener("click", closeSettings);
 
+  /* Para menu: the app's own list in place of the browser's select popup. The <select>
+     keeps the value and the options (filters prune them); this list is built from it on
+     every open, and picking a row sets the select and fires its change event. */
+  var paraPickerBtn = document.getElementById("para-picker-btn");
+  var paraMenu = document.getElementById("para-menu");
+
+  function closeParaMenu() {
+    if (!paraMenu || paraMenu.hidden) return;
+    paraMenu.hidden = true;
+    if (paraPickerBtn) paraPickerBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function openParaMenu() {
+    if (!paraMenu) return;
+    paraMenu.textContent = "";
+    var current = paraSelect.value;
+    Array.prototype.forEach.call(paraSelect.options, function (opt) {
+      var n = opt.value;
+      var item = document.createElement("button");
+      item.type = "button";
+      item.className = "para-menu-item";
+      item.setAttribute("role", "option");
+      item.dataset.value = n;
+      var selected = n === current;
+      item.setAttribute("aria-selected", selected ? "true" : "false");
+      item.innerHTML =
+        "<span class=\"para-menu-num\">Para " + escapeHtml(n) + "</span>" +
+        "<span class=\"para-menu-name\" lang=\"ar\">" + escapeHtml(paraName(n)[0]) + "</span>";
+      paraMenu.appendChild(item);
+    });
+    paraMenu.hidden = false;
+    paraPickerBtn.setAttribute("aria-expanded", "true");
+    var sel = paraMenu.querySelector('[aria-selected="true"]') || paraMenu.firstElementChild;
+    if (sel) {
+      sel.focus({ preventScroll: true });
+      // Scroll the list itself, never the page: scrollIntoView would also drag the document.
+      paraMenu.scrollTop = sel.offsetTop - (paraMenu.clientHeight - sel.offsetHeight) / 2;
+    }
+  }
+
+  function chooseParaFromMenu(value) {
+    closeParaMenu();
+    if (value !== paraSelect.value) {
+      paraSelect.value = value;
+      paraSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    if (paraPickerBtn) paraPickerBtn.focus({ preventScroll: true });
+  }
+
+  if (paraPickerBtn && paraMenu) {
+    paraPickerBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (paraMenu.hidden) openParaMenu(); else closeParaMenu();
+    });
+    paraMenu.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var item = e.target.closest ? e.target.closest(".para-menu-item") : null;
+      if (item) chooseParaFromMenu(item.dataset.value);
+    });
+    paraMenu.addEventListener("keydown", function (e) {
+      var items = Array.prototype.slice.call(paraMenu.querySelectorAll(".para-menu-item"));
+      var at = items.indexOf(document.activeElement);
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        var next = items[Math.min(items.length - 1, Math.max(0, at + (e.key === "ArrowDown" ? 1 : -1)))];
+        if (next) next.focus();
+      } else if (e.key === "Home" || e.key === "End") {
+        e.preventDefault();
+        items[e.key === "Home" ? 0 : items.length - 1].focus();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeParaMenu();
+        paraPickerBtn.focus();
+      }
+    });
+    document.addEventListener("click", closeParaMenu);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeParaMenu();
+    });
+  }
+
   /* Three-dot menu: one dropdown, opened from the app bar or from the docked bar. The
      dropdown moves under whichever button opened it, so it drops from the app bar and
      rises from the docked bar. */
@@ -3700,7 +3781,7 @@
     {
       title: "Choose a Para (Juz)",
       body: "Tap here to pick a Para from 1–30. Its rukus appear in the list below.",
-      selector: "#para-select",
+      selector: "#para-picker-btn",
     },
     {
       title: "Play a recording",

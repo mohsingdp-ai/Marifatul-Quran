@@ -113,10 +113,11 @@
             <option value="29">Para 29</option>
             <option value="30">Para 30</option>
           </select>
-          <div class="para-picker-face" aria-hidden="true">
+          <button type="button" class="para-picker-face" id="para-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="para-menu" title="Choose a para">
             <span class="para-picker-num" id="para-picker-num">Para 1</span>
             <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
-          </div>
+          </button>
+          <div class="para-menu" id="para-menu" role="listbox" aria-label="Choose a para" hidden></div>
           </div>
           <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
