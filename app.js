@@ -150,6 +150,7 @@
   };
   var persistPlaybackTimer = null;
   var mediaSessionKeepaliveTimer = null;
+  var screenWakeLock = null;
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";
@@ -2078,6 +2079,45 @@
     if (toolbarBtn) toolbarBtn.classList.toggle("is-loading", isLoading);
   }
 
+  function isScreenWakeLockSupported() {
+    return "wakeLock" in navigator && navigator.wakeLock && typeof navigator.wakeLock.request === "function";
+  }
+
+  function releaseWakeLockSentinel(sentinel) {
+    try {
+      var p = sentinel.release();
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    } catch (e) { /* ignore */ }
+  }
+
+  function requestScreenWakeLock() {
+    if (!isScreenWakeLockSupported() || screenWakeLock) return;
+    navigator.wakeLock.request("screen").then(function (sentinel) {
+      if (screenWakeLock) {
+        releaseWakeLockSentinel(sentinel);
+        return;
+      }
+      screenWakeLock = sentinel;
+      sentinel.addEventListener("release", function () {
+        if (screenWakeLock === sentinel) screenWakeLock = null;
+      });
+    }).catch(function () {
+      // Denied (hidden page, low battery, insecure context): audio keeps playing.
+    });
+  }
+
+  function releaseScreenWakeLock() {
+    if (!screenWakeLock) return;
+    var sentinel = screenWakeLock;
+    screenWakeLock = null;
+    releaseWakeLockSentinel(sentinel);
+  }
+
+  function syncScreenWakeLock() {
+    if (document.visibilityState === "visible") requestScreenWakeLock();
+    else releaseScreenWakeLock();
+  }
+
   function bindMqAudioLifecycle() {
     if (mqPlayback._listenersBound) return;
     mqPlayback._listenersBound = true;
@@ -2095,6 +2135,7 @@
     a.addEventListener("play", function () {
       stopMediaSessionKeepalive();
       currentPlayingAudio = a;
+      requestScreenWakeLock();
       clearPlayingClass();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
@@ -2601,11 +2642,12 @@
   });
 
   document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState !== "visible") return;
-    if (mqPlayback.el && mqPlayback.activeGlobalIndex != null && mqPlayback.el.paused) {
+    if (document.visibilityState === "visible" && mqPlayback.el && mqPlayback.activeGlobalIndex != null && mqPlayback.el.paused) {
       pulseMediaSessionIfActive();
     }
+    syncScreenWakeLock();
   });
+  syncScreenWakeLock();
 
   window.addEventListener("focus", function () {
     if (mqPlayback.el && mqPlayback.activeGlobalIndex != null && mqPlayback.el.paused) {
