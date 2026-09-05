@@ -31,4 +31,6 @@ if [ ! -x "$PY" ]; then
   uv pip install --python "$VENV" numpy >&2
 fi
 
+# Reuse freed blocks rather than fragmenting: the card is 4 GB and often shared.
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 exec "$PY" "$ROOT/scripts/find-onsets.py" "$@"

@@ -60,7 +60,7 @@ BACK, FWD = 25.0, 12.0   # window around the aligner's start: it runs late, some
 LEAD = 0.3         # the ear marks the breath before the first letter
 PRIOR = 0.3        # nats per second: a tie between two recitations goes to the aligner's side
 MIN_GAP = 0.6      # an ayah cannot start within this of the one before it
-CHUNK = 60.0       # longest window the GPU is asked to hold at once (placing missing ayat)
+CHUNK = 40.0       # longest window the GPU is asked to hold at once (placing missing ayat)
 LATER = 1.0        # seconds a start may move later before it is flagged
 
 # ---------------------------------------------------------------- romanisation
@@ -154,11 +154,33 @@ class Listener:
     def emissions(self, pcm, lo: float, hi: float):
         import numpy as np
         clip = np.array(pcm[int(lo * SR):int(hi * SR)])
-        x = self.torch.from_numpy(clip).unsqueeze(0).to(self.device)
-        with self.torch.inference_mode():
-            em, _ = self.model(x)
+        x = self.torch.from_numpy(clip).unsqueeze(0)
+        try:
+            em = self._run(x, self.device)
+        except self.torch.cuda.OutOfMemoryError:
+            # The card is small and shared. Free what can be freed and try once more; if
+            # it still does not fit, this one clip goes through the CPU rather than the run
+            # dying -- slow, but it happens on a handful of long windows at most.
+            self.torch.cuda.empty_cache()
+            try:
+                em = self._run(x, self.device)
+            except self.torch.cuda.OutOfMemoryError:
+                self.torch.cuda.empty_cache()
+                em = self._run(x, "cpu")
         logp = self.torch.log_softmax(em[0], dim=-1).cpu().numpy().astype(np.float64)
         return logp, (hi - lo) / logp.shape[0]
+
+    def _run(self, x, device):
+        model = self.model if device == self.device else self._cpu_model()
+        with self.torch.inference_mode():
+            em, _ = model(x.to(device))
+        return em
+
+    def _cpu_model(self):
+        if not hasattr(self, "_cpu"):
+            import copy
+            self._cpu = copy.deepcopy(self.model).to("cpu").eval()
+        return self._cpu
 
 # ---------------------------------------------------------------- the search
 
@@ -408,8 +430,12 @@ def to_edits(results: dict, timings: dict, keep: dict, edits_path: Path, flags_p
     edits_path.write_text(json.dumps(edits, indent=1))
     flags_path.write_text(json.dumps(flags, indent=1))
     # The same list in the shape the timing editor reads (timing-flags.json at the root):
-    # what the start was, what it became, and why a person should hear it.
-    shipped = {}
+    # what the start was, what it became, and why a person should hear it. Rukus this run
+    # did not search keep whatever the file already says about them -- a para done earlier
+    # and partly listened to must not get its remaining flags dropped or restored.
+    shipped_path = ROOT / "timing-flags.json"
+    shipped = json.loads(shipped_path.read_text()) if shipped_path.exists() else {}
+    shipped = {k: v for k, v in shipped.items() if k not in searched}
     for f in flags:
         entry = {"why": f["why"]}
         if f.get("t") is not None:
@@ -417,7 +443,7 @@ def to_edits(results: dict, timings: dict, keep: dict, edits_path: Path, flags_p
         if f.get("suggest") is not None:
             entry["to"] = f["suggest"]
         shipped.setdefault(f["key"], {})[str(f["n"])] = entry
-    (ROOT / "timing-flags.json").write_text(json.dumps(shipped, indent=1, sort_keys=True) + "\n")
+    shipped_path.write_text(json.dumps(shipped, indent=1, sort_keys=True) + "\n")
     moved.sort()
     print(f"edits: {len(moved)} starts moved, {placed} placed, in {len(edits)} rukus -> {edits_path.relative_to(ROOT)}")
     if moved:
