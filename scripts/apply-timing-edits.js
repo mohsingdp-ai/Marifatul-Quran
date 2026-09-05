@@ -9,7 +9,7 @@
  *
  * Input shape, matching what the browser stores:
  *
- *   { "<para>|<ruku>": { "starts": { "<ayah>": 157.5 }, "trimEnd": 1084.12 } }
+ *   { "<para>|<ruku>": { "starts": { "<ayah>": 157.5 } } }
  *
  * Only starts are recorded, because where an ayah ends is where the next one begins — the
  * editor shows both ends of that one boundary but they are the same number. An ayah with no
@@ -70,7 +70,6 @@ function main() {
 
   let moved = 0;
   let placed = 0;
-  let trims = 0;
   const touched = [];
   const detail = [];
 
@@ -98,12 +97,6 @@ function main() {
       startOf[n] = to;
     });
 
-    if (typeof change.trimEnd === "number" && round(change.trimEnd) !== round(entry.trim.end)) {
-      detail.push("  " + key + " trim end: " + round(entry.trim.end) + " -> " + round(change.trimEnd));
-      entry.trim = { start: entry.trim.start, end: change.trimEnd };
-      trims++;
-    }
-
     entry.ayahs = Object.keys(startOf).map(Number)
       .map(function (n) { return [n, startOf[n]]; })
       .sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
@@ -115,7 +108,6 @@ function main() {
   console.log("rukus touched: " + touched.length + (touched.length ? "  (" + touched.join(", ") + ")" : ""));
   console.log("starts moved:  " + moved);
   console.log("ayat placed:   " + placed);
-  console.log("trim ends set: " + trims);
 
   if (!write) {
     console.log("\nNothing written. Re-run with --write to apply.");

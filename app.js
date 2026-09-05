@@ -782,37 +782,28 @@
   }
 
   /**
-   * The start/end controls for one ayah. Times can be typed, or taken from wherever the
-   * recording currently sits — which is how this is meant to be used: listen, stop on the
-   * boundary, press the clock. "hear" plays that stretch back so it can be checked.
+   * The start control for one ayah. Where it ends is where the next one starts, so that
+   * number belongs to the next row and is edited there — one boundary, one box.
    *
-   * The end box holds the next ayah's start, because that is the same instant. Editing it
-   * moves that one boundary, and the row below shows the move too.
+   * A time can be typed, taken from wherever the recording is sitting by pressing the clock,
+   * or walked with the up and down arrows. "hear" plays the ayah from here to the next
+   * boundary so a correction can be checked rather than trusted.
    */
   function ayahTimingEditorHtml(timings, key, ayahNumber, nextAyahNumber) {
     var start = ayahExactStart(timings, ayahNumber);
-    var end = ayahEndTime(timings, ayahNumber, nextAyahNumber);
-    var edits = rukuEdits(key) || {};
-    var startEdited = editedStart(key, ayahNumber) !== null;
-    var endEdited = nextAyahNumber == null
-      ? typeof edits.trimEnd === "number"
-      : editedStart(key, nextAyahNumber) !== null;
-    var CLOCK = "\u23F1";
-    function field(kind, value, isEdited, label) {
-      return "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
-        "<span class=\"tm-label\">" + label + "</span>" +
-        "<input type=\"text\" class=\"tm-input\" data-field=\"" + kind + "\" " +
-          "inputmode=\"decimal\" spellcheck=\"false\" value=\"" + formatTimeInput(value) + "\" />" +
-        "<button type=\"button\" class=\"tm-now\" data-field=\"" + kind + "\" " +
-          "title=\"Use the current playback position\">" + CLOCK + "</button>" +
-        "</label>";
-    }
+    var isEdited = editedStart(key, ayahNumber) !== null;
     return "<div class=\"ayat-timing\" data-ayah=\"" + ayahNumber + "\"" +
         (nextAyahNumber == null ? "" : " data-next=\"" + nextAyahNumber + "\"") + ">" +
-      field("s", start, startEdited, "start") +
-      field("e", end, endEdited, nextAyahNumber == null ? "end (ruku)" : "end") +
-      "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah from start to end\">hear</button>" +
-      "<button type=\"button\" class=\"tm-reset\" title=\"Drop this ayah's correction\">reset</button>" +
+      "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
+        "<span class=\"tm-label\">start</span>" +
+        "<input type=\"text\" class=\"tm-input\" data-field=\"s\" " +
+          "inputmode=\"decimal\" spellcheck=\"false\" value=\"" + formatTimeInput(start) + "\" />" +
+        "<button type=\"button\" class=\"tm-now\" " +
+          "title=\"Use the current playback position\">\u23F1</button>" +
+      "</label>" +
+      "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah\">hear</button>" +
+      "<button type=\"button\" class=\"tm-reset\" title=\"Back to the generated time\"" +
+        (isEdited ? "" : " hidden") + ">reset</button>" +
       "</div>";
   }
 
@@ -955,7 +946,7 @@
     } catch (e) { /* private mode */ }
   }
 
-  /* Corrections for one ruku: { starts: { "<ayah>": seconds }, trimEnd: seconds }. */
+  /* Corrections for one ruku: { starts: { "<ayah>": seconds } }. */
   function rukuEdits(key) {
     return getTimingEdits()[key] || null;
   }
@@ -971,17 +962,10 @@
     var starts = forRuku.starts || (forRuku.starts = {});
     if (seconds === null) delete starts[ayahNumber];
     else starts[ayahNumber] = seconds;
-    if (!Object.keys(starts).length) delete forRuku.starts;
-    if (!forRuku.starts && forRuku.trimEnd === undefined) delete all[key];
-    saveTimingEdits(all);
-  }
-
-  function setEditedTrimEnd(key, seconds) {
-    var all = getTimingEdits();
-    var forRuku = all[key] || (all[key] = {});
-    if (seconds === null) delete forRuku.trimEnd;
-    else forRuku.trimEnd = seconds;
-    if (!forRuku.starts && forRuku.trimEnd === undefined) delete all[key];
+    if (!Object.keys(starts).length) {
+      delete forRuku.starts;
+      delete all[key];
+    }
     saveTimingEdits(all);
   }
 
@@ -1003,9 +987,7 @@
     }
     var ayahs = Object.keys(startOf).map(Number).map(function (n) { return [n, startOf[n]]; });
     ayahs.sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
-    var trim = base && base.trim ? { start: base.trim.start, end: base.trim.end } : { start: 0, end: 0 };
-    if (typeof edits.trimEnd === "number") trim.end = edits.trimEnd;
-    return { trim: trim, ayahs: ayahs };
+    return { trim: base ? base.trim : null, ayahs: ayahs };
   }
 
   /** Where an ayah actually starts, or null when nothing places it. */
@@ -2860,20 +2842,18 @@
     if (!panel) return;
     var timings = getRukuTimings(row) || { trim: null, ayahs: [] };
     var key = ayatKeyFor(row);
-    var edits = rukuEdits(key) || {};
     panel.querySelectorAll(".ayat-timing").forEach(function (box) {
       var n = Number(box.dataset.ayah);
-      var next = box.dataset.next ? Number(box.dataset.next) : null;
-      var values = { s: ayahExactStart(timings, n), e: ayahEndTime(timings, n, next) };
-      var marked = {
-        s: editedStart(key, n) !== null,
-        e: next == null ? typeof edits.trimEnd === "number" : editedStart(key, next) !== null
-      };
-      box.querySelectorAll(".tm-input").forEach(function (input) {
-        var field = input.dataset.field;
-        if (document.activeElement !== input) input.value = formatTimeInput(values[field]);
-        input.closest(".tm-field").classList.toggle("is-edited", marked[field]);
-      });
+      var input = box.querySelector(".tm-input");
+      if (!input) return;
+      var isEdited = editedStart(key, n) !== null;
+      // The box is always rewritten, focused or not. This only runs after a change has been
+      // committed — never mid-keystroke — and skipping the focused one left a reset showing
+      // the value it had just thrown away.
+      input.value = formatTimeInput(ayahExactStart(timings, n));
+      input.closest(".tm-field").classList.toggle("is-edited", isEdited);
+      var reset = box.querySelector(".tm-reset");
+      if (reset) reset.hidden = !isEdited;
     });
   }
 
@@ -2899,10 +2879,74 @@
    * Write one edited boundary. The start field is this ayah's own; the end field is the next
    * ayah's start, or the ruku's trim end when nothing follows.
    */
-  function applyTimingEdit(ctx, field, seconds) {
-    if (field === "s") setEditedStart(ctx.key, ctx.ayah, seconds);
-    else if (ctx.next == null) setEditedTrimEnd(ctx.key, seconds);
-    else setEditedStart(ctx.key, ctx.next, seconds);
+  /**
+   * Store a corrected start. A value matching what timings.js already says is not a
+   * correction: storing it would leave the box marked as edited and put an entry in the
+   * export that changes nothing, so it clears the override instead.
+   */
+  function applyTimingEdit(ctx, seconds) {
+    var shipped = typeof QURAN_TIMINGS === "undefined" ? null : QURAN_TIMINGS[ctx.key];
+    var generated = null;
+    if (shipped && shipped.ayahs) {
+      for (var i = 0; i < shipped.ayahs.length; i++) {
+        if (shipped.ayahs[i][0] === ctx.ayah) { generated = shipped.ayahs[i][1]; break; }
+      }
+    }
+    var unchanged = typeof seconds === "number" && typeof generated === "number" &&
+      Math.abs(seconds - generated) < 0.005;
+    setEditedStart(ctx.key, ctx.ayah, unchanged ? null : seconds);
+  }
+
+  /* Arrow keys walk a start: a tenth normally, a second with shift, a hundredth with alt. */
+  var TIMING_STEP = { plain: 0.1, shift: 1, alt: 0.01 };
+  var timingRestartTimer = null;
+
+  /**
+   * Play from the start that just moved, so a correction is heard rather than reasoned about.
+   * A held arrow key changes the number many times a second and restarting on each one would
+   * be unlistenable, so the jump waits for the pressing to stop.
+   */
+  function scheduleTimingRestart(globalIndex, seconds) {
+    if (timingRestartTimer) clearTimeout(timingRestartTimer);
+    if (seconds == null) return;
+    timingRestartTimer = setTimeout(function () {
+      timingRestartTimer = null;
+      previewRange(globalIndex, seconds, null);
+    }, 300);
+  }
+
+  /** Read a box back, store it, and play from it. Shared by typing and by the arrow keys. */
+  function commitTimingInput(input) {
+    var ctx = timingContext(input);
+    if (!ctx) return;
+    var raw = input.value.trim();
+    var seconds = raw === "" ? null : parseTimeInput(raw);
+    if (raw !== "" && seconds == null) {          // unreadable: put back what was there
+      refreshTimingEditor(ctx.panel, ctx.row);
+      return;
+    }
+    applyTimingEdit(ctx, seconds);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, seconds);
+  }
+
+  function nudgeTimingInput(input, direction, event) {
+    var ctx = timingContext(input);
+    if (!ctx) return;
+    var step = event.altKey ? TIMING_STEP.alt : event.shiftKey ? TIMING_STEP.shift : TIMING_STEP.plain;
+    var current = parseTimeInput(input.value);
+    if (current == null) {
+      // An ayah the aligner never placed has an empty box; step off where the ayah after it
+      // begins rather than from zero, which would be a long way from anything.
+      var timings = getRukuTimings(ctx.row) || { trim: null, ayahs: [] };
+      current = ayahEndTime(timings, ctx.ayah, ctx.next);
+      if (current == null) current = 0;
+    }
+    var moved = Math.max(0, Math.round((current + direction * step) * 100) / 100);
+    input.value = formatTimeInput(moved);
+    applyTimingEdit(ctx, moved);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, moved);
   }
 
   function handleTimingEditorClick(target) {
@@ -2916,8 +2960,10 @@
     if (now) {
       var a = mqPlayback.el;
       if (!a || Number(mqPlayback.activeGlobalIndex) !== ctx.globalIndex) return true;
-      applyTimingEdit(ctx, now.dataset.field, Number(a.currentTime.toFixed(2)));
+      var captured = Number(a.currentTime.toFixed(2));
+      applyTimingEdit(ctx, captured);
       refreshTimingEditor(ctx.panel, ctx.row);
+      scheduleTimingRestart(ctx.globalIndex, captured);
       return true;
     }
     if (hear) {
@@ -2927,6 +2973,7 @@
     }
     setEditedStart(ctx.key, ctx.ayah, null);
     refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, ayahExactStart(getRukuTimings(ctx.row), ctx.ayah));
     return true;
   }
 
@@ -3476,17 +3523,22 @@
   tbody.addEventListener("change", function (e) {
     if (!e.target.closest) return;
     var input = e.target.closest(".tm-input");
+    if (input) commitTimingInput(input);
+  });
+
+  tbody.addEventListener("keydown", function (e) {
+    if (!e.target.closest) return;
+    var input = e.target.closest(".tm-input");
     if (!input) return;
-    var ctx = timingContext(input);
-    if (!ctx) return;
-    var raw = input.value.trim();
-    var seconds = raw === "" ? null : parseTimeInput(raw);
-    if (raw !== "" && seconds == null) {          // unreadable: put back what was there
-      refreshTimingEditor(ctx.panel, ctx.row);
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();          // the caret and the page both want these otherwise
+      nudgeTimingInput(input, e.key === "ArrowUp" ? 1 : -1, e);
       return;
     }
-    applyTimingEdit(ctx, input.dataset.field, seconds);
-    refreshTimingEditor(ctx.panel, ctx.row);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitTimingInput(input);
+    }
   });
 
   document.addEventListener("click", function (e) {
