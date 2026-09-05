@@ -1,5 +1,6 @@
-# ASR environment for scripts/match-audio.sh — large, machine-specific, recreatable
-.venv-asr/
+# ASR environments — large, machine-specific, recreatable
+.venv-asr/     # scripts/match-audio.sh, scripts/align-ayat.sh (faster-whisper)
+.venv-align/   # scripts/find-onsets.sh (torch + the MMS aligner)
 
 # Cached Whisper transcripts (scripts/match-audio.py)
 .cache/

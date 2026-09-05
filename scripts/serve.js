@@ -13,7 +13,12 @@ const fs = require("fs");
 const path = require("path");
 const url = require("url");
 
+const applyTimingEdits = require("./apply-timing-edits.js");
+
 const root = path.join(__dirname, "..");
+const SAVE_TIMINGS_PATH = "/__save-timings";
+const RESOLVE_FLAG_PATH = "/__resolve-flag";
+const FLAGS = path.join(root, "timing-flags.json");
 const port = Number(process.argv[2]) || 8787;
 
 const MIME = {
@@ -36,7 +41,73 @@ function send(res, status, headers, body) {
   else res.end();
 }
 
+/**
+ * Save corrected ayah timings into timings.js.
+ *
+ * The editor in the app keeps its corrections in the browser, which cannot write to the
+ * repo — so the Save button posts them here and this applies them exactly as
+ * scripts/apply-timing-edits.js does from the command line. The server only ever listens on
+ * 127.0.0.1 and only exists while someone is running the app locally, which is the same
+ * ground the editor itself stands on.
+ */
+function saveTimings(req, res) {
+  let body = "";
+  let tooBig = false;
+  req.on("data", function (chunk) {
+    body += chunk;
+    if (body.length > 2e6) { tooBig = true; req.destroy(); }
+  });
+  req.on("end", function () {
+    if (tooBig) return send(res, 413, { "Content-Type": "application/json" }, '{"error":"too large"}');
+    let result;
+    try {
+      const edits = JSON.parse(body || "{}");
+      const src = fs.readFileSync(applyTimingEdits.TIMINGS, "utf8");
+      result = applyTimingEdits.applyEdits(src, edits);
+      fs.writeFileSync(applyTimingEdits.TIMINGS, result.text);
+    } catch (e) {
+      return send(res, 500, { "Content-Type": "application/json" },
+        JSON.stringify({ error: e.message }));
+    }
+    const s = result.summary;
+    console.log("saved timings: " + s.moved + " moved, " + s.placed + " placed, " +
+      s.rukus.length + " ruku(s): " + s.rukus.join(", "));
+    send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({
+      rukus: s.rukus, moved: s.moved, placed: s.placed, missing: s.missing, detail: s.detail
+    }));
+  });
+}
+
+/**
+ * Strike one ayah off timing-flags.json — the list of starts scripts/find-onsets.sh was least
+ * sure of. The editor's "ok" button calls this once a person has heard the start and agrees.
+ */
+function resolveFlag(req, res) {
+  let body = "";
+  req.on("data", function (chunk) { body += chunk; if (body.length > 1e4) req.destroy(); });
+  req.on("end", function () {
+    let left = 0;
+    try {
+      const ask = JSON.parse(body || "{}");
+      const flags = fs.existsSync(FLAGS) ? JSON.parse(fs.readFileSync(FLAGS, "utf8")) : {};
+      const ruku = flags[ask.key] || {};
+      delete ruku[String(ask.n)];
+      if (Object.keys(ruku).length) flags[ask.key] = ruku;
+      else delete flags[ask.key];
+      fs.writeFileSync(FLAGS, JSON.stringify(flags, null, 1) + "\n");
+      Object.keys(flags).forEach(function (k) { left += Object.keys(flags[k]).length; });
+      console.log("flag cleared: " + ask.key + " ayah " + ask.n + " (" + left + " left)");
+    } catch (e) {
+      return send(res, 500, { "Content-Type": "application/json" }, JSON.stringify({ error: e.message }));
+    }
+    send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({ left: left }));
+  });
+}
+
 const server = http.createServer(function (req, res) {
+  if (req.method === "POST" && req.url === SAVE_TIMINGS_PATH) return saveTimings(req, res);
+  if (req.method === "POST" && req.url === RESOLVE_FLAG_PATH) return resolveFlag(req, res);
+
   let pathname;
   try {
     pathname = decodeURIComponent(url.parse(req.url).pathname);
@@ -97,4 +168,5 @@ server.listen(port, "127.0.0.1", function () {
   console.log("Marifatul Quran dev server");
   console.log("  serving " + root);
   console.log("  http://127.0.0.1:" + port + "/index.html");
+  console.log("  ayah timing corrections save to timings.js via POST " + SAVE_TIMINGS_PATH);
 });

@@ -27,6 +27,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Save corrected ayah timings without leaving the list. Only ever shown on a local run,
+       and only once there is something to save. -->
+  <div class="timing-save-bar" id="timing-save-bar" hidden>
+    <span class="timing-save-count" id="timing-save-count"></span>
+    <button type="button" class="timing-save-btn" id="timing-save-btn">Save to timings.js</button>
+  </div>
+
   <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
   <header class="header">
     <div class="header-brand">
@@ -244,6 +251,25 @@
           </div>
         </div>
 
+        <!-- Ayat -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Ayat
+          </div>
+          <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Tap a word for its meaning</span>
+              <input type="checkbox" id="pref-word-meanings" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+            <p class="settings-hint">
+              Splits the word into its pieces with an Urdu meaning and its grammar for each.
+              Fetches a little extra for the para you are reading.
+            </p>
+          </div>
+        </div>
+
         <!-- Playback -->
         <div class="settings-group">
           <div class="settings-group-header">
@@ -409,6 +435,7 @@
   <script src="verses.js"></script>
   <script src="timings.js"></script>
   <script src="hifz.js"></script>
+  <script src="morphology-labels.js"></script>
   <script src="app.js"></script>
   <script src="material.js"></script>
   <script>

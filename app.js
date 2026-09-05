@@ -151,6 +151,7 @@
   var persistPlaybackTimer = null;
   var mediaSessionKeepaliveTimer = null;
   var screenWakeLock = null;
+  var noSleepVideo = null;
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";
@@ -726,6 +727,88 @@
     return String(n).replace(/\d/g, function (d) { return digits.charAt(Number(d)); });
   }
 
+  /**
+   * Consonant skeleton of one token, for matching our Uthmani text against quran.com's:
+   * both texts carry the same words but can differ in harakat, superscript letters and
+   * pause marks, so only the stripped skeleton is stable across them.
+   */
+  function wordSkeleton(tok) {
+    return tok.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200D]/g, "")
+      .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
+      .trim();
+  }
+
+  /*
+   * Word meanings are opt-in. They lay a tappable layer over the ayat and fetch extra data
+   * per para, which is not what someone who just wants to listen is after — so the ayat
+   * stay plain text until this is switched on in settings.
+   */
+  var WORD_MEANINGS_PREF_KEY = "mq_pref_word_meanings";
+
+  function wordMeaningsEnabled() {
+    try {
+      return localStorage.getItem(WORD_MEANINGS_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordMeaningsEnabled(on) {
+    try {
+      localStorage.setItem(WORD_MEANINGS_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+    if (!on) hideWordPopover();
+  }
+
+  /**
+   * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
+   * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
+   * them inside neighbouring words, so they can never be matched to a meaning.
+   */
+  function ayahWordsHtml(text) {
+    if (!wordMeaningsEnabled()) return escapeHtml(text);
+    var out = "";
+    var wordIndex = 0;
+    text.split(/\s+/).forEach(function (tok) {
+      if (!tok) return;
+      if (wordSkeleton(tok) === "") {
+        out += escapeHtml(tok) + " ";
+        return;
+      }
+      out += "<span class=\"ayah-word\" data-w=\"" + wordIndex + "\">" + escapeHtml(tok) + "</span> ";
+      wordIndex++;
+    });
+    return out;
+  }
+
+  /**
+   * The start control for one ayah. Where it ends is where the next one starts, so that
+   * number belongs to the next row and is edited there — one boundary, one box.
+   *
+   * A time can be typed, taken from wherever the recording is sitting by pressing the clock,
+   * or walked with the up and down arrows. "hear" plays the ayah from here to the next
+   * boundary so a correction can be checked rather than trusted.
+   */
+  function ayahTimingEditorHtml(timings, key, ayahNumber, nextAyahNumber) {
+    var start = ayahExactStart(timings, ayahNumber);
+    var isEdited = editedStart(key, ayahNumber) !== null;
+    var flag = flagFor(key, ayahNumber);
+    return "<div class=\"ayat-timing\" data-ayah=\"" + ayahNumber + "\"" +
+        (nextAyahNumber == null ? "" : " data-next=\"" + nextAyahNumber + "\"") + ">" +
+      "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
+        "<span class=\"tm-label\">start</span>" +
+        "<input type=\"text\" class=\"tm-input\" data-field=\"s\" " +
+          "inputmode=\"decimal\" spellcheck=\"false\" value=\"" + formatTimeInput(start) + "\" />" +
+        "<button type=\"button\" class=\"tm-now\" " +
+          "title=\"Use the current playback position\">\u23F1</button>" +
+      "</label>" +
+      "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah\">hear</button>" +
+      "<button type=\"button\" class=\"tm-reset\" title=\"Back to the generated time\"" +
+        (isEdited ? "" : " hidden") + ">reset</button>" +
+      (flag ? timingFlagHtml(flag) : "") +
+      "</div>";
+  }
+
   function buildAyatRow(item) {
     var row = item.row;
     var entry = getRukuAyat(row);
@@ -742,11 +825,13 @@
     td.colSpan = 7;
 
     var count = entry.ayahs.length;
+    var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
     var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
       "<div class=\"ayat-head\">" +
         "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
           row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
         "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
+        (toCheck ? "<span class=\"ayat-head-check\">" + toCheck + " to check</span>" : "") +
       "</div>";
 
     if (entry.showBasmala) {
@@ -754,9 +839,21 @@
     }
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
-    entry.ayahs.forEach(function (a) {
-      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" + escapeHtml(a.text) +
+    // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
+    // than not at all, so its ayat can be placed from scratch.
+    var editTimings = timingEditorEnabled()
+      ? (getRukuTimings(row) || { trim: null, ayahs: [], ends: {} })
+      : null;
+    var editKey = editTimings ? ayatKeyFor(row) : null;
+    entry.ayahs.forEach(function (a, ayahPos) {
+      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        ayahWordsHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
+      if (editTimings) {
+        var following = entry.ayahs[ayahPos + 1];
+        html += ayahTimingEditorHtml(editTimings, editKey, a.n, following ? following.n : null);
+      }
     });
     html += "</div>";
 
@@ -801,9 +898,203 @@
   /* ------------------------------------------------------------------ */
 
   /** timings.js entry for a ruku, or null while it has not been aligned. */
+  /* ------------------------------------------------------------------ */
+  /* Ayah timing editor.                                                  */
+  /*                                                                      */
+  /* One boundary sits between two ayat: where an ayah ends is where the   */
+  /* next one starts, which is why timings.js records starts only. Both    */
+  /* sides are shown so a boundary can be corrected from whichever end is  */
+  /* easier to hear, and either edit moves the same number. The last       */
+  /* ayah's end is the trim end, since nothing follows it.                 */
+  /*                                                                      */
+  /* Corrections live in localStorage while the work is under way and are  */
+  /* written into timings.js by scripts/apply-timing-edits.js. The editor  */
+  /* is for a local run only and never appears on a deployed copy.         */
+  /* ------------------------------------------------------------------ */
+
+  var TIMING_EDITS_KEY = "mq_timing_edits";
+
+  function isLocalRun() {
+    return location.hostname === "localhost" || location.hostname === "127.0.0.1" ||
+      location.hostname === "[::1]" || location.protocol === "file:";
+  }
+
+  /**
+   * The editor is for correcting the shipped data, so it appears under exactly the two
+   * conditions where that is the job at hand: the app is being run locally, where a dev
+   * server exists to write timings.js, and the reader is in the admin role. There is nothing
+   * to switch on — anyone who can see it came here to use it. A deployed copy, or anyone
+   * reading as a user, never sees the boxes or the save pill.
+   */
+  function timingEditorEnabled() {
+    return isLocalRun() && isAdmin();
+  }
+
+  // Parsed once and kept, because getRukuTimings is called on every timeupdate and must not
+  // read and parse storage sixty times a second.
+  var timingEditsCache = null;
+
+  function getTimingEdits() {
+    if (timingEditsCache) return timingEditsCache;
+    try {
+      timingEditsCache = JSON.parse(localStorage.getItem(TIMING_EDITS_KEY) || "{}") || {};
+    } catch (e) {
+      timingEditsCache = {};
+    }
+    return timingEditsCache;
+  }
+
+  function saveTimingEdits(all) {
+    timingEditsCache = all;
+    try {
+      localStorage.setItem(TIMING_EDITS_KEY, JSON.stringify(all));
+    } catch (e) { /* private mode */ }
+  }
+
+  /* Corrections for one ruku: { starts: { "<ayah>": seconds } }. */
+  function rukuEdits(key) {
+    return getTimingEdits()[key] || null;
+  }
+
+  function editedStart(key, ayahNumber) {
+    var e = rukuEdits(key);
+    return e && e.starts && typeof e.starts[ayahNumber] === "number" ? e.starts[ayahNumber] : null;
+  }
+
+  function setEditedStart(key, ayahNumber, seconds) {
+    var all = getTimingEdits();
+    var forRuku = all[key] || (all[key] = {});
+    var starts = forRuku.starts || (forRuku.starts = {});
+    if (seconds === null) delete starts[ayahNumber];
+    else starts[ayahNumber] = seconds;
+    if (!Object.keys(starts).length) {
+      delete forRuku.starts;
+      delete all[key];
+    }
+    saveTimingEdits(all);
+  }
+
+  function clearRukuEdits(key) {
+    var all = getTimingEdits();
+    delete all[key];
+    saveTimingEdits(all);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Starts a person should hear. scripts/find-onsets.sh --edits writes  */
+  /* timing-flags.json: the ayat whose corrected start it was least sure  */
+  /* of, each with a reason. The editor shows them as chips, and "ok"     */
+  /* asks the dev server to strike one off the file.                      */
+  /* ------------------------------------------------------------------ */
+
+  var timingFlags = null;
+
+  function loadTimingFlags() {
+    if (!timingEditorEnabled()) return;
+    fetch("timing-flags.json", { cache: "no-store" }).then(function (res) {
+      return res.ok ? res.json() : {};
+    }).then(function (flags) {
+      timingFlags = flags && typeof flags === "object" ? flags : {};
+      if (Object.keys(timingFlags).length) renderTable();
+    }).catch(function () { timingFlags = {}; });
+  }
+
+  function rukuFlags(key) {
+    var f = timingFlags && timingFlags[key];
+    return f && Object.keys(f).length ? f : null;
+  }
+
+  function flagFor(key, ayahNumber) {
+    var f = rukuFlags(key);
+    return f && f[ayahNumber] ? f[ayahNumber] : null;
+  }
+
+  function flagCount(key) {
+    var f = rukuFlags(key);
+    return f ? Object.keys(f).length : 0;
+  }
+
+  function resolveTimingFlag(key, ayahNumber) {
+    return fetch("__resolve-flag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, n: ayahNumber })
+    }).then(function (res) {
+      if (!res.ok) throw new Error("server error");
+      var f = timingFlags && timingFlags[key];
+      if (f) {
+        delete f[ayahNumber];
+        if (!Object.keys(f).length) delete timingFlags[key];
+      }
+    });
+  }
+
+  /** Why the onset finder wants this start heard, and a button to say it has been. */
+  function timingFlagHtml(flag) {
+    var detail = typeof flag.from === "number" && typeof flag.to === "number"
+      ? "was " + formatTimeInput(flag.from) + ", now " + formatTimeInput(flag.to)
+      : typeof flag.to === "number" ? "suggested " + formatTimeInput(flag.to) : "";
+    return "<span class=\"tm-flag\" title=\"" + escapeHtml(detail) + "\">\u26A0 " + escapeHtml(flag.why) + "</span>" +
+      "<button type=\"button\" class=\"tm-ok\" title=\"Heard it; the start is right\">ok</button>";
+  }
+
+  /**
+   * The shipped timings with corrections laid over them. A corrected start replaces what was
+   * generated, and places an ayah the aligner left out entirely.
+   */
+  function mergeTimingEdits(base, edits) {
+    var startOf = {};
+    if (base && base.ayahs) base.ayahs.forEach(function (pair) { startOf[pair[0]] = pair[1]; });
+    if (edits.starts) {
+      Object.keys(edits.starts).forEach(function (n) { startOf[n] = edits.starts[n]; });
+    }
+    var ayahs = Object.keys(startOf).map(Number).map(function (n) { return [n, startOf[n]]; });
+    ayahs.sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
+    return { trim: base ? base.trim : null, ayahs: ayahs };
+  }
+
+  /** Where an ayah actually starts, or null when nothing places it. */
+  function ayahExactStart(timings, ayahNumber) {
+    var list = (timings && timings.ayahs) || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i][0] === ayahNumber) return list[i][1];
+    }
+    return null;
+  }
+
+  /**
+   * Where an ayah ends: where the next one in the ruku starts. The last ayah runs to the
+   * trim end, past which the recording is closing announcements.
+   */
+  function ayahEndTime(timings, ayahNumber, nextAyahNumber) {
+    if (!timings) return null;
+    if (nextAyahNumber == null) {
+      return timings.trim && typeof timings.trim.end === "number" ? timings.trim.end : null;
+    }
+    return ayahExactStart(timings, nextAyahNumber);
+  }
+
+  /** Accepts plain seconds ("157.5") or "m:ss.ss", which is how the player shows time. */
+  function parseTimeInput(text) {
+    text = String(text == null ? "" : text).trim();
+    if (!text) return null;
+    var clock = text.match(/^(\d+):([0-5]?\d(?:\.\d+)?)$/);
+    if (clock) return Number(clock[1]) * 60 + Number(clock[2]);
+    var n = Number(text);
+    return isFinite(n) && n >= 0 ? n : null;
+  }
+
+  function formatTimeInput(seconds) {
+    return typeof seconds === "number" && isFinite(seconds) ? seconds.toFixed(2) : "";
+  }
+
   function getRukuTimings(row) {
     if (typeof QURAN_TIMINGS === "undefined" || !row) return null;
-    return QURAN_TIMINGS[ayatKeyFor(row)] || null;
+    var key = ayatKeyFor(row);
+    var base = QURAN_TIMINGS[key] || null;
+    if (!isLocalRun()) return base;
+    var edits = getTimingEdits()[key];
+    return edits ? mergeTimingEdits(base, edits) : base;
   }
 
   /**
@@ -823,6 +1114,24 @@
       found = timings.ayahs[i][0];
     }
     return found;
+  }
+
+  /**
+   * Where playback must jump to start at `ayahNumber`, or null when nothing usable is placed.
+   * An ayah the aligner could not place falls back to the placed ayah before it (the same
+   * hold-over rule recitingAyahAt uses), and one before the first placed ayah to the trim
+   * start, so the listener still skips the opening branding.
+   */
+  function ayahSeekTime(timings, ayahNumber) {
+    if (!timings || !timings.ayahs || !timings.ayahs.length) return null;
+    var prev = null;
+    for (var i = 0; i < timings.ayahs.length; i++) {
+      if (timings.ayahs[i][0] === ayahNumber) return timings.ayahs[i][1];
+      if (timings.ayahs[i][0] < ayahNumber) prev = timings.ayahs[i][1];
+    }
+    if (prev != null) return prev;
+    var trim = timings.trim;
+    return trim && typeof trim.start === "number" ? trim.start : null;
   }
 
   /** "<globalIndex>|<ayah>" currently lit, so the DOM is only touched when it changes. */
@@ -901,9 +1210,14 @@
       "<span class=\"card-num\">" + escapeHtml(String(row.surahNumber)) + "</span>";
     // Two titles, one shown per width: the surah on a wide screen, "Para N · R1–R2" on a phone.
     var rukuTag = escapeHtml(String(rukuDisplay(row)).replace(/-/g, "\u2013"));
+    // Starts the onset finder wants heard, so a ruku with work in it can be found from the list.
+    var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
+    var checkTag = toCheck
+      ? " <span class=\"ruku-check\" title=\"" + toCheck + " ayah start" + (toCheck === 1 ? "" : "s") + " to hear\">\u26A0 " + toCheck + "</span>"
+      : "";
     var rukuLine =
-      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span></span>" +
-      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + "</span>";
+      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span>" + checkTag + "</span>" +
+      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + checkTag + "</span>";
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
@@ -1255,6 +1569,7 @@
     wrap.appendChild(speedBtn);
 
     playBtn.addEventListener("click", function () {
+      previewStopAt = null;
       var a = ensureAudioElement();
       if (mqPlayback.activeGlobalIndex === globalIndex && a && !a.paused) {
         a.pause();
@@ -2079,6 +2394,59 @@
     if (toolbarBtn) toolbarBtn.classList.toggle("is-loading", isLoading);
   }
 
+  // Browsers without the Wake Lock API (iOS <= 16.3, Chrome/Firefox Android < 84/126)
+  // keep the screen on while a video plays, so a tiny silent looping clip stands in
+  // for the real lock there.
+  var NOSLEEP_MP4_SRC = "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlZ0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAQAAAAEAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHObWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeW1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAATlzdGJsAAAAuXN0c2QAAAAAAAAAAQAAAKlhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAQABABIAAAASAAAAAAAAAABFExhdmM2My4xLjEwMSBsaWJ4MjY0AAAAAAAAAAAAAAAAGP//AAAAL2F2Y0MBQsAN/+EAF2dCwA3afnnwEQAAAwABAAADAAIPFCqgAQAFaM4PLIAAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAAKPAAAAAAAAAAYc3R0cwAAAAAAAAABAAAAAgAAQAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAAAgAAAAEAAAAcc3RzegAAAAAAAAAAAAAAAgAAAoYAAAAJAAAAFHN0Y28AAAAAAAAAAQAAA1sAAABhdWR0YQAAAFltZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAACxpbHN0AAAAJKl0b28AAAAcZGF0YQAAAAEAAAAATGF2ZjYzLjEuMTAxAAAACGZyZWUAAAKXbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjUgcjMyMjIgYjM1NjA1YSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjUgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MCBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAFQZogFfU=";
+  var NOSLEEP_WEBM_SRC = "data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAINEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEyTbuMU6uEHFO7a1OsggH37AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjMuMS4xMDFXQYxMYXZmNjMuMS4xMDFEiYhAn0AAAAAAABZUrmvXrgEAAAAAAABO14EBc8WIuj/WS2ionOGcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4Q7msoA4JCwgQS6gQSagQJVsIRVuYEBVe6BAOwBAAAAAAAAAgAAElTDZ/pzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYzLjEuMTAxc3PVY8CLY8WIuj/WS2ionOFnyKBFo4dFTkNPREVSRIeTTGF2YzYzLjEuMTAxIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDIuMDAwMDAwMDAwAB9DtnXB54EAo6KBAACAEAIAnQEqBAAEAAvHCIWFiJmEiD+CAAwNYAD+5rUAo5iBA+gAsQEALxH8ABgAMD/0DAAAAP7mtQAcU7trkbuPs4EAt4r3gQHxggGx8IED";
+
+  function startNoSleepVideo() {
+    if (noSleepVideo) {
+      if (noSleepVideo.paused) {
+        var prev = noSleepVideo.play();
+        if (prev && typeof prev.catch === "function") prev.catch(function () {});
+      }
+      return;
+    }
+    var v = document.createElement("video");
+    if (typeof v.canPlayType !== "function") return;
+    var src = "";
+    if (v.canPlayType("video/mp4")) src = NOSLEEP_MP4_SRC;
+    else if (v.canPlayType("video/webm")) src = NOSLEEP_WEBM_SRC;
+    if (!src) return;
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute("playsinline", "");
+    v.setAttribute("webkit-playsinline", "");
+    v.setAttribute("aria-hidden", "true");
+    v.setAttribute("tabindex", "-1");
+    var s = v.style;
+    s.position = "fixed";
+    s.left = "0";
+    s.bottom = "0";
+    s.width = "1px";
+    s.height = "1px";
+    s.opacity = "0.01";
+    s.pointerEvents = "none";
+    s.zIndex = "-1";
+    v.src = src;
+    (document.body || document.documentElement).appendChild(v);
+    var p = v.play();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+    noSleepVideo = v;
+  }
+
+  function stopNoSleepVideo() {
+    if (!noSleepVideo) return;
+    var v = noSleepVideo;
+    noSleepVideo = null;
+    try { v.pause(); } catch (e) { /* ignore */ }
+    v.removeAttribute("src");
+    try { v.load(); } catch (e) { /* ignore */ }
+    if (v.parentNode) v.parentNode.removeChild(v);
+  }
+
   function isScreenWakeLockSupported() {
     return "wakeLock" in navigator && navigator.wakeLock && typeof navigator.wakeLock.request === "function";
   }
@@ -2091,7 +2459,11 @@
   }
 
   function requestScreenWakeLock() {
-    if (!isScreenWakeLockSupported() || screenWakeLock) return;
+    if (!isScreenWakeLockSupported()) {
+      startNoSleepVideo();
+      return;
+    }
+    if (screenWakeLock) return;
     navigator.wakeLock.request("screen").then(function (sentinel) {
       if (screenWakeLock) {
         releaseWakeLockSentinel(sentinel);
@@ -2107,10 +2479,12 @@
   }
 
   function releaseScreenWakeLock() {
-    if (!screenWakeLock) return;
-    var sentinel = screenWakeLock;
-    screenWakeLock = null;
-    releaseWakeLockSentinel(sentinel);
+    if (screenWakeLock) {
+      var sentinel = screenWakeLock;
+      screenWakeLock = null;
+      releaseWakeLockSentinel(sentinel);
+    }
+    stopNoSleepVideo();
   }
 
   function syncScreenWakeLock() {
@@ -2207,6 +2581,7 @@
     });
 
     a.addEventListener("timeupdate", function () {
+      stopPreviewIfPast(a);
       schedulePersistPlayback();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
@@ -2375,6 +2750,11 @@
 
   function prepareMqTrack(globalIndex, row, src, options) {
     options = options || {};
+    // The index arrives as a real array index from the row that built itself, but as a
+    // string from every dataset read — data-global-index when a track auto-advances,
+    // data-ayat-for when an ayah's play button starts one. Mixed, "5" === 5 is false, so
+    // the check that should pause a playing ruku misses and starts it over instead.
+    globalIndex = Number(globalIndex);
     getMqAudioEl();
     var a = mqPlayback.el;
     if (mqPlayback.activeGlobalIndex === globalIndex) {
@@ -2463,6 +2843,528 @@
           } else tryLoad(i + 1);
         });
       })(0);
+    });
+  }
+
+  /**
+   * An ayah's play control starts its ruku's recording at that ayah — the text itself stays
+   * inert so reading and scrolling never trip playback. The stored mid-track position is
+   * deliberately skipped: the user asked for this ayah, not wherever listening last stopped.
+   * Rukus without timings play from the top, which is still what the click promised.
+   */
+  function playFromAyah(globalIndex, ayahNumber) {
+    globalIndex = Number(globalIndex);
+    previewStopAt = null;
+    var row = data[globalIndex];
+    if (!row) return;
+    var src = getAudioSrc(row, globalIndex);
+    if (!src) return;
+    var wasActive = mqPlayback.activeGlobalIndex === globalIndex;
+    var t = ayahSeekTime(getRukuTimings(row), ayahNumber);
+    if (t == null) t = 0;
+    prepareMqTrack(globalIndex, row, src, { skipStoredPosition: true }).then(function () {
+      var a = mqPlayback.el;
+      if (!a) return;
+      a.loop = false;
+      if (!wasActive) a.playbackRate = getDefaultSpeed();
+      if (a.duration && isFinite(a.duration)) t = Math.min(Math.max(0, t), Math.max(0, a.duration - 0.05));
+      a.currentTime = t;
+      a.play().catch(function () { /* autoplay policy */ });
+    });
+  }
+
+  /* ---- timing editor interactions ---------------------------------- */
+
+  var previewStopAt = null;
+
+  /** Play just one stretch, so a corrected boundary can be heard rather than trusted. */
+  function previewRange(globalIndex, start, end) {
+    globalIndex = Number(globalIndex);
+    var row = data[globalIndex];
+    if (!row || start == null) return;
+    var src = getAudioSrc(row, globalIndex);
+    if (!src) return;
+    prepareMqTrack(globalIndex, row, src, { skipStoredPosition: true }).then(function () {
+      var a = mqPlayback.el;
+      if (!a) return;
+      a.loop = false;
+      a.currentTime = start;
+      previewStopAt = typeof end === "number" && end > start ? end : null;
+      a.play().catch(function () { /* autoplay policy */ });
+    });
+  }
+
+  function stopPreviewIfPast(a) {
+    if (previewStopAt == null || !a) return;
+    if (a.currentTime >= previewStopAt) {
+      previewStopAt = null;
+      a.pause();
+    }
+  }
+
+  /**
+   * Redraw one ruku's boxes. A single edit shows up twice — as this ayah's end and as the
+   * next one's start — so the whole panel is refreshed rather than the one box that changed.
+   */
+  function refreshTimingEditor(panel, row) {
+    if (!panel) return;
+    var timings = getRukuTimings(row) || { trim: null, ayahs: [] };
+    var key = ayatKeyFor(row);
+    panel.querySelectorAll(".ayat-timing").forEach(function (box) {
+      var n = Number(box.dataset.ayah);
+      var input = box.querySelector(".tm-input");
+      if (!input) return;
+      var isEdited = editedStart(key, n) !== null;
+      // The box is always rewritten, focused or not. This only runs after a change has been
+      // committed — never mid-keystroke — and skipping the focused one left a reset showing
+      // the value it had just thrown away.
+      input.value = formatTimeInput(ayahExactStart(timings, n));
+      input.closest(".tm-field").classList.toggle("is-edited", isEdited);
+      var reset = box.querySelector(".tm-reset");
+      if (reset) reset.hidden = !isEdited;
+    });
+    syncSaveTimingsUI();
+  }
+
+  function timingContext(el) {
+    var box = el.closest(".ayat-timing");
+    var tr = box ? box.closest("tr.ayat-row[data-ayat-for]") : null;
+    if (!box || !tr) return null;
+    var globalIndex = Number(tr.dataset.ayatFor);
+    var row = data[globalIndex];
+    if (!row) return null;
+    return {
+      box: box,
+      panel: tr,
+      row: row,
+      globalIndex: globalIndex,
+      key: ayatKeyFor(row),
+      ayah: Number(box.dataset.ayah),
+      next: box.dataset.next ? Number(box.dataset.next) : null
+    };
+  }
+
+  /**
+   * Write one edited boundary. The start field is this ayah's own; the end field is the next
+   * ayah's start, or the ruku's trim end when nothing follows.
+   */
+  /**
+   * Store a corrected start. A value matching what timings.js already says is not a
+   * correction: storing it would leave the box marked as edited and put an entry in the
+   * export that changes nothing, so it clears the override instead.
+   */
+  function applyTimingEdit(ctx, seconds) {
+    var shipped = typeof QURAN_TIMINGS === "undefined" ? null : QURAN_TIMINGS[ctx.key];
+    var generated = null;
+    if (shipped && shipped.ayahs) {
+      for (var i = 0; i < shipped.ayahs.length; i++) {
+        if (shipped.ayahs[i][0] === ctx.ayah) { generated = shipped.ayahs[i][1]; break; }
+      }
+    }
+    var unchanged = typeof seconds === "number" && typeof generated === "number" &&
+      Math.abs(seconds - generated) < 0.005;
+    setEditedStart(ctx.key, ctx.ayah, unchanged ? null : seconds);
+  }
+
+  /* Arrow keys walk a start: a tenth normally, a second with shift, a hundredth with alt. */
+  var TIMING_STEP = { plain: 0.1, shift: 1, alt: 0.01 };
+  var timingRestartTimer = null;
+
+  /**
+   * Play from the start that just moved, so a correction is heard rather than reasoned about.
+   * A held arrow key changes the number many times a second and restarting on each one would
+   * be unlistenable, so the jump waits for the pressing to stop.
+   */
+  function scheduleTimingRestart(globalIndex, seconds) {
+    if (timingRestartTimer) clearTimeout(timingRestartTimer);
+    if (seconds == null) return;
+
+    // Cut the old position off at once. Waiting out the debounce with it still playing means
+    // hearing the time you just moved away from, which sounds like the change was ignored.
+    var a = mqPlayback.el;
+    if (a && !a.paused && Number(mqPlayback.activeGlobalIndex) === Number(globalIndex)) {
+      a.pause();
+      a.currentTime = seconds;
+    }
+    previewStopAt = null;
+
+    timingRestartTimer = setTimeout(function () {
+      timingRestartTimer = null;
+      previewRange(globalIndex, seconds, null);
+    }, 300);
+  }
+
+  /** Read a box back, store it, and play from it. Shared by typing and by the arrow keys. */
+  function commitTimingInput(input) {
+    var ctx = timingContext(input);
+    if (!ctx) return;
+    var raw = input.value.trim();
+    var seconds = raw === "" ? null : parseTimeInput(raw);
+    if (raw !== "" && seconds == null) {          // unreadable: put back what was there
+      refreshTimingEditor(ctx.panel, ctx.row);
+      return;
+    }
+    applyTimingEdit(ctx, seconds);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, seconds);
+  }
+
+  function nudgeTimingInput(input, direction, event) {
+    var ctx = timingContext(input);
+    if (!ctx) return;
+    var step = event.altKey ? TIMING_STEP.alt : event.shiftKey ? TIMING_STEP.shift : TIMING_STEP.plain;
+    var current = parseTimeInput(input.value);
+    if (current == null) {
+      // An ayah the aligner never placed has an empty box; step off where the ayah after it
+      // begins rather than from zero, which would be a long way from anything.
+      var timings = getRukuTimings(ctx.row) || { trim: null, ayahs: [] };
+      current = ayahEndTime(timings, ctx.ayah, ctx.next);
+      if (current == null) current = 0;
+    }
+    var moved = Math.max(0, Math.round((current + direction * step) * 100) / 100);
+    input.value = formatTimeInput(moved);
+    applyTimingEdit(ctx, moved);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, moved);
+  }
+
+  function handleTimingEditorClick(target) {
+    var now = target.closest(".tm-now");
+    var hear = target.closest(".tm-hear");
+    var reset = target.closest(".tm-reset");
+    var ok = target.closest(".tm-ok");
+    if (!now && !hear && !reset && !ok) return false;
+    var ctx = timingContext(target);
+    if (!ctx) return true;
+
+    if (ok) {
+      ok.disabled = true;
+      resolveTimingFlag(ctx.key, ctx.ayah).then(function () {
+        renderTable();
+      }).catch(function () {
+        ok.disabled = false;
+        syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+      });
+      return true;
+    }
+
+    if (now) {
+      var a = mqPlayback.el;
+      if (!a || Number(mqPlayback.activeGlobalIndex) !== ctx.globalIndex) return true;
+      var captured = Number(a.currentTime.toFixed(2));
+      applyTimingEdit(ctx, captured);
+      refreshTimingEditor(ctx.panel, ctx.row);
+      scheduleTimingRestart(ctx.globalIndex, captured);
+      return true;
+    }
+    if (hear) {
+      var t = getRukuTimings(ctx.row);
+      previewRange(ctx.globalIndex, ayahExactStart(t, ctx.ayah), ayahEndTime(t, ctx.ayah, ctx.next));
+      return true;
+    }
+    setEditedStart(ctx.key, ctx.ayah, null);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    scheduleTimingRestart(ctx.globalIndex, ayahExactStart(getRukuTimings(ctx.row), ctx.ayah));
+    return true;
+  }
+
+  function activateAyatItem(item) {
+    var tr = item.closest ? item.closest("tr.ayat-row[data-ayat-for]") : null;
+    if (!tr) return;
+    var n = parseInt(item.dataset.ayah, 10);
+    if (isNaN(n)) return;
+    playFromAyah(tr.dataset.ayatFor, n);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Word meanings: tap a word in an ayah to see its Urdu meaning.      */
+  /* Data is quran.com's word-by-word API; the service worker's         */
+  /* network-first caching makes an ayah's words reusable offline.       */
+  /* ------------------------------------------------------------------ */
+
+  var ayahWordsCache = {};
+  var wordPopoverEl = null;
+  var wordPopToken = 0;
+
+  function getAyahWords(surahNumber, ayahNumber) {
+    var key = surahNumber + ":" + ayahNumber;
+    if (ayahWordsCache[key]) return Promise.resolve(ayahWordsCache[key]);
+    var url = "https://api.quran.com/api/v4/verses/by_key/" + key +
+      "?words=true&word_fields=text_uthmani,translation&language=ur";
+    return fetch(url).then(function (res) {
+      if (!res.ok) return null;
+      return res.json().then(function (j) {
+        var list = j && j.verse && Array.isArray(j.verse.words)
+          ? j.verse.words.filter(function (w) { return w.char_type_name === "word"; })
+          : null;
+        if (list) ayahWordsCache[key] = list;
+        return list;
+      });
+    }).catch(function () { return null; });
+  }
+
+  /**
+   * Once one word is tapped, the listener plainly wants meanings: quietly warm the rest of
+   * the ruku so later taps answer instantly, one ayah at a time to stay polite to the API.
+   */
+  function prefetchRukuWords(globalIndex) {
+    var row = data[globalIndex];
+    var entry = row ? getRukuAyat(row) : null;
+    if (!entry) return;
+    entry.ayahs.forEach(function (a, i) {
+      setTimeout(function () { getAyahWords(row.surahNumber, a.n); }, i * 300);
+    });
+  }
+
+  function findWordMeaning(words, word) {
+    var target = wordSkeleton(word);
+    for (var i = 0; i < words.length; i++) {
+      if (wordSkeleton(words[i].text_uthmani) === target) return words[i];
+    }
+    return null;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* How a word breaks apart: prefix + stem + suffix, each with its own   */
+  /* Urdu wording where one honestly exists. Segments come from the       */
+  /* Quranic Arabic Corpus (morphology/para-*.json, built by              */
+  /* scripts/build-morphology.js); the Urdu lives in morphology-labels.js.*/
+  /* ------------------------------------------------------------------ */
+
+  var paraMorphology = {};
+
+  function getParaMorphology(para) {
+    if (paraMorphology[para]) return paraMorphology[para];
+    var pending = fetch("morphology/para-" + para + ".json").then(function (res) {
+      return res.ok ? res.json() : null;
+    }).catch(function () { return null; });
+    paraMorphology[para] = pending;
+    return pending;
+  }
+
+  /**
+   * Urdu for the stems themselves, harvested by scripts/build-stem-meanings.js from the
+   * one-piece words elsewhere in the Quran that are nothing but that same stem. Loaded
+   * once and shared by every para.
+   */
+  var stemMeanings = null;
+  var stemMeaningsPending = null;
+
+  function getStemMeanings() {
+    if (stemMeanings) return Promise.resolve(stemMeanings);
+    if (stemMeaningsPending) return stemMeaningsPending;
+    stemMeaningsPending = fetch("stem-meanings.json").then(function (res) {
+      return res.ok ? res.json() : {};
+    }).catch(function () { return {}; }).then(function (map) {
+      stemMeanings = map;
+      return map;
+    });
+    return stemMeaningsPending;
+  }
+
+  function segmentsJoin(segs) {
+    return segs.map(function (s) { return s[0]; }).join("");
+  }
+
+  /**
+   * The segments of one word. The corpus lists words in the same order as our Uthmani
+   * text for every ayah but 37:130, so position is tried first and the letters confirm
+   * it; when the two disagree the rest of the ayah is searched instead.
+   */
+  function getWordSegments(para, surahNumber, ayahNumber, wordIndex, wordText) {
+    return getParaMorphology(para).then(function (all) {
+      if (!all) return null;
+      var words = all[surahNumber + ":" + ayahNumber];
+      if (!words) return null;
+      var target = wordSkeleton(wordText);
+      var atIndex = words[wordIndex];
+      if (atIndex && wordSkeleton(segmentsJoin(atIndex)) === target) return atIndex;
+      for (var i = 0; i < words.length; i++) {
+        if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
+      }
+      return null;
+    });
+  }
+
+  /**
+   * Which sense of an attached pronoun applies. Hanging off a verb it is the doer, or
+   * what the verb acts on once a doer is already there; off a noun it is the owner;
+   * off a preposition, what the preposition points at.
+   */
+  function pronounSense(segs, index) {
+    var stemPos = "";
+    var stemAt = -1;
+    for (var i = 0; i < segs.length; i++) {
+      if (segs[i][1] === 0) { stemPos = segs[i][2]; stemAt = i; break; }
+    }
+    if (stemPos !== "V") return stemPos === "N" ? "p" : "o";
+    for (var j = stemAt + 1; j < index; j++) {
+      if (segs[j][3] === "PRON") return "o";
+    }
+    return "s";
+  }
+
+  /**
+   * One segment's Urdu meaning, or "" when it honestly has none: ال and the كَ of ذٰلِكَ
+   * are grammar rather than words, and a verb or noun stem carries the verse's own
+   * vocabulary, which the whole-word gloss above already gives.
+   */
+  function segmentMeaning(segs, index) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var seg = segs[index];
+    var role = seg[3] || "";
+    if (labels.noMeaning[role]) return "";
+    if (role === "PRON") {
+      var forms = labels.pronoun[seg[4] || ""];
+      return forms ? forms[pronounSense(segs, index)] : "";
+    }
+    var key = labels.particleKey(seg[0]) + "|" + role;
+    if (seg[1] !== 0) return labels.affix[key] || "";
+    if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || "";
+    // A verb or noun stem: looked up by its exact letters, since that is how the harvest
+    // was keyed. Still blank for the stems that never occur as a word on their own.
+    if (stemMeanings) return stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "";
+    return "";
+  }
+
+  /** The short grammatical name under a segment, with its root when it has one. */
+  function segmentLabel(segs, index) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var seg = segs[index];
+    var text = labels.grammar[seg[3] || ""] || labels.posFallback[seg[2]] || "";
+    var extras = String(seg[6] || "").split(",").filter(Boolean).map(function (f) {
+      return labels.extra[f] || "";
+    }).filter(Boolean);
+    if (extras.length) text += " (" + extras.join("\u060C ") + ")";
+    return text;
+  }
+
+  /**
+   * The line under a grammatical name: whether the piece is واحد, تثنیہ or جمع, its gender
+   * and person, and the root it comes from. This is what tells a reader that وا۟ is a plural
+   * "you" and not a singular one — the name "ضمیر" alone never says so.
+   */
+  function segmentDetail(seg) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var bits = [];
+    var pgn = labels.describePgn(seg[4] || "");
+    if (pgn) bits.push(pgn);
+    return bits.join(" ");
+  }
+
+  /**
+   * The table is drawn even for a word that is a single piece. There is nothing to take
+   * apart there, but its form still matters — يَكُونَ is واحد where تَكُونُوا۟ is جمع — and
+   * showing it the same way everywhere means a reader looks in one place for it.
+   */
+  function wordPartsHtml(segs) {
+    if (!segs || !segs.length) return "";
+    var rows = "";
+    segs.forEach(function (seg, i) {
+      var meaning = segmentMeaning(segs, i);
+      var detail = segmentDetail(seg);
+      var root = seg[5]
+        ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(seg[5]) + "</span>"
+        : "";
+      var under = detail || root
+        ? "<span class=\"wpart-detail\">" + escapeHtml(detail) + root + "</span>"
+        : "";
+      rows += "<tr>" +
+        "<td class=\"wpart-ar\" lang=\"ar\">" + escapeHtml(seg[0]) + "</td>" +
+        "<td class=\"wpart-ur\" lang=\"ur\">" +
+          (meaning ? escapeHtml(meaning) : "<span class=\"wpart-none\">\u2014</span>") +
+        "</td>" +
+        "<td class=\"wpart-tag\" lang=\"ur\">" +
+          "<span class=\"wpart-name\">" + escapeHtml(segmentLabel(segs, i)) + "</span>" + under +
+        "</td>" +
+        "</tr>";
+    });
+    return "<table class=\"wpop-parts\" dir=\"rtl\">" +
+      "<thead><tr><th>\u062C\u0632\u0648</th><th>\u0645\u0639\u0646\u06CC</th><th>\u0642\u0648\u0627\u0639\u062F</th></tr></thead>" +
+      "<tbody>" + rows + "</tbody></table>";
+  }
+
+  function ensureWordPopover() {
+    if (wordPopoverEl) return wordPopoverEl;
+    wordPopoverEl = document.createElement("div");
+    wordPopoverEl.id = "ayah-word-pop";
+    wordPopoverEl.setAttribute("role", "tooltip");
+    wordPopoverEl.hidden = true;
+    document.body.appendChild(wordPopoverEl);
+    return wordPopoverEl;
+  }
+
+  function openWordFromElement(wordEl) {
+    var ayatTr = wordEl.closest("tr.ayat-row[data-ayat-for]");
+    var item = wordEl.closest(".ayat-item");
+    var row = ayatTr ? data[ayatTr.dataset.ayatFor] : null;
+    if (!row || !item) return;
+    openWordMeaning(wordEl, row.para, row.surahNumber, parseInt(item.dataset.ayah, 10));
+    prefetchRukuWords(ayatTr.dataset.ayatFor);
+  }
+
+  function hideWordPopover() {
+    if (wordPopoverEl) wordPopoverEl.hidden = true;
+  }
+
+  function positionWordPopover(pop, wordEl) {
+    var wr = wordEl.getBoundingClientRect();
+    var pr = pop.getBoundingClientRect();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var left = Math.min(Math.max(8, wr.left + wr.width / 2 - pr.width / 2), vw - pr.width - 8);
+    var top = wr.bottom + pr.height + 12 <= vh ? wr.bottom + 8 : Math.max(8, wr.top - pr.height - 8);
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+  }
+
+  function openWordMeaning(wordEl, para, surahNumber, ayahNumber) {
+    var pop = ensureWordPopover();
+    var token = ++wordPopToken;
+    var word = wordEl.textContent.trim();
+    var wordIndex = Number(wordEl.dataset.w);
+
+    // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (\u06DE)
+    // or pause mark into the same token, which the panel never shows.
+    function head() {
+      return "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>";
+    }
+
+    pop.innerHTML = head() + "<div class=\"wpop-loading\">Loading\u2026</div>";
+    pop.hidden = false;
+    positionWordPopover(pop, wordEl);
+
+    Promise.all([
+      getAyahWords(surahNumber, ayahNumber),
+      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
+      getStemMeanings()
+    ]).then(function (results) {
+      if (token !== wordPopToken || pop.hidden) return;
+      var words = results[0];
+      var segs = results[1];
+      var hit = words ? findWordMeaning(words, word) : null;
+      var parts = wordPartsHtml(segs);
+
+      if (!hit && !parts) {
+        pop.innerHTML = head() + "<div class=\"wpop-loading\">Meaning unavailable</div>";
+        positionWordPopover(pop, wordEl);
+        return;
+      }
+
+      var translit = hit && hit.transliteration && hit.transliteration.text
+        ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(hit.transliteration.text) + "</div>"
+        : "";
+      var meaning = hit
+        ? "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
+            escapeHtml((hit.translation && hit.translation.text) || "\u2014") +
+          "</div>"
+        : "";
+
+      pop.innerHTML = head() + translit + meaning + parts;
+      positionWordPopover(pop, wordEl);
     });
   }
 
@@ -2691,11 +3593,54 @@
   if (paraNextBtn) paraNextBtn.addEventListener("click", function () { stepPara(1); });
 
   tbody.addEventListener("click", function (e) {
-    var btn = e.target.closest ? e.target.closest(".verses-toggle") : null;
+    if (!e.target.closest) return;
+    if (handleTimingEditorClick(e.target)) return;
+    var wordEl = e.target.closest(".ayah-word");
+    if (wordEl) {
+      openWordFromElement(wordEl);
+      return;
+    }
+    var ayahPlay = e.target.closest(".ayah-play");
+    if (ayahPlay) {
+      activateAyatItem(ayahPlay);
+      return;
+    }
+    var btn = e.target.closest(".verses-toggle");
     if (!btn) return;
     var tr = btn.closest("tr[data-global-index]");
     if (tr) toggleAyat(tr.dataset.globalIndex);
   });
+
+  tbody.addEventListener("change", function (e) {
+    if (!e.target.closest) return;
+    var input = e.target.closest(".tm-input");
+    if (input) commitTimingInput(input);
+  });
+
+  tbody.addEventListener("keydown", function (e) {
+    if (!e.target.closest) return;
+    var input = e.target.closest(".tm-input");
+    if (!input) return;
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+      e.preventDefault();          // the caret and the page both want these otherwise
+      nudgeTimingInput(input, e.key === "ArrowUp" ? 1 : -1, e);
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      commitTimingInput(input);
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!wordPopoverEl || wordPopoverEl.hidden) return;
+    if (e.target.closest && (e.target.closest("#ayah-word-pop") || e.target.closest(".ayah-word"))) return;
+    hideWordPopover();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") hideWordPopover();
+  });
+  window.addEventListener("scroll", function () { hideWordPopover(); }, true);
 
   // GitHub API config (used for file upload)
 
@@ -2721,6 +3666,10 @@
   var togglePara = document.getElementById("show-only-recorded-para");
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
+  var prefWordMeanings = document.getElementById("pref-word-meanings");
+  var timingSaveBar = document.getElementById("timing-save-bar");
+  var timingSaveBarBtn = document.getElementById("timing-save-btn");
+  var timingSaveBarCount = document.getElementById("timing-save-count");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
@@ -2779,6 +3728,8 @@
   }
 
   function syncSettingsUI() {
+    if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
+    syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
     roleAdminBtn.classList.toggle("active", admin);
@@ -2877,6 +3828,78 @@
     setShowOnlyRecordedRuku(this.checked);
     renderTable({ skipViewRestore: true });
   });
+
+  if (prefWordMeanings) {
+    prefWordMeanings.addEventListener("change", function () {
+      setWordMeaningsEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  /** How many corrections are waiting, so the button can say what it would save. */
+  function countTimingEdits() {
+    var all = getTimingEdits();
+    var rukus = 0;
+    var starts = 0;
+    Object.keys(all).forEach(function (key) {
+      var n = Object.keys((all[key] && all[key].starts) || {}).length;
+      if (!n) return;
+      rukus++;
+      starts += n;
+    });
+    return { rukus: rukus, starts: starts };
+  }
+
+  function syncSaveTimingsUI(message) {
+    if (!timingSaveBar) return;
+    var count = countTimingEdits();
+    timingSaveBar.hidden = !timingEditorEnabled() || (count.starts === 0 && !message);
+    if (timingSaveBarCount) {
+      timingSaveBarCount.textContent = message ||
+        (count.starts + " start" + (count.starts === 1 ? "" : "s") + " unsaved");
+    }
+    if (timingSaveBarBtn) timingSaveBarBtn.disabled = count.starts === 0;
+  }
+
+  /**
+   * Hand the corrections to the dev server, which writes them into timings.js. Once they are
+   * in the file they are no longer corrections, so the browser's copy is dropped and the page
+   * reloads onto what was just written — leaving them would show every box as edited against
+   * a file that already agrees.
+   */
+  function saveTimingsToFile() {
+    var edits = getTimingEdits();
+    syncSaveTimingsUI("Saving\u2026");
+    fetch("__save-timings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(edits)
+    }).then(function (res) {
+      return res.json().then(function (body) { return { ok: res.ok, body: body }; });
+    }).then(function (r) {
+      if (!r.ok) {
+        syncSaveTimingsUI("Could not save: " + (r.body && r.body.error ? r.body.error : "server error"));
+        return;
+      }
+      var b = r.body;
+      var parts = [];
+      if (b.moved) parts.push(b.moved + " moved");
+      if (b.placed) parts.push(b.placed + " placed");
+      var note = "Saved " + (parts.length ? parts.join(", ") : "no changes") +
+        " in " + b.rukus.length + " ruku" + (b.rukus.length === 1 ? "" : "s");
+      if (b.missing && b.missing.length) note += " (skipped " + b.missing.join(", ") + ")";
+      syncSaveTimingsUI(note + " \u2014 reloading\u2026");
+      saveTimingEdits({});
+      setTimeout(function () { location.reload(); }, 900);
+    }).catch(function () {
+      syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+    });
+  }
+
+  if (timingSaveBarBtn) timingSaveBarBtn.addEventListener("click", saveTimingsToFile);
+
+  syncSaveTimingsUI();
+  loadTimingFlags();
 
   if (prefMediaNotif) {
     prefMediaNotif.addEventListener("change", function () {

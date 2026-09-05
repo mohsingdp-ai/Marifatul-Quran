@@ -30,7 +30,7 @@ if [ ! -x "$PY" ]; then
   uv venv --python 3.12 "$VENV" >&2
   if has_nvidia; then
     echo "==> NVIDIA GPU found; installing faster-whisper + CUDA runtime wheels" >&2
-    uv pip install --python "$VENV" faster-whisper nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*" >&2
+    uv pip install --python "$VENV" faster-whisper nvidia-cublas-cu12 "nvidia-cudnn-cu12==9.*" nvidia-cuda-runtime-cu12 >&2
   else
     echo "==> no NVIDIA GPU; installing faster-whisper for CPU" >&2
     uv pip install --python "$VENV" faster-whisper >&2
@@ -46,8 +46,11 @@ try:
 except ImportError:
     raise SystemExit
 base = nvidia.__path__[0]
-dirs = [os.path.join(base, d, "lib") for d in ("cublas", "cudnn")]
-print(":".join(p for p in dirs if os.path.isdir(p)))
+# Every wheel's lib dir, not a fixed list: CTranslate2 also needs the CUDA runtime
+# (nvidia-cuda-runtime-cu12) and it is cheaper to point at all of them than to keep up.
+dirs = sorted(os.path.join(base, d, "lib") for d in os.listdir(base)
+              if os.path.isdir(os.path.join(base, d, "lib")))
+print(":".join(dirs))
 PY
 )"
 [ -n "$CUDA_LIBS" ] && export LD_LIBRARY_PATH="$CUDA_LIBS${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
