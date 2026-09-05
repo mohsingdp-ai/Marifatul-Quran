@@ -756,7 +756,9 @@
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
     entry.ayahs.forEach(function (a) {
-      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" + escapeHtml(a.text) +
+      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        escapeHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
     });
     html += "</div>";
@@ -824,6 +826,24 @@
       found = timings.ayahs[i][0];
     }
     return found;
+  }
+
+  /**
+   * Where playback must jump to start at `ayahNumber`, or null when nothing usable is placed.
+   * An ayah the aligner could not place falls back to the placed ayah before it (the same
+   * hold-over rule recitingAyahAt uses), and one before the first placed ayah to the trim
+   * start, so the listener still skips the opening branding.
+   */
+  function ayahSeekTime(timings, ayahNumber) {
+    if (!timings || !timings.ayahs || !timings.ayahs.length) return null;
+    var prev = null;
+    for (var i = 0; i < timings.ayahs.length; i++) {
+      if (timings.ayahs[i][0] === ayahNumber) return timings.ayahs[i][1];
+      if (timings.ayahs[i][0] < ayahNumber) prev = timings.ayahs[i][1];
+    }
+    if (prev != null) return prev;
+    var trim = timings.trim;
+    return trim && typeof trim.start === "number" ? trim.start : null;
   }
 
   /** "<globalIndex>|<ayah>" currently lit, so the DOM is only touched when it changes. */
@@ -2526,6 +2546,39 @@
     });
   }
 
+  /**
+   * An ayah's play control starts its ruku's recording at that ayah — the text itself stays
+   * inert so reading and scrolling never trip playback. The stored mid-track position is
+   * deliberately skipped: the user asked for this ayah, not wherever listening last stopped.
+   * Rukus without timings play from the top, which is still what the click promised.
+   */
+  function playFromAyah(globalIndex, ayahNumber) {
+    var row = data[globalIndex];
+    if (!row) return;
+    var src = getAudioSrc(row, globalIndex);
+    if (!src) return;
+    var wasActive = mqPlayback.activeGlobalIndex === globalIndex;
+    var t = ayahSeekTime(getRukuTimings(row), ayahNumber);
+    if (t == null) t = 0;
+    prepareMqTrack(globalIndex, row, src, { skipStoredPosition: true }).then(function () {
+      var a = mqPlayback.el;
+      if (!a) return;
+      a.loop = false;
+      if (!wasActive) a.playbackRate = getDefaultSpeed();
+      if (a.duration && isFinite(a.duration)) t = Math.min(Math.max(0, t), Math.max(0, a.duration - 0.05));
+      a.currentTime = t;
+      a.play().catch(function () { /* autoplay policy */ });
+    });
+  }
+
+  function activateAyatItem(item) {
+    var tr = item.closest ? item.closest("tr.ayat-row[data-ayat-for]") : null;
+    if (!tr) return;
+    var n = parseInt(item.dataset.ayah, 10);
+    if (isNaN(n)) return;
+    playFromAyah(tr.dataset.ayatFor, n);
+  }
+
   function syncToolbarTransport() {
     var btn = document.getElementById("toolbar-play-pause-btn");
     var icon = document.getElementById("toolbar-transport-icon");
@@ -2751,7 +2804,13 @@
   if (paraNextBtn) paraNextBtn.addEventListener("click", function () { stepPara(1); });
 
   tbody.addEventListener("click", function (e) {
-    var btn = e.target.closest ? e.target.closest(".verses-toggle") : null;
+    if (!e.target.closest) return;
+    var ayahPlay = e.target.closest(".ayah-play");
+    if (ayahPlay) {
+      activateAyatItem(ayahPlay);
+      return;
+    }
+    var btn = e.target.closest(".verses-toggle");
     if (!btn) return;
     var tr = btn.closest("tr[data-global-index]");
     if (tr) toggleAyat(tr.dataset.globalIndex);

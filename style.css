@@ -1854,6 +1854,40 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   border-color: var(--md-tertiary);
 }
 
+/* Play control on an ayah: deliberate target, so taps on the words while reading or
+   scrolling never start playback. Sits between the text and the end-of-ayah marker,
+   quiet until pointed at. */
+.ayah-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  margin-inline-end: 0.3rem;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--md-on-surface-variant);
+  cursor: pointer;
+  vertical-align: middle;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.ayah-play svg {
+  display: block;
+  width: 1em;
+  height: 1em;
+}
+
+.ayah-play:hover {
+  background: color-mix(in srgb, var(--md-primary) 12%, transparent);
+  color: var(--md-primary);
+}
+
+.ayat-item.is-reciting .ayah-play {
+  color: var(--md-tertiary);
+}
+
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
   display: inline-flex;
