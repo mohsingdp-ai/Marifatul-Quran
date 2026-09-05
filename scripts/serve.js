@@ -17,6 +17,8 @@ const applyTimingEdits = require("./apply-timing-edits.js");
 
 const root = path.join(__dirname, "..");
 const SAVE_TIMINGS_PATH = "/__save-timings";
+const RESOLVE_FLAG_PATH = "/__resolve-flag";
+const FLAGS = path.join(root, "timing-flags.json");
 const port = Number(process.argv[2]) || 8787;
 
 const MIME = {
@@ -76,8 +78,35 @@ function saveTimings(req, res) {
   });
 }
 
+/**
+ * Strike one ayah off timing-flags.json — the list of starts scripts/find-onsets.sh was least
+ * sure of. The editor's "ok" button calls this once a person has heard the start and agrees.
+ */
+function resolveFlag(req, res) {
+  let body = "";
+  req.on("data", function (chunk) { body += chunk; if (body.length > 1e4) req.destroy(); });
+  req.on("end", function () {
+    let left = 0;
+    try {
+      const ask = JSON.parse(body || "{}");
+      const flags = fs.existsSync(FLAGS) ? JSON.parse(fs.readFileSync(FLAGS, "utf8")) : {};
+      const ruku = flags[ask.key] || {};
+      delete ruku[String(ask.n)];
+      if (Object.keys(ruku).length) flags[ask.key] = ruku;
+      else delete flags[ask.key];
+      fs.writeFileSync(FLAGS, JSON.stringify(flags, null, 1) + "\n");
+      Object.keys(flags).forEach(function (k) { left += Object.keys(flags[k]).length; });
+      console.log("flag cleared: " + ask.key + " ayah " + ask.n + " (" + left + " left)");
+    } catch (e) {
+      return send(res, 500, { "Content-Type": "application/json" }, JSON.stringify({ error: e.message }));
+    }
+    send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({ left: left }));
+  });
+}
+
 const server = http.createServer(function (req, res) {
   if (req.method === "POST" && req.url === SAVE_TIMINGS_PATH) return saveTimings(req, res);
+  if (req.method === "POST" && req.url === RESOLVE_FLAG_PATH) return resolveFlag(req, res);
 
   let pathname;
   try {

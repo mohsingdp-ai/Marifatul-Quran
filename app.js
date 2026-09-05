@@ -792,6 +792,7 @@
   function ayahTimingEditorHtml(timings, key, ayahNumber, nextAyahNumber) {
     var start = ayahExactStart(timings, ayahNumber);
     var isEdited = editedStart(key, ayahNumber) !== null;
+    var flag = flagFor(key, ayahNumber);
     return "<div class=\"ayat-timing\" data-ayah=\"" + ayahNumber + "\"" +
         (nextAyahNumber == null ? "" : " data-next=\"" + nextAyahNumber + "\"") + ">" +
       "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
@@ -804,6 +805,7 @@
       "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah\">hear</button>" +
       "<button type=\"button\" class=\"tm-reset\" title=\"Back to the generated time\"" +
         (isEdited ? "" : " hidden") + ">reset</button>" +
+      (flag ? timingFlagHtml(flag) : "") +
       "</div>";
   }
 
@@ -823,11 +825,13 @@
     td.colSpan = 7;
 
     var count = entry.ayahs.length;
+    var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
     var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
       "<div class=\"ayat-head\">" +
         "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
           row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
         "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
+        (toCheck ? "<span class=\"ayat-head-check\">" + toCheck + " to check</span>" : "") +
       "</div>";
 
     if (entry.showBasmala) {
@@ -974,6 +978,64 @@
     var all = getTimingEdits();
     delete all[key];
     saveTimingEdits(all);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Starts a person should hear. scripts/find-onsets.sh --edits writes  */
+  /* timing-flags.json: the ayat whose corrected start it was least sure  */
+  /* of, each with a reason. The editor shows them as chips, and "ok"     */
+  /* asks the dev server to strike one off the file.                      */
+  /* ------------------------------------------------------------------ */
+
+  var timingFlags = null;
+
+  function loadTimingFlags() {
+    if (!timingEditorEnabled()) return;
+    fetch("timing-flags.json", { cache: "no-store" }).then(function (res) {
+      return res.ok ? res.json() : {};
+    }).then(function (flags) {
+      timingFlags = flags && typeof flags === "object" ? flags : {};
+      if (Object.keys(timingFlags).length) renderTable();
+    }).catch(function () { timingFlags = {}; });
+  }
+
+  function rukuFlags(key) {
+    var f = timingFlags && timingFlags[key];
+    return f && Object.keys(f).length ? f : null;
+  }
+
+  function flagFor(key, ayahNumber) {
+    var f = rukuFlags(key);
+    return f && f[ayahNumber] ? f[ayahNumber] : null;
+  }
+
+  function flagCount(key) {
+    var f = rukuFlags(key);
+    return f ? Object.keys(f).length : 0;
+  }
+
+  function resolveTimingFlag(key, ayahNumber) {
+    return fetch("__resolve-flag", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, n: ayahNumber })
+    }).then(function (res) {
+      if (!res.ok) throw new Error("server error");
+      var f = timingFlags && timingFlags[key];
+      if (f) {
+        delete f[ayahNumber];
+        if (!Object.keys(f).length) delete timingFlags[key];
+      }
+    });
+  }
+
+  /** Why the onset finder wants this start heard, and a button to say it has been. */
+  function timingFlagHtml(flag) {
+    var detail = typeof flag.from === "number" && typeof flag.to === "number"
+      ? "was " + formatTimeInput(flag.from) + ", now " + formatTimeInput(flag.to)
+      : typeof flag.to === "number" ? "suggested " + formatTimeInput(flag.to) : "";
+    return "<span class=\"tm-flag\" title=\"" + escapeHtml(detail) + "\">\u26A0 " + escapeHtml(flag.why) + "</span>" +
+      "<button type=\"button\" class=\"tm-ok\" title=\"Heard it; the start is right\">ok</button>";
   }
 
   /**
@@ -1148,9 +1210,14 @@
       "<span class=\"card-num\">" + escapeHtml(String(row.surahNumber)) + "</span>";
     // Two titles, one shown per width: the surah on a wide screen, "Para N · R1–R2" on a phone.
     var rukuTag = escapeHtml(String(rukuDisplay(row)).replace(/-/g, "\u2013"));
+    // Starts the onset finder wants heard, so a ruku with work in it can be found from the list.
+    var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
+    var checkTag = toCheck
+      ? " <span class=\"ruku-check\" title=\"" + toCheck + " ayah start" + (toCheck === 1 ? "" : "s") + " to hear\">\u26A0 " + toCheck + "</span>"
+      : "";
     var rukuLine =
-      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span></span>" +
-      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + "</span>";
+      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span>" + checkTag + "</span>" +
+      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + checkTag + "</span>";
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
@@ -2965,9 +3032,21 @@
     var now = target.closest(".tm-now");
     var hear = target.closest(".tm-hear");
     var reset = target.closest(".tm-reset");
-    if (!now && !hear && !reset) return false;
+    var ok = target.closest(".tm-ok");
+    if (!now && !hear && !reset && !ok) return false;
     var ctx = timingContext(target);
     if (!ctx) return true;
+
+    if (ok) {
+      ok.disabled = true;
+      resolveTimingFlag(ctx.key, ctx.ayah).then(function () {
+        renderTable();
+      }).catch(function () {
+        ok.disabled = false;
+        syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+      });
+      return true;
+    }
 
     if (now) {
       var a = mqPlayback.el;
@@ -3820,6 +3899,7 @@
   if (timingSaveBarBtn) timingSaveBarBtn.addEventListener("click", saveTimingsToFile);
 
   syncSaveTimingsUI();
+  loadTimingFlags();
 
   if (prefMediaNotif) {
     prefMediaNotif.addEventListener("change", function () {

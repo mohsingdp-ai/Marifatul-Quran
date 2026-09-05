@@ -2158,6 +2158,33 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   line-height: 1.3;
 }
 
+/* A start the onset finder was unsure of: the reason, and a button to strike it off. */
+.tm-flag {
+  font-size: 0.7rem;
+  line-height: 1.4;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  color: var(--md-error);
+  background: var(--md-error-container);
+}
+
+.ayat-timing .tm-ok {
+  color: var(--md-error);
+}
+
+.ayat-head-check,
+.ruku-check {
+  font-size: 0.72rem;
+  line-height: 1rem;
+  letter-spacing: 0.02em;
+  color: var(--md-error);
+}
+
+.ruku-check {
+  margin-left: 0.4rem;
+  font-weight: 600;
+}
+
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
   display: inline-flex;
