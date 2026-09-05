@@ -738,12 +738,35 @@
       .trim();
   }
 
+  /*
+   * Word meanings are opt-in. They lay a tappable layer over the ayat and fetch extra data
+   * per para, which is not what someone who just wants to listen is after — so the ayat
+   * stay plain text until this is switched on in settings.
+   */
+  var WORD_MEANINGS_PREF_KEY = "mq_pref_word_meanings";
+
+  function wordMeaningsEnabled() {
+    try {
+      return localStorage.getItem(WORD_MEANINGS_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordMeaningsEnabled(on) {
+    try {
+      localStorage.setItem(WORD_MEANINGS_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+    if (!on) hideWordPopover();
+  }
+
   /**
    * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
    * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
    * them inside neighbouring words, so they can never be matched to a meaning.
    */
   function ayahWordsHtml(text) {
+    if (!wordMeaningsEnabled()) return escapeHtml(text);
     var out = "";
     var wordIndex = 0;
     text.split(/\s+/).forEach(function (tok) {
@@ -3178,6 +3201,7 @@
   var togglePara = document.getElementById("show-only-recorded-para");
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
+  var prefWordMeanings = document.getElementById("pref-word-meanings");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
@@ -3236,6 +3260,7 @@
   }
 
   function syncSettingsUI() {
+    if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
     roleAdminBtn.classList.toggle("active", admin);
@@ -3334,6 +3359,13 @@
     setShowOnlyRecordedRuku(this.checked);
     renderTable({ skipViewRestore: true });
   });
+
+  if (prefWordMeanings) {
+    prefWordMeanings.addEventListener("change", function () {
+      setWordMeaningsEnabled(this.checked);
+      renderTable();
+    });
+  }
 
   if (prefMediaNotif) {
     prefMediaNotif.addEventListener("change", function () {

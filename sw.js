@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v17";
+const CACHE = "mq-v18";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -134,7 +134,6 @@ const STATIC = [
   "./material.js",
   "./hifz.js",
   "./morphology-labels.js",
-  "./stem-meanings.json",
   "./data.js",
   "./verses.js",
   "./timings.js",
