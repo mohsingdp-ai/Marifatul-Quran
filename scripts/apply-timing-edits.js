@@ -92,6 +92,12 @@ function applyEdits(src, edits) {
     entry.ayahs = Object.keys(startOf).map(Number)
       .map(function (n) { return [n, startOf[n]]; })
       .sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
+    // The trim follows the first ayah: it was set 0.4 s ahead of where the aligner put that
+    // ayah, so a start corrected to earlier than the trim would otherwise be cut off.
+    if (entry.trim && entry.ayahs.length && entry.ayahs[0][1] - 0.4 < entry.trim.start) {
+      entry.trim.start = Math.max(0, entry.ayahs[0][1] - 0.4);
+      summary.detail.push(key + " trim start pulled back to " + round(entry.trim.start));
+    }
     summary.rukus.push(key);
   });
 

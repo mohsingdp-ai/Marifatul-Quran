@@ -61,7 +61,7 @@ LEAD = 0.3         # the ear marks the breath before the first letter
 PRIOR = 0.3        # nats per second: a tie between two recitations goes to the aligner's side
 MIN_GAP = 0.6      # an ayah cannot start within this of the one before it
 CHUNK = 60.0       # longest window the GPU is asked to hold at once (placing missing ayat)
-LATER = 2.0        # seconds a start may move later before it is flagged
+LATER = 1.0        # seconds a start may move later before it is flagged
 
 # ---------------------------------------------------------------- romanisation
 
@@ -362,7 +362,10 @@ def to_edits(results: dict, timings: dict, keep: dict, edits_path: Path, flags_p
         if suggest is not None:
             f["suggest"] = suggest
         flags.append(f)
+    searched = {k for k, _ in results}
     for key in timings:
+        if key not in searched:
+            continue                       # a ruku this run never looked at is left alone
         order = sorted(((int(n), t) for n, t in timings[key].items()), key=lambda kv: kv[1])
         known = {n for n, _ in order}
         extra = sorted(r["n"] for (k, _), r in results.items()
@@ -455,6 +458,8 @@ def main() -> int:
 
     if opts.edits:
         timings = load_timings(ROOT / "timings.js")
+        if opts.para:
+            timings = {k: v for k, v in timings.items() if int(k.split("|")[0]) in opts.para}
         to_edits(done_already(out), timings, ear, WORK / "edits.json", WORK / "flags.json",
                  opts.weak, opts.ambiguous, opts.suspect)
         return 0
