@@ -2509,6 +2509,11 @@
 
   function prepareMqTrack(globalIndex, row, src, options) {
     options = options || {};
+    // The index arrives as a real array index from the row that built itself, but as a
+    // string from every dataset read — data-global-index when a track auto-advances,
+    // data-ayat-for when an ayah's play button starts one. Mixed, "5" === 5 is false, so
+    // the check that should pause a playing ruku misses and starts it over instead.
+    globalIndex = Number(globalIndex);
     getMqAudioEl();
     var a = mqPlayback.el;
     if (mqPlayback.activeGlobalIndex === globalIndex) {
@@ -2607,6 +2612,7 @@
    * Rukus without timings play from the top, which is still what the click promised.
    */
   function playFromAyah(globalIndex, ayahNumber) {
+    globalIndex = Number(globalIndex);
     var row = data[globalIndex];
     if (!row) return;
     var src = getAudioSrc(row, globalIndex);
