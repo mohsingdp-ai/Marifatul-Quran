@@ -443,7 +443,12 @@ def to_edits(results: dict, timings: dict, keep: dict, edits_path: Path, flags_p
         if f.get("suggest") is not None:
             entry["to"] = f["suggest"]
         shipped.setdefault(f["key"], {})[str(f["n"])] = entry
-    shipped_path.write_text(json.dumps(shipped, indent=1, sort_keys=True) + "\n")
+    # Rukus in order, ayat in numeric order -- which is also how the dev server's rewrite
+    # comes out, so striking a flag off never reorders the file.
+    shipped = {k: {str(n): v[str(n)] for n in sorted(int(x) for x in v)}
+               for k, v in sorted(shipped.items(), key=lambda kv: [int(t) if t.isdigit() else t
+                                                                    for t in kv[0].replace("|R", "|").split("|")])}
+    shipped_path.write_text(json.dumps(shipped, indent=1) + "\n")
     moved.sort()
     print(f"edits: {len(moved)} starts moved, {placed} placed, in {len(edits)} rukus -> {edits_path.relative_to(ROOT)}")
     if moved:
