@@ -2855,6 +2855,7 @@
       var reset = box.querySelector(".tm-reset");
       if (reset) reset.hidden = !isEdited;
     });
+    syncSaveTimingsUI();
   }
 
   function timingContext(el) {
@@ -3587,6 +3588,11 @@
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
   var prefTimingEditor = document.getElementById("pref-timing-editor");
+  var saveTimingsBtn = document.getElementById("save-timings-btn");
+  var saveTimingsStatus = document.getElementById("save-timings-status");
+  var timingSaveBar = document.getElementById("timing-save-bar");
+  var timingSaveBarBtn = document.getElementById("timing-save-btn");
+  var timingSaveBarCount = document.getElementById("timing-save-count");
   var timingEditorGroup = document.getElementById("timing-editor-group");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
@@ -3650,6 +3656,7 @@
     // The timing editor is an authoring aid for a local run; a deployed copy never offers it.
     if (timingEditorGroup) timingEditorGroup.hidden = !isLocalRun();
     if (prefTimingEditor) prefTimingEditor.checked = timingEditorEnabled();
+    syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
     roleAdminBtn.classList.toggle("active", admin);
@@ -3756,14 +3763,92 @@
     });
   }
 
+  /** How many corrections are waiting, so the button can say what it would save. */
+  function countTimingEdits() {
+    var all = getTimingEdits();
+    var rukus = 0;
+    var starts = 0;
+    Object.keys(all).forEach(function (key) {
+      var n = Object.keys((all[key] && all[key].starts) || {}).length;
+      if (!n) return;
+      rukus++;
+      starts += n;
+    });
+    return { rukus: rukus, starts: starts };
+  }
+
+  function syncSaveTimingsUI(message) {
+    var count = countTimingEdits();
+    var summary = count.starts === 0
+      ? "No corrections yet"
+      : count.starts + " start" + (count.starts === 1 ? "" : "s") + " in " +
+        count.rukus + " ruku" + (count.rukus === 1 ? "" : "s") + " waiting";
+
+    if (saveTimingsBtn && saveTimingsStatus) {
+      saveTimingsBtn.disabled = count.starts === 0;
+      saveTimingsStatus.textContent = message || summary;
+    }
+
+    // The pill on the list stays out of the way until there is something to save.
+    if (timingSaveBar) {
+      timingSaveBar.hidden = !timingEditorEnabled() || (count.starts === 0 && !message);
+      if (timingSaveBarCount) {
+        timingSaveBarCount.textContent = message ||
+          (count.starts + " start" + (count.starts === 1 ? "" : "s") + " unsaved");
+      }
+      if (timingSaveBarBtn) timingSaveBarBtn.disabled = count.starts === 0;
+    }
+  }
+
+  /**
+   * Hand the corrections to the dev server, which writes them into timings.js. Once they are
+   * in the file they are no longer corrections, so the browser's copy is dropped and the page
+   * reloads onto what was just written — leaving them would show every box as edited against
+   * a file that already agrees.
+   */
+  function saveTimingsToFile() {
+    var edits = getTimingEdits();
+    syncSaveTimingsUI("Saving\u2026");
+    fetch("__save-timings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(edits)
+    }).then(function (res) {
+      return res.json().then(function (body) { return { ok: res.ok, body: body }; });
+    }).then(function (r) {
+      if (!r.ok) {
+        syncSaveTimingsUI("Could not save: " + (r.body && r.body.error ? r.body.error : "server error"));
+        return;
+      }
+      var b = r.body;
+      var parts = [];
+      if (b.moved) parts.push(b.moved + " moved");
+      if (b.placed) parts.push(b.placed + " placed");
+      var note = "Saved " + (parts.length ? parts.join(", ") : "no changes") +
+        " in " + b.rukus.length + " ruku" + (b.rukus.length === 1 ? "" : "s");
+      if (b.missing && b.missing.length) note += " (skipped " + b.missing.join(", ") + ")";
+      saveTimingsStatus.textContent = note + " \u2014 reloading\u2026";
+      saveTimingEdits({});
+      setTimeout(function () { location.reload(); }, 900);
+    }).catch(function () {
+      syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+    });
+  }
+
+  if (saveTimingsBtn) saveTimingsBtn.addEventListener("click", saveTimingsToFile);
+  if (timingSaveBarBtn) timingSaveBarBtn.addEventListener("click", saveTimingsToFile);
+
   if (prefTimingEditor) {
     prefTimingEditor.addEventListener("change", function () {
       try {
         localStorage.setItem(TIMING_EDITOR_PREF_KEY, this.checked ? "true" : "false");
       } catch (e) { /* private mode */ }
       renderTable();
+      syncSaveTimingsUI();
     });
   }
+
+  syncSaveTimingsUI();
 
   if (prefMediaNotif) {
     prefMediaNotif.addEventListener("change", function () {

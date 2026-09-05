@@ -56,28 +56,20 @@ function replaceEntry(src, key, entry) {
   return src.slice(0, at) + formatEntry(key, entry) + src.slice(close + "\n  }".length);
 }
 
-function main() {
-  const file = process.argv[2];
-  const write = process.argv.indexOf("--write") !== -1;
-  if (!file) {
-    console.error("usage: node scripts/apply-timing-edits.js <edits.json> [--write]");
-    process.exit(1);
-  }
-
-  const edits = JSON.parse(fs.readFileSync(file, "utf8"));
-  const src = fs.readFileSync(TIMINGS, "utf8");
+/**
+ * Apply corrections to the text of timings.js and report what changed. Returns the new text
+ * rather than writing it, so the same logic serves the command line and the Save button the
+ * dev server exposes.
+ */
+function applyEdits(src, edits) {
   const timings = loadTimings(src);
-
-  let moved = 0;
-  let placed = 0;
-  const touched = [];
-  const detail = [];
+  const summary = { rukus: [], moved: 0, placed: 0, detail: [], missing: [] };
 
   Object.keys(edits).forEach(function (key) {
     const entry = timings[key];
     const change = edits[key] || {};
     if (!entry) {
-      console.error("  ! timings.js has no ruku " + key + " — skipped");
+      summary.missing.push(key);
       return;
     }
 
@@ -88,11 +80,11 @@ function main() {
       const to = change.starts[n];
       if (typeof to !== "number") return;
       if (startOf[n] === undefined) {
-        placed++;
-        detail.push("  " + key + " ayah " + n + ": placed at " + round(to));
+        summary.placed++;
+        summary.detail.push(key + " ayah " + n + ": placed at " + round(to));
       } else if (round(startOf[n]) !== round(to)) {
-        moved++;
-        detail.push("  " + key + " ayah " + n + ": " + round(startOf[n]) + " -> " + round(to));
+        summary.moved++;
+        summary.detail.push(key + " ayah " + n + ": " + round(startOf[n]) + " -> " + round(to));
       }
       startOf[n] = to;
     });
@@ -100,32 +92,46 @@ function main() {
     entry.ayahs = Object.keys(startOf).map(Number)
       .map(function (n) { return [n, startOf[n]]; })
       .sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
-    touched.push(key);
+    summary.rukus.push(key);
   });
 
-  detail.forEach(function (line) { console.log(line); });
-  if (detail.length) console.log("");
-  console.log("rukus touched: " + touched.length + (touched.length ? "  (" + touched.join(", ") + ")" : ""));
-  console.log("starts moved:  " + moved);
-  console.log("ayat placed:   " + placed);
+  let text = src;
+  for (const key of summary.rukus) {
+    const next = replaceEntry(text, key, timings[key]);
+    if (next === null) throw new Error("could not locate the block for " + key);
+    text = next;
+  }
+  return { text: text, summary: summary };
+}
+
+module.exports = { applyEdits: applyEdits, TIMINGS: TIMINGS };
+
+function main() {
+  const file = process.argv[2];
+  const write = process.argv.indexOf("--write") !== -1;
+  if (!file) {
+    console.error("usage: node scripts/apply-timing-edits.js <edits.json> [--write]");
+    process.exit(1);
+  }
+
+  const src = fs.readFileSync(TIMINGS, "utf8");
+  const result = applyEdits(src, JSON.parse(fs.readFileSync(file, "utf8")));
+  const s = result.summary;
+
+  s.missing.forEach(function (k) { console.error("  ! timings.js has no ruku " + k + " — skipped"); });
+  s.detail.forEach(function (line) { console.log("  " + line); });
+  if (s.detail.length) console.log("");
+  console.log("rukus touched: " + s.rukus.length + (s.rukus.length ? "  (" + s.rukus.join(", ") + ")" : ""));
+  console.log("starts moved:  " + s.moved);
+  console.log("ayat placed:   " + s.placed);
 
   if (!write) {
     console.log("\nNothing written. Re-run with --write to apply.");
     return;
   }
-
-  let out = src;
-  for (const key of touched) {
-    const next = replaceEntry(out, key, timings[key]);
-    if (next === null) {
-      console.error("  ! could not locate the block for " + key + " — nothing written");
-      process.exit(1);
-    }
-    out = next;
-  }
-  fs.writeFileSync(TIMINGS, out);
-  console.log("\ntimings.js written (" + touched.length + " ruku block" +
-    (touched.length === 1 ? "" : "s") + " replaced, the rest untouched).");
+  fs.writeFileSync(TIMINGS, result.text);
+  console.log("\ntimings.js written (" + s.rukus.length + " ruku block" +
+    (s.rukus.length === 1 ? "" : "s") + " replaced, the rest untouched).");
 }
 
-main();
+if (require.main === module) main();

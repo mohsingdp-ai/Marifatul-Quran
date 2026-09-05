@@ -27,6 +27,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Save corrected ayah timings without leaving the list. Only ever shown on a local run,
+       and only once there is something to save. -->
+  <div class="timing-save-bar" id="timing-save-bar" hidden>
+    <span class="timing-save-count" id="timing-save-count"></span>
+    <button type="button" class="timing-save-btn" id="timing-save-btn">Save to timings.js</button>
+  </div>
+
   <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
   <header class="header">
     <div class="header-brand">
@@ -283,6 +290,12 @@
               the new start so you hear it. Corrections are kept in this browser until they
               are written into timings.js.
             </p>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-inline">
+              <button type="button" class="btn btn-sm" id="save-timings-btn">Save to timings.js</button>
+              <span class="settings-hint" id="save-timings-status">No corrections yet</span>
+            </div>
           </div>
         </div>
 

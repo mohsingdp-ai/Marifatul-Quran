@@ -13,7 +13,10 @@ const fs = require("fs");
 const path = require("path");
 const url = require("url");
 
+const applyTimingEdits = require("./apply-timing-edits.js");
+
 const root = path.join(__dirname, "..");
+const SAVE_TIMINGS_PATH = "/__save-timings";
 const port = Number(process.argv[2]) || 8787;
 
 const MIME = {
@@ -36,7 +39,46 @@ function send(res, status, headers, body) {
   else res.end();
 }
 
+/**
+ * Save corrected ayah timings into timings.js.
+ *
+ * The editor in the app keeps its corrections in the browser, which cannot write to the
+ * repo — so the Save button posts them here and this applies them exactly as
+ * scripts/apply-timing-edits.js does from the command line. The server only ever listens on
+ * 127.0.0.1 and only exists while someone is running the app locally, which is the same
+ * ground the editor itself stands on.
+ */
+function saveTimings(req, res) {
+  let body = "";
+  let tooBig = false;
+  req.on("data", function (chunk) {
+    body += chunk;
+    if (body.length > 2e6) { tooBig = true; req.destroy(); }
+  });
+  req.on("end", function () {
+    if (tooBig) return send(res, 413, { "Content-Type": "application/json" }, '{"error":"too large"}');
+    let result;
+    try {
+      const edits = JSON.parse(body || "{}");
+      const src = fs.readFileSync(applyTimingEdits.TIMINGS, "utf8");
+      result = applyTimingEdits.applyEdits(src, edits);
+      fs.writeFileSync(applyTimingEdits.TIMINGS, result.text);
+    } catch (e) {
+      return send(res, 500, { "Content-Type": "application/json" },
+        JSON.stringify({ error: e.message }));
+    }
+    const s = result.summary;
+    console.log("saved timings: " + s.moved + " moved, " + s.placed + " placed, " +
+      s.rukus.length + " ruku(s): " + s.rukus.join(", "));
+    send(res, 200, { "Content-Type": "application/json" }, JSON.stringify({
+      rukus: s.rukus, moved: s.moved, placed: s.placed, missing: s.missing, detail: s.detail
+    }));
+  });
+}
+
 const server = http.createServer(function (req, res) {
+  if (req.method === "POST" && req.url === SAVE_TIMINGS_PATH) return saveTimings(req, res);
+
   let pathname;
   try {
     pathname = decodeURIComponent(url.parse(req.url).pathname);
@@ -97,4 +139,5 @@ server.listen(port, "127.0.0.1", function () {
   console.log("Marifatul Quran dev server");
   console.log("  serving " + root);
   console.log("  http://127.0.0.1:" + port + "/index.html");
+  console.log("  ayah timing corrections save to timings.js via POST " + SAVE_TIMINGS_PATH);
 });

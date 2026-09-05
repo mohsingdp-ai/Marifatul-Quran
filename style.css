@@ -2034,6 +2034,47 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-outline);
 }
 
+/* Saving corrected timings from the list itself, so the work does not mean a trip into
+   settings after every ruku. It sits clear of the docked player and only appears when there
+   is something to save. */
+.timing-save-bar {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 999px;
+  background: var(--md-surface-container-lowest);
+  border: 1px solid var(--md-outline-variant);
+  box-shadow: var(--md-elevation-3);
+}
+
+.timing-save-count {
+  font-size: 0.78rem;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+}
+
+.timing-save-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--md-on-primary);
+  background: var(--md-primary);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.timing-save-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Ayah timing editor: a strip under each ayah with where it starts and ends. Left-to-right
    and in a plain mono face — these are numbers to compare down the column, not prose. A box
    that has been corrected is marked, so what has been touched is obvious at a glance. */
