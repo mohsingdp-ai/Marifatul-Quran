@@ -909,20 +909,21 @@
   /* ------------------------------------------------------------------ */
 
   var TIMING_EDITS_KEY = "mq_timing_edits";
-  var TIMING_EDITOR_PREF_KEY = "mq_pref_timing_editor";
 
   function isLocalRun() {
     return location.hostname === "localhost" || location.hostname === "127.0.0.1" ||
       location.hostname === "[::1]" || location.protocol === "file:";
   }
 
+  /**
+   * The editor is for correcting the shipped data, so it appears under exactly the two
+   * conditions where that is the job at hand: the app is being run locally, where a dev
+   * server exists to write timings.js, and the reader is in the admin role. There is nothing
+   * to switch on — anyone who can see it came here to use it. A deployed copy, or anyone
+   * reading as a user, never sees the boxes or the save pill.
+   */
   function timingEditorEnabled() {
-    if (!isLocalRun()) return false;
-    try {
-      return localStorage.getItem(TIMING_EDITOR_PREF_KEY) === "true";
-    } catch (e) {
-      return false;
-    }
+    return isLocalRun() && isAdmin();
   }
 
   // Parsed once and kept, because getRukuTimings is called on every timeupdate and must not
@@ -3587,13 +3588,9 @@
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
-  var prefTimingEditor = document.getElementById("pref-timing-editor");
-  var saveTimingsBtn = document.getElementById("save-timings-btn");
-  var saveTimingsStatus = document.getElementById("save-timings-status");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
-  var timingEditorGroup = document.getElementById("timing-editor-group");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
@@ -3653,9 +3650,6 @@
 
   function syncSettingsUI() {
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
-    // The timing editor is an authoring aid for a local run; a deployed copy never offers it.
-    if (timingEditorGroup) timingEditorGroup.hidden = !isLocalRun();
-    if (prefTimingEditor) prefTimingEditor.checked = timingEditorEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -3778,26 +3772,14 @@
   }
 
   function syncSaveTimingsUI(message) {
+    if (!timingSaveBar) return;
     var count = countTimingEdits();
-    var summary = count.starts === 0
-      ? "No corrections yet"
-      : count.starts + " start" + (count.starts === 1 ? "" : "s") + " in " +
-        count.rukus + " ruku" + (count.rukus === 1 ? "" : "s") + " waiting";
-
-    if (saveTimingsBtn && saveTimingsStatus) {
-      saveTimingsBtn.disabled = count.starts === 0;
-      saveTimingsStatus.textContent = message || summary;
+    timingSaveBar.hidden = !timingEditorEnabled() || (count.starts === 0 && !message);
+    if (timingSaveBarCount) {
+      timingSaveBarCount.textContent = message ||
+        (count.starts + " start" + (count.starts === 1 ? "" : "s") + " unsaved");
     }
-
-    // The pill on the list stays out of the way until there is something to save.
-    if (timingSaveBar) {
-      timingSaveBar.hidden = !timingEditorEnabled() || (count.starts === 0 && !message);
-      if (timingSaveBarCount) {
-        timingSaveBarCount.textContent = message ||
-          (count.starts + " start" + (count.starts === 1 ? "" : "s") + " unsaved");
-      }
-      if (timingSaveBarBtn) timingSaveBarBtn.disabled = count.starts === 0;
-    }
+    if (timingSaveBarBtn) timingSaveBarBtn.disabled = count.starts === 0;
   }
 
   /**
@@ -3827,7 +3809,7 @@
       var note = "Saved " + (parts.length ? parts.join(", ") : "no changes") +
         " in " + b.rukus.length + " ruku" + (b.rukus.length === 1 ? "" : "s");
       if (b.missing && b.missing.length) note += " (skipped " + b.missing.join(", ") + ")";
-      saveTimingsStatus.textContent = note + " \u2014 reloading\u2026";
+      syncSaveTimingsUI(note + " \u2014 reloading\u2026");
       saveTimingEdits({});
       setTimeout(function () { location.reload(); }, 900);
     }).catch(function () {
@@ -3835,18 +3817,7 @@
     });
   }
 
-  if (saveTimingsBtn) saveTimingsBtn.addEventListener("click", saveTimingsToFile);
   if (timingSaveBarBtn) timingSaveBarBtn.addEventListener("click", saveTimingsToFile);
-
-  if (prefTimingEditor) {
-    prefTimingEditor.addEventListener("change", function () {
-      try {
-        localStorage.setItem(TIMING_EDITOR_PREF_KEY, this.checked ? "true" : "false");
-      } catch (e) { /* private mode */ }
-      renderTable();
-      syncSaveTimingsUI();
-    });
-  }
 
   syncSaveTimingsUI();
 

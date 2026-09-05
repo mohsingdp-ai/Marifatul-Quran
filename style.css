@@ -2052,6 +2052,12 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   box-shadow: var(--md-elevation-3);
 }
 
+/* display:flex above beats the browser's own [hidden] rule, so hiding has to be said here
+   or the pill sits on screen reading "0 starts unsaved" with nothing to save. */
+.timing-save-bar[hidden] {
+  display: none;
+}
+
 .timing-save-count {
   font-size: 0.78rem;
   color: var(--md-on-surface-variant);
