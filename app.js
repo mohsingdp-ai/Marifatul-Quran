@@ -2909,6 +2909,16 @@
   function scheduleTimingRestart(globalIndex, seconds) {
     if (timingRestartTimer) clearTimeout(timingRestartTimer);
     if (seconds == null) return;
+
+    // Cut the old position off at once. Waiting out the debounce with it still playing means
+    // hearing the time you just moved away from, which sounds like the change was ignored.
+    var a = mqPlayback.el;
+    if (a && !a.paused && Number(mqPlayback.activeGlobalIndex) === Number(globalIndex)) {
+      a.pause();
+      a.currentTime = seconds;
+    }
+    previewStopAt = null;
+
     timingRestartTimer = setTimeout(function () {
       timingRestartTimer = null;
       previewRange(globalIndex, seconds, null);
