@@ -2676,6 +2676,26 @@
     return pending;
   }
 
+  /**
+   * Urdu for the stems themselves, harvested by scripts/build-stem-meanings.js from the
+   * one-piece words elsewhere in the Quran that are nothing but that same stem. Loaded
+   * once and shared by every para.
+   */
+  var stemMeanings = null;
+  var stemMeaningsPending = null;
+
+  function getStemMeanings() {
+    if (stemMeanings) return Promise.resolve(stemMeanings);
+    if (stemMeaningsPending) return stemMeaningsPending;
+    stemMeaningsPending = fetch("stem-meanings.json").then(function (res) {
+      return res.ok ? res.json() : {};
+    }).catch(function () { return {}; }).then(function (map) {
+      stemMeanings = map;
+      return map;
+    });
+    return stemMeaningsPending;
+  }
+
   function segmentsJoin(segs) {
     return segs.map(function (s) { return s[0]; }).join("");
   }
@@ -2736,6 +2756,9 @@
     var key = labels.particleKey(seg[0]) + "|" + role;
     if (seg[1] !== 0) return labels.affix[key] || "";
     if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || "";
+    // A verb or noun stem: looked up by its exact letters, since that is how the harvest
+    // was keyed. Still blank for the stems that never occur as a word on their own.
+    if (stemMeanings) return stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "";
     return "";
   }
 
@@ -2850,7 +2873,8 @@
 
     Promise.all([
       getAyahWords(surahNumber, ayahNumber),
-      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word)
+      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
+      getStemMeanings()
     ]).then(function (results) {
       if (token !== wordPopToken || pop.hidden) return;
       var words = results[0];
