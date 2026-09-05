@@ -151,6 +151,7 @@
   var persistPlaybackTimer = null;
   var mediaSessionKeepaliveTimer = null;
   var screenWakeLock = null;
+  var noSleepVideo = null;
 
   // GitHub API config
   var GITHUB_OWNER = "mohsingdp-ai";
@@ -2079,6 +2080,59 @@
     if (toolbarBtn) toolbarBtn.classList.toggle("is-loading", isLoading);
   }
 
+  // Browsers without the Wake Lock API (iOS <= 16.3, Chrome/Firefox Android < 84/126)
+  // keep the screen on while a video plays, so a tiny silent looping clip stands in
+  // for the real lock there.
+  var NOSLEEP_MP4_SRC = "data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAMrbW9vdgAAAGxtdmhkAAAAAAAAAAAAAAAAAAAD6AAAB9AAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAlZ0cmFrAAAAXHRraGQAAAADAAAAAAAAAAAAAAABAAAAAAAAB9AAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAQAAAAEAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAfQAAAAAAABAAAAAAHObWRpYQAAACBtZGhkAAAAAAAAAAAAAAAAAABAAAAAgABVxAAAAAAALWhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABWaWRlb0hhbmRsZXIAAAABeW1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAATlzdGJsAAAAuXN0c2QAAAAAAAAAAQAAAKlhdmMxAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAQABABIAAAASAAAAAAAAAABFExhdmM2My4xLjEwMSBsaWJ4MjY0AAAAAAAAAAAAAAAAGP//AAAAL2F2Y0MBQsAN/+EAF2dCwA3afnnwEQAAAwABAAADAAIPFCqgAQAFaM4PLIAAAAAQcGFzcAAAAAEAAAABAAAAFGJ0cnQAAAAAAAAKPAAAAAAAAAAYc3R0cwAAAAAAAAABAAAAAgAAQAAAAAAUc3RzcwAAAAAAAAABAAAAAQAAABxzdHNjAAAAAAAAAAEAAAABAAAAAgAAAAEAAAAcc3RzegAAAAAAAAAAAAAAAgAAAoYAAAAJAAAAFHN0Y28AAAAAAAAAAQAAA1sAAABhdWR0YQAAAFltZXRhAAAAAAAAACFoZGxyAAAAAAAAAABtZGlyYXBwbAAAAAAAAAAAAAAAACxpbHN0AAAAJKl0b28AAAAcZGF0YQAAAAEAAAAATGF2ZjYzLjEuMTAxAAAACGZyZWUAAAKXbWRhdAAAAnAGBf//bNxF6b3m2Ui3lizYINkj7u94MjY0IC0gY29yZSAxNjUgcjMyMjIgYjM1NjA1YSAtIEguMjY0L01QRUctNCBBVkMgY29kZWMgLSBDb3B5bGVmdCAyMDAzLTIwMjUgLSBodHRwOi8vd3d3LnZpZGVvbGFuLm9yZy94MjY0Lmh0bWwgLSBvcHRpb25zOiBjYWJhYz0wIHJlZj0xIGRlYmxvY2s9MTowOjAgYW5hbHlzZT0weDE6MHgxMTEgbWU9aGV4IHN1Ym1lPTcgcHN5PTEgcHN5X3JkPTEuMDA6MC4wMCBtaXhlZF9yZWY9MCBtZV9yYW5nZT0xNiBjaHJvbWFfbWU9MSB0cmVsbGlzPTEgOHg4ZGN0PTAgY3FtPTAgZGVhZHpvbmU9MjEsMTEgZmFzdF9wc2tpcD0xIGNocm9tYV9xcF9vZmZzZXQ9LTIgdGhyZWFkcz0xIGxvb2thaGVhZF90aHJlYWRzPTEgc2xpY2VkX3RocmVhZHM9MCBucj0wIGRlY2ltYXRlPTEgaW50ZXJsYWNlZD0wIGJsdXJheV9jb21wYXQ9MCBjb25zdHJhaW5lZF9pbnRyYT0wIGJmcmFtZXM9MCB3ZWlnaHRwPTAga2V5aW50PTI1MCBrZXlpbnRfbWluPTEgc2NlbmVjdXQ9NDAgaW50cmFfcmVmcmVzaD0wIHJjX2xvb2thaGVhZD00MCByYz1jcmYgbWJ0cmVlPTEgY3JmPTIzLjAgcWNvbXA9MC42MCBxcG1pbj0wIHFwbWF4PTY5IHFwc3RlcD00IGlwX3JhdGlvPTEuNDAgYXE9MToxLjAwAIAAAAAOZYiEBb///w9FAAFPf4AAAAAFQZogFfU=";
+  var NOSLEEP_WEBM_SRC = "data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQJChYECGFOAZwEAAAAAAAINEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHWTbuMU6uEElTDZ1OsggEyTbuMU6uEHFO7a1OsggH37AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsCrXsYMPQkBNgIxMYXZmNjMuMS4xMDFXQYxMYXZmNjMuMS4xMDFEiYhAn0AAAAAAABZUrmvXrgEAAAAAAABO14EBc8WIuj/WS2ionOGcgQAitZyDdW5kiIEAhoVWX1ZQOIOBASPjg4Q7msoA4JCwgQS6gQSagQJVsIRVuYEBVe6BAOwBAAAAAAAAAgAAElTDZ/pzc59jwIBnyJlFo4dFTkNPREVSRIeMTGF2ZjYzLjEuMTAxc3PVY8CLY8WIuj/WS2ionOFnyKBFo4dFTkNPREVSRIeTTGF2YzYzLjEuMTAxIGxpYnZweGfIoUWjiERVUkFUSU9ORIeTMDA6MDA6MDIuMDAwMDAwMDAwAB9DtnXB54EAo6KBAACAEAIAnQEqBAAEAAvHCIWFiJmEiD+CAAwNYAD+5rUAo5iBA+gAsQEALxH8ABgAMD/0DAAAAP7mtQAcU7trkbuPs4EAt4r3gQHxggGx8IED";
+
+  function startNoSleepVideo() {
+    if (noSleepVideo) {
+      if (noSleepVideo.paused) {
+        var prev = noSleepVideo.play();
+        if (prev && typeof prev.catch === "function") prev.catch(function () {});
+      }
+      return;
+    }
+    var v = document.createElement("video");
+    if (typeof v.canPlayType !== "function") return;
+    var src = "";
+    if (v.canPlayType("video/mp4")) src = NOSLEEP_MP4_SRC;
+    else if (v.canPlayType("video/webm")) src = NOSLEEP_WEBM_SRC;
+    if (!src) return;
+    v.muted = true;
+    v.loop = true;
+    v.playsInline = true;
+    v.setAttribute("playsinline", "");
+    v.setAttribute("webkit-playsinline", "");
+    v.setAttribute("aria-hidden", "true");
+    v.setAttribute("tabindex", "-1");
+    var s = v.style;
+    s.position = "fixed";
+    s.left = "0";
+    s.bottom = "0";
+    s.width = "1px";
+    s.height = "1px";
+    s.opacity = "0.01";
+    s.pointerEvents = "none";
+    s.zIndex = "-1";
+    v.src = src;
+    (document.body || document.documentElement).appendChild(v);
+    var p = v.play();
+    if (p && typeof p.catch === "function") p.catch(function () {});
+    noSleepVideo = v;
+  }
+
+  function stopNoSleepVideo() {
+    if (!noSleepVideo) return;
+    var v = noSleepVideo;
+    noSleepVideo = null;
+    try { v.pause(); } catch (e) { /* ignore */ }
+    v.removeAttribute("src");
+    try { v.load(); } catch (e) { /* ignore */ }
+    if (v.parentNode) v.parentNode.removeChild(v);
+  }
+
   function isScreenWakeLockSupported() {
     return "wakeLock" in navigator && navigator.wakeLock && typeof navigator.wakeLock.request === "function";
   }
@@ -2091,7 +2145,11 @@
   }
 
   function requestScreenWakeLock() {
-    if (!isScreenWakeLockSupported() || screenWakeLock) return;
+    if (!isScreenWakeLockSupported()) {
+      startNoSleepVideo();
+      return;
+    }
+    if (screenWakeLock) return;
     navigator.wakeLock.request("screen").then(function (sentinel) {
       if (screenWakeLock) {
         releaseWakeLockSentinel(sentinel);
@@ -2107,10 +2165,12 @@
   }
 
   function releaseScreenWakeLock() {
-    if (!screenWakeLock) return;
-    var sentinel = screenWakeLock;
-    screenWakeLock = null;
-    releaseWakeLockSentinel(sentinel);
+    if (screenWakeLock) {
+      var sentinel = screenWakeLock;
+      screenWakeLock = null;
+      releaseWakeLockSentinel(sentinel);
+    }
+    stopNoSleepVideo();
   }
 
   function syncScreenWakeLock() {
