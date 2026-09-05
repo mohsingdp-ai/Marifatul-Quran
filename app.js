@@ -781,6 +781,41 @@
     return out;
   }
 
+  /**
+   * The start/end controls for one ayah. Times can be typed, or taken from wherever the
+   * recording currently sits — which is how this is meant to be used: listen, stop on the
+   * boundary, press the clock. "hear" plays that stretch back so it can be checked.
+   *
+   * The end box holds the next ayah's start, because that is the same instant. Editing it
+   * moves that one boundary, and the row below shows the move too.
+   */
+  function ayahTimingEditorHtml(timings, key, ayahNumber, nextAyahNumber) {
+    var start = ayahExactStart(timings, ayahNumber);
+    var end = ayahEndTime(timings, ayahNumber, nextAyahNumber);
+    var edits = rukuEdits(key) || {};
+    var startEdited = editedStart(key, ayahNumber) !== null;
+    var endEdited = nextAyahNumber == null
+      ? typeof edits.trimEnd === "number"
+      : editedStart(key, nextAyahNumber) !== null;
+    var CLOCK = "\u23F1";
+    function field(kind, value, isEdited, label) {
+      return "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
+        "<span class=\"tm-label\">" + label + "</span>" +
+        "<input type=\"text\" class=\"tm-input\" data-field=\"" + kind + "\" " +
+          "inputmode=\"decimal\" spellcheck=\"false\" value=\"" + formatTimeInput(value) + "\" />" +
+        "<button type=\"button\" class=\"tm-now\" data-field=\"" + kind + "\" " +
+          "title=\"Use the current playback position\">" + CLOCK + "</button>" +
+        "</label>";
+    }
+    return "<div class=\"ayat-timing\" data-ayah=\"" + ayahNumber + "\"" +
+        (nextAyahNumber == null ? "" : " data-next=\"" + nextAyahNumber + "\"") + ">" +
+      field("s", start, startEdited, "start") +
+      field("e", end, endEdited, nextAyahNumber == null ? "end (ruku)" : "end") +
+      "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah from start to end\">hear</button>" +
+      "<button type=\"button\" class=\"tm-reset\" title=\"Drop this ayah's correction\">reset</button>" +
+      "</div>";
+  }
+
   function buildAyatRow(item) {
     var row = item.row;
     var entry = getRukuAyat(row);
@@ -809,11 +844,21 @@
     }
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
-    entry.ayahs.forEach(function (a) {
+    // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
+    // than not at all, so its ayat can be placed from scratch.
+    var editTimings = timingEditorEnabled()
+      ? (getRukuTimings(row) || { trim: null, ayahs: [], ends: {} })
+      : null;
+    var editKey = editTimings ? ayatKeyFor(row) : null;
+    entry.ayahs.forEach(function (a, ayahPos) {
       html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         ayahWordsHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
+      if (editTimings) {
+        var following = entry.ayahs[ayahPos + 1];
+        html += ayahTimingEditorHtml(editTimings, editKey, a.n, following ? following.n : null);
+      }
     });
     html += "</div>";
 
@@ -858,9 +903,153 @@
   /* ------------------------------------------------------------------ */
 
   /** timings.js entry for a ruku, or null while it has not been aligned. */
+  /* ------------------------------------------------------------------ */
+  /* Ayah timing editor.                                                  */
+  /*                                                                      */
+  /* One boundary sits between two ayat: where an ayah ends is where the   */
+  /* next one starts, which is why timings.js records starts only. Both    */
+  /* sides are shown so a boundary can be corrected from whichever end is  */
+  /* easier to hear, and either edit moves the same number. The last       */
+  /* ayah's end is the trim end, since nothing follows it.                 */
+  /*                                                                      */
+  /* Corrections live in localStorage while the work is under way and are  */
+  /* written into timings.js by scripts/apply-timing-edits.js. The editor  */
+  /* is for a local run only and never appears on a deployed copy.         */
+  /* ------------------------------------------------------------------ */
+
+  var TIMING_EDITS_KEY = "mq_timing_edits";
+  var TIMING_EDITOR_PREF_KEY = "mq_pref_timing_editor";
+
+  function isLocalRun() {
+    return location.hostname === "localhost" || location.hostname === "127.0.0.1" ||
+      location.hostname === "[::1]" || location.protocol === "file:";
+  }
+
+  function timingEditorEnabled() {
+    if (!isLocalRun()) return false;
+    try {
+      return localStorage.getItem(TIMING_EDITOR_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Parsed once and kept, because getRukuTimings is called on every timeupdate and must not
+  // read and parse storage sixty times a second.
+  var timingEditsCache = null;
+
+  function getTimingEdits() {
+    if (timingEditsCache) return timingEditsCache;
+    try {
+      timingEditsCache = JSON.parse(localStorage.getItem(TIMING_EDITS_KEY) || "{}") || {};
+    } catch (e) {
+      timingEditsCache = {};
+    }
+    return timingEditsCache;
+  }
+
+  function saveTimingEdits(all) {
+    timingEditsCache = all;
+    try {
+      localStorage.setItem(TIMING_EDITS_KEY, JSON.stringify(all));
+    } catch (e) { /* private mode */ }
+  }
+
+  /* Corrections for one ruku: { starts: { "<ayah>": seconds }, trimEnd: seconds }. */
+  function rukuEdits(key) {
+    return getTimingEdits()[key] || null;
+  }
+
+  function editedStart(key, ayahNumber) {
+    var e = rukuEdits(key);
+    return e && e.starts && typeof e.starts[ayahNumber] === "number" ? e.starts[ayahNumber] : null;
+  }
+
+  function setEditedStart(key, ayahNumber, seconds) {
+    var all = getTimingEdits();
+    var forRuku = all[key] || (all[key] = {});
+    var starts = forRuku.starts || (forRuku.starts = {});
+    if (seconds === null) delete starts[ayahNumber];
+    else starts[ayahNumber] = seconds;
+    if (!Object.keys(starts).length) delete forRuku.starts;
+    if (!forRuku.starts && forRuku.trimEnd === undefined) delete all[key];
+    saveTimingEdits(all);
+  }
+
+  function setEditedTrimEnd(key, seconds) {
+    var all = getTimingEdits();
+    var forRuku = all[key] || (all[key] = {});
+    if (seconds === null) delete forRuku.trimEnd;
+    else forRuku.trimEnd = seconds;
+    if (!forRuku.starts && forRuku.trimEnd === undefined) delete all[key];
+    saveTimingEdits(all);
+  }
+
+  function clearRukuEdits(key) {
+    var all = getTimingEdits();
+    delete all[key];
+    saveTimingEdits(all);
+  }
+
+  /**
+   * The shipped timings with corrections laid over them. A corrected start replaces what was
+   * generated, and places an ayah the aligner left out entirely.
+   */
+  function mergeTimingEdits(base, edits) {
+    var startOf = {};
+    if (base && base.ayahs) base.ayahs.forEach(function (pair) { startOf[pair[0]] = pair[1]; });
+    if (edits.starts) {
+      Object.keys(edits.starts).forEach(function (n) { startOf[n] = edits.starts[n]; });
+    }
+    var ayahs = Object.keys(startOf).map(Number).map(function (n) { return [n, startOf[n]]; });
+    ayahs.sort(function (a, b) { return a[1] - b[1]; });   // recitation order, as shipped
+    var trim = base && base.trim ? { start: base.trim.start, end: base.trim.end } : { start: 0, end: 0 };
+    if (typeof edits.trimEnd === "number") trim.end = edits.trimEnd;
+    return { trim: trim, ayahs: ayahs };
+  }
+
+  /** Where an ayah actually starts, or null when nothing places it. */
+  function ayahExactStart(timings, ayahNumber) {
+    var list = (timings && timings.ayahs) || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i][0] === ayahNumber) return list[i][1];
+    }
+    return null;
+  }
+
+  /**
+   * Where an ayah ends: where the next one in the ruku starts. The last ayah runs to the
+   * trim end, past which the recording is closing announcements.
+   */
+  function ayahEndTime(timings, ayahNumber, nextAyahNumber) {
+    if (!timings) return null;
+    if (nextAyahNumber == null) {
+      return timings.trim && typeof timings.trim.end === "number" ? timings.trim.end : null;
+    }
+    return ayahExactStart(timings, nextAyahNumber);
+  }
+
+  /** Accepts plain seconds ("157.5") or "m:ss.ss", which is how the player shows time. */
+  function parseTimeInput(text) {
+    text = String(text == null ? "" : text).trim();
+    if (!text) return null;
+    var clock = text.match(/^(\d+):([0-5]?\d(?:\.\d+)?)$/);
+    if (clock) return Number(clock[1]) * 60 + Number(clock[2]);
+    var n = Number(text);
+    return isFinite(n) && n >= 0 ? n : null;
+  }
+
+  function formatTimeInput(seconds) {
+    return typeof seconds === "number" && isFinite(seconds) ? seconds.toFixed(2) : "";
+  }
+
   function getRukuTimings(row) {
     if (typeof QURAN_TIMINGS === "undefined" || !row) return null;
-    return QURAN_TIMINGS[ayatKeyFor(row)] || null;
+    var key = ayatKeyFor(row);
+    var base = QURAN_TIMINGS[key] || null;
+    if (!isLocalRun()) return base;
+    var edits = getTimingEdits()[key];
+    return edits ? mergeTimingEdits(base, edits) : base;
   }
 
   /**
@@ -1330,6 +1519,7 @@
     wrap.appendChild(speedBtn);
 
     playBtn.addEventListener("click", function () {
+      previewStopAt = null;
       var a = ensureAudioElement();
       if (mqPlayback.activeGlobalIndex === globalIndex && a && !a.paused) {
         a.pause();
@@ -2341,6 +2531,7 @@
     });
 
     a.addEventListener("timeupdate", function () {
+      stopPreviewIfPast(a);
       schedulePersistPlayback();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
@@ -2613,6 +2804,7 @@
    */
   function playFromAyah(globalIndex, ayahNumber) {
     globalIndex = Number(globalIndex);
+    previewStopAt = null;
     var row = data[globalIndex];
     if (!row) return;
     var src = getAudioSrc(row, globalIndex);
@@ -2629,6 +2821,113 @@
       a.currentTime = t;
       a.play().catch(function () { /* autoplay policy */ });
     });
+  }
+
+  /* ---- timing editor interactions ---------------------------------- */
+
+  var previewStopAt = null;
+
+  /** Play just one stretch, so a corrected boundary can be heard rather than trusted. */
+  function previewRange(globalIndex, start, end) {
+    globalIndex = Number(globalIndex);
+    var row = data[globalIndex];
+    if (!row || start == null) return;
+    var src = getAudioSrc(row, globalIndex);
+    if (!src) return;
+    prepareMqTrack(globalIndex, row, src, { skipStoredPosition: true }).then(function () {
+      var a = mqPlayback.el;
+      if (!a) return;
+      a.loop = false;
+      a.currentTime = start;
+      previewStopAt = typeof end === "number" && end > start ? end : null;
+      a.play().catch(function () { /* autoplay policy */ });
+    });
+  }
+
+  function stopPreviewIfPast(a) {
+    if (previewStopAt == null || !a) return;
+    if (a.currentTime >= previewStopAt) {
+      previewStopAt = null;
+      a.pause();
+    }
+  }
+
+  /**
+   * Redraw one ruku's boxes. A single edit shows up twice — as this ayah's end and as the
+   * next one's start — so the whole panel is refreshed rather than the one box that changed.
+   */
+  function refreshTimingEditor(panel, row) {
+    if (!panel) return;
+    var timings = getRukuTimings(row) || { trim: null, ayahs: [] };
+    var key = ayatKeyFor(row);
+    var edits = rukuEdits(key) || {};
+    panel.querySelectorAll(".ayat-timing").forEach(function (box) {
+      var n = Number(box.dataset.ayah);
+      var next = box.dataset.next ? Number(box.dataset.next) : null;
+      var values = { s: ayahExactStart(timings, n), e: ayahEndTime(timings, n, next) };
+      var marked = {
+        s: editedStart(key, n) !== null,
+        e: next == null ? typeof edits.trimEnd === "number" : editedStart(key, next) !== null
+      };
+      box.querySelectorAll(".tm-input").forEach(function (input) {
+        var field = input.dataset.field;
+        if (document.activeElement !== input) input.value = formatTimeInput(values[field]);
+        input.closest(".tm-field").classList.toggle("is-edited", marked[field]);
+      });
+    });
+  }
+
+  function timingContext(el) {
+    var box = el.closest(".ayat-timing");
+    var tr = box ? box.closest("tr.ayat-row[data-ayat-for]") : null;
+    if (!box || !tr) return null;
+    var globalIndex = Number(tr.dataset.ayatFor);
+    var row = data[globalIndex];
+    if (!row) return null;
+    return {
+      box: box,
+      panel: tr,
+      row: row,
+      globalIndex: globalIndex,
+      key: ayatKeyFor(row),
+      ayah: Number(box.dataset.ayah),
+      next: box.dataset.next ? Number(box.dataset.next) : null
+    };
+  }
+
+  /**
+   * Write one edited boundary. The start field is this ayah's own; the end field is the next
+   * ayah's start, or the ruku's trim end when nothing follows.
+   */
+  function applyTimingEdit(ctx, field, seconds) {
+    if (field === "s") setEditedStart(ctx.key, ctx.ayah, seconds);
+    else if (ctx.next == null) setEditedTrimEnd(ctx.key, seconds);
+    else setEditedStart(ctx.key, ctx.next, seconds);
+  }
+
+  function handleTimingEditorClick(target) {
+    var now = target.closest(".tm-now");
+    var hear = target.closest(".tm-hear");
+    var reset = target.closest(".tm-reset");
+    if (!now && !hear && !reset) return false;
+    var ctx = timingContext(target);
+    if (!ctx) return true;
+
+    if (now) {
+      var a = mqPlayback.el;
+      if (!a || Number(mqPlayback.activeGlobalIndex) !== ctx.globalIndex) return true;
+      applyTimingEdit(ctx, now.dataset.field, Number(a.currentTime.toFixed(2)));
+      refreshTimingEditor(ctx.panel, ctx.row);
+      return true;
+    }
+    if (hear) {
+      var t = getRukuTimings(ctx.row);
+      previewRange(ctx.globalIndex, ayahExactStart(t, ctx.ayah), ayahEndTime(t, ctx.ayah, ctx.next));
+      return true;
+    }
+    setEditedStart(ctx.key, ctx.ayah, null);
+    refreshTimingEditor(ctx.panel, ctx.row);
+    return true;
   }
 
   function activateAyatItem(item) {
@@ -3157,6 +3456,7 @@
 
   tbody.addEventListener("click", function (e) {
     if (!e.target.closest) return;
+    if (handleTimingEditorClick(e.target)) return;
     var wordEl = e.target.closest(".ayah-word");
     if (wordEl) {
       openWordFromElement(wordEl);
@@ -3171,6 +3471,22 @@
     if (!btn) return;
     var tr = btn.closest("tr[data-global-index]");
     if (tr) toggleAyat(tr.dataset.globalIndex);
+  });
+
+  tbody.addEventListener("change", function (e) {
+    if (!e.target.closest) return;
+    var input = e.target.closest(".tm-input");
+    if (!input) return;
+    var ctx = timingContext(input);
+    if (!ctx) return;
+    var raw = input.value.trim();
+    var seconds = raw === "" ? null : parseTimeInput(raw);
+    if (raw !== "" && seconds == null) {          // unreadable: put back what was there
+      refreshTimingEditor(ctx.panel, ctx.row);
+      return;
+    }
+    applyTimingEdit(ctx, input.dataset.field, seconds);
+    refreshTimingEditor(ctx.panel, ctx.row);
   });
 
   document.addEventListener("click", function (e) {
@@ -3208,6 +3524,8 @@
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
+  var prefTimingEditor = document.getElementById("pref-timing-editor");
+  var timingEditorGroup = document.getElementById("timing-editor-group");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
@@ -3267,6 +3585,9 @@
 
   function syncSettingsUI() {
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
+    // The timing editor is an authoring aid for a local run; a deployed copy never offers it.
+    if (timingEditorGroup) timingEditorGroup.hidden = !isLocalRun();
+    if (prefTimingEditor) prefTimingEditor.checked = timingEditorEnabled();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
     roleAdminBtn.classList.toggle("active", admin);
@@ -3369,6 +3690,15 @@
   if (prefWordMeanings) {
     prefWordMeanings.addEventListener("change", function () {
       setWordMeaningsEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefTimingEditor) {
+    prefTimingEditor.addEventListener("change", function () {
+      try {
+        localStorage.setItem(TIMING_EDITOR_PREF_KEY, this.checked ? "true" : "false");
+      } catch (e) { /* private mode */ }
       renderTable();
     });
   }

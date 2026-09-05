@@ -263,6 +263,26 @@
           </div>
         </div>
 
+        <!-- Ayah timings (local authoring aid; hidden unless served locally) -->
+        <div class="settings-group" id="timing-editor-group" hidden>
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+            Ayah timings
+          </div>
+          <div class="settings-row">
+            <label class="settings-toggle-label">
+              <span class="settings-toggle-text">Edit ayah start and end</span>
+              <input type="checkbox" id="pref-timing-editor" />
+              <span class="settings-toggle-switch"></span>
+            </label>
+            <p class="settings-hint">
+              Puts a start and end box under every ayah. Type a time, or press the clock to
+              take wherever the recording is now. Corrections are kept in this browser until
+              they are written into timings.js.
+            </p>
+          </div>
+        </div>
+
         <!-- Playback -->
         <div class="settings-group">
           <div class="settings-group-header">

@@ -2034,6 +2034,83 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-outline);
 }
 
+/* Ayah timing editor: a strip under each ayah with where it starts and ends. Left-to-right
+   and in a plain mono face — these are numbers to compare down the column, not prose. A box
+   that has been corrected is marked, so what has been touched is obvious at a glance. */
+.ayat-timing {
+  direction: ltr;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.15rem 0 0.7rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--md-shape-sm, 8px);
+  background: var(--md-surface-container-low);
+  border: 1px solid var(--md-outline-variant);
+}
+
+.tm-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tm-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--md-on-surface-variant);
+}
+
+.tm-input {
+  width: 6.2em;
+  padding: 0.15rem 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  color: var(--md-on-surface);
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 6px;
+}
+
+.tm-input:focus {
+  outline: none;
+  border-color: var(--md-primary);
+}
+
+/* A value that no longer matches what timings.js shipped. */
+.tm-field.is-edited .tm-input {
+  border-color: var(--md-tertiary);
+  color: var(--md-tertiary);
+  font-weight: 600;
+}
+
+.tm-field.is-edited .tm-label {
+  color: var(--md-tertiary);
+}
+
+.ayat-timing button {
+  padding: 0.15rem 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--md-on-surface-variant);
+  background: var(--md-surface);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.ayat-timing button:hover {
+  color: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
+.tm-now {
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
   display: inline-flex;
