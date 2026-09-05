@@ -2007,6 +2007,18 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-on-surface-variant);
 }
 
+/* A one-piece word gets its form on a single line instead of a one-row table, which would
+   only repeat the word above it with an empty meaning cell. */
+.wpop-grammar {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--md-outline-variant);
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 0.72rem;
+  line-height: 1.9;
+  color: var(--md-on-surface-variant);
+}
+
 /* Number, gender, person and root, on their own line under the grammatical name so that
    واحد or جمع is readable at a glance instead of being inferred from the meaning. */
 .wpart-name {

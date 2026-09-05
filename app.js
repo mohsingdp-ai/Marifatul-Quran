@@ -2766,9 +2766,21 @@
     return bits.join(" ");
   }
 
-  /** Nothing to show for a word that is a single piece — it is already whole. */
   function wordPartsHtml(segs) {
-    if (!segs || segs.length < 2) return "";
+    if (!segs || !segs.length) return "";
+
+    // A word that is one piece has nothing to take apart, but its form still matters:
+    // يَكُونَ is واحد where تَكُونُوا۟ is جمع, and without this line nothing says so.
+    if (segs.length === 1) {
+      var lone = [segmentLabel(segs, 0), segmentDetail(segs[0])].filter(Boolean).join(" \u00B7 ");
+      var loneRoot = segs[0][5]
+        ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(segs[0][5]) + "</span>"
+        : "";
+      if (!lone && !loneRoot) return "";
+      return "<div class=\"wpop-grammar\" lang=\"ur\" dir=\"rtl\">" +
+        escapeHtml(lone) + loneRoot + "</div>";
+    }
+
     var rows = "";
     segs.forEach(function (seg, i) {
       var meaning = segmentMeaning(segs, i);
