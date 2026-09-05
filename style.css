@@ -1888,6 +1888,152 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-tertiary);
 }
 
+/* Tappable word inside an ayah: quiet until pointed at, and the affordance never shifts
+   the line — underline only, no background, on hover-capable pointers. */
+.ayah-word {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .ayah-word:hover {
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in srgb, var(--md-primary) 55%, transparent);
+    text-underline-offset: 0.35em;
+  }
+}
+
+/* Meaning popover for a tapped word (quran.com-style: the word, how it is read, what it means). */
+#ayah-word-pop {
+  position: fixed;
+  z-index: 120;
+  min-width: 250px;
+  max-width: min(380px, calc(100vw - 16px));
+  padding: 0.65rem 0.9rem 0.75rem;
+  border-radius: var(--md-shape-md);
+  background: var(--md-surface-container-lowest);
+  box-shadow: var(--md-elevation-3);
+  border: 1px solid var(--md-outline-variant);
+}
+
+.wpop-word {
+  font-family: var(--md-font-arabic);
+  font-size: 1.45rem;
+  line-height: 1.9;
+  color: var(--md-on-surface);
+  text-align: right;
+}
+
+.wpop-translit {
+  font-size: 0.8rem;
+  line-height: 1.1;
+  color: var(--md-on-surface-variant);
+  margin-top: 0.2rem;
+}
+
+.wpop-meaning {
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 1.1rem;
+  line-height: 2;
+  color: var(--md-primary);
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+.wpop-loading {
+  font-size: 0.85rem;
+  color: var(--md-on-surface-variant);
+  margin-top: 0.3rem;
+}
+
+/* How the word breaks apart, as a small table: the piece, what it means, and what it is
+   grammatically. Reading is right-to-left, so the Arabic column lands on the right. A piece
+   with no meaning of its own (ال, or a verb stem whose sense is the word's own) shows a dash
+   rather than an empty cell, so the table never looks like it failed to load. */
+.wpop-parts {
+  width: 100%;
+  margin-top: 0.55rem;
+  border-collapse: collapse;
+  table-layout: auto;
+}
+
+.wpop-parts th {
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 0.68rem;
+  font-weight: 400;
+  line-height: 1.9;
+  color: var(--md-on-surface-variant);
+  text-align: right;
+  white-space: nowrap;
+  padding: 0 0 0.25rem;
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.wpop-parts th + th,
+.wpop-parts td + td {
+  padding-inline-start: 0.55rem;
+}
+
+.wpop-parts td {
+  vertical-align: top;
+  padding: 0.34rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 45%, transparent);
+}
+
+.wpop-parts tr:last-child td {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.wpart-ar {
+  font-family: var(--md-font-arabic);
+  font-size: 1.1rem;
+  line-height: 1.75;
+  color: var(--md-on-surface);
+  white-space: nowrap;
+}
+
+.wpart-ur {
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 0.92rem;
+  line-height: 1.85;
+  color: var(--md-primary);
+}
+
+.wpart-tag {
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 0.72rem;
+  line-height: 1.85;
+  color: var(--md-on-surface-variant);
+}
+
+/* Number, gender, person and root, on their own line under the grammatical name so that
+   واحد or جمع is readable at a glance instead of being inferred from the meaning. */
+.wpart-name {
+  display: block;
+}
+
+.wpart-detail {
+  display: block;
+  font-size: 0.66rem;
+  line-height: 1.75;
+  color: var(--md-outline);
+}
+
+/* The root, kept visually apart from the grammatical name it sits beside. */
+.wpart-root {
+  display: inline-block;
+  margin-inline-start: 0.35rem;
+  font-family: var(--md-font-arabic);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  color: var(--md-tertiary);
+}
+
+.wpart-none {
+  color: var(--md-outline);
+}
+
 /* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
   display: inline-flex;

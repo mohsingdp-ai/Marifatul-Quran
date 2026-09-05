@@ -727,6 +727,37 @@
     return String(n).replace(/\d/g, function (d) { return digits.charAt(Number(d)); });
   }
 
+  /**
+   * Consonant skeleton of one token, for matching our Uthmani text against quran.com's:
+   * both texts carry the same words but can differ in harakat, superscript letters and
+   * pause marks, so only the stripped skeleton is stable across them.
+   */
+  function wordSkeleton(tok) {
+    return tok.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200D]/g, "")
+      .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
+      .trim();
+  }
+
+  /**
+   * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
+   * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
+   * them inside neighbouring words, so they can never be matched to a meaning.
+   */
+  function ayahWordsHtml(text) {
+    var out = "";
+    var wordIndex = 0;
+    text.split(/\s+/).forEach(function (tok) {
+      if (!tok) return;
+      if (wordSkeleton(tok) === "") {
+        out += escapeHtml(tok) + " ";
+        return;
+      }
+      out += "<span class=\"ayah-word\" data-w=\"" + wordIndex + "\">" + escapeHtml(tok) + "</span> ";
+      wordIndex++;
+    });
+    return out;
+  }
+
   function buildAyatRow(item) {
     var row = item.row;
     var entry = getRukuAyat(row);
@@ -758,7 +789,7 @@
     entry.ayahs.forEach(function (a) {
       html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
-        escapeHtml(a.text) +
+        ayahWordsHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
     });
     html += "</div>";
@@ -2579,6 +2610,270 @@
     playFromAyah(tr.dataset.ayatFor, n);
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Word meanings: tap a word in an ayah to see its Urdu meaning.      */
+  /* Data is quran.com's word-by-word API; the service worker's         */
+  /* network-first caching makes an ayah's words reusable offline.       */
+  /* ------------------------------------------------------------------ */
+
+  var ayahWordsCache = {};
+  var wordPopoverEl = null;
+  var wordPopToken = 0;
+
+  function getAyahWords(surahNumber, ayahNumber) {
+    var key = surahNumber + ":" + ayahNumber;
+    if (ayahWordsCache[key]) return Promise.resolve(ayahWordsCache[key]);
+    var url = "https://api.quran.com/api/v4/verses/by_key/" + key +
+      "?words=true&word_fields=text_uthmani,translation&language=ur";
+    return fetch(url).then(function (res) {
+      if (!res.ok) return null;
+      return res.json().then(function (j) {
+        var list = j && j.verse && Array.isArray(j.verse.words)
+          ? j.verse.words.filter(function (w) { return w.char_type_name === "word"; })
+          : null;
+        if (list) ayahWordsCache[key] = list;
+        return list;
+      });
+    }).catch(function () { return null; });
+  }
+
+  /**
+   * Once one word is tapped, the listener plainly wants meanings: quietly warm the rest of
+   * the ruku so later taps answer instantly, one ayah at a time to stay polite to the API.
+   */
+  function prefetchRukuWords(globalIndex) {
+    var row = data[globalIndex];
+    var entry = row ? getRukuAyat(row) : null;
+    if (!entry) return;
+    entry.ayahs.forEach(function (a, i) {
+      setTimeout(function () { getAyahWords(row.surahNumber, a.n); }, i * 300);
+    });
+  }
+
+  function findWordMeaning(words, word) {
+    var target = wordSkeleton(word);
+    for (var i = 0; i < words.length; i++) {
+      if (wordSkeleton(words[i].text_uthmani) === target) return words[i];
+    }
+    return null;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* How a word breaks apart: prefix + stem + suffix, each with its own   */
+  /* Urdu wording where one honestly exists. Segments come from the       */
+  /* Quranic Arabic Corpus (morphology/para-*.json, built by              */
+  /* scripts/build-morphology.js); the Urdu lives in morphology-labels.js.*/
+  /* ------------------------------------------------------------------ */
+
+  var paraMorphology = {};
+
+  function getParaMorphology(para) {
+    if (paraMorphology[para]) return paraMorphology[para];
+    var pending = fetch("morphology/para-" + para + ".json").then(function (res) {
+      return res.ok ? res.json() : null;
+    }).catch(function () { return null; });
+    paraMorphology[para] = pending;
+    return pending;
+  }
+
+  function segmentsJoin(segs) {
+    return segs.map(function (s) { return s[0]; }).join("");
+  }
+
+  /**
+   * The segments of one word. The corpus lists words in the same order as our Uthmani
+   * text for every ayah but 37:130, so position is tried first and the letters confirm
+   * it; when the two disagree the rest of the ayah is searched instead.
+   */
+  function getWordSegments(para, surahNumber, ayahNumber, wordIndex, wordText) {
+    return getParaMorphology(para).then(function (all) {
+      if (!all) return null;
+      var words = all[surahNumber + ":" + ayahNumber];
+      if (!words) return null;
+      var target = wordSkeleton(wordText);
+      var atIndex = words[wordIndex];
+      if (atIndex && wordSkeleton(segmentsJoin(atIndex)) === target) return atIndex;
+      for (var i = 0; i < words.length; i++) {
+        if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
+      }
+      return null;
+    });
+  }
+
+  /**
+   * Which sense of an attached pronoun applies. Hanging off a verb it is the doer, or
+   * what the verb acts on once a doer is already there; off a noun it is the owner;
+   * off a preposition, what the preposition points at.
+   */
+  function pronounSense(segs, index) {
+    var stemPos = "";
+    var stemAt = -1;
+    for (var i = 0; i < segs.length; i++) {
+      if (segs[i][1] === 0) { stemPos = segs[i][2]; stemAt = i; break; }
+    }
+    if (stemPos !== "V") return stemPos === "N" ? "p" : "o";
+    for (var j = stemAt + 1; j < index; j++) {
+      if (segs[j][3] === "PRON") return "o";
+    }
+    return "s";
+  }
+
+  /**
+   * One segment's Urdu meaning, or "" when it honestly has none: ال and the كَ of ذٰلِكَ
+   * are grammar rather than words, and a verb or noun stem carries the verse's own
+   * vocabulary, which the whole-word gloss above already gives.
+   */
+  function segmentMeaning(segs, index) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var seg = segs[index];
+    var role = seg[3] || "";
+    if (labels.noMeaning[role]) return "";
+    if (role === "PRON") {
+      var forms = labels.pronoun[seg[4] || ""];
+      return forms ? forms[pronounSense(segs, index)] : "";
+    }
+    var key = labels.particleKey(seg[0]) + "|" + role;
+    if (seg[1] !== 0) return labels.affix[key] || "";
+    if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || "";
+    return "";
+  }
+
+  /** The short grammatical name under a segment, with its root when it has one. */
+  function segmentLabel(segs, index) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var seg = segs[index];
+    var text = labels.grammar[seg[3] || ""] || labels.posFallback[seg[2]] || "";
+    var extras = String(seg[6] || "").split(",").filter(Boolean).map(function (f) {
+      return labels.extra[f] || "";
+    }).filter(Boolean);
+    if (extras.length) text += " (" + extras.join("\u060C ") + ")";
+    return text;
+  }
+
+  /**
+   * The line under a grammatical name: whether the piece is واحد, تثنیہ or جمع, its gender
+   * and person, and the root it comes from. This is what tells a reader that وا۟ is a plural
+   * "you" and not a singular one — the name "ضمیر" alone never says so.
+   */
+  function segmentDetail(seg) {
+    var labels = window.MQ_MORPH_UR;
+    if (!labels) return "";
+    var bits = [];
+    var pgn = labels.describePgn(seg[4] || "");
+    if (pgn) bits.push(pgn);
+    return bits.join(" ");
+  }
+
+  /** Nothing to show for a word that is a single piece — it is already whole. */
+  function wordPartsHtml(segs) {
+    if (!segs || segs.length < 2) return "";
+    var rows = "";
+    segs.forEach(function (seg, i) {
+      var meaning = segmentMeaning(segs, i);
+      var detail = segmentDetail(seg);
+      var root = seg[5]
+        ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(seg[5]) + "</span>"
+        : "";
+      var under = detail || root
+        ? "<span class=\"wpart-detail\">" + escapeHtml(detail) + root + "</span>"
+        : "";
+      rows += "<tr>" +
+        "<td class=\"wpart-ar\" lang=\"ar\">" + escapeHtml(seg[0]) + "</td>" +
+        "<td class=\"wpart-ur\" lang=\"ur\">" +
+          (meaning ? escapeHtml(meaning) : "<span class=\"wpart-none\">\u2014</span>") +
+        "</td>" +
+        "<td class=\"wpart-tag\" lang=\"ur\">" +
+          "<span class=\"wpart-name\">" + escapeHtml(segmentLabel(segs, i)) + "</span>" + under +
+        "</td>" +
+        "</tr>";
+    });
+    return "<table class=\"wpop-parts\" dir=\"rtl\">" +
+      "<thead><tr><th>\u062C\u0632\u0648</th><th>\u0645\u0639\u0646\u06CC</th><th>\u0642\u0648\u0627\u0639\u062F</th></tr></thead>" +
+      "<tbody>" + rows + "</tbody></table>";
+  }
+
+  function ensureWordPopover() {
+    if (wordPopoverEl) return wordPopoverEl;
+    wordPopoverEl = document.createElement("div");
+    wordPopoverEl.id = "ayah-word-pop";
+    wordPopoverEl.setAttribute("role", "tooltip");
+    wordPopoverEl.hidden = true;
+    document.body.appendChild(wordPopoverEl);
+    return wordPopoverEl;
+  }
+
+  function openWordFromElement(wordEl) {
+    var ayatTr = wordEl.closest("tr.ayat-row[data-ayat-for]");
+    var item = wordEl.closest(".ayat-item");
+    var row = ayatTr ? data[ayatTr.dataset.ayatFor] : null;
+    if (!row || !item) return;
+    openWordMeaning(wordEl, row.para, row.surahNumber, parseInt(item.dataset.ayah, 10));
+    prefetchRukuWords(ayatTr.dataset.ayatFor);
+  }
+
+  function hideWordPopover() {
+    if (wordPopoverEl) wordPopoverEl.hidden = true;
+  }
+
+  function positionWordPopover(pop, wordEl) {
+    var wr = wordEl.getBoundingClientRect();
+    var pr = pop.getBoundingClientRect();
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var left = Math.min(Math.max(8, wr.left + wr.width / 2 - pr.width / 2), vw - pr.width - 8);
+    var top = wr.bottom + pr.height + 12 <= vh ? wr.bottom + 8 : Math.max(8, wr.top - pr.height - 8);
+    pop.style.left = left + "px";
+    pop.style.top = top + "px";
+  }
+
+  function openWordMeaning(wordEl, para, surahNumber, ayahNumber) {
+    var pop = ensureWordPopover();
+    var token = ++wordPopToken;
+    var word = wordEl.textContent.trim();
+    var wordIndex = Number(wordEl.dataset.w);
+
+    // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (\u06DE)
+    // or pause mark into the same token, which the panel never shows.
+    function head() {
+      return "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>";
+    }
+
+    pop.innerHTML = head() + "<div class=\"wpop-loading\">Loading\u2026</div>";
+    pop.hidden = false;
+    positionWordPopover(pop, wordEl);
+
+    Promise.all([
+      getAyahWords(surahNumber, ayahNumber),
+      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word)
+    ]).then(function (results) {
+      if (token !== wordPopToken || pop.hidden) return;
+      var words = results[0];
+      var segs = results[1];
+      var hit = words ? findWordMeaning(words, word) : null;
+      var parts = wordPartsHtml(segs);
+
+      if (!hit && !parts) {
+        pop.innerHTML = head() + "<div class=\"wpop-loading\">Meaning unavailable</div>";
+        positionWordPopover(pop, wordEl);
+        return;
+      }
+
+      var translit = hit && hit.transliteration && hit.transliteration.text
+        ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(hit.transliteration.text) + "</div>"
+        : "";
+      var meaning = hit
+        ? "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
+            escapeHtml((hit.translation && hit.translation.text) || "\u2014") +
+          "</div>"
+        : "";
+
+      pop.innerHTML = head() + translit + meaning + parts;
+      positionWordPopover(pop, wordEl);
+    });
+  }
+
   function syncToolbarTransport() {
     var btn = document.getElementById("toolbar-play-pause-btn");
     var icon = document.getElementById("toolbar-transport-icon");
@@ -2805,6 +3100,11 @@
 
   tbody.addEventListener("click", function (e) {
     if (!e.target.closest) return;
+    var wordEl = e.target.closest(".ayah-word");
+    if (wordEl) {
+      openWordFromElement(wordEl);
+      return;
+    }
     var ayahPlay = e.target.closest(".ayah-play");
     if (ayahPlay) {
       activateAyatItem(ayahPlay);
@@ -2815,6 +3115,16 @@
     var tr = btn.closest("tr[data-global-index]");
     if (tr) toggleAyat(tr.dataset.globalIndex);
   });
+
+  document.addEventListener("click", function (e) {
+    if (!wordPopoverEl || wordPopoverEl.hidden) return;
+    if (e.target.closest && (e.target.closest("#ayah-word-pop") || e.target.closest(".ayah-word"))) return;
+    hideWordPopover();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") hideWordPopover();
+  });
+  window.addEventListener("scroll", function () { hideWordPopover(); }, true);
 
   // GitHub API config (used for file upload)
 
