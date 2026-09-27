@@ -3078,17 +3078,49 @@
 
   /* ------------------------------------------------------------------ */
   /* Word meanings: tap a word in an ayah to see its Urdu meaning.      */
-  /* Data is quran.com's word-by-word API; the service worker's         */
-  /* network-first caching makes an ayah's words reusable offline.       */
+  /* word-meanings/para-*.json ships the transliteration and gloss      */
+  /* locally (scripts/build-word-meanings.js); quran.com's word-by-word */
+  /* API is only a fallback for paras the local file lacks.             */
   /* ------------------------------------------------------------------ */
 
   var ayahWordsCache = {};
+  var paraWordMeanings = {};
   var wordPopoverEl = null;
   var wordPopToken = 0;
 
-  function getAyahWords(surahNumber, ayahNumber) {
+  function getParaWordMeanings(para) {
+    if (paraWordMeanings[para]) return paraWordMeanings[para];
+    var pending = fetch("word-meanings/para-" + para + ".json").then(function (res) {
+      return res.ok ? res.json() : null;
+    }).catch(function () { return null; });
+    paraWordMeanings[para] = pending;
+    return pending;
+  }
+
+  /** The local file as quran.com's shape: text_uthmani, transliteration and translation. */
+  function localWordsToList(rows) {
+    return rows.map(function (w) {
+      return {
+        text_uthmani: w[0],
+        transliteration: w[1] ? { text: w[1] } : null,
+        translation: w[2] ? { text: w[2] } : null
+      };
+    });
+  }
+
+  function getAyahWords(para, surahNumber, ayahNumber) {
     var key = surahNumber + ":" + ayahNumber;
     if (ayahWordsCache[key]) return Promise.resolve(ayahWordsCache[key]);
+    return getParaWordMeanings(para).then(function (all) {
+      var rows = all && all[key];
+      if (!rows) return fetchAyahWords(key);
+      var list = localWordsToList(rows);
+      ayahWordsCache[key] = list;
+      return list;
+    });
+  }
+
+  function fetchAyahWords(key) {
     var url = "https://api.quran.com/api/v4/verses/by_key/" + key +
       "?words=true&word_fields=text_uthmani,translation&language=ur";
     return fetch(url).then(function (res) {
@@ -3112,7 +3144,7 @@
     var entry = row ? getRukuAyat(row) : null;
     if (!entry) return;
     entry.ayahs.forEach(function (a, i) {
-      setTimeout(function () { getAyahWords(row.surahNumber, a.n); }, i * 300);
+      setTimeout(function () { getAyahWords(row.para, row.surahNumber, a.n); }, i * 300);
     });
   }
 
@@ -3338,7 +3370,7 @@
     positionWordPopover(pop, wordEl);
 
     Promise.all([
-      getAyahWords(surahNumber, ayahNumber),
+      getAyahWords(para, surahNumber, ayahNumber),
       getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
       getStemMeanings()
     ]).then(function (results) {
