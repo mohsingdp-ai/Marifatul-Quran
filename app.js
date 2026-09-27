@@ -733,8 +733,10 @@
    * pause marks, so only the stripped skeleton is stable across them.
    */
   function wordSkeleton(tok) {
-    return tok.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200D]/g, "")
+    return tok.replace(/[\u0654\u0655]/g, "\u0621")
+      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF]/g, "")
       .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
+      .replace(/\s+/g, "")
       .trim();
   }
 
@@ -3148,12 +3150,41 @@
     });
   }
 
-  function findWordMeaning(words, word) {
+  /**
+   * The source word for a tapped one. The editions drift apart now and then: a rare word
+   * is spelled differently (ٱفْتَرَىٰهُ against ٱفْتَرَاهُ) or quran.com files two words as
+   * one (إِلْ يَاسِينَ), so the one-letter neighbour at the tapped position, or either half
+   * of a joined entry, still counts as a match.
+   */
+  function findWordMeaning(words, word, wordIndex) {
     var target = wordSkeleton(word);
     for (var i = 0; i < words.length; i++) {
       if (wordSkeleton(words[i].text_uthmani) === target) return words[i];
+      var pieces = words[i].text_uthmani.split(/\s+/);
+      for (var p = 0; p < pieces.length; p++) {
+        if (wordSkeleton(pieces[p]) === target) return words[i];
+      }
     }
+    var atIndex = words[wordIndex];
+    if (atIndex && oneEditApart(wordSkeleton(atIndex.text_uthmani), target)) return atIndex;
     return null;
+  }
+
+  /** True when a and b differ by at most one inserted, dropped or changed letter. */
+  function oneEditApart(a, b) {
+    if (a === b) return true;
+    if (Math.abs(a.length - b.length) > 1) return false;
+    var i = 0;
+    var j = 0;
+    var edits = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] === b[j]) { i++; j++; continue; }
+      if (++edits > 1) return false;
+      if (a.length > b.length) i++;
+      else if (b.length > a.length) j++;
+      else { i++; j++; }
+    }
+    return edits + (a.length - i) + (b.length - j) <= 1;
   }
 
   /* ------------------------------------------------------------------ */
@@ -3377,7 +3408,7 @@
       if (token !== wordPopToken || pop.hidden) return;
       var words = results[0];
       var segs = results[1];
-      var hit = words ? findWordMeaning(words, word) : null;
+      var hit = words ? findWordMeaning(words, word, wordIndex) : null;
       var parts = wordPartsHtml(segs);
 
       if (!hit && !parts) {
