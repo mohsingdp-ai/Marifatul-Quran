@@ -885,6 +885,7 @@ body.has-docked-player {
 }
 
 .toolbar-transport-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -893,6 +894,29 @@ body.has-docked-player {
 
 .toolbar-transport-icon svg {
   display: block;
+}
+
+/* The same buffering spinner on the toolbar's transport button. */
+.btn-toolbar-transport.is-loading {
+  pointer-events: none;
+}
+
+.btn-toolbar-transport.is-loading .toolbar-transport-icon svg {
+  opacity: 0;
+}
+
+.btn-toolbar-transport.is-loading .toolbar-transport-icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  border: 3px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: audio-spin 0.8s linear infinite;
 }
 
 .btn-toolbar-locate {
@@ -2489,12 +2513,12 @@ tr.playing.audio-paused .audio-play-btn {
 .audio-play-btn.is-loading::after {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 20px;
-  height: 20px;
-  margin: -10px 0 0 -10px;
-  border: 3px solid color-mix(in srgb, currentColor 25%, transparent);
+  inset: 0;
+  margin: auto;
+  box-sizing: border-box;
+  width: 28px;
+  height: 28px;
+  border: 3px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
   animation: audio-spin 0.8s linear infinite;
