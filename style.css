@@ -1943,6 +1943,78 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   }
 }
 
+/* Word-by-word mode: the ayah becomes a table of bordered cells, each word over its small
+   grey Urdu meaning. Grey, so the full translation below stays the one teal line. All cells
+   of one ayah share the width of its widest word (--cell, set by sizeGlossCells). Cells
+   overlap by 1px so neighbouring borders read as one line. */
+.ayat-body.has-gloss .ayat-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 0.3rem;
+}
+
+/* Play and ayah number share a line above the table, so the cells get the full width. */
+.ayat-body.has-gloss .ayat-num {
+  margin-inline-start: auto;
+}
+
+.ayah-cells {
+  order: 1;
+  flex-basis: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--cell, 4.5rem), 100%), 1fr));
+  padding: 1px 0 0 1px;
+}
+
+.ayah-cells.is-measuring {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.ayah-cells > [data-w] {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.65rem 0.4rem;
+  margin: -1px 0 0 -1px;
+  border: 1px solid var(--md-outline-variant);
+  font-size: 1.35rem;
+  line-height: 1.9;
+}
+
+.ayah-mark {
+  position: absolute;
+  top: 0.1rem;
+  left: 0.25rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--md-on-surface-variant);
+}
+
+.ayat-body.has-gloss .ayat-translation {
+  order: 2;
+  flex-basis: 100%;
+}
+
+.ayah-gloss {
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 0.8rem;
+  line-height: 1.9;
+  color: var(--md-on-surface-variant);
+  text-align: center;
+  text-align-last: center;
+  width: 100%;
+  max-width: 6rem;
+  border-top: 1px dashed color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
+}
+
+.ayah-gloss:empty {
+  display: none;
+}
+
 /* Meaning popover for a tapped word (quran.com-style: the word, how it is read, what it means). */
 #ayah-word-pop {
   position: fixed;

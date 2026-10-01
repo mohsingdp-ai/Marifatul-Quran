@@ -763,6 +763,59 @@
   }
 
   /*
+   * The Urdu meaning printed under every word, so a reader can follow word by word without
+   * tapping. Opt-in: it roughly doubles the height of each ayah.
+   */
+  var WORD_GLOSS_PREF_KEY = "mq_pref_word_gloss";
+
+  function wordGlossEnabled() {
+    try {
+      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordGlossEnabled(on) {
+    try {
+      localStorage.setItem(WORD_GLOSS_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /** Fill each word's gloss slot from the same data the tap card uses. */
+  function fillWordGlosses(container, row) {
+    var items = container.querySelectorAll(".ayat-item");
+    Array.prototype.forEach.call(items, function (item) {
+      var words = item.querySelectorAll("[data-w]");
+      if (!words.length || !words[0].querySelector(".ayah-gloss")) return;
+      getAyahWords(row.para, row.surahNumber, Number(item.dataset.ayah)).then(function (list) {
+        if (!list) return;
+        Array.prototype.forEach.call(words, function (w) {
+          var hit = findWordMeaning(list, w.firstChild.nodeValue, Number(w.dataset.w));
+          w.querySelector(".ayah-gloss").textContent = (hit && hit.translation && hit.translation.text) || "";
+        });
+        sizeGlossCells(item);
+      });
+    });
+  }
+
+  /**
+   * Every cell in one ayah as wide as its widest word, so the grid reads as a table; the
+   * next ayah gets its own width. Needs layout, so a hidden panel is sized when it opens.
+   */
+  function sizeGlossCells(scope) {
+    var grids = scope.querySelectorAll(".ayah-cells");
+    Array.prototype.forEach.call(grids, function (g) {
+      if (!g.offsetParent) return;
+      g.classList.add("is-measuring");
+      var widest = 0;
+      Array.prototype.forEach.call(g.children, function (c) { widest = Math.max(widest, c.offsetWidth); });
+      g.classList.remove("is-measuring");
+      g.style.setProperty("--cell", Math.ceil(widest) + "px");
+    });
+  }
+
+  /*
    * Maududi's Urdu translation under each ayah. On unless switched off in settings.
    * asset/translations/maududi/para-*.json ships it locally (scripts/build-translations.js);
    * quran.com is only a fallback if that file cannot be loaded.
@@ -830,7 +883,12 @@
    * them inside neighbouring words, so they can never be matched to a meaning.
    */
   function ayahWordsHtml(text) {
-    if (!wordMeaningsEnabled()) return escapeHtml(text);
+    var tap = wordMeaningsEnabled();
+    var gloss = wordGlossEnabled();
+    if (!tap && !gloss) return escapeHtml(text);
+    // Without tapping on, the words still need a wrapper to hang the gloss under.
+    var cls = tap ? "ayah-word" : "gloss-word";
+    if (gloss) return glossCellsHtml(text, cls);
     var out = "";
     var wordIndex = 0;
     text.split(/\s+/).forEach(function (tok) {
@@ -839,10 +897,34 @@
         out += escapeHtml(tok) + " ";
         return;
       }
-      out += "<span class=\"ayah-word\" data-w=\"" + wordIndex + "\">" + escapeHtml(tok) + "</span> ";
+      out += "<span class=\"" + cls + "\" data-w=\"" + wordIndex + "\">" + escapeHtml(tok) + "</span> ";
       wordIndex++;
     });
     return out;
+  }
+
+  /**
+   * Word-by-word grid: one cell per word, its gloss slot filled later. A pause mark is not a
+   * word, so it rides in the corner of the word before it rather than taking a cell.
+   * The word's own text stays the cell's first node — the tap card reads it from there.
+   */
+  function glossCellsHtml(text, cls) {
+    var cells = [];
+    var lead = "";
+    text.split(/\s+/).forEach(function (tok) {
+      if (!tok) return;
+      if (wordSkeleton(tok) === "") {
+        var mark = "<span class=\"ayah-mark\">" + escapeHtml(tok) + "</span>";
+        if (cells.length) cells[cells.length - 1].marks += mark;
+        else lead += mark;
+        return;
+      }
+      cells.push({ tok: tok, marks: "" });
+    });
+    return "<span class=\"ayah-cells\">" + cells.map(function (c, i) {
+      return "<span class=\"" + cls + "\" data-w=\"" + i + "\">" + escapeHtml(c.tok) +
+        (i === 0 ? lead : "") + c.marks + "<span class=\"ayah-gloss\" lang=\"ur\"></span></span>";
+    }).join("") + "</span>";
   }
 
   /**
@@ -902,7 +984,7 @@
       html += "<div class=\"ayat-basmala\" lang=\"ar\">\ufdfd</div>";
     }
 
-    html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
+    html += "<div class=\"ayat-body" + (wordGlossEnabled() ? " has-gloss" : "") + "\" dir=\"rtl\" lang=\"ar\">";
     // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
     // than not at all, so its ayat can be placed from scratch.
     var editTimings = timingEditorEnabled()
@@ -931,6 +1013,7 @@
     td.innerHTML = html;
     tr.appendChild(td);
     fillTranslations(td, row);
+    fillWordGlosses(td, row);
     return tr;
   }
 
@@ -941,6 +1024,7 @@
       var gi = ayatRows[i].dataset.ayatFor;
       var open = isAyatOpen(data[gi]);
       ayatRows[i].hidden = !open;
+      if (open) sizeGlossCells(ayatRows[i]);
       var mainTr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
       if (!mainTr) continue;
       mainTr.classList.toggle("has-ayat-open", open);
@@ -3455,7 +3539,7 @@
   function openWordMeaning(wordEl, para, surahNumber, ayahNumber) {
     var pop = ensureWordPopover();
     var token = ++wordPopToken;
-    var word = wordEl.textContent.trim();
+    var word = wordEl.firstChild.nodeValue.trim();
     var wordIndex = Number(wordEl.dataset.w);
 
     // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (\u06DE)
@@ -3799,6 +3883,7 @@
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
   var prefTranslation = document.getElementById("pref-translation");
+  var prefWordGloss = document.getElementById("pref-word-gloss");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -3862,6 +3947,7 @@
   function syncSettingsUI() {
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
+    if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -3972,6 +4058,17 @@
   if (prefTranslation) {
     prefTranslation.addEventListener("change", function () {
       setTranslationEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { sizeGlossCells(tbody); });
+  }
+
+  if (prefWordGloss) {
+    prefWordGloss.addEventListener("change", function () {
+      setWordGlossEnabled(this.checked);
       renderTable();
     });
   }
