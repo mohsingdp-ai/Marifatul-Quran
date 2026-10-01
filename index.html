@@ -472,11 +472,12 @@
       var headerBtn = document.getElementById("install-header-btn");
       var deferred = null;
       var INSTALLED_KEY = "pwa_installed";
+      // The menu item always stays, so the app can be reinstalled or put on another
+      // device; only the app-bar shortcut goes away once the app is installed.
       function hideInstall() {
-        btn.style.display = "none";
         if (headerWrap) headerWrap.style.display = "none";
       }
-      // Once we know the app is installed, keep the buttons away on later visits too --
+      // Once we know the app is installed, keep the app-bar button away on later visits too --
       // a browser tab does not know it is running beside an installed copy.
       function markInstalled() {
         try { localStorage.setItem(INSTALLED_KEY, "true"); } catch (e) { /* storage off */ }
@@ -495,15 +496,35 @@
         try { localStorage.removeItem(INSTALLED_KEY); } catch (e) { /* storage off */ }
       }
 
+      if (headerBtn) headerBtn.addEventListener("click", function () { btn.click(); });
+
+      btn.addEventListener("click", function () {
+        if (deferred) {
+          deferred.prompt();
+          deferred.userChoice.then(function () { deferred = null; });
+          return;
+        }
+
+        if (isStandalone || rememberedInstalled()) {
+          alert("The app is already installed. Open it from your home screen or app drawer.\n\nTo reinstall, remove it first, then tap Install app again in the browser.");
+          return;
+        }
+
+        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+          alert("To install on iOS:\n\n1. Tap the Share button \u{1F4E4} at the bottom of Safari\n2. Tap \u201CAdd to Home Screen\u201D\n3. Tap \u201CAdd\u201D");
+          return;
+        }
+
+        alert("To install:\n\nIn Chrome: tap the menu (\u22EE) then \u201CAdd to Home Screen\u201D or \u201CInstall app\u201D\nIn Edge: tap the menu then \u201CApps \u2192 Install this site as an app\u201D");
+      });
+
       // Hide install button when running as installed PWA (unless reinstalling)
       if (isStandalone && !isReinstall) {
         markInstalled();
         return;
       }
-      if (rememberedInstalled() && !isReinstall) {
-        hideInstall();
-        return;
-      }
+      if (rememberedInstalled() && !isReinstall) hideInstall();
       // Chrome can say whether this app is installed when the manifest lists itself.
       if (navigator.getInstalledRelatedApps) {
         navigator.getInstalledRelatedApps().then(function (apps) {
@@ -515,6 +536,9 @@
       window.addEventListener("beforeinstallprompt", function (e) {
         e.preventDefault();
         deferred = e;
+        // The browser only offers this when the app is not installed, so an old
+        // "installed" note is stale -- the app was removed since.
+        try { localStorage.removeItem(INSTALLED_KEY); } catch (err) { /* storage off */ }
         // If this is a reinstall flow, auto-trigger the prompt immediately
         if (isReinstall) {
           isReinstall = false;
@@ -541,23 +565,6 @@
         }, 500);
       }
 
-      if (headerBtn) headerBtn.addEventListener("click", function () { btn.click(); });
-
-      btn.addEventListener("click", function () {
-        if (deferred) {
-          deferred.prompt();
-          deferred.userChoice.then(function () { deferred = null; });
-          return;
-        }
-
-        var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        if (isIOS) {
-          alert("To install on iOS:\n\n1. Tap the Share button \u{1F4E4} at the bottom of Safari\n2. Tap \u201CAdd to Home Screen\u201D\n3. Tap \u201CAdd\u201D");
-          return;
-        }
-
-        alert("To install:\n\nIn Chrome: tap the menu (\u22EE) then \u201CAdd to Home Screen\u201D or \u201CInstall app\u201D\nIn Edge: tap the menu then \u201CApps \u2192 Install this site as an app\u201D");
-      });
     })();
   </script>
 </body>
