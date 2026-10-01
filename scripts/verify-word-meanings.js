@@ -22,6 +22,37 @@ const https = require("https");
 const ROOT = path.join(__dirname, "..");
 const OUT_DIR = path.join(ROOT, "asset", "word-meanings");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
+const MORPH_DIR = path.join(ROOT, "asset", "morphology");
+const FIXES = path.join(ROOT, "word-gloss-fixes.csv");
+const LABELS = require("../morphology-labels.js").MQ_MORPH_UR;
+const STEMS = JSON.parse(fs.readFileSync(path.join(ROOT, "stem-meanings.json"), "utf8"));
+
+function readFixes() {
+  if (!fs.existsSync(FIXES)) return {};
+  const out = {};
+  fs.readFileSync(FIXES, "utf8").split(/\r?\n/).slice(1).forEach(function (line) {
+    const c = line.split(",");
+    const urdu = (c.slice(5).join(",") || "").trim();
+    if (urdu) out[c[1] + "|" + c[2]] = urdu;
+  });
+  return out;
+}
+
+function corpusGloss(segs) {
+  if (!segs) return "";
+  const words = [];
+  for (const s of segs) {
+    const role = s[3] || "";
+    if (LABELS.noMeaning[role]) continue;
+    if (role === "PRON" || (s[1] === 0 && s[2] === "V")) return "";
+    const key = LABELS.particleKey(s[0]) + "|" + role;
+    const m = s[1] !== 0 ? LABELS.affix[key]
+      : LABELS.particle[key] || STEMS[s[0] + "|" + (s[2] || "") + "|" + role];
+    if (!m) return "";
+    words.push(m);
+  }
+  return words.join(" ");
+}
 
 const args = process.argv.slice(2);
 const liveAt = args.indexOf("--live");
@@ -82,17 +113,22 @@ function oneEditApart(a, b) {
   return edits + (a.length - i) + (b.length - j) <= 1;
 }
 
-/** One source word as the build stored it. */
-function sourceTriple(w) {
+/** One source word as the build stored it, with fixes and corpus gloss overlay applied. */
+function sourceTriple(w, key, i, segs, fixes) {
+  const fix = fixes[key + "|" + (i + 1)];
+  const raw = ((w.translation && w.translation.text) || "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s,،]+|[\s,،]+$/g, "");
   return [
     w.text_uthmani || "",
     (w.transliteration && w.transliteration.text) || "",
-    (w.translation && w.translation.text) || ""
+    fix || raw || corpusGloss(segs && segs[i])
   ];
 }
 
-function sourceWords(verse) {
-  return (verse.words || []).filter(function (w) { return w.char_type_name === "word"; }).map(sourceTriple);
+function sourceWords(verse, key, segs, fixes) {
+  return (verse.words || []).filter(function (w) { return w.char_type_name === "word"; })
+    .map(function (w, i) { return sourceTriple(w, key, i, segs, fixes); });
 }
 
 function getJson(url) {
@@ -123,6 +159,15 @@ async function main() {
     files[p] = JSON.parse(fs.readFileSync(f, "utf8"));
   }
 
+  const fixes = readFixes();
+  const morphFiles = {};
+  function morphOf(p) {
+    if (morphFiles[p]) return morphFiles[p];
+    const f = path.join(MORPH_DIR, "para-" + p + ".json");
+    if (!fs.existsSync(f)) return null;
+    return (morphFiles[p] = JSON.parse(fs.readFileSync(f, "utf8")));
+  }
+
   const surahCache = {};
   function surahOf(n) {
     const f = path.join(CACHE_DIR, n + ".json");
@@ -140,6 +185,7 @@ async function main() {
   const mismatchAyat = [];
   const unmatchedByAyah = [];
   const liveSample = [];
+  const keyToPara = {};
 
   for (const row of data) {
     const entry = verses[row.para + "|" + row.rukuInPara];
@@ -149,11 +195,14 @@ async function main() {
 
     for (const ayah of entry.ayahs) {
       const key = row.surahNumber + ":" + ayah.n;
+      keyToPara[key] = row.para;
       ayatChecked++;
       const local = files[row.para] && files[row.para][key];
       const verse = (surah.verses || []).find(function (v) { return v.verse_key === key; });
       if (!verse) { fail(key, "no source verse in cache"); continue; }
-      const src = sourceWords(verse);
+      const morph = morphOf(row.para);
+      const segs = morph && morph[key];
+      const src = sourceWords(verse, key, segs, fixes);
       if (!local) { missingAyat.push(key); continue; }
 
       // 2. the stored data must equal the source exactly
@@ -206,8 +255,9 @@ async function main() {
     for (const s of liveSample) {
       const url = "https://api.quran.com/api/v4/verses/by_key/" + s.key +
         "?words=true&word_fields=text_uthmani,translation&language=ur";
-      const j = await getJson(url);
-      const live = sourceWords(j.verse);
+      const morph = morphOf(keyToPara[s.key] || 1);
+      const segs = morph && morph[s.key];
+      const live = sourceWords(j.verse, s.key, segs, fixes);
       liveChecked++;
       if (JSON.stringify(live) !== JSON.stringify(s.local)) fail(s.key, "differs from LIVE quran.com");
       await new Promise(function (r) { setTimeout(r, 250); });
