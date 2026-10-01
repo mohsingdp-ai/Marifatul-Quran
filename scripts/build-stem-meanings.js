@@ -23,6 +23,21 @@ const https = require("https");
 const ROOT = path.join(__dirname, "..");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
 const OUT = path.join(ROOT, "stem-meanings.json");
+const WORD_MEANINGS = path.join(ROOT, "asset", "word-meanings");
+const FIXES = path.join(ROOT, "stem-meaning-fixes.tsv");
+
+/**
+ * The corrected whole-word glosses (quran.com plus word-gloss-fixes.csv), built by
+ * scripts/build-word-meanings.js. Harvesting from these instead of the raw API keeps a fixed
+ * word's mistake from coming back as a stem meaning. Run build-word-meanings.js first.
+ */
+function correctedGlosses() {
+  const all = {};
+  fs.readdirSync(WORD_MEANINGS).forEach(function (f) {
+    Object.assign(all, JSON.parse(fs.readFileSync(path.join(WORD_MEANINGS, f), "utf8")));
+  });
+  return all;
+}
 const SURAHS = 114;
 
 function getJson(url) {
@@ -111,6 +126,7 @@ function commonest(byGloss) {
 
 async function main() {
   const corpus = readCorpusWords();
+  const corrected = correctedGlosses();
 
   // Stems that need a meaning: the ones sitting inside a longer word.
   const wanted = {};
@@ -145,7 +161,8 @@ async function main() {
         if (segs.length !== 1) return;          // a word that is nothing but its stem
         const seg = segs[0];
         if (seg.isAffix) return;
-        const gloss = ((w.translation || {}).text || "").trim();
+        const fixed = (corrected[verse.verse_key] || [])[i];
+        const gloss = (fixed ? fixed[2] : ((w.translation || {}).text || "")).trim();
         if (!gloss || gloss === "-") return;
         const f = byForm[stemKey(seg)] || (byForm[stemKey(seg)] = {});
         f[gloss] = (f[gloss] || 0) + 1;
@@ -167,6 +184,18 @@ async function main() {
     if (l) { out[key] = commonest(l); viaLemma++; }
   });
 
+  // Hand-checked meanings win: a harvested gloss often comes from another form of the word
+  // (singular for plural, past for command), and only a fix list can say which.
+  let fixed = 0;
+  if (fs.existsSync(FIXES)) {
+    fs.readFileSync(FIXES, "utf8").split(/\r?\n/).slice(1).forEach(function (line) {
+      const c = line.split("\t");
+      if (c.length < 2 || !c[1].trim()) return;
+      out[c[0]] = c[1].trim();
+      fixed++;
+    });
+  }
+
   fs.writeFileSync(OUT, JSON.stringify(out));
   const bytes = fs.statSync(OUT).size;
   console.log("");
@@ -176,6 +205,7 @@ async function main() {
   console.log("  matched by lemma:    " + viaLemma);
   console.log("  total:               " + Object.keys(out).length +
     "  (" + (100 * Object.keys(out).length / Object.keys(wanted).length).toFixed(0) + "%)");
+  console.log("  from fixes tsv:      " + fixed);
   console.log("stem-meanings.json:    " + (bytes / 1024).toFixed(0) + " KB");
 }
 

@@ -3515,21 +3515,35 @@
   }
 
   /**
-   * Which sense of an attached pronoun applies. Hanging off a verb it is the doer, or
-   * what the verb acts on once a doer is already there; off a noun it is the owner;
-   * off a preposition, what the preposition points at.
+   * Which sense of an attached pronoun applies. Off a noun it is the owner; off a
+   * preposition, what the preposition points at. Off a verb it is the doer only when it is
+   * the verb's own subject ending — the first one, agreeing with the verb's person and
+   * number, on a form that spells its subject out (كَفَرُ+وا۟). Otherwise it is what the verb
+   * acts on: the هُمْ of جَآءَ+هُمْ, the نَا of ٱهْدِ+نَا.
    */
   function pronounSense(segs, index) {
-    var stemPos = "";
+    var stem = null;
     var stemAt = -1;
     for (var i = 0; i < segs.length; i++) {
-      if (segs[i][1] === 0) { stemPos = segs[i][2]; stemAt = i; break; }
+      if (segs[i][1] === 0) { stem = segs[i]; stemAt = i; break; }
     }
-    if (stemPos !== "V") return stemPos === "N" ? "p" : "o";
+    if (!stem || stem[2] !== "V") return stem && stem[2] === "N" ? "p" : "o";
     for (var j = stemAt + 1; j < index; j++) {
       if (segs[j][3] === "PRON") return "o";
     }
-    return "s";
+    return isSubjectEnding(stem[3], stem[4] || "", segs[index][4] || "") ? "s" : "o";
+  }
+
+  /** "3MP" vs "3P": same person and number, and same gender where both name one. */
+  function isSubjectEnding(tense, verbPgn, pronPgn) {
+    if (!verbPgn || !pronPgn) return false;
+    // These forms carry their subject in the stem or a prefix, never in an ending.
+    if (verbPgn === "3MS" || verbPgn === "3FS") return false;
+    if (tense !== "PERF" && (verbPgn === "1S" || verbPgn === "1P" || verbPgn === "2MS")) return false;
+    if (verbPgn.charAt(0) !== pronPgn.charAt(0) || verbPgn.slice(-1) !== pronPgn.slice(-1)) return false;
+    var vg = verbPgn.length === 3 ? verbPgn.charAt(1) : "";
+    var pg = pronPgn.length === 3 ? pronPgn.charAt(1) : "";
+    return !vg || !pg || vg === pg;
   }
 
   /**
