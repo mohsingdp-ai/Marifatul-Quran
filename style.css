@@ -1924,6 +1924,34 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-primary);
 }
 
+/* Admin-only "copy AI prompt" controls: the ruku one sits at the end of the panel header,
+   the ayah one beside the play button (sharing its look). Both turn teal once copied. */
+.ayat-head .ayat-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-inline-start: auto;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: 999px;
+  background: none;
+  color: var(--md-on-surface-variant);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  cursor: pointer;
+}
+
+.ayat-head .ayat-prompt svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.ayat-prompt.is-copied {
+  color: var(--md-primary);
+  border-color: var(--md-primary);
+}
+
 .ayat-item.is-reciting .ayah-play {
   color: var(--md-tertiary);
 }

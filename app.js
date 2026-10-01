@@ -978,6 +978,10 @@
           row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
         "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
         (toCheck ? "<span class=\"ayat-head-check\">" + toCheck + " to check</span>" : "") +
+        (isAdmin()
+          ? "<button type=\"button\" class=\"ayat-prompt\" title=\"Copy an AI grammar prompt for this ruku\">" +
+            COPY_SVG + "<span>AI prompt</span></button>"
+          : "") +
       "</div>";
 
     if (entry.showBasmala) {
@@ -992,9 +996,13 @@
       : null;
     var editKey = editTimings ? ayatKeyFor(row) : null;
     var showTranslation = translationEnabled();
+    var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        (admin
+          ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
+          : "") +
         ayahWordsHtml(a.text) +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>" +
         (showTranslation
@@ -3388,16 +3396,121 @@
    */
   function getWordSegments(para, surahNumber, ayahNumber, wordIndex, wordText) {
     return getParaMorphology(para).then(function (all) {
-      if (!all) return null;
-      var words = all[surahNumber + ":" + ayahNumber];
-      if (!words) return null;
-      var target = wordSkeleton(wordText);
-      var atIndex = words[wordIndex];
-      if (atIndex && wordSkeleton(segmentsJoin(atIndex)) === target) return atIndex;
-      for (var i = 0; i < words.length; i++) {
-        if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
+      return all ? findWordSegments(all[surahNumber + ":" + ayahNumber], wordIndex, wordText) : null;
+    });
+  }
+
+  function findWordSegments(words, wordIndex, wordText) {
+    if (!words) return null;
+    var target = wordSkeleton(wordText);
+    var atIndex = words[wordIndex];
+    if (atIndex && wordSkeleton(segmentsJoin(atIndex)) === target) return atIndex;
+    for (var i = 0; i < words.length; i++) {
+      if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
+    }
+    return null;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Admin: copy a ready-made prompt for any AI chat, asking for a word- */
+  /* by-word grammar lesson on one ayah or the whole ruku. It carries    */
+  /* our own text, Maududi's translation, word meanings and corpus tags, */
+  /* so the AI checks and expands our data instead of recalling it.      */
+  /* ------------------------------------------------------------------ */
+
+  var COPY_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+
+  /** "ذَٰ (N DEM MS) + لِ (P DIST)", with the root where the corpus gives one. */
+  function segmentsLine(segs) {
+    return segs.map(function (s) {
+      var tags = [s[2], s[3], s[4]].filter(Boolean).join(" ");
+      return s[0] + " (" + tags + (s[5] ? ", root " + s[5] : "") + ")";
+    }).join(" + ");
+  }
+
+  function buildLlmPrompt(row, ayahs) {
+    var whole = ayahs.length > 1;
+    return Promise.all([
+      getParaTranslation(row.para),
+      getParaMorphology(row.para),
+      Promise.all(ayahs.map(function (a) { return getAyahWords(row.para, row.surahNumber, a.n); }))
+    ]).then(function (r) {
+      var tr = r[0] || {};
+      var morph = r[1] || {};
+      var ref = row.surah + " " + row.surahNumber + ":" + ayahs[0].n +
+        (whole ? "\u2013" + ayahs[ayahs.length - 1].n : "") +
+        " (Para " + row.para + ", Ruku " + String(rukuDisplay(row)).replace(/^R/, "") + ")";
+
+      var body = ayahs.map(function (a, i) {
+        var key = row.surahNumber + ":" + a.n;
+        var list = r[2][i] || [];
+        var n = 0;
+        var lines = [];
+        a.text.split(/\s+/).forEach(function (tok) {
+          if (!tok || wordSkeleton(tok) === "") return;
+          var hit = findWordMeaning(list, tok, n);
+          var segs = findWordSegments(morph[key], n, tok);
+          n++;
+          lines.push(n + ". " + tok +
+            " \u2014 " + ((hit && hit.translation && hit.translation.text) || "?") +
+            (segs ? " \u2014 " + segmentsLine(segs) : ""));
+        });
+        return "Ayah " + key + "\n" +
+          "Arabic: " + a.text + "\n" +
+          "Maududi: " + (tr[key] || "?") + "\n" +
+          "Words:\n" + lines.join("\n");
+      }).join("\n\n");
+
+      return [
+        "You are a teacher of Quranic Arabic grammar (\u0635\u0631\u0641 \u0648 \u0646\u062d\u0648) for Urdu-speaking students.",
+        "",
+        "Below is " + ref + ". For " + (whole ? "each ayah" : "the ayah") + " I give the Arabic, Maulana Maududi's Urdu",
+        "translation, and our word list with each word's Urdu meaning and its pieces with",
+        "grammar tags.",
+        "",
+        "Sources — follow them, do not correct them:",
+        "- Urdu word meanings: our word-by-word translation is the reference. Use each",
+        "  word's meaning exactly as given in the \u0644\u0641\u0638\u06cc \u0645\u0639\u0646\u06cc column. Only where it shows",
+        "  \"?\" write your own and mark it (your wording).",
+        "- Word splits and grammar: the Quranic Arabic Corpus (corpus.quran.com). Keep its",
+        "  split and tags, and explain them in Urdu. Use the corpus for anything our tags",
+        "  leave out (case, \u0628\u0627\u0628, mood, role in the sentence).",
+        "- Whole-ayah translation: Maulana Maududi, exactly as given.",
+        "",
+        "For " + (whole ? "every ayah" : "the ayah") + " give:",
+        "1. A word-by-word table:",
+        "   \u0644\u0641\u0638 | \u062a\u0644\u0641\u0638 | \u0644\u0641\u0638\u06cc \u0645\u0639\u0646\u06cc | \u0645\u0627\u062f\u06c1 (root) | \u0642\u0633\u0645 (\u0627\u0633\u0645/\u0641\u0639\u0644/\u062d\u0631\u0641) |",
+        "   \u0635\u0631\u0641 (\u0628\u0627\u0628\u060c \u0635\u06cc\u063a\u06c1\u060c \u062c\u0646\u0633\u060c \u0639\u062f\u062f\u060c \u062d\u0627\u0644\u062a) | \u0646\u062d\u0648 (\u0645\u0628\u062a\u062f\u0627\u060c \u062e\u0628\u0631\u060c \u0641\u0627\u0639\u0644\u060c \u0645\u0641\u0639\u0648\u0644\u060c \u062c\u0627\u0631 \u0645\u062c\u0631\u0648\u0631\u2026)",
+        "2. \u062a\u0631\u06a9\u06cc\u0628 of the whole ayah in 2\u20134 lines.",
+        "3. A short note on any word whose form or meaning is unusual.",
+        "",
+        whole
+          ? "At the end, list the roots that repeat in this ruku, with their meanings."
+          : "At the end, list each root used, with its basic meaning.",
+        "",
+        "Rules: answer in Urdu, write Arabic terms in Arabic script, keep the Arabic exactly",
+        "as given, no tafseer beyond grammar, and say \"not sure\" rather than guess.",
+        "",
+        "--- Data ---",
+        body
+      ].join("\n");
+    });
+  }
+
+  function copyLlmPrompt(btn) {
+    var tr = btn.closest("tr.ayat-row[data-ayat-for]");
+    var row = tr && data[tr.dataset.ayatFor];
+    var entry = row && getRukuAyat(row);
+    if (!entry) return;
+    var n = Number(btn.dataset.ayah);
+    var ayahs = n ? entry.ayahs.filter(function (a) { return a.n === n; }) : entry.ayahs;
+    buildLlmPrompt(row, ayahs).then(copyShareCaption).then(function (ok) {
+      if (!ok) {
+        alert("Could not copy. Try again.");
+        return;
       }
-      return null;
+      btn.classList.add("is-copied");
+      setTimeout(function () { btn.classList.remove("is-copied"); }, 1500);
     });
   }
 
@@ -3810,6 +3923,11 @@
   tbody.addEventListener("click", function (e) {
     if (!e.target.closest) return;
     if (handleTimingEditorClick(e.target)) return;
+    var promptBtn = e.target.closest(".ayat-prompt");
+    if (promptBtn) {
+      copyLlmPrompt(promptBtn);
+      return;
+    }
     var wordEl = e.target.closest(".ayah-word");
     if (wordEl) {
       openWordFromElement(wordEl);
