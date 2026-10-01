@@ -6,6 +6,12 @@
  * the uthmani text (for matching the tapped word), its transliteration, and its Urdu
  * gloss — and files them per para the way the app loads morphology.
  *
+ * quran.com leaves some words blank (mostly مِن, مَا, ذٰلِكَ — their meaning folded into a
+ * neighbour). Those are filled from the Quranic Arabic Corpus pieces: particle, affix and
+ * stem wording from morphology-labels.js and stem-meanings.json. Words where that would
+ * read badly (a verb, an attached pronoun) are left blank for word-gloss-fixes.csv, whose
+ * Urdu column wins over everything — add a row there to correct any bad gloss.
+ *
  * Run:  node scripts/build-word-meanings.js
  * Out:  asset/word-meanings/para-<1..30>.json, keyed "<surah>:<ayah>", one [text, translit,
  *       urdu] triple per word in recitation order.
@@ -17,6 +23,43 @@ const https = require("https");
 const ROOT = path.join(__dirname, "..");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
 const OUT_DIR = path.join(ROOT, "asset", "word-meanings");
+const MORPH_DIR = path.join(ROOT, "asset", "morphology");
+const FIXES = path.join(ROOT, "word-gloss-fixes.csv");
+const LABELS = require("../morphology-labels.js").MQ_MORPH_UR;
+const STEMS = JSON.parse(fs.readFileSync(path.join(ROOT, "stem-meanings.json"), "utf8"));
+
+/** "<surah>:<ayah>|<word_no>" -> Urdu, from the hand-checked CSV. */
+function readFixes() {
+  if (!fs.existsSync(FIXES)) return {};
+  const out = {};
+  fs.readFileSync(FIXES, "utf8").split(/\r?\n/).slice(1).forEach(function (line) {
+    const c = line.split(",");
+    const urdu = (c.slice(5).join(",") || "").trim();
+    if (urdu) out[c[1] + "|" + c[2]] = urdu;
+  });
+  return out;
+}
+
+/**
+ * A blank word's Urdu built from its corpus pieces, or "" when a piece has no wording or
+ * the result would mislead: a verb stem's harvested gloss carries someone else's person
+ * and tense, and a pronoun glued on needs Urdu word order the pieces cannot give.
+ */
+function corpusGloss(segs) {
+  if (!segs) return "";
+  const words = [];
+  for (const s of segs) {
+    const role = s[3] || "";
+    if (LABELS.noMeaning[role]) continue;
+    if (role === "PRON" || (s[1] === 0 && s[2] === "V")) return "";
+    const key = LABELS.particleKey(s[0]) + "|" + role;
+    const m = s[1] !== 0 ? LABELS.affix[key]
+      : LABELS.particle[key] || STEMS[s[0] + "|" + (s[2] || "") + "|" + role];
+    if (!m) return "";
+    words.push(m);
+  }
+  return words.join(" ");
+}
 
 function getJson(url) {
   return new Promise(function (resolve, reject) {
@@ -98,8 +141,29 @@ async function main() {
         return [
           w.text_uthmani || "",
           (w.transliteration && w.transliteration.text) || "",
-          (w.translation && w.translation.text) || ""
+          ((w.translation && w.translation.text) || "").replace(/\s+/g, " ").replace(/^[\s,،]+|[\s,،]+$/g, "")
         ];
+      });
+    });
+  });
+
+  const fixes = readFixes();
+  const blanks = [];
+  let filled = 0;
+  let fixed = 0;
+  Object.keys(byPara).forEach(function (para) {
+    const morph = JSON.parse(fs.readFileSync(path.join(MORPH_DIR, "para-" + para + ".json"), "utf8"));
+    byPara[para].forEach(function (k) {
+      (ayat[k] || []).forEach(function (w, i) {
+        const fix = fixes[k + "|" + (i + 1)];
+        if (fix) {
+          w[2] = fix;
+          fixed++;
+        } else if (!w[2]) {
+          w[2] = corpusGloss((morph[k] || [])[i]);
+          if (w[2]) filled++;
+          else blanks.push([para, k, i + 1, w[0], w[1]].join(","));
+        }
       });
     });
   });
@@ -129,6 +193,10 @@ async function main() {
   console.log("ayat with data:  " + Object.keys(ayat).length);
   console.log("para files:      " + written + (missing ? "  (ayat with no source row: " + missing + ")" : ""));
   console.log("total size:      " + (totalBytes / 1048576).toFixed(2) + " MB uncompressed");
+  console.log("from corpus:     " + filled);
+  console.log("from fixes csv:  " + fixed);
+  console.log("still blank:     " + blanks.length + (blanks.length ? "  (add to " + path.basename(FIXES) + ")" : ""));
+  blanks.forEach(function (b) { console.log("  " + b); });
 }
 
 main().catch(function (err) {
