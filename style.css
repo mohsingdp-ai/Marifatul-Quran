@@ -1859,6 +1859,22 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   margin-bottom: 0;
 }
 
+/* Maududi's Urdu translation, on its own line under the Arabic it translates. */
+.ayat-translation {
+  display: block;
+  font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
+  font-size: 1rem;
+  line-height: 2.1;
+  color: var(--md-primary);
+  text-align: right;
+  text-align-last: right;
+  margin-top: 0.15rem;
+}
+
+.ayat-translation:empty {
+  display: none;
+}
+
 /* The ayah being recited right now (set by the timings feature). A wash behind the words
    rather than a colour on them: at this size, recolouring the Arabic changes how the script
    reads, and the point is to say "here", not to restyle the text. */

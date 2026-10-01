@@ -762,6 +762,68 @@
     if (!on) hideWordPopover();
   }
 
+  /*
+   * Maududi's Urdu translation under each ayah. On unless switched off in settings.
+   * asset/translations/maududi/para-*.json ships it locally (scripts/build-translations.js);
+   * quran.com is only a fallback if that file cannot be loaded.
+   */
+  var TRANSLATION_PREF_KEY = "mq_pref_translation";
+  var paraTranslations = {};
+
+  function translationEnabled() {
+    try {
+      return localStorage.getItem(TRANSLATION_PREF_KEY) !== "false";
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setTranslationEnabled(on) {
+    try {
+      localStorage.setItem(TRANSLATION_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  function stripTranslationMarkup(html) {
+    return html.replace(/<sup[^>]*>.*?<\/sup>/g, "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  function fetchParaTranslation(para) {
+    var url = "https://api.quran.com/api/v4/quran/translations/97?fields=verse_key&juz_number=" + para;
+    return fetch(url).then(function (res) { return res.ok ? res.json() : null; }).then(function (j) {
+      if (!j || !Array.isArray(j.translations)) return null;
+      var out = {};
+      j.translations.forEach(function (t) { out[t.verse_key] = stripTranslationMarkup(t.text || ""); });
+      return out;
+    });
+  }
+
+  function getParaTranslation(para) {
+    if (paraTranslations[para]) return paraTranslations[para];
+    var pending = fetch("asset/translations/maududi/para-" + para + ".json").then(function (res) {
+      return res.ok ? res.json() : null;
+    }).catch(function () { return null; }).then(function (local) {
+      return local || fetchParaTranslation(para);
+    }).catch(function () { return null; }).then(function (all) {
+      // Forget a failed load so the next render can try again once back online.
+      if (!all) delete paraTranslations[para];
+      return all;
+    });
+    paraTranslations[para] = pending;
+    return pending;
+  }
+
+  function fillTranslations(container, row) {
+    var slots = container.querySelectorAll(".ayat-translation[data-key]");
+    if (!slots.length) return;
+    getParaTranslation(row.para).then(function (all) {
+      if (!all) return;
+      for (var i = 0; i < slots.length; i++) {
+        slots[i].textContent = all[slots[i].dataset.key] || "";
+      }
+    });
+  }
+
   /**
    * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
    * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
@@ -847,11 +909,16 @@
       ? (getRukuTimings(row) || { trim: null, ayahs: [], ends: {} })
       : null;
     var editKey = editTimings ? ayatKeyFor(row) : null;
+    var showTranslation = translationEnabled();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         ayahWordsHtml(a.text) +
-        "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span></p>";
+        "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>" +
+        (showTranslation
+          ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
+          : "") +
+        "</p>";
       if (editTimings) {
         var following = entry.ayahs[ayahPos + 1];
         html += ayahTimingEditorHtml(editTimings, editKey, a.n, following ? following.n : null);
@@ -863,6 +930,7 @@
 
     td.innerHTML = html;
     tr.appendChild(td);
+    fillTranslations(td, row);
     return tr;
   }
 
@@ -3730,6 +3798,7 @@
   var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
+  var prefTranslation = document.getElementById("pref-translation");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -3792,6 +3861,7 @@
 
   function syncSettingsUI() {
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
+    if (prefTranslation) prefTranslation.checked = translationEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -3895,6 +3965,13 @@
   if (prefWordMeanings) {
     prefWordMeanings.addEventListener("change", function () {
       setWordMeaningsEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefTranslation) {
+    prefTranslation.addEventListener("change", function () {
+      setTranslationEnabled(this.checked);
       renderTable();
     });
   }
