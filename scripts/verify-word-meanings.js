@@ -1,5 +1,5 @@
 /**
- * Verify word-meanings/para-*.json against quran.com's word-by-word data and against
+ * Verify asset/word-meanings/para-*.json against quran.com's word-by-word data and against
  * how the app actually matches a tapped word.
  *
  * Run:  node scripts/verify-word-meanings.js             (local checks)
@@ -20,7 +20,7 @@ const vm = require("vm");
 const https = require("https");
 
 const ROOT = path.join(__dirname, "..");
-const OUT_DIR = path.join(ROOT, "word-meanings");
+const OUT_DIR = path.join(ROOT, "asset", "word-meanings");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
 
 const args = process.argv.slice(2);

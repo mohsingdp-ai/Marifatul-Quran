@@ -8,7 +8,7 @@
  * app already fetches from quran.com.
  *
  * Run:  node scripts/build-morphology.js
- * Out:  morphology/para-<1..30>.json, keyed "<surah>:<ayah>".
+ * Out:  asset/morphology/para-<1..30>.json, keyed "<surah>:<ayah>".
  *
  * Words are stored in recitation order, so the app matches the word a reader tapped by
  * its position in the ayah. That holds for 6235 of the 6236 ayat in verses.js; the app
@@ -21,7 +21,7 @@ const https = require("https");
 const ROOT = path.join(__dirname, "..");
 const SRC_URL = "https://raw.githubusercontent.com/mustafa0x/quran-morphology/master/quran-morphology.txt";
 const CACHE = path.join(ROOT, ".cache", "quran-morphology.txt");
-const OUT_DIR = path.join(ROOT, "morphology");
+const OUT_DIR = path.join(ROOT, "asset", "morphology");
 
 function download(url) {
   return new Promise(function (resolve, reject) {

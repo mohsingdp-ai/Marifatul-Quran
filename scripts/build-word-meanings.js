@@ -7,7 +7,7 @@
  * gloss — and files them per para the way the app loads morphology.
  *
  * Run:  node scripts/build-word-meanings.js
- * Out:  word-meanings/para-<1..30>.json, keyed "<surah>:<ayah>", one [text, translit,
+ * Out:  asset/word-meanings/para-<1..30>.json, keyed "<surah>:<ayah>", one [text, translit,
  *       urdu] triple per word in recitation order.
  */
 const fs = require("fs");
@@ -16,7 +16,7 @@ const https = require("https");
 
 const ROOT = path.join(__dirname, "..");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
-const OUT_DIR = path.join(ROOT, "word-meanings");
+const OUT_DIR = path.join(ROOT, "asset", "word-meanings");
 
 function getJson(url) {
   return new Promise(function (resolve, reject) {

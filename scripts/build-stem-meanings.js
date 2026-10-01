@@ -63,7 +63,7 @@ async function surahWords(n) {
 }
 
 /**
- * The corpus with its lemmas kept, which morphology/para-*.json drops. A lemma is what
+ * The corpus with its lemmas kept, which asset/morphology/para-*.json drops. A lemma is what
  * separates عِجْل "بچھڑا" from عَجِل "جلد بازی": both read عجل once the vowels come off, so
  * matching on letters alone hands the calf the wrong meaning.
  */

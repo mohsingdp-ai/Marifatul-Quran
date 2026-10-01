@@ -3080,7 +3080,7 @@
 
   /* ------------------------------------------------------------------ */
   /* Word meanings: tap a word in an ayah to see its Urdu meaning.      */
-  /* word-meanings/para-*.json ships the transliteration and gloss      */
+  /* asset/word-meanings/para-*.json ships the transliteration and gloss */
   /* locally (scripts/build-word-meanings.js); quran.com's word-by-word */
   /* API is only a fallback for paras the local file lacks.             */
   /* ------------------------------------------------------------------ */
@@ -3092,7 +3092,7 @@
 
   function getParaWordMeanings(para) {
     if (paraWordMeanings[para]) return paraWordMeanings[para];
-    var pending = fetch("word-meanings/para-" + para + ".json").then(function (res) {
+    var pending = fetch("asset/word-meanings/para-" + para + ".json").then(function (res) {
       return res.ok ? res.json() : null;
     }).catch(function () { return null; });
     paraWordMeanings[para] = pending;
@@ -3190,7 +3190,7 @@
   /* ------------------------------------------------------------------ */
   /* How a word breaks apart: prefix + stem + suffix, each with its own   */
   /* Urdu wording where one honestly exists. Segments come from the       */
-  /* Quranic Arabic Corpus (morphology/para-*.json, built by              */
+  /* Quranic Arabic Corpus (asset/morphology/para-*.json, built by        */
   /* scripts/build-morphology.js); the Urdu lives in morphology-labels.js.*/
   /* ------------------------------------------------------------------ */
 
@@ -3198,7 +3198,7 @@
 
   function getParaMorphology(para) {
     if (paraMorphology[para]) return paraMorphology[para];
-    var pending = fetch("morphology/para-" + para + ".json").then(function (res) {
+    var pending = fetch("asset/morphology/para-" + para + ".json").then(function (res) {
       return res.ok ? res.json() : null;
     }).catch(function () { return null; });
     paraMorphology[para] = pending;
