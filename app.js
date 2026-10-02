@@ -3314,17 +3314,22 @@
    * The source word for a tapped one. The editions drift apart now and then: a rare word
    * is spelled differently (ٱفْتَرَىٰهُ against ٱفْتَرَاهُ) or quran.com files two words as
    * one (إِلْ يَاسِينَ), so the one-letter neighbour at the tapped position, or either half
-   * of a joined entry, still counts as a match.
+   * of a joined entry, still counts as a match. Skeletons repeat within an ayah (مَّن "who"
+   * and مِنۢ "from" are both من), so the match nearest the tapped position wins.
    */
   function findWordMeaning(words, word, wordIndex) {
     var target = wordSkeleton(word);
+    var best = null;
+    var bestDist = Infinity;
     for (var i = 0; i < words.length; i++) {
-      if (wordSkeleton(words[i].text_uthmani) === target) return words[i];
-      var pieces = words[i].text_uthmani.split(/\s+/);
-      for (var p = 0; p < pieces.length; p++) {
-        if (wordSkeleton(pieces[p]) === target) return words[i];
+      var hit = wordSkeleton(words[i].text_uthmani) === target ||
+        words[i].text_uthmani.split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+      if (hit && Math.abs(i - wordIndex) < bestDist) {
+        best = words[i];
+        bestDist = Math.abs(i - wordIndex);
       }
     }
+    if (best) return best;
     var atIndex = words[wordIndex];
     if (atIndex && oneEditApart(wordSkeleton(atIndex.text_uthmani), target)) return atIndex;
     return null;
