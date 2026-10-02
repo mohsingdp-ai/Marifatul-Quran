@@ -782,21 +782,63 @@
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
+  /*
+   * A button on each ayah that turns just that ayah's word meanings on or off, for learning:
+   * hide them, recall each word, then check. Opt-in, so listeners never see the extra button.
+   */
+  var AYAH_GLOSS_SWITCH_PREF_KEY = "mq_pref_ayah_gloss_switch";
+
+  function ayahGlossSwitchEnabled() {
+    try {
+      return localStorage.getItem(AYAH_GLOSS_SWITCH_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setAyahGlossSwitchEnabled(on) {
+    try {
+      localStorage.setItem(AYAH_GLOSS_SWITCH_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
   /** Fill each word's gloss slot from the same data the tap card uses. */
   function fillWordGlosses(container, row) {
-    var items = container.querySelectorAll(".ayat-item");
-    Array.prototype.forEach.call(items, function (item) {
-      var words = item.querySelectorAll("[data-w]");
-      if (!words.length || !words[0].querySelector(".ayah-gloss")) return;
-      getAyahWords(row.para, row.surahNumber, Number(item.dataset.ayah)).then(function (list) {
-        if (!list) return;
-        Array.prototype.forEach.call(words, function (w) {
-          var hit = findWordMeaning(list, w.firstChild.nodeValue, Number(w.dataset.w));
-          w.querySelector(".ayah-gloss").textContent = (hit && hit.translation && hit.translation.text) || "";
-        });
-        sizeGlossCells(item);
-      });
+    Array.prototype.forEach.call(container.querySelectorAll(".ayat-item"), function (item) {
+      fillAyahGlosses(item, row);
     });
+  }
+
+  function fillAyahGlosses(item, row) {
+    var words = item.querySelectorAll("[data-w]");
+    if (!words.length || !words[0].querySelector(".ayah-gloss")) return;
+    getAyahWords(row.para, row.surahNumber, Number(item.dataset.ayah)).then(function (list) {
+      if (!list) return;
+      Array.prototype.forEach.call(words, function (w) {
+        var hit = findWordMeaning(list, w.firstChild.nodeValue, Number(w.dataset.w));
+        w.querySelector(".ayah-gloss").textContent = (hit && hit.translation && hit.translation.text) || "";
+      });
+      sizeGlossCells(item);
+    });
+  }
+
+  /**
+   * One ayah's meanings on or off. Each ayah starts as "Meaning under every word" says;
+   * a switch lasts until the ayat are drawn again.
+   */
+  function toggleAyahGloss(btn) {
+    var item = btn.closest(".ayat-item");
+    var tr = btn.closest("tr[data-ayat-for]");
+    var row = tr && data[tr.dataset.ayatFor];
+    var entry = row && getRukuAyat(row);
+    var n = Number(item.dataset.ayah);
+    var ayah = entry && entry.ayahs.filter(function (a) { return a.n === n; })[0];
+    if (!ayah) return;
+    var on = !item.classList.contains("has-gloss");
+    item.querySelector(".ayah-text").innerHTML = ayahWordsHtml(ayah.text, on);
+    item.classList.toggle("has-gloss", on);
+    btn.setAttribute("aria-pressed", String(on));
+    if (on) fillAyahGlosses(item, row);
   }
 
   /**
@@ -882,9 +924,8 @@
    * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
    * them inside neighbouring words, so they can never be matched to a meaning.
    */
-  function ayahWordsHtml(text) {
+  function ayahWordsHtml(text, gloss) {
     var tap = wordMeaningsEnabled();
-    var gloss = wordGlossEnabled();
     if (!tap && !gloss) return escapeHtml(text);
     // Without tapping on, the words still need a wrapper to hang the gloss under.
     var cls = tap ? "ayah-word" : "gloss-word";
@@ -988,7 +1029,9 @@
       html += "<div class=\"ayat-basmala\" lang=\"ar\">\ufdfd</div>";
     }
 
-    html += "<div class=\"ayat-body" + (wordGlossEnabled() ? " has-gloss" : "") + "\" dir=\"rtl\" lang=\"ar\">";
+    html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
+    var gloss = wordGlossEnabled();
+    var glossSwitch = ayahGlossSwitchEnabled();
     // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
     // than not at all, so its ayat can be placed from scratch.
     var editTimings = timingEditorEnabled()
@@ -998,12 +1041,15 @@
     var showTranslation = translationEnabled();
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
-      html += "<p class=\"ayat-item\" data-ayah=\"" + a.n + "\">" +
+      html += "<p class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        (glossSwitch
+          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + gloss + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
+          : "") +
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
           : "") +
-        ayahWordsHtml(a.text) +
+        "<span class=\"ayah-text\">" + ayahWordsHtml(a.text, gloss) + "</span>" +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>" +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
@@ -1942,6 +1988,7 @@
   var WHATSAPP_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12.04 2.005c-5.52 0-10 4.48-10 10.002 0 1.76.46 3.47 1.34 4.98L2.05 22l5.08-1.34c1.46.8 3.12 1.23 4.91 1.23 5.52 0 10-4.48 10-10.002 0-2.67-1.04-5.18-2.93-7.07a9.95 9.95 0 0 0-7.07-2.893zm.03 17.92c-1.5 0-2.97-.4-4.25-1.15l-.3-.18-3.18.84.85-3.11-.2-.31a7.764 7.764 0 0 1-1.2-4.12c0-4.28 3.47-7.75 7.75-7.75 2.07 0 4.02.81 5.48 2.28a7.684 7.684 0 0 1 2.25 5.47c-.01 4.28-3.48 7.76-7.75 7.76zm4.26-4.51c-.24-.12-1.43-.7-1.66-.78-.22-.08-.39-.12-.56.12-.17.24-.64.78-.79.94-.15.16-.3.18-.54.06-.24-.12-1.02-.37-1.95-1.2-.72-.64-1.2-1.43-1.34-1.67-.15-.24-.02-.37.11-.49.12-.12.24-.27.37-.4.12-.14.16-.24.24-.4.08-.16.04-.31-.02-.43-.06-.12-.53-1.26-.73-1.73-.19-.46-.39-.39-.53-.41h-.45c-.15 0-.4.06-.61.3-.21.24-.81.79-.81 1.92s.83 2.23.94 2.39c.12.16 1.62 2.48 3.93 3.48.55.23.98.37 1.31.47.55.18 1.05.16 1.44.09.44-.07 1.42-.58 1.62-1.14.21-.56.21-1.03.15-1.13-.06-.1-.22-.16-.46-.28z"/></svg>';
   var AYAT_BOOK_SVG = '<svg class="verses-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>';
   var AYAT_CHEVRON_SVG = '<svg class="verses-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
+  var GLOSS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
   var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
@@ -3952,6 +3999,11 @@
       openWordFromElement(wordEl);
       return;
     }
+    var glossBtn = e.target.closest(".ayah-gloss-toggle");
+    if (glossBtn) {
+      toggleAyahGloss(glossBtn);
+      return;
+    }
     var ayahPlay = e.target.closest(".ayah-play");
     if (ayahPlay) {
       activateAyatItem(ayahPlay);
@@ -4021,6 +4073,7 @@
   var prefWordMeanings = document.getElementById("pref-word-meanings");
   var prefTranslation = document.getElementById("pref-translation");
   var prefWordGloss = document.getElementById("pref-word-gloss");
+  var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -4085,6 +4138,7 @@
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
     if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
+    if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -4206,6 +4260,13 @@
   if (prefWordGloss) {
     prefWordGloss.addEventListener("change", function () {
       setWordGlossEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefAyahGlossSwitch) {
+    prefAyahGlossSwitch.addEventListener("change", function () {
+      setAyahGlossSwitchEnabled(this.checked);
       renderTable();
     });
   }

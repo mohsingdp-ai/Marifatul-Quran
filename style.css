@@ -1919,6 +1919,16 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   height: 1em;
 }
 
+/* The words' wrapper is there only so one ayah can be redrawn; it adds no box of its own. */
+.ayah-text {
+  display: contents;
+}
+
+/* Word-meanings switch on each ayah: teal while that ayah shows its meanings. */
+.ayah-gloss-toggle[aria-pressed="true"] {
+  color: var(--md-primary);
+}
+
 .ayah-play:hover {
   background: color-mix(in srgb, var(--md-primary) 12%, transparent);
   color: var(--md-primary);
@@ -1975,7 +1985,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
    grey Urdu meaning. Grey, so the full translation below stays the one teal line. All cells
    of one ayah share the width of its widest word (--cell, set by sizeGlossCells). Cells
    overlap by 1px so neighbouring borders read as one line. */
-.ayat-body.has-gloss .ayat-item {
+.ayat-item.has-gloss {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1983,7 +1993,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 /* Play and ayah number share a line above the table, so the cells get the full width. */
-.ayat-body.has-gloss .ayat-num {
+.ayat-item.has-gloss .ayat-num {
   margin-inline-start: auto;
 }
 
@@ -2022,7 +2032,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-on-surface-variant);
 }
 
-.ayat-body.has-gloss .ayat-translation {
+.ayat-item.has-gloss .ayat-translation {
   order: 2;
   flex-basis: 100%;
 }
@@ -3275,6 +3285,15 @@ tr.playing.audio-paused .audio-play-btn {
 
 .settings-toggle-text {
   flex: 1;
+}
+
+/* A feature's own icon before its name, so the setting and the button it adds look alike. */
+.settings-toggle-icon {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.25em;
+  margin-inline-end: 0.4rem;
+  color: var(--md-primary);
 }
 
 .settings-hint {
