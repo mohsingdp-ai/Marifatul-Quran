@@ -2033,8 +2033,52 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .ayat-item.has-gloss .ayat-translation {
+  order: 3;
+  flex-basis: 100%;
+}
+
+/* Word cards under an ayah: one per word, each laid out like the card a tapped word opens,
+   as many to a row as fit (one on a phone). */
+.wt {
   order: 2;
   flex-basis: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: right;
+  text-align-last: right;
+}
+
+.wt[hidden] {
+  display: none;
+}
+
+.wt-card {
+  min-width: 0;
+  padding: 0.65rem 0.9rem 0.75rem;
+  border-radius: var(--md-shape-md);
+  background: var(--md-surface-container-lowest);
+  border: 1px solid var(--md-outline-variant);
+}
+
+.wt-card .wpop-translit {
+  font-family: var(--md-font-sans, system-ui, sans-serif);
+  text-align: left;
+  text-align-last: left;
+}
+
+/* The ruku list restyles its own table's head and body; a card's parts table sits inside it
+   and must stay a plain table, heading row included. */
+.ruku-table .wt-card .wpop-parts thead {
+  display: table-header-group;
+}
+
+.ruku-table .wt-card .wpop-parts tbody {
+  display: table-row-group;
+  width: auto;
 }
 
 .ayah-gloss {

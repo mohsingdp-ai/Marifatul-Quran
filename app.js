@@ -802,6 +802,65 @@
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
+  /*
+   * A card for every word under each ayah: the word, its meaning, what each of its pieces
+   * means, and each piece's grammar. For study, so opt-in.
+   */
+  var WORD_TABLE_PREF_KEY = "mq_pref_word_table";
+
+  function wordTableEnabled() {
+    try {
+      return localStorage.getItem(WORD_TABLE_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordTableEnabled(on) {
+    try {
+      localStorage.setItem(WORD_TABLE_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /**
+   * Fill each ayah's word cards once the para's word data, grammar and stem meanings are in.
+   */
+  function fillWordTables(container, row, entry) {
+    var slots = container.querySelectorAll(".wt");
+    if (!slots.length) return;
+    Promise.all([getParaMorphology(row.para), getStemMeanings()]).then(function (res) {
+      var morph = res[0] || {};
+      Array.prototype.forEach.call(slots, function (slot) {
+        var n = Number(slot.closest(".ayat-item").dataset.ayah);
+        var ayah = entry.ayahs.filter(function (a) { return a.n === n; })[0];
+        if (!ayah) return;
+        getAyahWords(row.para, row.surahNumber, n).then(function (list) {
+          slot.innerHTML = wordTableRowsHtml(ayah.text, list || [], morph[row.surahNumber + ":" + n]);
+        });
+      });
+    });
+  }
+
+  /** One card per word, laid out like the card a tapped word opens. */
+  function wordTableRowsHtml(text, list, morphWords) {
+    var html = "";
+    var i = 0;
+    text.split(/\s+/).forEach(function (tok) {
+      if (!tok || wordSkeleton(tok) === "") return;
+      var hit = findWordMeaning(list, tok, i);
+      var segs = findWordSegments(morphWords, i, tok);
+      i++;
+      var translit = hit && hit.transliteration && hit.transliteration.text;
+      html += "<div class=\"wt-card\" role=\"listitem\">" +
+        "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(tok) + "</div>" +
+        (translit ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(translit) + "</div>" : "") +
+        "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
+          escapeHtml((hit && hit.translation && hit.translation.text) || "\u2014") + "</div>" +
+        wordPartsHtml(segs) + "</div>";
+    });
+    return html;
+  }
+
   /** Fill each word's gloss slot from the same data the tap card uses. */
   function fillWordGlosses(container, row) {
     Array.prototype.forEach.call(container.querySelectorAll(".ayat-item"), function (item) {
@@ -823,8 +882,8 @@
   }
 
   /**
-   * One ayah's meanings on or off. Each ayah starts as "Meaning under every word" says;
-   * a switch lasts until the ayat are drawn again.
+   * One ayah's word cards, or with no cards its meanings under the words, on or off. Each
+   * ayah starts as the settings say; a switch lasts until the ayat are drawn again.
    */
   function toggleAyahGloss(btn) {
     var item = btn.closest(".ayat-item");
@@ -834,6 +893,12 @@
     var n = Number(item.dataset.ayah);
     var ayah = entry && entry.ayahs.filter(function (a) { return a.n === n; })[0];
     if (!ayah) return;
+    var table = item.querySelector(".wt");
+    if (table) {
+      table.hidden = !table.hidden;
+      btn.setAttribute("aria-pressed", String(!table.hidden));
+      return;
+    }
     var on = !item.classList.contains("has-gloss");
     item.querySelector(".ayah-text").innerHTML = ayahWordsHtml(ayah.text, on);
     item.classList.toggle("has-gloss", on);
@@ -1032,6 +1097,7 @@
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
     var gloss = wordGlossEnabled();
     var glossSwitch = ayahGlossSwitchEnabled();
+    var table = wordTableEnabled();
     // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
     // than not at all, so its ayat can be placed from scratch.
     var editTimings = timingEditorEnabled()
@@ -1041,20 +1107,21 @@
     var showTranslation = translationEnabled();
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
-      html += "<p class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
+      html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         (glossSwitch
-          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + gloss + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
+          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
           : "") +
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
           : "") +
         "<span class=\"ayah-text\">" + ayahWordsHtml(a.text, gloss) + "</span>" +
         "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>" +
+        (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
           : "") +
-        "</p>";
+        "</div>";
       if (editTimings) {
         var following = entry.ayahs[ayahPos + 1];
         html += ayahTimingEditorHtml(editTimings, editKey, a.n, following ? following.n : null);
@@ -1068,6 +1135,7 @@
     tr.appendChild(td);
     fillTranslations(td, row);
     fillWordGlosses(td, row);
+    fillWordTables(td, row, entry);
     return tr;
   }
 
@@ -4074,6 +4142,7 @@
   var prefTranslation = document.getElementById("pref-translation");
   var prefWordGloss = document.getElementById("pref-word-gloss");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
+  var prefWordTable = document.getElementById("pref-word-table");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -4139,6 +4208,7 @@
     if (prefTranslation) prefTranslation.checked = translationEnabled();
     if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
+    if (prefWordTable) prefWordTable.checked = wordTableEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -4267,6 +4337,13 @@
   if (prefAyahGlossSwitch) {
     prefAyahGlossSwitch.addEventListener("change", function () {
       setAyahGlossSwitchEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefWordTable) {
+    prefWordTable.addEventListener("change", function () {
+      setWordTableEnabled(this.checked);
       renderTable();
     });
   }
