@@ -164,6 +164,8 @@ async function main() {
           if (w[2]) filled++;
           else blanks.push([para, k, i + 1, w[0], w[1]].join(","));
         }
+        // "اورنہ" -> "اور نہ". ponytail: would also split a real word like اوراق; none in the data yet.
+        w[2] = w[2].replace(/(^|\s)اور(?=[؀-ۿ])/g, "$1اور ");
       });
     });
   });
