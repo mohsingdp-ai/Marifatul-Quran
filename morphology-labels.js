@@ -74,7 +74,7 @@
     "م|VOC": "اے",
 
     // emphatic nun on a verb
-    "ن|EMPH": "یقیناً"
+    "ن|EMPH": "ضرور"
   };
 
   /*
