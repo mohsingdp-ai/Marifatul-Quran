@@ -30,3 +30,13 @@ test("every word in the Quran finds its own meaning", () => {
     }
   }
 });
+
+test("the one part that carries meaning is the only one picked", () => {
+  const window = { MQ_MORPH_UR: require("../morphology-labels.js").MQ_MORPH_UR };
+  const { soleMeaningPart } = new Function("window", grab("soleMeaningPart") +
+    "return { soleMeaningPart };")(window);
+  const morph = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "asset", "morphology", "para-1.json"), "utf8"));
+  assert.strictEqual(soleMeaningPart(morph["2:7"][1]), 0);    // ٱللَّهُ — one piece
+  assert.strictEqual(soleMeaningPart(morph["1:2"][0]), 1);    // ٱلْ + حَمْدُ
+  assert.strictEqual(soleMeaningPart(morph["2:3"][1]), -1);   // يُؤْمِنُ + ونَ — two carry meaning
+});

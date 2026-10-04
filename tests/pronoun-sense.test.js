@@ -29,3 +29,8 @@ test("an ending the verb acts on is the object", () => {
 test("off a noun the pronoun is the owner", () => {
   assert.strictEqual(sense("2:5", 5), "p");   // رَّبِّ+هِمْ
 });
+
+test("the build keeps case and verb pattern for the grammar line", () => {
+  assert.strictEqual(morph["1:1"][0][1][6], "GEN");          // سْمِ — مجرور
+  assert.strictEqual(morph["2:3"][1][0][6], "VF4,IND");      // يُؤْمِنُ — باب افعال، مرفوع
+});

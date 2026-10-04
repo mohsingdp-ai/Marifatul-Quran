@@ -314,11 +314,34 @@
   /* Fallbacks when a stem carries no role of its own: plain nouns and particles. */
   var POS_FALLBACK = { N: "اسم", P: "حرف", V: "فعل" };
 
-  /* Voice and mood, appended in brackets when present. */
+  /* Voice, mood and case, appended in brackets when present. */
   var EXTRA = {
     PASS: "مجہول",
+    IND: "مرفوع",
     SUBJ: "منصوب",
-    JUS: "مجزوم"
+    JUS: "مجزوم",
+    NOM: "مرفوع",
+    ACC: "منصوب",
+    GEN: "مجرور"
+  };
+
+  /*
+   * The verb pattern (باب) the corpus numbers I–XI, named after its masdar the way Urdu
+   * madrasa grammar does. Form I has several vowel patterns of its own, so it is only
+   * called ثلاثی مجرد.
+   */
+  var VERB_FORM = {
+    VF1: "ثلاثی مجرد",
+    VF2: "باب تفعیل",
+    VF3: "باب مفاعلہ",
+    VF4: "باب افعال",
+    VF5: "باب تفعّل",
+    VF6: "باب تفاعل",
+    VF7: "باب انفعال",
+    VF8: "باب افتعال",
+    VF9: "باب افعلال",
+    VF10: "باب استفعال",
+    VF11: "باب افعیلال"
   };
 
   global.MQ_MORPH_UR = {
@@ -330,6 +353,7 @@
     noMeaning: NO_MEANING,
     describePgn: describePgn,
     posFallback: POS_FALLBACK,
-    extra: EXTRA
+    extra: EXTRA,
+    verbForm: VERB_FORM
   };
 })(this);

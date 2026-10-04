@@ -102,6 +102,9 @@ function packSegment(text, pos, featureStr) {
     else if (f.indexOf("ROOT:") === 0) root = f.slice(5);
     else if (f === "PASS" || f === "ACT_PCPL" || f === "PASS_PCPL" || f === "VN") flags.push(f);
     else if (f.indexOf("MOOD:") === 0) flags.push(f.slice(5));
+    // Case (اعراب) and the verb's pattern (باب), e.g. "GEN" and "VF4" for باب افعال.
+    else if (f === "NOM" || f === "ACC" || f === "GEN") flags.push(f);
+    else if (/^VF:\d+$/.test(f)) flags.push("VF" + f.slice(3));
   });
 
   const out = [text, kind, pos, role, pgn, root, flags.join(",")];

@@ -856,7 +856,7 @@
         (translit ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(translit) + "</div>" : "") +
         "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
           escapeHtml((hit && hit.translation && hit.translation.text) || "\u2014") + "</div>" +
-        wordPartsHtml(segs) + "</div>";
+        wordPartsHtml(segs, hit && hit.translation && hit.translation.text) + "</div>";
     });
     return html;
   }
@@ -3682,12 +3682,12 @@
       return forms ? forms[pronounSense(segs, index)] : "";
     }
     var key = labels.particleKey(seg[0]) + "|" + role;
-    if (seg[1] !== 0) return labels.affix[key] || "";
-    if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || "";
-    // A verb or noun stem: looked up by its exact letters, since that is how the harvest
-    // was keyed. Still blank for the stems that never occur as a word on their own.
-    if (stemMeanings) return stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "";
-    return "";
+    // A stem is looked up by its exact letters, since that is how the harvest was keyed. A
+    // piece the label tables lack (مَا of إِمَّا, the ـًا "surely" ending) falls back to it too.
+    var stem = stemMeanings ? stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "" : "";
+    if (seg[1] !== 0) return labels.affix[key] || stem;
+    if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || stem;
+    return stem;
   }
 
   /** The short grammatical name under a segment, with its root when it has one. */
@@ -3714,7 +3714,26 @@
     var bits = [];
     var pgn = labels.describePgn(seg[4] || "");
     if (pgn) bits.push(pgn);
-    return bits.join(" ");
+    String(seg[6] || "").split(",").forEach(function (f) {
+      if (labels.verbForm[f]) bits.push(labels.verbForm[f]);
+    });
+    return bits.join(" \u00B7 ");
+  }
+
+  /**
+   * The index of the only part that can carry a meaning (not ال and the like), or -1. A word
+   * of one piece is that piece, even الٓمٓ, whose letters are named rather than translated.
+   */
+  function soleMeaningPart(segs) {
+    if (segs.length === 1) return 0;
+    var labels = window.MQ_MORPH_UR;
+    var found = -1;
+    for (var i = 0; i < segs.length; i++) {
+      if (labels && labels.noMeaning[segs[i][3] || ""]) continue;
+      if (found !== -1) return -1;
+      found = i;
+    }
+    return found;
   }
 
   /**
@@ -3722,11 +3741,14 @@
    * apart there, but its form still matters — يَكُونَ is واحد where تَكُونُوا۟ is جمع — and
    * showing it the same way everywhere means a reader looks in one place for it.
    */
-  function wordPartsHtml(segs) {
+  function wordPartsHtml(segs, wordGloss) {
     if (!segs || !segs.length) return "";
     var rows = "";
+    var sole = soleMeaningPart(segs);
     segs.forEach(function (seg, i) {
-      var meaning = segmentMeaning(segs, i);
+      // The one part that carries meaning (ٱللَّهَ alone, or دُّنْيَا after ٱلْ) means just
+      // what the whole word means.
+      var meaning = segmentMeaning(segs, i) || (i === sole && wordGloss) || "";
       var detail = segmentDetail(seg);
       var root = seg[5]
         ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(seg[5]) + "</span>"
@@ -3808,7 +3830,7 @@
       var words = results[0];
       var segs = results[1];
       var hit = words ? findWordMeaning(words, word, wordIndex) : null;
-      var parts = wordPartsHtml(segs);
+      var parts = wordPartsHtml(segs, hit && hit.translation && hit.translation.text);
 
       if (!hit && !parts) {
         pop.innerHTML = head() + "<div class=\"wpop-loading\">Meaning unavailable</div>";
