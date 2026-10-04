@@ -1834,7 +1834,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 .ayat-basmala {
   text-align: center;
   /* One ligature glyph, as wide as a phone: it scales with the viewport below 1.6rem. */
-  font-size: min(1.6rem, 6.5vw);
+  font-size: calc(min(1.6rem, 6.5vw) * var(--mushaf-scale, 1));
   line-height: 1.6;
   white-space: nowrap;
   overflow-x: clip;
@@ -1844,7 +1844,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .ayat-body {
   font-family: var(--md-font-arabic);
-  font-size: 1.6rem;
+  font-size: calc(1.6rem * var(--mushaf-scale, 1));
   line-height: 2.15;
   color: var(--md-on-surface);
   text-align: justify;
@@ -2019,7 +2019,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   padding: 0.3rem 0.65rem 0.4rem;
   margin: -1px 0 0 -1px;
   border: 1px solid var(--md-outline-variant);
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--mushaf-scale, 1));
   line-height: 1.9;
 }
 
@@ -2083,13 +2083,13 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .ayah-gloss {
   font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
-  font-size: 0.8rem;
+  font-size: calc(0.8rem * var(--mushaf-scale, 1));
   line-height: 1.9;
   color: var(--md-on-surface-variant);
   text-align: center;
   text-align-last: center;
   width: 100%;
-  max-width: 6rem;
+  max-width: calc(6rem * var(--mushaf-scale, 1));
   border-top: 1px dashed color-mix(in srgb, var(--md-outline-variant) 70%, transparent);
 }
 
@@ -3075,7 +3075,7 @@ tr.playing.audio-paused .audio-play-btn {
   }
 
   .ayat-body {
-    font-size: 1.45rem;
+    font-size: calc(1.45rem * var(--mushaf-scale, 1));
     line-height: 2.05;
   }
 

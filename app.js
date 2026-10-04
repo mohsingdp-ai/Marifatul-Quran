@@ -21,6 +21,27 @@
 
   applyUiTheme(getUiTheme());
 
+  /* Mushaf text size: scales the Arabic and the meaning under each word, nothing else. */
+  var FONT_SCALE_MIN = 70, FONT_SCALE_MAX = 200, FONT_SCALE_STEP = 5;
+
+  function getFontScale() {
+    var n = parseInt(localStorage.getItem("mushaf_scale"), 10);
+    return isNaN(n) ? 100 : Math.max(FONT_SCALE_MIN, Math.min(FONT_SCALE_MAX, n));
+  }
+
+  function setFontScale(pct) {
+    pct = Math.max(FONT_SCALE_MIN, Math.min(FONT_SCALE_MAX, pct));
+    if (pct === 100) localStorage.removeItem("mushaf_scale");
+    else localStorage.setItem("mushaf_scale", String(pct));
+    applyFontScale(pct);
+  }
+
+  function applyFontScale(pct) {
+    document.documentElement.style.setProperty("--mushaf-scale", String(pct / 100));
+  }
+
+  applyFontScale(getFontScale());
+
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
 
@@ -4175,6 +4196,32 @@
   var settingsVolumeRange = document.getElementById("settings-volume-range");
   var settingsVolumeValue = document.getElementById("settings-volume-value");
   var themeModeGroup = document.getElementById("theme-mode-group");
+  var fontSmallerBtn = document.getElementById("font-smaller-btn");
+  var fontLargerBtn = document.getElementById("font-larger-btn");
+  var fontResetBtn = document.getElementById("font-reset-btn");
+  var fontSizeValue = document.getElementById("font-size-value");
+
+  function syncFontScaleUI() {
+    var pct = getFontScale();
+    if (fontSizeValue) fontSizeValue.textContent = pct + "%";
+    if (fontSmallerBtn) fontSmallerBtn.disabled = pct <= FONT_SCALE_MIN;
+    if (fontLargerBtn) fontLargerBtn.disabled = pct >= FONT_SCALE_MAX;
+    if (fontResetBtn) fontResetBtn.disabled = pct === 100;
+    sizeGlossCells(tbody);
+  }
+
+  if (fontSmallerBtn) fontSmallerBtn.addEventListener("click", function () {
+    setFontScale(getFontScale() - FONT_SCALE_STEP);
+    syncFontScaleUI();
+  });
+  if (fontLargerBtn) fontLargerBtn.addEventListener("click", function () {
+    setFontScale(getFontScale() + FONT_SCALE_STEP);
+    syncFontScaleUI();
+  });
+  if (fontResetBtn) fontResetBtn.addEventListener("click", function () {
+    setFontScale(100);
+    syncFontScaleUI();
+  });
 
   function syncVolumeUI() {
     var pct = Math.round(getAudioVolume() * 100);
@@ -4249,6 +4296,7 @@
     });
     speedSelect.value = String(getDefaultSpeed());
     syncVolumeUI();
+    syncFontScaleUI();
     var th = getUiTheme();
     if (themeModeGroup) {
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
@@ -4650,7 +4698,7 @@
 
     // Preserve current track and essential settings
     var preserve = {};
-    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", HIFZ_STORAGE_KEY, "guide_seen"];
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", HIFZ_STORAGE_KEY, "guide_seen"];
     keepKeys.forEach(function (k) {
       var v = localStorage.getItem(k);
       if (v !== null) preserve[k] = v;
