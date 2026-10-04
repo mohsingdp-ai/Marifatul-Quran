@@ -2035,6 +2035,8 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 .ayat-item.has-gloss .ayat-translation {
   order: 3;
   flex-basis: 100%;
+  /* Room above and below so the Nastaliq never touches the word grid. */
+  padding: 0.6rem 0 0.5rem;
 }
 
 /* Word cards under an ayah: one per word, each laid out like the card a tapped word opens,
