@@ -3238,7 +3238,7 @@
   "37": {
    "from": 155.12,
    "to": 149.75,
-   "why": "moved -5.4s"
+   "why": "moved -5.4s · Jev: late"
   }
  },
  "24|R11": {
@@ -3250,7 +3250,7 @@
   "59": {
    "from": 198.3,
    "to": 193.03,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   }
  },
  "24|R12": {
@@ -3286,7 +3286,7 @@
   "14": {
    "from": 203.03,
    "to": 199,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
   }
  },
  "24|R19+": {
@@ -3298,7 +3298,11 @@
   "36": {
    "from": 139.14,
    "to": 133.63,
-   "why": "moved -5.5s"
+   "why": "moved -5.5s · Jev: early"
+  },
+  "44": {
+   "to": 341.12,
+   "why": "Jev: early"
   }
  },
  "24|R2": {
@@ -3337,7 +3341,7 @@
   "61": {
    "from": 247.98,
    "to": 229.24,
-   "why": "moved -18.7s"
+   "why": "moved -18.7s · Jev: early (likely)"
   }
  },
  "24|R4-R5": {
@@ -3345,6 +3349,10 @@
    "from": 115.44,
    "to": 109.61,
    "why": "moved -5.8s"
+  },
+  "75": {
+   "to": 390.49,
+   "why": "Jev: early (likely)"
   }
  },
  "24|R6": {
@@ -3356,7 +3364,7 @@
   "7": {
    "from": 179.12,
    "to": 167.65,
-   "why": "moved -11.5s"
+   "why": "moved -11.5s · Jev: early (likely)"
   },
   "9": {
    "from": 282.5,
@@ -3369,6 +3377,14 @@
    "from": 298.02,
    "to": 299.95,
    "why": "moved +1.9s later"
+  },
+  "12": {
+   "to": 85.16,
+   "why": "Jev: early"
+  },
+  "16": {
+   "to": 193.86,
+   "why": "Jev: early"
   }
  },
  "25|R1": {
@@ -3380,7 +3396,7 @@
   "48": {
    "from": 109.75,
    "to": 112.7,
-   "why": "moved +3.0s later"
+   "why": "moved +3.0s later · Jev: early (likely)"
   }
  },
  "25|R10-R11": {
@@ -3397,7 +3413,7 @@
   "52": {
    "from": 385.7,
    "to": 386.93,
-   "why": "moved +1.2s later"
+   "why": "moved +1.2s later · Jev: late"
   },
   "53": {
    "from": 411.07,
@@ -3407,7 +3423,7 @@
   "54": {
    "from": 442.5,
    "to": 446.74,
-   "why": "weak fit"
+   "why": "weak fit · Jev: late (likely)"
   }
  },
  "25|R13": {
@@ -3420,6 +3436,14 @@
    "from": 172.54,
    "to": 173.43,
    "why": "two candidates"
+  },
+  "74": {
+   "to": 107.69,
+   "why": "Jev: early (likely)"
+  },
+  "79": {
+   "to": 189.39,
+   "why": "Jev: early"
   }
  },
  "25|R14": {
@@ -3447,6 +3471,10 @@
    "from": 389.59,
    "to": 384.32,
    "why": "moved -5.3s"
+  },
+  "2": {
+   "to": 35.53,
+   "why": "Jev: late (likely)"
   }
  },
  "25|R15-R16": {
@@ -3474,13 +3502,29 @@
    "from": 352.71,
    "to": 350.98,
    "why": "two candidates"
+  },
+  "32": {
+   "to": 49.79,
+   "why": "Jev: early"
+  },
+  "46": {
+   "to": 234.98,
+   "why": "Jev: early (likely)"
+  },
+  "53": {
+   "to": 304.55,
+   "why": "Jev: late (likely)"
+  },
+  "57": {
+   "to": 371.51,
+   "why": "Jev: late"
   }
  },
  "25|R17-R18": {
   "10": {
    "from": 163.26,
    "to": 169.76,
-   "why": "moved +6.5s"
+   "why": "moved +6.5s · Jev: unclear (likely)"
   }
  },
  "25|R19-20": {
@@ -3492,7 +3536,11 @@
   "28": {
    "from": 191.82,
    "to": 197.8,
-   "why": "moved +6.0s"
+   "why": "moved +6.0s · Jev: late"
+  },
+  "31": {
+   "to": 259.81,
+   "why": "Jev: early"
   }
  },
  "25|R2": {
@@ -3519,6 +3567,10 @@
    "from": 70.96,
    "to": 69.83,
    "why": "two candidates"
+  },
+  "26": {
+   "to": 321.21,
+   "why": "Jev: early (likely)"
   }
  },
  "25|R5": {
@@ -3535,7 +3587,7 @@
   "34": {
    "from": 113.5,
    "to": 117.24,
-   "why": "moved +3.7s later"
+   "why": "moved +3.7s later · Jev: late"
   }
  },
  "25|R6": {
@@ -3553,6 +3605,10 @@
    "from": 383.63,
    "to": 382.42,
    "why": "two candidates"
+  },
+  "51": {
+   "to": 288.85,
+   "why": "Jev: early"
   }
  },
  "25|R7": {
@@ -3609,13 +3665,17 @@
    "from": 378.32,
    "to": 370.29,
    "why": "moved -8.0s"
+  },
+  "2": {
+   "to": 31.13,
+   "why": "Jev: late"
   }
  },
  "26|R10": {
   "15": {
    "from": 202,
    "to": 202.59,
-   "why": "weak fit"
+   "why": "weak fit · Jev: late"
   }
  },
  "26|R11": {
@@ -3658,19 +3718,19 @@
   "13": {
    "from": 264.14,
    "to": 263.21,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   }
  },
  "26|R15": {
   "1": {
    "from": 44.12,
    "to": 41.25,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "2": {
    "from": 86,
    "to": 60.82,
-   "why": "moved -25.2s"
+   "why": "moved -25.2s · Jev: late (likely)"
   },
   "3": {
    "from": 113.44,
@@ -3697,7 +3757,7 @@
   "17": {
    "from": 65.8,
    "to": 58.25,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
   },
   "18": {
    "from": 90.06,
@@ -3708,6 +3768,10 @@
    "from": 233.54,
    "to": 227.41,
    "why": "moved -6.1s"
+  },
+  "23": {
+   "to": 209.23,
+   "why": "Jev: early"
   }
  },
  "26|R17": {
@@ -3719,7 +3783,7 @@
   "41": {
    "from": 259.36,
    "to": 261.77,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
   },
   "43": {
    "from": 306.05,
@@ -3761,7 +3825,7 @@
   "23": {
    "from": 368.89,
    "to": 368.15,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "24": {
    "from": 388.38,
@@ -3772,6 +3836,14 @@
    "from": 428.69,
    "to": 434.29,
    "why": "moved +5.6s"
+  },
+  "15": {
+   "to": 248.68,
+   "why": "Jev: early"
+  },
+  "25": {
+   "to": 404.09,
+   "why": "Jev: early"
   }
  },
  "26|R2": {
@@ -3783,7 +3855,7 @@
   "17": {
    "from": 327.34,
    "to": 307.58,
-   "why": "moved -19.8s"
+   "why": "moved -19.8s · Jev: early"
   }
  },
  "26|R5": {
@@ -3800,12 +3872,12 @@
   "5": {
    "from": 228.9,
    "to": 223.29,
-   "why": "moved -5.6s"
+   "why": "moved -5.6s · Jev: early"
   },
   "6": {
    "from": 243.88,
    "to": 233.23,
-   "why": "moved -10.7s"
+   "why": "moved -10.7s · Jev: late"
   },
   "8": {
    "from": 274.54,
@@ -3816,6 +3888,10 @@
    "from": 310.05,
    "to": 306.19,
    "why": "two candidates"
+  },
+  "2": {
+   "to": 45.74,
+   "why": "Jev: early"
   }
  },
  "26|R6": {
@@ -3830,6 +3906,10 @@
    "from": 169.78,
    "to": 164.53,
    "why": "moved -5.2s"
+  },
+  "20": {
+   "to": 22.85,
+   "why": "Jev: early (likely)"
   }
  },
  "26|R8": {
@@ -3851,7 +3931,7 @@
   "35": {
    "from": 201.67,
    "to": 194.16,
-   "why": "moved -7.5s"
+   "why": "moved -7.5s · Jev: late (likely)"
   }
  },
  "26|R9": {
@@ -3885,7 +3965,7 @@
   "53": {
    "from": 359.78,
    "to": 359.23,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "54": {
    "from": 376.54,
@@ -3895,19 +3975,19 @@
   "57": {
    "from": 406.78,
    "to": 405.89,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   }
  },
  "27|R10": {
   "43": {
    "from": 55,
    "to": 59.96,
-   "why": "moved +5.0s later"
+   "why": "moved +5.0s later · Jev: late"
   },
   "45": {
    "from": 121.04,
    "to": 119.53,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
   },
   "49": {
    "from": 173.22,
@@ -3919,7 +3999,7 @@
   "2": {
    "from": 36.2,
    "to": 42.56,
-   "why": "moved +6.4s"
+   "why": "moved +6.4s · Jev: early"
   },
   "4": {
    "from": 52.7,
@@ -3934,7 +4014,7 @@
   "29": {
    "from": 354.61,
    "to": 340.22,
-   "why": "moved -14.4s"
+   "why": "moved -14.4s · Jev: early"
   },
   "35": {
    "from": 417.97,
@@ -3945,6 +4025,14 @@
    "from": 494.99,
    "to": 488.65,
    "why": "moved -6.3s"
+  },
+  "34": {
+   "to": 412.35,
+   "why": "Jev: late"
+  },
+  "41": {
+   "to": 469.53,
+   "why": "Jev: early (likely)"
   }
  },
  "27|R13": {
@@ -3967,6 +4055,14 @@
    "from": 222.77,
    "to": 229.37,
    "why": "weak fit"
+  },
+  "48": {
+   "to": 42.46,
+   "why": "Jev: early"
+  },
+  "58": {
+   "to": 136.55,
+   "why": "Jev: early"
   }
  },
  "27|R14": {
@@ -3983,7 +4079,7 @@
   "13": {
    "from": 211.99,
    "to": 205.32,
-   "why": "moved -6.7s"
+   "why": "moved -6.7s · Jev: early (likely)"
   },
   "20": {
    "from": 326.54,
@@ -4003,7 +4099,15 @@
   "36": {
    "from": 505.31,
    "to": 500.24,
-   "why": "moved -5.1s"
+   "why": "moved -5.1s · Jev: early"
+  },
+  "9": {
+   "to": 125.37,
+   "why": "Jev: early (likely)"
+  },
+  "11": {
+   "to": 190.99,
+   "why": "Jev: early"
   }
  },
  "27|R15": {
@@ -4021,6 +4125,18 @@
    "from": 495.2,
    "to": 490.11,
    "why": "moved -5.1s"
+  },
+  "39": {
+   "to": 14.21,
+   "why": "Jev: early"
+  },
+  "52": {
+   "to": 192.85,
+   "why": "Jev: early"
+  },
+  "68": {
+   "to": 398.45,
+   "why": "Jev: early"
   }
  },
  "27|R16": {
@@ -4033,6 +4149,14 @@
    "from": 159.42,
    "to": 159.16,
    "why": "two candidates"
+  },
+  "80": {
+   "to": 103.93,
+   "why": "Jev: late"
+  },
+  "94": {
+   "to": 314.43,
+   "why": "Jev: late (likely)"
   }
  },
  "27|R17": {
@@ -4040,6 +4164,10 @@
    "from": 75.82,
    "to": 68.61,
    "why": "moved -7.2s"
+  },
+  "5": {
+   "to": 121.93,
+   "why": "Jev: early"
   }
  },
  "27|R18": {
@@ -4053,7 +4181,7 @@
   "20": {
    "from": 17.6,
    "to": 8.51,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   },
   "21": {
    "from": 167.01,
@@ -4102,7 +4230,11 @@
   "22": {
    "from": 343.06,
    "to": 346.82,
-   "why": "moved +3.8s later"
+   "why": "moved +3.8s later · Jev: late"
+  },
+  "2": {
+   "to": 29.61,
+   "why": "Jev: early (likely)"
   }
  },
  "27|R4": {
@@ -4119,7 +4251,7 @@
   "34": {
    "from": 180.62,
    "to": 172.93,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
   },
   "39": {
    "from": 272.67,
@@ -4141,7 +4273,7 @@
   "10": {
    "from": 254.9,
    "to": 242.23,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "13": {
    "from": 290.78,
@@ -4152,6 +4284,10 @@
    "from": 454.72,
    "to": 450.11,
    "why": "two candidates"
+  },
+  "4": {
+   "to": 99.39,
+   "why": "Jev: early (likely)"
   }
  },
  "27|R6": {
@@ -4196,6 +4332,18 @@
    "from": 376.2,
    "to": 367.59,
    "why": "moved -8.6s"
+  },
+  "49": {
+   "to": 269.29,
+   "why": "Jev: early (likely)"
+  },
+  "54": {
+   "to": 359.83,
+   "why": "Jev: late"
+  },
+  "56": {
+   "to": 392.99,
+   "why": "Jev: early (likely)"
   }
  },
  "27|R8": {
@@ -4217,7 +4365,7 @@
   "8": {
    "from": 221.76,
    "to": 214.05,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "10": {
    "from": 258.44,
@@ -4227,12 +4375,24 @@
   "13": {
    "from": 320.06,
    "to": 325.44,
-   "why": "moved +5.4s"
+   "why": "moved +5.4s · Jev: early"
   },
   "20": {
    "from": 485.76,
    "to": 476.33,
    "why": "moved -9.4s"
+  },
+  "5": {
+   "to": 145.35,
+   "why": "Jev: late (likely)"
+  },
+  "15": {
+   "to": 368.91,
+   "why": "Jev: late (likely)"
+  },
+  "19": {
+   "to": 439.93,
+   "why": "Jev: early"
   }
  },
  "27|R9": {
@@ -4263,17 +4423,21 @@
   "11": {
    "from": 89.56,
    "to": 82.09,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   },
   "13": {
    "from": 258.14,
    "to": 253.35,
-   "why": "weak fit"
+   "why": "weak fit · Jev: late (likely)"
   },
   "14": {
    "from": 307.45,
    "to": 307.16,
    "why": "weak fit"
+  },
+  "12": {
+   "to": 172.51,
+   "why": "Jev: late (likely)"
   }
  },
  "28|R11": {
@@ -4285,7 +4449,7 @@
   "3": {
    "from": 175.82,
    "to": 178.77,
-   "why": "moved +3.0s later"
+   "why": "moved +3.0s later · Jev: late"
   },
   "5": {
    "from": 263.49,
@@ -4295,7 +4459,7 @@
   "6": {
    "from": 393.51,
    "to": 387.6,
-   "why": "moved -5.9s"
+   "why": "moved -5.9s · Jev: late (likely)"
   },
   "7": {
    "from": 466.54,
@@ -4306,6 +4470,14 @@
    "from": 519.25,
    "to": 513.38,
    "why": "moved -5.9s"
+  },
+  "2": {
+   "to": 73.18,
+   "why": "Jev: early (likely)"
+  },
+  "4": {
+   "to": 234.39,
+   "why": "Jev: late"
   }
  },
  "28|R12": {
@@ -4319,7 +4491,7 @@
   "1": {
    "from": 38.48,
    "to": 15.34,
-   "why": "moved -23.1s"
+   "why": "moved -23.1s · Jev: early (likely)"
   },
   "2": {
    "from": 160.02,
@@ -4329,7 +4501,7 @@
   "3": {
    "from": 293.96,
    "to": 285.09,
-   "why": "moved -8.9s"
+   "why": "moved -8.9s · Jev: early (likely)"
   },
   "4": {
    "from": 406.4,
@@ -4340,6 +4512,10 @@
    "from": 744.82,
    "to": 733.91,
    "why": "moved -10.9s"
+  },
+  "7": {
+   "to": 808.07,
+   "why": "Jev: early"
   }
  },
  "28|R14": {
@@ -4363,7 +4539,7 @@
   "2": {
    "from": 132.86,
    "to": 120.41,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
   },
   "4": {
    "from": 248.18,
@@ -4389,6 +4565,10 @@
    "from": 691.84,
    "to": 690.91,
    "why": "weak fit"
+  },
+  "9": {
+   "to": 763.7,
+   "why": "Jev: late"
   }
  },
  "28|R16": {
@@ -4418,6 +4598,10 @@
    "from": 1159.69,
    "to": 1144.94,
    "why": "moved -14.8s"
+  },
+  "6": {
+   "to": 955.25,
+   "why": "Jev: late"
   }
  },
  "28|R18": {
@@ -4429,7 +4613,11 @@
   "12": {
    "from": 336.82,
    "to": 330.51,
-   "why": "moved -6.3s"
+   "why": "moved -6.3s · Jev: early (likely)"
+  },
+  "10": {
+   "to": 194.01,
+   "why": "Jev: early"
   }
  },
  "28|R19": {
@@ -4446,7 +4634,7 @@
   "3": {
    "from": 205.07,
    "to": 197.94,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   },
   "5": {
    "from": 594.1,
@@ -4456,19 +4644,23 @@
   "6": {
    "from": 742.58,
    "to": 722.26,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "7": {
    "from": 809.25,
    "to": 805.96,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
+  },
+  "4": {
+   "to": 451.7,
+   "why": "Jev: late (likely)"
   }
  },
  "28|R2": {
   "7": {
    "from": 23.13,
    "to": 7.14,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "8": {
    "from": 198.01,
@@ -4507,7 +4699,7 @@
   "20": {
    "from": 315.79,
    "to": 309.36,
-   "why": "moved -6.4s"
+   "why": "moved -6.4s · Jev: early"
   },
   "21": {
    "from": 352.94,
@@ -4546,7 +4738,11 @@
   "14": {
    "from": 343.12,
    "to": 341.83,
-   "why": "weak fit"
+   "why": "weak fit · Jev: late (likely)"
+  },
+  "16": {
+   "to": 473.39,
+   "why": "Jev: early (likely)"
   }
  },
  "28|R6": {
@@ -4570,12 +4766,12 @@
   "1": {
    "from": 240.96,
    "to": 225.97,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   },
   "2": {
    "from": 553.84,
    "to": 549.31,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   }
  },
  "28|R8": {
@@ -4587,7 +4783,7 @@
   "8": {
    "from": 166.58,
    "to": 142.78,
-   "why": "moved -23.8s"
+   "why": "moved -23.8s · Jev: late"
   },
   "12": {
    "from": 691.15,
@@ -4598,6 +4794,14 @@
    "from": 951.64,
    "to": 952.29,
    "why": "two candidates"
+  },
+  "10": {
+   "to": 316.56,
+   "why": "Jev: early"
+  },
+  "11": {
+   "to": 558.32,
+   "why": "Jev: late"
   }
  },
  "28|R9": {
@@ -4664,6 +4868,10 @@
    "from": 516.02,
    "to": 514.81,
    "why": "two candidates"
+  },
+  "15": {
+   "to": 415.85,
+   "why": "Jev: early"
   }
  },
  "29|R12": {
@@ -4680,7 +4888,7 @@
   "28": {
    "from": 218.19,
    "to": 209.64,
-   "why": "moved -8.6s"
+   "why": "moved -8.6s · Jev: early (likely)"
   }
  },
  "29|R13-R14": {
@@ -4698,6 +4906,18 @@
    "from": 225.14,
    "to": 224.9,
    "why": "two candidates"
+  },
+  "3": {
+   "to": 47.1,
+   "why": "Jev: late (likely)"
+  },
+  "7": {
+   "to": 132.63,
+   "why": "Jev: late"
+  },
+  "10": {
+   "to": 168.61,
+   "why": "Jev: early"
   }
  },
  "29|R15-R16": {
@@ -4730,6 +4950,18 @@
    "from": 440.59,
    "to": 439.32,
    "why": "two candidates"
+  },
+  "14": {
+   "to": 127.71,
+   "why": "Jev: early"
+  },
+  "20": {
+   "to": 174.97,
+   "why": "Jev: late (likely)"
+  },
+  "41": {
+   "to": 393.25,
+   "why": "Jev: early"
   }
  },
  "29|R17-R18": {
@@ -4741,7 +4973,7 @@
   "16": {
    "from": 195.16,
    "to": 189.37,
-   "why": "moved -5.8s"
+   "why": "moved -5.8s · Jev: early"
   },
   "21": {
    "from": 240.36,
@@ -4756,19 +4988,39 @@
   "34": {
    "from": 381.28,
    "to": 384.73,
-   "why": "moved +3.5s later"
+   "why": "moved +3.5s later · Jev: late (likely)"
   },
   "40": {
    "from": 459.96,
    "to": 454.11,
    "why": "moved -5.8s"
+  },
+  "1": {
+   "to": 25.23,
+   "why": "Jev: late (likely)"
+  },
+  "9": {
+   "to": 112.41,
+   "why": "Jev: early (likely)"
+  },
+  "12": {
+   "to": 142.64,
+   "why": "Jev: early"
+  },
+  "35": {
+   "to": 404.62,
+   "why": "Jev: late (likely)"
+  },
+  "38": {
+   "to": 436.95,
+   "why": "Jev: early (likely)"
   }
  },
  "29|R19-R20": {
   "4": {
    "from": 102.93,
    "to": 97.74,
-   "why": "moved -5.2s"
+   "why": "moved -5.2s · Jev: early"
   },
   "7": {
    "from": 142.1,
@@ -4788,12 +5040,24 @@
   "16": {
    "from": 319.89,
    "to": 305.6,
-   "why": "moved -14.3s"
+   "why": "moved -14.3s · Jev: unclear (likely)"
   },
   "30": {
    "from": 549.49,
    "to": 548.88,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
+  },
+  "2": {
+   "to": 52.28,
+   "why": "Jev: early"
+  },
+  "15": {
+   "to": 293.19,
+   "why": "Jev: early (likely)"
+  },
+  "25": {
+   "to": 475.9,
+   "why": "Jev: early (likely)"
   }
  },
  "29|R2": {
@@ -4826,6 +5090,14 @@
    "from": 394.56,
    "to": 390.47,
    "why": "two candidates"
+  },
+  "18": {
+   "to": 113.47,
+   "why": "Jev: late"
+  },
+  "30": {
+   "to": 416,
+   "why": "Jev: early (likely)"
   }
  },
  "29|R21-R22": {
@@ -4862,12 +5134,20 @@
   "35": {
    "from": 369.88,
    "to": 365.62,
-   "why": "would overtake the previous ayah"
+   "why": "would overtake the previous ayah · Jev: early"
   },
   "42": {
    "from": 425.76,
    "to": 418.65,
    "why": "moved -7.1s"
+  },
+  "1": {
+   "to": 40.67,
+   "why": "Jev: early (likely)"
+  },
+  "6": {
+   "to": 113.9,
+   "why": "Jev: late (likely)"
   }
  },
  "29|R3": {
@@ -4899,7 +5179,7 @@
   "11": {
    "from": 224.6,
    "to": 215.27,
-   "why": "moved -9.3s"
+   "why": "moved -9.3s · Jev: early (likely)"
   },
   "14": {
    "from": 268.02,
@@ -4919,7 +5199,11 @@
   "28": {
    "from": 654.15,
    "to": 644.08,
-   "why": "moved -10.1s"
+   "why": "moved -10.1s · Jev: early"
+  },
+  "21": {
+   "to": 522.41,
+   "why": "Jev: late (likely)"
   }
  },
  "29|R4": {
@@ -4931,7 +5215,7 @@
   "35": {
    "from": 41.92,
    "to": 42.44,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "46": {
    "from": 300.22,
@@ -4952,13 +5236,21 @@
    "from": 459.34,
    "to": 447.55,
    "why": "moved -11.8s"
+  },
+  "43": {
+   "to": 212.25,
+   "why": "Jev: late (likely)"
+  },
+  "50": {
+   "to": 405.35,
+   "why": "Jev: late (likely)"
   }
  },
  "29|R5": {
   "1": {
    "from": 24.18,
    "to": 29.48,
-   "why": "weak fit"
+   "why": "weak fit · Jev: late (likely)"
   },
   "2": {
    "from": 29.72,
@@ -4968,7 +5260,7 @@
   "3": {
    "from": 35.19,
    "to": 34.49,
-   "why": "would overtake the previous ayah"
+   "why": "would overtake the previous ayah · Jev: late"
   },
   "5": {
    "from": 59.2,
@@ -4989,6 +5281,10 @@
    "from": 224.06,
    "to": 218.49,
    "why": "two candidates"
+  },
+  "31": {
+   "to": 434.3,
+   "why": "Jev: early (likely)"
   }
  },
  "29|R6": {
@@ -5011,13 +5307,17 @@
    "from": 151.23,
    "to": 151.12,
    "why": "weak fit"
+  },
+  "45": {
+   "to": 93.48,
+   "why": "Jev: early"
   }
  },
  "29|R7": {
   "1": {
    "from": 38.9,
    "to": 33.07,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "4": {
    "from": 81.83,
@@ -5033,6 +5333,18 @@
    "from": 327.73,
    "to": 320.24,
    "why": "moved -7.5s"
+  },
+  "21": {
+   "to": 331.16,
+   "why": "Jev: early"
+  },
+  "23": {
+   "to": 346.24,
+   "why": "Jev: early"
+  },
+  "34": {
+   "to": 478,
+   "why": "Jev: early (likely)"
   }
  },
  "29|R8": {
@@ -5050,6 +5362,10 @@
    "from": 154.02,
    "to": 151.23,
    "why": "two candidates"
+  },
+  "39": {
+   "to": 67.25,
+   "why": "Jev: late (likely)"
   }
  },
  "29|R9-R10": {
@@ -5066,12 +5382,16 @@
   "17": {
    "from": 328.66,
    "to": 330.62,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "18": {
    "from": 333.82,
    "to": 330.98,
    "why": "would overtake the previous ayah"
+  },
+  "26": {
+   "to": 459.95,
+   "why": "Jev: late"
   }
  },
  "2|R1": {
@@ -5321,12 +5641,12 @@
   "1": {
    "from": 43.2,
    "to": 36.91,
-   "why": "moved -6.3s"
+   "why": "moved -6.3s · Jev: early (likely)"
   },
   "2": {
    "from": 59.71,
    "to": 49.54,
-   "why": "moved -10.2s"
+   "why": "moved -10.2s · Jev: early"
   },
   "3": {
    "from": 64.74,
@@ -5336,12 +5656,12 @@
   "4": {
    "from": 72.92,
    "to": 78.92,
-   "why": "moved +6.0s"
+   "why": "moved +6.0s · Jev: late (likely)"
   },
   "5": {
    "from": 79.36,
    "to": 79.24,
-   "why": "would overtake the previous ayah"
+   "why": "would overtake the previous ayah · Jev: late (likely)"
   },
   "6": {
    "from": 83.56,
@@ -5351,12 +5671,16 @@
   "19": {
    "from": 224.08,
    "to": 217.03,
-   "why": "moved -7.1s"
+   "why": "moved -7.1s · Jev: early"
   },
   "26": {
    "from": 302.78,
    "to": 311.48,
    "why": "moved +8.7s"
+  },
+  "27": {
+   "to": 313.18,
+   "why": "Jev: early"
   }
  },
  "30|R10": {
@@ -5378,7 +5702,7 @@
   "7": {
    "from": 78.92,
    "to": 72.08,
-   "why": "would overtake the previous ayah"
+   "why": "would overtake the previous ayah · Jev: early (likely)"
   },
   "11": {
    "from": 146.37,
@@ -5404,6 +5728,10 @@
    "from": 221.29,
    "to": 217.14,
    "why": "weak fit"
+  },
+  "15": {
+   "to": 179.57,
+   "why": "Jev: early (likely)"
   }
  },
  "30|R11": {
@@ -5420,7 +5748,7 @@
   "13": {
    "from": 200.46,
    "to": 191.69,
-   "why": "moved -8.8s"
+   "why": "moved -8.8s · Jev: early (likely)"
   },
   "17": {
    "from": 234.76,
@@ -5433,6 +5761,14 @@
    "from": 25.58,
    "to": 18.64,
    "why": "moved -6.9s"
+  },
+  "10": {
+   "to": 147.51,
+   "why": "Jev: early"
+  },
+  "11": {
+   "to": 164.4,
+   "why": "Jev: late"
   }
  },
  "30|R13": {
@@ -5454,7 +5790,7 @@
   "7": {
    "from": 123.98,
    "to": 127.6,
-   "why": "moved +3.6s later"
+   "why": "moved +3.6s later · Jev: late"
   },
   "11": {
    "from": 166.87,
@@ -5469,12 +5805,16 @@
   "25": {
    "from": 368.5,
    "to": 365.09,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
   },
   "26": {
    "from": 369.34,
    "to": 370.85,
    "why": "moved +1.5s later"
+  },
+  "24": {
+   "to": 350.04,
+   "why": "Jev: late (likely)"
   }
  },
  "30|R14": {
@@ -5501,7 +5841,7 @@
   "12": {
    "from": 214.41,
    "to": 219.98,
-   "why": "moved +5.6s"
+   "why": "moved +5.6s · Jev: late"
   },
   "15": {
    "from": 265.56,
@@ -5511,12 +5851,12 @@
   "16": {
    "from": 308.25,
    "to": 305.12,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early (likely)"
   },
   "22": {
    "from": 402.61,
    "to": 399.52,
-   "why": "two candidates"
+   "why": "two candidates · Jev: early"
   },
   "24": {
    "from": 443.15,
@@ -5527,18 +5867,22 @@
    "from": 560.05,
    "to": 546.9,
    "why": "moved -13.1s"
+  },
+  "11": {
+   "to": 206.41,
+   "why": "Jev: early"
   }
  },
  "30|R15": {
   "2": {
    "from": 44.52,
    "to": 43.88,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
   },
   "12": {
    "from": 179.18,
    "to": 164.62,
-   "why": "moved -14.6s"
+   "why": "moved -14.6s · Jev: early"
   },
   "16": {
    "from": 202.64,
@@ -5556,18 +5900,22 @@
    "from": 167.61,
    "to": 161.92,
    "why": "moved -5.7s"
+  },
+  "3": {
+   "to": 42.41,
+   "why": "Jev: early"
   }
  },
  "30|R18": {
   "4": {
    "from": 34.46,
    "to": 28.87,
-   "why": "moved -5.6s"
+   "why": "moved -5.6s · Jev: early (likely)"
   },
   "7": {
    "from": 88.44,
    "to": 90.86,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
   },
   "8": {
    "from": 92.68,
@@ -5580,6 +5928,14 @@
    "from": 2.38,
    "to": 0.24,
    "why": "two candidates"
+  },
+  "3": {
+   "to": 26.23,
+   "why": "Jev: early (likely)"
+  },
+  "6": {
+   "to": 62.37,
+   "why": "Jev: late"
   }
  },
  "30|R20": {
@@ -5598,7 +5954,7 @@
   "7": {
    "from": 57.67,
    "to": 63.25,
-   "why": "moved +5.6s"
+   "why": "moved +5.6s · Jev: late (likely)"
   },
   "12": {
    "from": 115.58,
@@ -5609,6 +5965,18 @@
    "from": 178.34,
    "to": 175.95,
    "why": "weak fit"
+  },
+  "2": {
+   "to": 14.85,
+   "why": "Jev: early (likely)"
+  },
+  "5": {
+   "to": 33.23,
+   "why": "Jev: late"
+  },
+  "18": {
+   "to": 179.45,
+   "why": "Jev: early"
   }
  },
  "30|R22": {
@@ -5652,6 +6020,14 @@
    "from": 35.7,
    "to": 35.51,
    "why": "two candidates"
+  },
+  "2": {
+   "to": 15.36,
+   "why": "Jev: early (likely)"
+  },
+  "7": {
+   "to": 50.55,
+   "why": "Jev: early"
   }
  },
  "30|R28": {
@@ -5659,6 +6035,10 @@
    "from": 11.79,
    "to": 9.56,
    "why": "two candidates"
+  },
+  "1": {
+   "to": 1.16,
+   "why": "Jev: early"
   }
  },
  "30|R29": {
@@ -5702,7 +6082,11 @@
   "43": {
    "from": 451.34,
    "to": 450.44,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late"
+  },
+  "44": {
+   "to": 458.51,
+   "why": "Jev: early"
   }
  },
  "30|R32": {
@@ -5726,7 +6110,7 @@
   "4": {
    "from": 30,
    "to": 22.18,
-   "why": "moved -7.8s"
+   "why": "moved -7.8s · Jev: early (likely)"
   }
  },
  "30|R37": {
@@ -5753,6 +6137,10 @@
    "from": 65.41,
    "to": 40.11,
    "why": "moved -25.3s"
+  },
+  "5": {
+   "to": 60.85,
+   "why": "Jev: early (likely)"
   }
  },
  "30|R5": {
@@ -5764,7 +6152,7 @@
   "3": {
    "from": 66.43,
    "to": 48.33,
-   "why": "weak fit"
+   "why": "weak fit · Jev: early (likely)"
   },
   "5": {
    "from": 127.1,
@@ -5774,7 +6162,7 @@
   "6": {
    "from": 142.08,
    "to": 133.65,
-   "why": "moved -8.4s"
+   "why": "moved -8.4s · Jev: early (likely)"
   },
   "11": {
    "from": 217.96,
@@ -5795,13 +6183,33 @@
    "from": 354.74,
    "to": 352.85,
    "why": "two candidates"
+  },
+  "2": {
+   "to": 46.97,
+   "why": "Jev: early (likely)"
+  },
+  "4": {
+   "to": 105.39,
+   "why": "Jev: early"
+  },
+  "15": {
+   "to": 258.27,
+   "why": "Jev: late"
+  },
+  "17": {
+   "to": 295.09,
+   "why": "Jev: late (likely)"
+  },
+  "36": {
+   "to": 452.25,
+   "why": "Jev: early"
   }
  },
  "30|R6": {
   "9": {
    "from": 142.03,
    "to": 139.82,
-   "why": "would overtake the previous ayah"
+   "why": "would overtake the previous ayah · Jev: late (likely)"
   },
   "12": {
    "from": 164.59,
@@ -5816,12 +6224,12 @@
   "18": {
    "from": 219.45,
    "to": 205.78,
-   "why": "moved -13.7s"
+   "why": "moved -13.7s · Jev: early (likely)"
   },
   "21": {
    "from": 285.49,
    "to": 289.23,
-   "why": "moved +3.7s later"
+   "why": "moved +3.7s later · Jev: late (likely)"
   },
   "27": {
    "from": 351.7,
@@ -5831,34 +6239,66 @@
   "28": {
    "from": 363.17,
    "to": 355.57,
-   "why": "moved -7.6s"
+   "why": "moved -7.6s · Jev: early (likely)"
   },
   "29": {
    "from": 371.49,
    "to": 373.94,
-   "why": "moved +2.4s later"
+   "why": "moved +2.4s later · Jev: late (likely)"
+  },
+  "4": {
+   "to": 55.9,
+   "why": "Jev: unclear (likely)"
+  },
+  "6": {
+   "to": 108.92,
+   "why": "Jev: late (likely)"
+  },
+  "10": {
+   "to": 141.84,
+   "why": "Jev: early"
+  },
+  "20": {
+   "to": 267.62,
+   "why": "Jev: early (likely)"
+  },
+  "24": {
+   "to": 321.87,
+   "why": "Jev: early"
   }
  },
  "30|R7": {
   "10": {
    "from": 111.76,
    "to": 114.1,
-   "why": "moved +2.3s later"
+   "why": "moved +2.3s later · Jev: early"
   },
   "17": {
    "from": 157.74,
    "to": 160.16,
-   "why": "moved +2.4s later"
+   "why": "moved +2.4s later · Jev: late"
   },
   "18": {
    "from": 159.81,
    "to": 163.38,
-   "why": "moved +3.6s later"
+   "why": "moved +3.6s later · Jev: early"
   },
   "19": {
    "from": 162.42,
    "to": 171.98,
    "why": "moved +9.6s"
+  },
+  "7": {
+   "to": 73.75,
+   "why": "Jev: early"
+  },
+  "11": {
+   "to": 119.63,
+   "why": "Jev: early"
+  },
+  "14": {
+   "to": 129.79,
+   "why": "Jev: early (likely)"
   }
  },
  "30|R8": {
@@ -5870,7 +6310,7 @@
   "4": {
    "from": 84.54,
    "to": 74.35,
-   "why": "moved -10.2s"
+   "why": "moved -10.2s · Jev: early"
   },
   "5": {
    "from": 90.62,
@@ -5895,7 +6335,7 @@
   "9": {
    "from": 164.7,
    "to": 164.41,
-   "why": "two candidates"
+   "why": "two candidates · Jev: late (likely)"
   },
   "17": {
    "from": 297.41,
@@ -5905,12 +6345,12 @@
   "21": {
    "from": 345.47,
    "to": 349.34,
-   "why": "moved +3.9s later"
+   "why": "moved +3.9s later · Jev: late (likely)"
   },
   "23": {
    "from": 367.75,
    "to": 361.83,
-   "why": "moved -5.9s"
+   "why": "moved -5.9s · Jev: early"
   },
   "25": {
    "from": 431.51,
@@ -5926,6 +6366,18 @@
    "from": 473.37,
    "to": 466.98,
    "why": "two candidates"
+  },
+  "2": {
+   "to": 34.04,
+   "why": "Jev: early"
+  },
+  "35": {
+   "to": 573.6,
+   "why": "Jev: early"
+  },
+  "36": {
+   "to": 581.28,
+   "why": "Jev: early"
   }
  },
  "30|R9": {
@@ -7160,6 +7612,44 @@
    "from": 87.62,
    "to": 78.51,
    "why": "moved -9.1s"
+  }
+ },
+ "24|R13": {
+  "71": {
+   "to": 48.32,
+   "why": "Jev: early"
+  },
+  "73": {
+   "to": 69.43,
+   "why": "Jev: early (likely)"
+  }
+ },
+ "24|R18": {
+  "30": {
+   "to": 132.19,
+   "why": "Jev: early"
+  }
+ },
+ "25|R9": {
+  "28": {
+   "to": 55.61,
+   "why": "Jev: early (likely)"
+  },
+  "35": {
+   "to": 311.94,
+   "why": "Jev: late (likely)"
+  }
+ },
+ "30|R24": {
+  "5": {
+   "to": 37.25,
+   "why": "Jev: early"
+  }
+ },
+ "30|R31": {
+  "3": {
+   "to": 29.27,
+   "why": "Jev: early"
   }
  }
 }
