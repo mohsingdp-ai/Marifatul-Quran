@@ -3140,9 +3140,9 @@
    "why": "Jev moved +1.8s"
   },
   "20": {
-   "from": 119.71,
-   "to": 129.27,
-   "why": "moved -9.3s · Jev moved +9.6s · Jev: late, listen"
+   "from": 129.02,
+   "to": 119.71,
+   "why": "moved -9.3s"
   },
   "21": {
    "from": 145.91,
@@ -3454,9 +3454,9 @@
    "why": "moved -6.5s"
   },
   "88": {
-   "from": 163.39,
-   "to": 170.9,
-   "why": "moved -7.8s · Jev moved +7.5s · Jev: late, listen"
+   "from": 171.2,
+   "to": 163.39,
+   "why": "moved -7.8s"
   },
   "94": {
    "from": 238.48,
@@ -3518,11 +3518,6 @@
    "from": 128.96,
    "to": 128.77,
    "why": "Jev moved -7.9s · Jev: early, moved +7.7s"
-  },
-  "152": {
-   "from": 163.29,
-   "to": 166.55,
-   "why": "Jev moved +3.3s · Jev: late, listen"
   },
   "153": {
    "from": 179.1,
@@ -3901,11 +3896,6 @@
    "to": 371.51,
    "why": "Jev: late"
   },
-  "50": {
-   "from": 283.58,
-   "to": 291.49,
-   "why": "Jev moved +7.9s · Jev: late, listen"
-  },
   "39": {
    "from": 147.44,
    "to": 135.72,
@@ -3917,11 +3907,6 @@
    "from": 163.26,
    "to": 169.76,
    "why": "moved +6.5s · Jev: unclear (likely) · Jev: early, listen"
-  },
-  "19": {
-   "from": 383.79,
-   "to": 396.64,
-   "why": "Jev moved +12.8s · Jev: late, listen"
   },
   "11": {
    "from": 197.78,
@@ -4231,11 +4216,6 @@
    "to": 296.32,
    "why": "moved -9.7s"
   },
-  "32": {
-   "from": 72.65,
-   "to": 76.76,
-   "why": "Jev moved +4.1s · Jev: late, listen"
-  },
   "38": {
    "why": "Jev: early, listen"
   }
@@ -4334,20 +4314,15 @@
    "to": 28.47,
    "why": "moved -5.2s"
   },
-  "2": {
-   "to": 51.62,
-   "why": "Jev: early · Jev moved +5.9s · Jev: late, listen",
-   "from": 45.74
-  },
   "3": {
    "from": 88.54,
    "to": 81.11,
    "why": "moved -7.4s"
   },
   "5": {
-   "from": 223.29,
-   "to": 228.3,
-   "why": "moved -5.6s · Jev: early · Jev moved +5.0s · Jev: late, listen"
+   "from": 228.9,
+   "to": 223.29,
+   "why": "moved -5.6s"
   },
   "6": {
    "from": 243.88,
@@ -4515,11 +4490,6 @@
    "from": 494.99,
    "to": 488.65,
    "why": "moved -6.3s"
-  },
-  "37": {
-   "from": 437.71,
-   "to": 442.39,
-   "why": "Jev moved +4.7s · Jev: late, listen"
   }
  },
  "27|R13": {
@@ -4884,9 +4854,9 @@
    "why": "moved -5.4s"
   },
   "42": {
-   "from": 135.28,
-   "to": 145.8,
-   "why": "moved -5.3s · Jev moved +10.5s · Jev: late, listen"
+   "from": 140.61,
+   "to": 135.28,
+   "why": "moved -5.3s"
   },
   "49": {
    "to": 282.22,
@@ -4946,9 +4916,9 @@
    "why": "two candidates · Jev: late · Jev: early, listen"
   },
   "10": {
-   "from": 255.97,
-   "to": 267.78,
-   "why": "two candidates · Jev moved +11.8s · Jev: late, listen"
+   "from": 258.44,
+   "to": 255.97,
+   "why": "two candidates"
   },
   "13": {
    "from": 325.44,
@@ -5097,11 +5067,6 @@
    "from": 733.91,
    "to": 736.3,
    "why": "moved -10.9s · Jev moved +2.4s"
-  },
-  "7": {
-   "to": 814.67,
-   "why": "Jev: early · Jev: early, moved +6.6s · Jev: late, listen",
-   "from": 808.07
   }
  },
  "28|R14": {
@@ -5357,11 +5322,6 @@
   "16": {
    "to": 473.39,
    "why": "Jev: early (likely)"
-  },
-  "15": {
-   "from": 423.95,
-   "to": 425.92,
-   "why": "Jev moved +2.0s · Jev: late, listen"
   }
  },
  "28|R6": {
@@ -5440,11 +5400,6 @@
    "from": 164.74,
    "to": 163.61,
    "why": "two candidates"
-  },
-  "9": {
-   "from": 280.98,
-   "to": 286.02,
-   "why": "Jev moved +5.0s · Jev: late, listen"
   }
  },
  "29|R1": {
@@ -5504,11 +5459,6 @@
    "from": 516.02,
    "to": 514.81,
    "why": "two candidates"
-  },
-  "2": {
-   "from": 52.07,
-   "to": 57.44,
-   "why": "Jev moved +5.4s · Jev: late, listen"
   }
  },
  "29|R12": {
@@ -5868,8 +5818,8 @@
   },
   "11": {
    "from": 224.6,
-   "to": 224.3,
-   "why": "moved -9.3s · Jev: early (likely) · Jev: early, moved +9.0s · Jev: late, listen"
+   "to": 215.27,
+   "why": "moved -9.3s"
   },
   "14": {
    "from": 268.02,
@@ -6438,9 +6388,9 @@
    "why": "moved -10.7s"
   },
   "5": {
-   "from": 60.31,
-   "to": 68.12,
-   "why": "moved -8.1s · Jev moved +7.8s · Jev: late, listen"
+   "from": 68.42,
+   "to": 60.31,
+   "why": "moved -8.1s"
   },
   "6": {
    "from": 73.26,
@@ -6725,11 +6675,6 @@
    "from": 92.68,
    "to": 91.16,
    "why": "would overtake the previous ayah"
-  },
-  "5": {
-   "from": 43.5,
-   "to": 49.36,
-   "why": "Jev moved +5.9s · Jev: late, listen"
   }
  },
  "30|R19": {
@@ -7126,11 +7071,6 @@
    "from": 114.1,
    "to": 117.54,
    "why": "moved +2.3s later · Jev: early · Jev moved +3.4s"
-  },
-  "11": {
-   "to": 121.88,
-   "why": "Jev: early · Jev moved +2.2s · Jev: late, listen",
-   "from": 119.63
   },
   "14": {
    "to": 134.08,
