@@ -749,16 +749,23 @@
   }
 
   /**
-   * Consonant skeleton of one token, for matching our Uthmani text against quran.com's:
-   * both texts carry the same words but can differ in harakat, superscript letters and
-   * pause marks, so only the stripped skeleton is stable across them.
+   * Consonant skeleton of one token, for matching our Indo-Pak text against quran.com's
+   * Uthmani: both carry the same words but differ in harakat, pause marks, long alifs
+   * (ٱلصِّرَٰطَ against الصِّرَاطَ) and how a hamza sits (أُو۟لَـٰٓئِكَ against اُولٰٓىِٕكَ), so
+   * alifs and hamzas drop out and the Urdu-style ی ک fold into Arabic ي ك. A few words are
+   * one private-use glyph of the Indo-Pak font (أُنثَىٰ), spelled back out here; the font's
+   * other private-use glyphs are marks.
    */
   function wordSkeleton(tok) {
-    return tok.replace(/[\u0654\u0655]/g, "\u0621")
-      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF]/g, "")
-      .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
-      .replace(/\s+/g, "")
-      .trim();
+    var s = tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
+      .replace(/\uF668/g, "\u0641\u064A").replace(/\uF669/g, "\u0643\u064A")
+      .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF\uE000-\uF8FF]/g, "")
+      .replace(/[\u0649\u06CC\u0626]/g, "\u064A")
+      .replace(/\u06A9/g, "\u0643")
+      .replace(/\u0624/g, "\u0648")
+      .replace(/\s+/g, "");
+    // A word that is all alif (اُ before a ligature) must stay a word, not a mark.
+    return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
   }
 
   /*

@@ -8,6 +8,12 @@
 /* ================================================================== */
 /* Design tokens                                                       */
 /* ================================================================== */
+@font-face {
+  font-family: "IndoPak Nastaleeq";
+  src: url("asset/fonts/indopak-nastaleeq.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
 
@@ -88,6 +94,9 @@
   /* --- Type --- */
   --md-font: "Segoe UI", system-ui, sans-serif;
   --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  /* The ayat themselves: Indo-Pak script, bundled so it works offline. Some words are this
+     font's own glyphs, so any element showing ayah text needs it. */
+  --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
 
   /* Legacy names. Rules written against the old palette (and branches that add to it) keep
      resolving to the matching M3 role. */
@@ -1843,7 +1852,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .ayat-body {
-  font-family: var(--md-font-arabic);
+  font-family: var(--mushaf-font);
   font-size: calc(1.6rem * var(--mushaf-scale, 1));
   line-height: 2.15;
   color: var(--md-on-surface);
@@ -2113,7 +2122,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .wpop-word {
-  font-family: var(--md-font-arabic);
+  font-family: var(--mushaf-font);
   font-size: 1.45rem;
   line-height: 1.9;
   color: var(--md-on-surface);
@@ -2392,6 +2401,8 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   padding: 0 0.25em;
   border: 1px solid var(--md-tertiary);
   border-radius: 50%;
+  /* The Indo-Pak font has no plain digits, so the number keeps the old face. */
+  font-family: var(--md-font-arabic);
   font-size: 0.6em;
   line-height: 1;
   color: var(--md-tertiary);
