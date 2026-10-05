@@ -5,8 +5,9 @@
  *
  * Source: api.quran.com, `text_indopak_nastaleeq` — the text drawn for the KFGQPC IndoPak
  * Nastaleeq font in asset/fonts. Its trailing ayah-number glyph is dropped, since the UI
- * draws its own marker. Some ligatures (أُنثَىٰ, وَٱلَّٰٓـِٔى …) are private-use glyphs of that
- * font, so the text only reads right in it. Keys, numbering and basmala flags are untouched.
+ * draws that from the font itself. The font's other private-use glyphs (أُنثَىٰ, the iqlab
+ * meem …) are written back as ordinary Unicode by plainSigns(), so any Naskh face reads it.
+ * Keys, numbering and basmala flags are untouched.
  */
 const fs = require("fs");
 const path = require("path");
@@ -14,12 +15,57 @@ const path = require("path");
 const outPath = path.join(__dirname, "..", "verses.js");
 const URL = "https://api.quran.com/api/v4/quran/verses/indopak_nastaleeq";
 
+/**
+ * The font's private-use glyphs inside an ayah, as ordinary Unicode, so the text reads in any
+ * Naskh face and the app needs the Indo-Pak font only for its end-of-ayah ornaments. Each was
+ * matched by eye against the glyph, quran.com's plain `text_indopak` and its Uthmani.
+ */
+const SIGNS = {
+  "\uF65D": "\u06E2", "\uF65B": "\u06E2", "\uF66A": "\u06E2", "\uF64A": "\u06E2", // iqlab: small meem
+  "\uF66D": "\u06ED", "\uF66B": "\u06ED",            // iqlab under kasratan: small low meem
+  "\uF64B": "",                                      // an empty spacing glyph
+  "\uF61F": "\u0627\u0650\u06E8",                    // alif of a nun qutni: اِۨ
+  "\uF651": "", "\uF662": "", "\uF663": "",          // "وقف لازم" captions; the ۘ beside them stays
+  "\uF64F": "",                                      // three-quarter hizb marker (6:73)
+  "\uF697": "\u06D9", "\uF63E": "\u06DA", "\uF654": "\u06DA", "\uF699": "\u06D6", // stacked pause signs
+  "\uF693": "\u06E9",                                // sajdah emblem (22:77)
+  "\uF653": "\u06E6\u064E",                          // small yeh with fatha
+  "\uF694": "\u0655\u0650", "\uF657": "\u0655\u064D", // hamza below with kasra / kasratan
+  // Words drawn as one glyph, spelled out.
+  "\uF664": "\u0646\u0652\u062B\u0670\u06CC",              // ـنْثٰی
+  "\uF665": "\u0646\u0652\u062B\u0670\u0653\u06CC",        // ـنْثٰٓی
+  "\uF667": "\u0644\u0651\u0670\u0653\u0626\u0650\u06CC\u0652", // ـلّٰٓئِیْ
+  "\uF668": "\u0641\u0651\u0670\u06E4\u06CC",              // ـفّٰۤی
+  "\uF669": "\u0643\u0651\u0670\u06E4\u06CC",              // ـكّٰۤی
+  "\uF666": "\u062B\u064F\u0644\u064F\u062B\u064E\u06CC\u0650", // ثُلُثَیِ
+  "\uF658": "\u0648\u064E\u0644\u0652\u06CC\u064E\u062A\u064E\u0644\u064E\u0637\u0651\u064E\u0641\u0652", // وَلْیَتَلَطَّفْ
+};
+
+function plainSigns(t) {
+  // A small meem or small yeh standing alone belongs on the word before it.
+  const toks = t.split(" ");
+  for (let i = toks.length - 1; i > 0; i--) {
+    if (toks[i] !== "\uF64A" && toks[i] !== "\uF653") continue;
+    let j = i - 1;
+    while (j > 0 && !/[\u0621-\u064A\u0671-\u06D3]/.test(toks[j])) j--;
+    toks[j] += SIGNS[toks[i]];
+    toks.splice(i, 1);
+  }
+  return toks.join(" ")
+    .replace("\uF65E\u0646\u064F\u0640", "\u0646\u064F\u0640\u06E8") // نُـۨجِی (21:88)
+    .replace(/[\uE000-\uF8FF]/g, (c) => {
+      if (!(c in SIGNS)) throw new Error("No plain form for U+" + c.charCodeAt(0).toString(16).toUpperCase());
+      return SIGNS[c];
+    })
+    .replace("\u06E9\u06DF", "\u06E9");
+}
+
 async function main() {
   const res = await fetch(URL);
   if (!res.ok) throw new Error("HTTP " + res.status + " for " + URL);
   const text = {};
   (await res.json()).verses.forEach((v) => {
-    text[v.verse_key] = v.text_indopak_nastaleeq.replace(/\s*[-]+$/, "").trim();
+    text[v.verse_key] = plainSigns(v.text_indopak_nastaleeq.replace(/\s*[\uE000-\uF8FF]+$/, "").trim());
   });
 
   let surah = 0;

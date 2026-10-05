@@ -89,9 +89,7 @@ function paraAyahs() {
 
 /** The app's skeleton, copied so the check fails when the app's matching would. */
 function wordSkeleton(tok) {
-  var s = tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
-    .replace(/\uF668/g, "\u0641\u064A").replace(/\uF669/g, "\u0643\u064A")
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF\uE000-\uF8FF]/g, "")
+  var s = tok.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF\uE000-\uF8FF]/g, "")
     .replace(/[\u0649\u06CC\u0626]/g, "\u064A")
     .replace(/\u06A9/g, "\u0643")
     .replace(/\u0624/g, "\u0648")
