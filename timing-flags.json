@@ -2528,7 +2528,7 @@
   "60": {
    "from": 22.51,
    "to": 26.47,
-   "why": "moved +4.0s later · Jev: late, listen"
+   "why": "moved +4.0s later"
   },
   "64": {
    "from": 208.64,
@@ -2573,9 +2573,6 @@
    "from": 240.31,
    "to": 244.2,
    "why": "Jev: early, moved +3.9s"
-  },
-  "87": {
-   "why": "Jev: late, listen"
   }
  },
  "20|R5": {
@@ -2656,9 +2653,6 @@
   },
   "1": {
    "why": "Jev: early, listen"
-  },
-  "9": {
-   "why": "Jev: late, listen"
   }
  },
  "21|R11": {
@@ -3040,9 +3034,6 @@
    "from": 193.98,
    "to": 179.21,
    "why": "moved -14.8s"
-  },
-  "51": {
-   "why": "Jev: late, listen"
   }
  },
  "22|R4": {
@@ -3287,7 +3278,7 @@
   "45": {
    "from": 353.45,
    "to": 356.33,
-   "why": "weak fit · Jev: late, listen"
+   "why": "weak fit"
   },
   "46": {
    "from": 354.83,
@@ -3553,9 +3544,6 @@
    "from": 431.37,
    "to": 430.22,
    "why": "two candidates"
-  },
-  "139": {
-   "why": "Jev: late, listen"
   }
  },
  "24|R1": {
@@ -3572,7 +3560,7 @@
   "37": {
    "from": 149.75,
    "to": 139.55,
-   "why": "moved -5.4s · Jev: late · Jev moved -10.2s"
+   "why": "moved -5.4s · Jev moved -10.2s"
   },
   "41": {
    "from": 269.26,
@@ -3776,7 +3764,7 @@
   "52": {
    "from": 386.93,
    "to": 379.16,
-   "why": "moved +1.2s later · Jev: late · Jev moved -7.8s"
+   "why": "moved +1.2s later · Jev moved -7.8s"
   },
   "53": {
    "from": 411.07,
@@ -3786,7 +3774,7 @@
   "54": {
    "from": 446.74,
    "to": 441.46,
-   "why": "weak fit · Jev: late (likely) · Jev moved -5.3s"
+   "why": "weak fit · Jev moved -5.3s"
   },
   "36": {
    "from": 15.71,
@@ -3824,7 +3812,7 @@
  "25|R14": {
   "2": {
    "to": 30.06,
-   "why": "Jev: late (likely) · Jev moved -5.5s",
+   "why": "Jev moved -5.5s",
    "from": 35.53
   },
   "14": {
@@ -3892,10 +3880,6 @@
    "to": 350.98,
    "why": "two candidates"
   },
-  "57": {
-   "to": 371.51,
-   "why": "Jev: late"
-  },
   "39": {
    "from": 147.44,
    "to": 135.72,
@@ -3923,7 +3907,7 @@
   "28": {
    "from": 197.8,
    "to": 188.3,
-   "why": "moved +6.0s · Jev: late · Jev moved -9.5s"
+   "why": "moved +6.0s · Jev moved -9.5s"
   },
   "31": {
    "to": 259.81,
@@ -4209,7 +4193,7 @@
   "41": {
    "from": 261.77,
    "to": 259.06,
-   "why": "two candidates · Jev: late (likely) · Jev moved -2.7s"
+   "why": "two candidates · Jev moved -2.7s"
   },
   "43": {
    "from": 306.05,
@@ -4258,7 +4242,7 @@
   "23": {
    "from": 368.15,
    "to": 361.61,
-   "why": "two candidates · Jev: late · Jev moved -6.5s"
+   "why": "two candidates · Jev moved -6.5s"
   },
   "24": {
    "from": 388.38,
@@ -4377,7 +4361,7 @@
   "35": {
    "from": 194.16,
    "to": 185.86,
-   "why": "moved -7.5s · Jev: late (likely) · Jev moved -8.3s"
+   "why": "moved -7.5s · Jev moved -8.3s"
   },
   "34": {
    "from": 166.18,
@@ -4416,7 +4400,7 @@
   "53": {
    "from": 359.23,
    "to": 353.32,
-   "why": "two candidates · Jev: late · Jev moved -5.9s"
+   "why": "two candidates · Jev moved -5.9s"
   },
   "54": {
    "from": 376.54,
@@ -4426,7 +4410,7 @@
   "57": {
    "from": 405.89,
    "to": 401.2,
-   "why": "two candidates · Jev: late · Jev moved -4.7s"
+   "why": "two candidates · Jev moved -4.7s"
   },
   "58": {
    "from": 416.51,
@@ -4438,7 +4422,7 @@
   "43": {
    "from": 59.96,
    "to": 55.08,
-   "why": "moved +5.0s later · Jev: late · Jev moved -4.9s"
+   "why": "moved +5.0s later · Jev moved -4.9s"
   },
   "45": {
    "from": 119.53,
@@ -4637,7 +4621,7 @@
   },
   "94": {
    "to": 312.12,
-   "why": "Jev: late (likely) · Jev moved -2.3s",
+   "why": "Jev moved -2.3s",
    "from": 314.43
   },
   "95": {
@@ -4738,7 +4722,7 @@
   "22": {
    "from": 346.82,
    "to": 342.32,
-   "why": "moved +3.8s later · Jev: late · Jev moved -4.5s"
+   "why": "moved +3.8s later · Jev moved -4.5s"
   },
   "9": {
    "from": 106.52,
@@ -4792,7 +4776,7 @@
   "10": {
    "from": 242.23,
    "to": 232.16,
-   "why": "two candidates · Jev: late · Jev moved -10.1s"
+   "why": "two candidates · Jev moved -10.1s"
   },
   "13": {
    "from": 290.78,
@@ -4870,7 +4854,7 @@
   },
   "54": {
    "to": 351.7,
-   "why": "Jev: late · Jev moved -8.1s",
+   "why": "Jev moved -8.1s",
    "from": 359.83
   },
   "55": {
@@ -4902,7 +4886,7 @@
   },
   "5": {
    "to": 138.4,
-   "why": "Jev: late (likely) · Jev moved -6.9s",
+   "why": "Jev moved -6.9s",
    "from": 145.35
   },
   "7": {
@@ -4913,7 +4897,7 @@
   "8": {
    "from": 221.76,
    "to": 214.05,
-   "why": "two candidates · Jev: late · Jev: early, listen"
+   "why": "two candidates · Jev: early, listen"
   },
   "10": {
    "from": 258.44,
@@ -4927,7 +4911,7 @@
   },
   "15": {
    "to": 364.1,
-   "why": "Jev: late (likely) · Jev moved -4.8s",
+   "why": "Jev moved -4.8s",
    "from": 368.91
   },
   "19": {
@@ -4981,13 +4965,13 @@
   },
   "12": {
    "to": 166.72,
-   "why": "Jev: late (likely) · Jev moved -5.8s",
+   "why": "Jev moved -5.8s",
    "from": 172.51
   },
   "13": {
    "from": 253.35,
    "to": 249.82,
-   "why": "weak fit · Jev: late (likely) · Jev moved -3.5s"
+   "why": "weak fit · Jev moved -3.5s"
   },
   "14": {
    "from": 307.45,
@@ -5008,7 +4992,7 @@
   "3": {
    "from": 175.82,
    "to": 178.77,
-   "why": "moved +3.0s later · Jev: late"
+   "why": "moved +3.0s later"
   },
   "4": {
    "to": 234.39,
@@ -5022,7 +5006,7 @@
   "6": {
    "from": 387.6,
    "to": 378.32,
-   "why": "moved -5.9s · Jev: late (likely) · Jev moved -9.3s"
+   "why": "moved -5.9s · Jev moved -9.3s"
   },
   "7": {
    "from": 465.53,
@@ -5149,10 +5133,6 @@
    "from": 894.43,
    "to": 887.86,
    "why": "moved -6.6s"
-  },
-  "6": {
-   "to": 955.25,
-   "why": "Jev: late"
   },
   "7": {
    "from": 1159.69,
@@ -5355,7 +5335,7 @@
   "2": {
    "from": 549.31,
    "to": 543.76,
-   "why": "two candidates · Jev: late · Jev moved -5.5s"
+   "why": "two candidates · Jev moved -5.5s"
   }
  },
  "28|R8": {
@@ -5367,7 +5347,7 @@
   "8": {
    "from": 142.78,
    "to": 137.16,
-   "why": "moved -23.8s · Jev: late · Jev moved -5.6s"
+   "why": "moved -23.8s · Jev moved -5.6s"
   },
   "10": {
    "to": 317.58,
@@ -5376,7 +5356,7 @@
   },
   "11": {
    "to": 550.75,
-   "why": "Jev: late · Jev moved -7.6s",
+   "why": "Jev moved -7.6s",
    "from": 558.32
   },
   "12": {
@@ -5491,7 +5471,7 @@
   },
   "3": {
    "to": 44.0,
-   "why": "Jev: late (likely) · Jev moved -3.1s",
+   "why": "Jev moved -3.1s",
    "from": 47.1
   },
   "4": {
@@ -5570,7 +5550,7 @@
  "29|R17-R18": {
   "1": {
    "to": 19.24,
-   "why": "Jev: late (likely) · Jev moved -6.0s",
+   "why": "Jev moved -6.0s",
    "from": 25.23
   },
   "9": {
@@ -5604,11 +5584,11 @@
   "34": {
    "from": 384.73,
    "to": 378.4,
-   "why": "moved +3.5s later · Jev: late (likely) · Jev moved -6.3s"
+   "why": "moved +3.5s later · Jev moved -6.3s"
   },
   "35": {
    "to": 398.18,
-   "why": "Jev: late (likely) · Jev moved -6.4s",
+   "why": "Jev moved -6.4s",
    "from": 404.62
   },
   "38": {
@@ -5679,7 +5659,7 @@
   "30": {
    "from": 553.99,
    "to": 548.83,
-   "why": "two candidates · Jev: late (likely) · Jev moved -5.2s"
+   "why": "two candidates · Jev moved -5.2s"
   },
   "24": {
    "from": 461.8,
@@ -5833,7 +5813,7 @@
   },
   "21": {
    "to": 514.5,
-   "why": "Jev: late (likely) · Jev moved -7.9s",
+   "why": "Jev moved -7.9s",
    "from": 522.41
   },
   "26": {
@@ -5884,7 +5864,7 @@
   },
   "50": {
    "to": 402.56,
-   "why": "Jev: late (likely) · Jev moved -2.8s",
+   "why": "Jev moved -2.8s",
    "from": 405.35
   },
   "51": {
@@ -5907,7 +5887,7 @@
   "1": {
    "from": 29.48,
    "to": 23.88,
-   "why": "weak fit · Jev: late (likely) · Jev moved -5.6s"
+   "why": "weak fit · Jev moved -5.6s"
   },
   "2": {
    "from": 29.72,
@@ -6042,7 +6022,7 @@
   },
   "39": {
    "to": 61.86,
-   "why": "Jev: late (likely) · Jev moved -5.4s",
+   "why": "Jev moved -5.4s",
    "from": 67.25
   },
   "43": {
@@ -6349,7 +6329,7 @@
   "4": {
    "from": 78.92,
    "to": 72.62,
-   "why": "moved +6.0s · Jev: late (likely) · Jev moved -6.3s"
+   "why": "moved +6.0s · Jev moved -6.3s"
   },
   "5": {
    "from": 79.36,
@@ -6482,7 +6462,7 @@
   },
   "11": {
    "to": 159.24,
-   "why": "Jev: late · Jev moved -5.2s",
+   "why": "Jev moved -5.2s",
    "from": 164.4
   },
   "12": {
@@ -6510,7 +6490,7 @@
   "7": {
    "from": 127.6,
    "to": 123.68,
-   "why": "moved +3.6s later · Jev: late · Jev moved -3.9s"
+   "why": "moved +3.6s later · Jev moved -3.9s"
   },
   "11": {
    "from": 166.87,
@@ -6524,7 +6504,7 @@
   },
   "24": {
    "to": 344.31,
-   "why": "Jev: late (likely) · Jev moved -5.7s",
+   "why": "Jev moved -5.7s",
    "from": 350.04
   },
   "25": {
@@ -6586,7 +6566,7 @@
   "12": {
    "from": 219.98,
    "to": 212.73,
-   "why": "moved +5.6s · Jev: late · Jev moved -7.2s"
+   "why": "moved +5.6s · Jev moved -7.2s"
   },
   "15": {
    "from": 265.56,
@@ -6626,7 +6606,7 @@
   "2": {
    "from": 43.88,
    "to": 39.62,
-   "why": "two candidates · Jev: late · Jev moved -4.3s"
+   "why": "two candidates · Jev moved -4.3s"
   },
   "12": {
    "from": 164.62,
@@ -6689,7 +6669,7 @@
   },
   "6": {
    "to": 56.1,
-   "why": "Jev: late · Jev moved -6.3s",
+   "why": "Jev moved -6.3s",
    "from": 62.37
   }
  },
@@ -6712,13 +6692,13 @@
   },
   "5": {
    "to": 28.06,
-   "why": "Jev: late · Jev moved -5.2s",
+   "why": "Jev moved -5.2s",
    "from": 33.23
   },
   "7": {
    "from": 63.25,
    "to": 50.12,
-   "why": "moved +5.6s · Jev: late (likely) · Jev moved -13.1s"
+   "why": "moved +5.6s · Jev moved -13.1s"
   },
   "12": {
    "from": 115.58,
@@ -6839,7 +6819,7 @@
   "43": {
    "from": 450.44,
    "to": 441.86,
-   "why": "two candidates · Jev: late · Jev moved -8.6s"
+   "why": "two candidates · Jev moved -8.6s"
   },
   "44": {
    "to": 458.51,
@@ -6960,12 +6940,12 @@
   },
   "15": {
    "to": 253.44,
-   "why": "Jev: late · Jev moved -4.8s",
+   "why": "Jev moved -4.8s",
    "from": 258.27
   },
   "17": {
    "to": 288.8,
-   "why": "Jev: late (likely) · Jev moved -6.3s",
+   "why": "Jev moved -6.3s",
    "from": 295.09
   },
   "19": {
@@ -7000,13 +6980,13 @@
   },
   "6": {
    "to": 102.67,
-   "why": "Jev: late (likely) · Jev moved -6.2s",
+   "why": "Jev moved -6.2s",
    "from": 108.92
   },
   "9": {
    "from": 142.03,
    "to": 139.82,
-   "why": "would overtake the previous ayah · Jev: late (likely)"
+   "why": "would overtake the previous ayah"
   },
   "10": {
    "to": 146.29,
@@ -7035,7 +7015,7 @@
   "21": {
    "from": 289.23,
    "to": 281.13,
-   "why": "moved +3.7s later · Jev: late (likely) · Jev moved -8.1s"
+   "why": "moved +3.7s later · Jev moved -8.1s"
   },
   "24": {
    "to": 321.87,
@@ -7054,7 +7034,7 @@
   "29": {
    "from": 373.94,
    "to": 370.63,
-   "why": "moved +2.4s later · Jev: late (likely) · Jev moved -3.3s"
+   "why": "moved +2.4s later · Jev moved -3.3s"
   },
   "22": {
    "from": 294.41,
@@ -7080,7 +7060,7 @@
   "17": {
    "from": 160.16,
    "to": 156.94,
-   "why": "moved +2.4s later · Jev: late · Jev moved -3.2s"
+   "why": "moved +2.4s later · Jev moved -3.2s"
   },
   "18": {
    "from": 159.81,
@@ -7142,7 +7122,7 @@
   "9": {
    "from": 164.41,
    "to": 158.9,
-   "why": "two candidates · Jev: late (likely) · Jev moved -5.5s"
+   "why": "two candidates · Jev moved -5.5s"
   },
   "17": {
    "from": 297.41,
@@ -7152,7 +7132,7 @@
   "21": {
    "from": 349.34,
    "to": 345.17,
-   "why": "moved +3.9s later · Jev: late (likely) · Jev moved -4.2s"
+   "why": "moved +3.9s later · Jev moved -4.2s"
   },
   "23": {
    "from": 361.83,
@@ -8607,7 +8587,7 @@
   },
   "35": {
    "to": 308.2,
-   "why": "Jev: late (likely) · Jev moved -3.7s",
+   "why": "Jev moved -3.7s",
    "from": 311.94
   },
   "26": {
