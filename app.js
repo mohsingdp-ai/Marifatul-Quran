@@ -1136,10 +1136,15 @@
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
       // The ayah's closing pause marks go into the ornament's span, in the Indo-Pak font,
-      // which sets them on top of the ornament as a printed mushaf does.
+      // which sets them on top of the ornament as a printed mushaf does. A sajdah ayah, or
+      // one with stacked pause signs, ends in the font's own ornament for it; the rest get
+      // the plain one.
       var words = a.text.split(/\s+/);
       var endMarks = [];
       while (words.length && wordSkeleton(words[words.length - 1]) === "") endMarks.unshift(words.pop());
+      var endText = endMarks.join("");
+      var ownOrnament = endText.match(/[\uE000-\uF8FF]+$/);
+      if (ownOrnament) endText = endText.slice(0, ownOrnament.index);
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         (glossSwitch
@@ -1150,8 +1155,8 @@
           : "") +
         "<span class=\"ayah-text\">" + ayahWordsHtml(words.join(" "), gloss).replace(/ $/, "") + "</span>" +
         "<span class=\"ayat-num\" role=\"img\" aria-label=\"Ayah " + a.n + "\">" +
-        (endMarks.length ? "<span class=\"ayat-num-mark\">" + escapeHtml(endMarks.join("")) + "</span>" : "") +
-        ayahOrnament(a.n) + "</span>" +
+        (endText ? "<span class=\"ayat-num-mark\">" + escapeHtml(endText) + "</span>" : "") +
+        (ownOrnament ? ownOrnament[0] : ayahOrnament(a.n)) + "</span>" +
         (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
