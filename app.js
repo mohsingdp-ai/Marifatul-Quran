@@ -743,22 +743,54 @@
     return "ayat-panel-" + globalIndex;
   }
 
-  function toArabicDigits(n) {
-    var digits = "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669";
-    return String(n).replace(/\d/g, function (d) { return digits.charAt(Number(d)); });
+  /**
+   * The Indo-Pak font's own end-of-ayah ornament, the number drawn inside it, as in a printed
+   * mushaf: private-use U+F500 is ayah 1, up to U+F61D for 286. Placed straight after the
+   * ayah's closing pause mark, the font sets that mark above the ornament.
+   */
+  function ayahOrnament(n) {
+    return String.fromCharCode(0xF4FF + n);
   }
 
   /**
-   * Consonant skeleton of one token, for matching our Uthmani text against quran.com's:
-   * both texts carry the same words but can differ in harakat, superscript letters and
-   * pause marks, so only the stripped skeleton is stable across them.
+   * An ayah split for drawing: its words, and its closing pause marks, which go into the
+   * ornament's span so the Indo-Pak font sets them on top of the ornament as a printed mushaf
+   * does. A sajdah ayah, or one with stacked pause signs, ends in the font's own ornament for
+   * it (`ornament`); the rest get the plain one from ayahOrnament().
+   */
+  function ayahParts(text) {
+    var words = text.split(/\s+/);
+    var endMarks = [];
+    while (words.length && wordSkeleton(words[words.length - 1]) === "") endMarks.unshift(words.pop());
+    var endText = endMarks.join("");
+    var own = endText.match(/[\uF631-\uF63D\uF681-\uF68E\uF690-\uF693]$/);
+    return {
+      body: words.join(" "),
+      endText: own ? endText.slice(0, own.index) : endText,
+      ornament: own ? own[0] : ""
+    };
+  }
+
+  /**
+   * Consonant skeleton of one token, for matching our Indo-Pak text against quran.com's
+   * Uthmani: both carry the same words but differ in harakat, pause marks, long alifs
+   * (ٱلصِّرَٰطَ against الصِّرَاطَ) and how a hamza sits (أُو۟لَـٰٓئِكَ against اُولٰٓىِٕكَ), so
+   * alifs and hamzas drop out and the Urdu-style ی ک fold into Arabic ي ك. A few words are
+   * written with private-use ligatures of the Indo-Pak font (اُنْثٰی, وَلْیَتَلَطَّفْ), spelled
+   * back out here; the font's other private-use glyphs are signs.
    */
   function wordSkeleton(tok) {
-    return tok.replace(/[\u0654\u0655]/g, "\u0621")
-      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF]/g, "")
-      .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
-      .replace(/\s+/g, "")
-      .trim();
+    var s = tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
+      .replace(/\uF668/g, "\u0641\u064A").replace(/\uF669/g, "\u0643\u064A")
+      .replace(/\uF666/g, "\u062B\u0644\u062B\u064A")
+      .replace(/\uF658/g, "\u0648\u0644\u064A\u062A\u0644\u0637\u0641")
+      .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF\uE000-\uF8FF]/g, "")
+      .replace(/[\u0649\u06CC\u0626]/g, "\u064A")
+      .replace(/\u06A9/g, "\u0643")
+      .replace(/\u0624/g, "\u0648")
+      .replace(/\s+/g, "");
+    // A word that is all alif (اُ before a ligature) must stay a word, not a mark.
+    return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
   }
 
   /*
@@ -921,7 +953,7 @@
       return;
     }
     var on = !item.classList.contains("has-gloss");
-    item.querySelector(".ayah-text").innerHTML = ayahWordsHtml(ayah.text, on);
+    item.querySelector(".ayah-text").innerHTML = ayahWordsHtml(ayahParts(ayah.text).body, on).replace(/ $/, "");
     item.classList.toggle("has-gloss", on);
     btn.setAttribute("aria-pressed", String(on));
     if (on) fillAyahGlosses(item, row);
@@ -1128,6 +1160,7 @@
     var showTranslation = translationEnabled();
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
+      var parts = ayahParts(a.text);
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         (glossSwitch
@@ -1136,8 +1169,10 @@
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
           : "") +
-        "<span class=\"ayah-text\">" + ayahWordsHtml(a.text, gloss) + "</span>" +
-        "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>" +
+        "<span class=\"ayah-text\">" + ayahWordsHtml(parts.body, gloss).replace(/ $/, "") + "</span>" +
+        "<span class=\"ayat-num\" role=\"img\" aria-label=\"Ayah " + a.n + "\">" +
+        (parts.endText ? "<span class=\"ayat-num-mark\">" + escapeHtml(parts.endText) + "</span>" : "") +
+        (parts.ornament || ayahOrnament(a.n)) + "</span>" +
         (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
