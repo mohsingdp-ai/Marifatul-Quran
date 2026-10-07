@@ -103,6 +103,18 @@ function wordSkeleton(tok) {
   return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
 }
 
+/** The app's word-parts lookup (findWordSegments), copied for the same reason. */
+function findWordSegments(words, wordIndex, wordText) {
+  if (!words) return null;
+  const join = (segs) => segs.map((x) => x[0]).join("");
+  const target = wordSkeleton(wordText);
+  const atIndex = words[wordIndex];
+  if (atIndex && wordSkeleton(join(atIndex)) === target) return atIndex;
+  for (const w of words) if (wordSkeleton(join(w)) === target) return w;
+  if (atIndex && oneEditApart(wordSkeleton(join(atIndex)), target)) return atIndex;
+  return null;
+}
+
 /** The app's one-letter tolerance, copied for the same reason. */
 function oneEditApart(a, b) {
   if (a === b) return true;
@@ -192,6 +204,7 @@ async function main() {
   const missingAyat = [];
   const mismatchAyat = [];
   const unmatchedByAyah = [];
+  const noParts = { "": [], " (Indo-Pak)": [] };
   const liveSample = [];
   const keyToPara = {};
 
@@ -236,6 +249,7 @@ async function main() {
           });
           if (!hit && local[i]) hit = oneEditApart(wordSkeleton(local[i][0]), target);
           if (!hit) { unmatchedWords++; ayahUnmatched++; }
+          if (segs && !findWordSegments(segs, i, tok)) noParts[script[0]].push(key + " " + tok);
         });
         if (ayahUnmatched) unmatchedByAyah.push(key + script[0]);
       });
@@ -283,6 +297,12 @@ async function main() {
   console.log("ayat differing source:   " + mismatchAyat.length);
   console.log("ayat with unmatched tap: " + unmatchedByAyah.length + "   (" + unmatchedWords + " words)");
   console.log("unexpected extra keys:   " + extraKeys);
+  // Known: 37:130 splits إِلْ يَاسِينَ, which the corpus keeps as one word, so 2 Uthmani taps
+  // there show no parts. Anything past that is new.
+  Object.keys(noParts).forEach(function (k) {
+    console.log("taps without word parts" + (k || " (Uthmani)") + ": " + noParts[k].length +
+      (noParts[k].length ? "   " + noParts[k].slice(0, 6).join(", ") : ""));
+  });
   if (liveCount) console.log("live quran.com sampled:  " + liveChecked + " ayat");
 
   if (!problems.length) {

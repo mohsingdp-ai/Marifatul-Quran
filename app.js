@@ -3638,7 +3638,9 @@
   /**
    * The segments of one word. The corpus lists words in the same order as our Uthmani
    * text for every ayah but 37:130, so position is tried first and the letters confirm
-   * it; when the two disagree the rest of the ayah is searched instead.
+   * it; when the two disagree the rest of the ayah is searched instead. Last, as for word
+   * meanings, one letter off at the same position still counts: the Indo-Pak text writes
+   * some hamzas differently (خَطِیْٓئَةً against خَطِيٓـَٔةً).
    */
   function getWordSegments(para, surahNumber, ayahNumber, wordIndex, wordText) {
     return getParaMorphology(para).then(function (all) {
@@ -3654,6 +3656,7 @@
     for (var i = 0; i < words.length; i++) {
       if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
     }
+    if (atIndex && oneEditApart(wordSkeleton(segmentsJoin(atIndex)), target)) return atIndex;
     return null;
   }
 
@@ -3746,7 +3749,9 @@
   function copyLlmPrompt(btn) {
     var tr = btn.closest("tr.ayat-row[data-ayat-for]");
     var row = tr && data[tr.dataset.ayatFor];
-    var entry = row && getRukuAyat(row);
+    // Always the Uthmani text: the Indo-Pak one carries its font's private glyphs, which an
+    // AI reads as junk.
+    var entry = row && typeof QURAN_VERSES !== "undefined" && QURAN_VERSES[ayatKeyFor(row)];
     if (!entry) return;
     var n = Number(btn.dataset.ayah);
     var ayahs = n ? entry.ayahs.filter(function (a) { return a.n === n; }) : entry.ayahs;
