@@ -41,6 +41,9 @@ function indoPakPlainWords(words) {
   return toks.join(" ")
     .replace("\uF65E\u0646\u064F\u0640", "\u0646\u064F\u0640\u06E8") // نُـۨجِی (21:88)
     .replace(/[\uE000-\uF8FF]/g, function (c) { return INDOPAK_PLAIN_SIGNS[c] || ""; })
+    // The iqlab meem of a fathatan sits on the letter that carries it, before the alif or
+    // ى that follows (مُصَدِّقًۢا), as quran.com and the Uthmani text place it.
+    .replace(/\u064B([\u0627\u0649\u06CC])\u06E2/g, "\u064B\u06E2$1")
     .replace(/ {2,}/g, " ")
     .trim();
 }
