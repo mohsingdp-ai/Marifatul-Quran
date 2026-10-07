@@ -7,12 +7,15 @@
  * Deliberately does NOT reuse build-verses.js's Basmala stripping: re-running the same
  * helper would only prove it is self-consistent. Instead each stored ayah must either equal
  * the API text outright, or be the API text with exactly the Basmala removed from the front.
+ * The one other accepted difference is the short list of known slips in the API's text in
+ * scripts/verse-corrections.js, each applied exactly as listed.
  *
  * Source: api.alquran.cloud, edition `quran-uthmani`.
  */
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { CORRECTIONS, correctAyah } = require("./verse-corrections");
 
 const rootDir = path.join(__dirname, "..");
 const EDITION = "quran-uthmani";
@@ -80,6 +83,7 @@ async function main() {
 
   /* 2. Per-ruku: metadata, ayah numbering, and Uthmani text. */
   let ayatChecked = 0;
+  let corrected = 0;
   for (const row of selected) {
     const key = `${row.para}|${row.rukuInPara}`;
     const entry = verses[key];
@@ -107,8 +111,12 @@ async function main() {
     if (!!entry.showBasmala !== expectBasmala) fail(key, `showBasmala ${entry.showBasmala}, expected ${expectBasmala}`);
 
     for (const a of entry.ayahs) {
-      const official = surah.byNumber.get(a.n);
-      if (official === undefined) { fail(key, `ayah ${a.n} not in surah ${row.surahNumber}`); continue; }
+      const raw = surah.byNumber.get(a.n);
+      if (raw === undefined) { fail(key, `ayah ${a.n} not in surah ${row.surahNumber}`); continue; }
+      let official;
+      try { official = correctAyah(row.surahNumber + ":" + a.n, raw); }
+      catch (e) { fail(key, e.message); continue; }
+      if (official !== raw) corrected++;
       ayatChecked++;
       if (a.text === official) continue;
       /* Only permitted difference: the Basmala prefix removed from ayah 1. */
@@ -145,7 +153,11 @@ async function main() {
     if (missingSurahs.length) fail("coverage", `surahs absent from data.js: ${missingSurahs.join(",")}`);
   }
 
-  console.log(`Checked ${selected.length} rukus / ${ayatChecked} ayat against ${EDITION}.`);
+  console.log(`Checked ${selected.length} rukus / ${ayatChecked} ayat against ${EDITION}` +
+    ` (${corrected} with a listed correction).`);
+  if (!paraFilter.length && corrected !== Object.keys(CORRECTIONS).length) {
+    fail("corrections", `${corrected} of ${Object.keys(CORRECTIONS).length} listed corrections were used`);
+  }
   if (!problems.length) { console.log("✅ verses.js matches the Uthmani scripture."); return; }
   console.log(`\n❌ ${problems.length} problem(s):`);
   problems.forEach((p) => console.log("  " + p));

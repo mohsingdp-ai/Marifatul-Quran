@@ -110,6 +110,10 @@ function findWordSegments(words, wordIndex, wordText) {
   const target = wordSkeleton(wordText);
   const atIndex = words[wordIndex];
   if (atIndex && wordSkeleton(join(atIndex)) === target) return atIndex;
+  const holds = (seg) => !!seg && seg[0].split(/\s+/).some((p) => wordSkeleton(p) === target);
+  const before = words[wordIndex - 1];
+  if (atIndex && holds(atIndex[0])) return [atIndex[0]];
+  if (before && holds(before[before.length - 1])) return [before[before.length - 1]];
   for (const w of words) if (wordSkeleton(join(w)) === target) return w;
   if (atIndex && oneEditApart(wordSkeleton(join(atIndex)), target)) return atIndex;
   return null;
@@ -297,8 +301,6 @@ async function main() {
   console.log("ayat differing source:   " + mismatchAyat.length);
   console.log("ayat with unmatched tap: " + unmatchedByAyah.length + "   (" + unmatchedWords + " words)");
   console.log("unexpected extra keys:   " + extraKeys);
-  // Known: 37:130 splits إِلْ يَاسِينَ, which the corpus keeps as one word, so 2 Uthmani taps
-  // there show no parts. Anything past that is new.
   Object.keys(noParts).forEach(function (k) {
     console.log("taps without word parts" + (k || " (Uthmani)") + ": " + noParts[k].length +
       (noParts[k].length ? "   " + noParts[k].slice(0, 6).join(", ") : ""));

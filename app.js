@@ -3638,9 +3638,11 @@
   /**
    * The segments of one word. The corpus lists words in the same order as our Uthmani
    * text for every ayah but 37:130, so position is tried first and the letters confirm
-   * it; when the two disagree the rest of the ayah is searched instead. Last, as for word
-   * meanings, one letter off at the same position still counts: the Indo-Pak text writes
-   * some hamzas differently (خَطِیْٓئَةً against خَطِيٓـَٔةً).
+   * it. A word our text splits where the corpus keeps it whole (بَعْدَ مَا in 2:181, 8:6,
+   * 13:37; إِلْ يَاسِينَ in 37:130) gets its own segment next, before the ayah-wide search,
+   * which would hand 13:37's مَا the parts of a later, different مَا. Otherwise the rest of
+   * the ayah is searched. Last, as for word meanings, one letter off at the same position still
+   * counts: the Indo-Pak text writes some hamzas differently (خَطِیْٓئَةً against خَطِيٓـَٔةً).
    */
   function getWordSegments(para, surahNumber, ayahNumber, wordIndex, wordText) {
     return getParaMorphology(para).then(function (all) {
@@ -3653,10 +3655,26 @@
     var target = wordSkeleton(wordText);
     var atIndex = words[wordIndex];
     if (atIndex && wordSkeleton(segmentsJoin(atIndex)) === target) return atIndex;
+    var split = splitSegment(atIndex, words[wordIndex - 1], target);
+    if (split) return [split];
     for (var i = 0; i < words.length; i++) {
       if (wordSkeleton(segmentsJoin(words[i])) === target) return words[i];
     }
     if (atIndex && oneEditApart(wordSkeleton(segmentsJoin(atIndex)), target)) return atIndex;
+    return null;
+  }
+
+  /**
+   * The segment a split word stands for: the first half of the corpus word at its place, or
+   * the second half of the one before it. A segment holding a space (إِلْ يَاسِينَ) counts
+   * for either half.
+   */
+  function splitSegment(here, before, target) {
+    function holds(seg) {
+      return !!seg && seg[0].split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+    }
+    if (here && holds(here[0])) return here[0];
+    if (before && holds(before[before.length - 1])) return before[before.length - 1];
     return null;
   }
 
