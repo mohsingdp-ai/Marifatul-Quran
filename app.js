@@ -42,6 +42,49 @@
 
   applyFontScale(getFontScale());
 
+  /* Mushaf script: v4's Uthmani text (verses.js) or the Indo-Pak one (verses-indopak.js,
+     fetched only once picked). html[data-mushaf] says which is on screen; it switches only
+     when that text is in hand, so the ayat never show one script in the other's style. */
+  function getMushafScript() {
+    try {
+      return localStorage.getItem("mushaf_script") === "indopak" ? "indopak" : "uthmani";
+    } catch (e) {
+      return "uthmani";
+    }
+  }
+
+  function setMushafScript(script) {
+    try {
+      if (script === "indopak") localStorage.setItem("mushaf_script", "indopak");
+      else localStorage.removeItem("mushaf_script");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  function indoPakShown() {
+    return document.documentElement.getAttribute("data-mushaf") === "indopak";
+  }
+
+  function applyMushafScript(render) {
+    var next = getMushafScript();
+    if (next === "indopak" && typeof QURAN_VERSES_INDOPAK === "undefined") {
+      if (!document.getElementById("indopak-verses")) {
+        var s = document.createElement("script");
+        s.id = "indopak-verses";
+        s.src = "verses-indopak.js";
+        s.onload = function () { applyMushafScript(true); };
+        // Offline before it was ever cached: stay on Uthmani, try again on the next pick.
+        s.onerror = function () { s.remove(); };
+        document.head.appendChild(s);
+      }
+      next = "uthmani";
+    }
+    if (document.documentElement.getAttribute("data-mushaf") === next) return;
+    document.documentElement.setAttribute("data-mushaf", next);
+    if (render) renderTable();
+  }
+
+  applyMushafScript(false);
+
   const tbody = document.getElementById("ruku-tbody");
   const paraSelect = document.getElementById("para-select");
 
@@ -730,9 +773,19 @@
     return String(row.para) + "|" + String(row.rukuInPara);
   }
 
+  var indoPakEntries = {};
+
+  /** A ruku's ayat, in the mushaf script on screen. */
   function getRukuAyat(row) {
     if (typeof QURAN_VERSES === "undefined" || !row) return null;
-    return QURAN_VERSES[ayatKeyFor(row)] || null;
+    var key = ayatKeyFor(row);
+    var entry = QURAN_VERSES[key] || null;
+    if (!entry || !indoPakShown()) return entry;
+    return indoPakEntries[key] || (indoPakEntries[key] = Object.assign({}, entry, {
+      ayahs: entry.ayahs.map(function (a) {
+        return { n: a.n, text: QURAN_VERSES_INDOPAK[entry.surahNumber + ":" + a.n] || a.text };
+      })
+    }));
   }
 
   function isAyatOpen(row) {
@@ -741,6 +794,11 @@
 
   function ayatPanelId(globalIndex) {
     return "ayat-panel-" + globalIndex;
+  }
+
+  function toArabicDigits(n) {
+    var digits = "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669";
+    return String(n).replace(/\d/g, function (d) { return digits.charAt(Number(d)); });
   }
 
   /**
@@ -753,12 +811,12 @@
   }
 
   /**
-   * An ayah split for drawing: its words, and its closing pause marks, which go into the
-   * ornament's span so the Indo-Pak font sets them on top of the ornament as a printed mushaf
-   * does. A sajdah ayah, or one with stacked pause signs, ends in the font's own ornament for
-   * it (`ornament`); the rest get the plain one from ayahOrnament().
+   * An Indo-Pak ayah split for drawing: its words, and its closing pause marks, which go into
+   * the ornament's span so the Indo-Pak font sets them on top of the ornament as a printed
+   * mushaf does. A sajdah ayah, or one with stacked pause signs, ends in the font's own
+   * ornament for it (`ornament`); the rest get the plain one from ayahOrnament().
    */
-  function ayahParts(text) {
+  function indoPakParts(text) {
     var words = text.split(/\s+/);
     var endMarks = [];
     while (words.length && wordSkeleton(words[words.length - 1]) === "") endMarks.unshift(words.pop());
@@ -771,9 +829,24 @@
     };
   }
 
+  /** An ayah's words as HTML: the Uthmani text whole, the Indo-Pak one without its end marks. */
+  function ayahTextHtml(text, gloss) {
+    if (!indoPakShown()) return ayahWordsHtml(text, gloss);
+    return ayahWordsHtml(indoPakParts(text).body, gloss).replace(/ $/, "");
+  }
+
+  /** End-of-ayah marker: v4's gold ring with the number, or the Indo-Pak font's ornament. */
+  function ayahNumHtml(a) {
+    if (!indoPakShown()) return "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>";
+    var parts = indoPakParts(a.text);
+    return "<span class=\"ayat-num\" role=\"img\" aria-label=\"Ayah " + a.n + "\">" +
+      (parts.endText ? "<span class=\"ayat-num-mark\">" + escapeHtml(parts.endText) + "</span>" : "") +
+      (parts.ornament || ayahOrnament(a.n)) + "</span>";
+  }
+
   /**
-   * Consonant skeleton of one token, for matching our Indo-Pak text against quran.com's
-   * Uthmani: both carry the same words but differ in harakat, pause marks, long alifs
+   * Consonant skeleton of one token, for matching our Uthmani or Indo-Pak text against
+   * quran.com's Uthmani. Indo-Pak and Uthmani carry the same words but differ in harakat, pause marks, long alifs
    * (ٱلصِّرَٰطَ against الصِّرَاطَ) and how a hamza sits (أُو۟لَـٰٓئِكَ against اُولٰٓىِٕكَ), so
    * alifs and hamzas drop out and the Urdu-style ی ک fold into Arabic ي ك. A few words are
    * written with private-use ligatures of the Indo-Pak font (اُنْثٰی, وَلْیَتَلَطَّفْ), spelled
@@ -953,7 +1026,7 @@
       return;
     }
     var on = !item.classList.contains("has-gloss");
-    item.querySelector(".ayah-text").innerHTML = ayahWordsHtml(ayahParts(ayah.text).body, on).replace(/ $/, "");
+    item.querySelector(".ayah-text").innerHTML = ayahTextHtml(ayah.text, on);
     item.classList.toggle("has-gloss", on);
     btn.setAttribute("aria-pressed", String(on));
     if (on) fillAyahGlosses(item, row);
@@ -1160,7 +1233,6 @@
     var showTranslation = translationEnabled();
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
-      var parts = ayahParts(a.text);
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
         (glossSwitch
@@ -1169,10 +1241,8 @@
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
           : "") +
-        "<span class=\"ayah-text\">" + ayahWordsHtml(parts.body, gloss).replace(/ $/, "") + "</span>" +
-        "<span class=\"ayat-num\" role=\"img\" aria-label=\"Ayah " + a.n + "\">" +
-        (parts.endText ? "<span class=\"ayat-num-mark\">" + escapeHtml(parts.endText) + "</span>" : "") +
-        (parts.ornament || ayahOrnament(a.n)) + "</span>" +
+        "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
+        ayahNumHtml(a) +
         (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
@@ -4235,6 +4305,23 @@
   var fontLargerBtn = document.getElementById("font-larger-btn");
   var fontResetBtn = document.getElementById("font-reset-btn");
   var fontSizeValue = document.getElementById("font-size-value");
+  var mushafScriptGroup = document.getElementById("mushaf-script-group");
+
+  function syncMushafScriptUI() {
+    if (!mushafScriptGroup) return;
+    var script = getMushafScript();
+    mushafScriptGroup.querySelectorAll("[data-mushaf-script]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.mushafScript === script);
+    });
+  }
+
+  if (mushafScriptGroup) mushafScriptGroup.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-mushaf-script]");
+    if (!btn) return;
+    setMushafScript(btn.dataset.mushafScript);
+    syncMushafScriptUI();
+    applyMushafScript(true);
+  });
 
   function syncFontScaleUI() {
     var pct = getFontScale();
@@ -4332,6 +4419,7 @@
     speedSelect.value = String(getDefaultSpeed());
     syncVolumeUI();
     syncFontScaleUI();
+    syncMushafScriptUI();
     var th = getUiTheme();
     if (themeModeGroup) {
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
@@ -4733,7 +4821,7 @@
 
     // Preserve current track and essential settings
     var preserve = {};
-    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", HIFZ_STORAGE_KEY, "guide_seen"];
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", "mushaf_script", HIFZ_STORAGE_KEY, "guide_seen"];
     keepKeys.forEach(function (k) {
       var v = localStorage.getItem(k);
       if (v !== null) preserve[k] = v;

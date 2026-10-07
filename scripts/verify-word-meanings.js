@@ -8,8 +8,9 @@
  * Checks, for every ayah the app shows:
  *   1. the entry exists in the para file;
  *   2. every [text, transliteration, urdu] triple equals the quran.com source in .cache;
- *   3. every tappable word of verses.js finds its entry by the same skeleton match the
- *      app uses — otherwise the card would show no transliteration or Urdu for it.
+ *   3. every tappable word of verses.js, and of verses-indopak.js (the Indo-Pak mushaf),
+ *      finds its entry by the same skeleton match the app uses — otherwise the card would
+ *      show no transliteration or Urdu for it.
  *
  * Source for 2 is .cache/urdu-wbw (what the build read); --live re-checks a sample
  * against api.quran.com so a stale cache cannot pass unnoticed.
@@ -157,6 +158,7 @@ function getJson(url) {
 async function main() {
   const { data, byPara } = paraAyahs();
   const verses = evalFile("verses.js", "QURAN_VERSES");
+  const indoPak = evalFile("verses-indopak.js", "QURAN_VERSES_INDOPAK");
 
   const files = {};
   for (const p of Object.keys(byPara)) {
@@ -221,19 +223,22 @@ async function main() {
         if (!t[2]) emptyGloss++;
       });
 
-      // 3. every tappable word of the app's own text must find its entry
-      const tokens = ayah.text.split(/\s+/).filter(function (t) { return t && wordSkeleton(t) !== ""; });
-      let ayahUnmatched = 0;
-      tokens.forEach(function (tok, i) {
-        const target = wordSkeleton(tok);
-        let hit = local.some(function (t) {
-          if (wordSkeleton(t[0]) === target) return true;
-          return t[0].split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+      // 3. every tappable word of the app's own text, in either script, must find its entry
+      if (!indoPak[key]) fail(key, "no Indo-Pak text in verses-indopak.js");
+      [["", ayah.text], [" (Indo-Pak)", indoPak[key] || ""]].forEach(function (script) {
+        const tokens = script[1].split(/\s+/).filter(function (t) { return t && wordSkeleton(t) !== ""; });
+        let ayahUnmatched = 0;
+        tokens.forEach(function (tok, i) {
+          const target = wordSkeleton(tok);
+          let hit = local.some(function (t) {
+            if (wordSkeleton(t[0]) === target) return true;
+            return t[0].split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+          });
+          if (!hit && local[i]) hit = oneEditApart(wordSkeleton(local[i][0]), target);
+          if (!hit) { unmatchedWords++; ayahUnmatched++; }
         });
-        if (!hit && local[i]) hit = oneEditApart(wordSkeleton(local[i][0]), target);
-        if (!hit) { unmatchedWords++; ayahUnmatched++; }
+        if (ayahUnmatched) unmatchedByAyah.push(key + script[0]);
       });
-      if (ayahUnmatched) unmatchedByAyah.push(key);
 
       if (liveSample.length < liveCount && ayatChecked % Math.max(1, Math.floor(6236 / liveCount)) === 0) {
         liveSample.push({ key: key, local: local });

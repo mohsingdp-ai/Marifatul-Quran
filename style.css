@@ -94,10 +94,8 @@
   /* --- Type --- */
   --md-font: "Segoe UI", system-ui, sans-serif;
   --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
-  /* The ayat themselves: Indo-Pak text in the bundled Indo-Pak Nastaleeq font it was written
-     for, so it works offline. Some words and signs are this font's own glyphs, so any
-     element showing ayah text needs it. */
-  --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
+  /* The ayat themselves. Indo-Pak text (Settings > Mushaf script) swaps this below. */
+  --mushaf-font: var(--md-font-arabic);
 
   /* Legacy names. Rules written against the old palette (and branches that add to it) keep
      resolving to the matching M3 role. */
@@ -1899,7 +1897,9 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .ayat-item.is-reciting .ayat-num {
-  color: var(--md-primary);
+  background: var(--md-tertiary);
+  color: var(--md-on-tertiary);
+  border-color: var(--md-tertiary);
 }
 
 /* Play control on an ayah: deliberate target, so taps on the words while reading or
@@ -2389,12 +2389,48 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   font-weight: 600;
 }
 
-/* End-of-ayah marker: the Indo-Pak font's own numbered ornament, in gold, with the ayah's
-   closing pause mark set on top of it by that font. */
+/* End-of-ayah marker: Arabic-Indic number in a gold ring, like a mushaf. */
 .ayat-num {
-  font-family: "IndoPak Nastaleeq";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.7em;
+  height: 1.7em;
+  margin: 0 0.3em;
+  padding: 0 0.25em;
+  border: 1px solid var(--md-tertiary);
+  border-radius: 50%;
+  font-size: 0.6em;
+  line-height: 1;
   color: var(--md-tertiary);
+  vertical-align: middle;
+}
+
+/* Indo-Pak mushaf: the text in the bundled Indo-Pak Nastaleeq font it was written for (it
+   works offline; some words and signs are this font's own glyphs). The end-of-ayah marker
+   is that font's numbered ornament, with the ayah's closing pause mark set on top of it. */
+html[data-mushaf="indopak"] {
+  --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
+}
+
+html[data-mushaf="indopak"] .ayat-num {
+  display: inline;
+  min-width: 0;
+  height: auto;
+  margin: 0;
   margin-inline: 0.25em 0.3em;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-family: "IndoPak Nastaleeq";
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+html[data-mushaf="indopak"] .ayat-item.is-reciting .ayat-num {
+  background: none;
+  color: var(--md-primary);
 }
 
 .ayat-num-mark {
