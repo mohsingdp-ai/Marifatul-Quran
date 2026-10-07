@@ -42,12 +42,16 @@
 
   applyFontScale(getFontScale());
 
-  /* Mushaf script: v4's Uthmani text (verses.js) or the Indo-Pak one (verses-indopak.js,
-     fetched only once picked). html[data-mushaf] says which is on screen; it switches only
-     when that text is in hand, so the ayat never show one script in the other's style. */
+  /* Mushaf script: v4's Uthmani text (verses.js), or the Indo-Pak one (verses-indopak.js,
+     fetched only once picked) in its Nastaleeq font ("indopak") or in the Uthmani-style
+     Naskh faces ("indopak-naskh"). html[data-mushaf] says which is on screen; it switches
+     only when that text is in hand, so the ayat never show one script in another's style. */
+  var MUSHAF_SCRIPTS = ["uthmani", "indopak", "indopak-naskh"];
+
   function getMushafScript() {
     try {
-      return localStorage.getItem("mushaf_script") === "indopak" ? "indopak" : "uthmani";
+      var s = localStorage.getItem("mushaf_script");
+      return MUSHAF_SCRIPTS.indexOf(s) > 0 ? s : "uthmani";
     } catch (e) {
       return "uthmani";
     }
@@ -55,18 +59,19 @@
 
   function setMushafScript(script) {
     try {
-      if (script === "indopak") localStorage.setItem("mushaf_script", "indopak");
+      if (MUSHAF_SCRIPTS.indexOf(script) > 0) localStorage.setItem("mushaf_script", script);
       else localStorage.removeItem("mushaf_script");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
+  /** Either Indo-Pak look: the Indo-Pak text, with its own end-of-ayah ornaments. */
   function indoPakShown() {
-    return document.documentElement.getAttribute("data-mushaf") === "indopak";
+    return (document.documentElement.getAttribute("data-mushaf") || "").indexOf("indopak") === 0;
   }
 
   function applyMushafScript(render) {
     var next = getMushafScript();
-    if (next === "indopak" && typeof QURAN_VERSES_INDOPAK === "undefined") {
+    if (next !== "uthmani" && typeof QURAN_VERSES_INDOPAK === "undefined") {
       if (!document.getElementById("indopak-verses")) {
         var s = document.createElement("script");
         s.id = "indopak-verses";
@@ -781,11 +786,26 @@
     var key = ayatKeyFor(row);
     var entry = QURAN_VERSES[key] || null;
     if (!entry || !indoPakShown()) return entry;
-    return indoPakEntries[key] || (indoPakEntries[key] = Object.assign({}, entry, {
+    var naskh = document.documentElement.getAttribute("data-mushaf") === "indopak-naskh";
+    var cacheKey = (naskh ? "n|" : "") + key;
+    return indoPakEntries[cacheKey] || (indoPakEntries[cacheKey] = Object.assign({}, entry, {
       ayahs: entry.ayahs.map(function (a) {
-        return { n: a.n, text: QURAN_VERSES_INDOPAK[entry.surahNumber + ":" + a.n] || a.text };
+        var text = QURAN_VERSES_INDOPAK[entry.surahNumber + ":" + a.n] || a.text;
+        return { n: a.n, text: naskh ? indoPakNaskhText(text) : text };
       })
     }));
+  }
+
+  /**
+   * Indo-Pak text for the Naskh faces: the words in plain Unicode (indopak-plain.js); the
+   * closing marks and any sign-bearing ornament stay, since the Indo-Pak font draws them in
+   * the ayah-number span.
+   */
+  function indoPakNaskhText(text) {
+    var words = text.split(/\s+/);
+    var end = [];
+    while (words.length && wordSkeleton(words[words.length - 1]) === "") end.unshift(words.pop());
+    return indoPakPlainWords(words.join(" ")) + (end.length ? " " + end.join(" ") : "");
   }
 
   function isAyatOpen(row) {

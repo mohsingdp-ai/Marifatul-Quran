@@ -8,9 +8,10 @@
  * Checks, for every ayah the app shows:
  *   1. the entry exists in the para file;
  *   2. every [text, transliteration, urdu] triple equals the quran.com source in .cache;
- *   3. every tappable word of verses.js, and of verses-indopak.js (the Indo-Pak mushaf),
- *      finds its entry by the same skeleton match the app uses — otherwise the card would
- *      show no transliteration or Urdu for it.
+ *   3. every tappable word of verses.js, of verses-indopak.js (the Indo-Pak mushaf), and of
+ *      that text made plain for the Naskh faces (indopak-plain.js) finds its entry by the
+ *      same skeleton match the app uses — otherwise the card would show no transliteration
+ *      or Urdu for it. The plain text must keep no private-use glyph in its words.
  *
  * Source for 2 is .cache/urdu-wbw (what the build read); --live re-checks a sample
  * against api.quran.com so a stale cache cannot pass unnoticed.
@@ -26,6 +27,7 @@ const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
 const MORPH_DIR = path.join(ROOT, "asset", "morphology");
 const FIXES = path.join(ROOT, "word-gloss-fixes.csv");
 const LABELS = require("../morphology-labels.js").MQ_MORPH_UR;
+const { INDOPAK_PLAIN_SIGNS, indoPakPlainWords } = require("../indopak-plain.js");
 const STEMS = JSON.parse(fs.readFileSync(path.join(ROOT, "stem-meanings.json"), "utf8"));
 
 function readFixes() {
@@ -101,6 +103,14 @@ function wordSkeleton(tok) {
     .replace(/\s+/g, "");
   // A word that is all alif (اُ before a ligature) must stay a word, not a mark.
   return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
+}
+
+/** The app's indoPakNaskhText, copied for the same reason. */
+function indoPakNaskhText(text) {
+  const words = text.split(/\s+/);
+  const end = [];
+  while (words.length && wordSkeleton(words[words.length - 1]) === "") end.unshift(words.pop());
+  return indoPakPlainWords(words.join(" ")) + (end.length ? " " + end.join(" ") : "");
 }
 
 /** The app's word-parts lookup (findWordSegments), copied for the same reason. */
@@ -208,7 +218,7 @@ async function main() {
   const missingAyat = [];
   const mismatchAyat = [];
   const unmatchedByAyah = [];
-  const noParts = { "": [], " (Indo-Pak)": [] };
+  const noParts = { "": [], " (Indo-Pak)": [], " (Indo-Pak Naskh)": [] };
   const liveSample = [];
   const keyToPara = {};
 
@@ -242,7 +252,17 @@ async function main() {
 
       // 3. every tappable word of the app's own text, in either script, must find its entry
       if (!indoPak[key]) fail(key, "no Indo-Pak text in verses-indopak.js");
-      [["", ayah.text], [" (Indo-Pak)", indoPak[key] || ""]].forEach(function (script) {
+      const ip = indoPak[key] || "";
+      const naskh = indoPakNaskhText(ip);
+      // Every private glyph in the words must have a plain form (the closing marks keep theirs).
+      const rawWords = ip.split(/\s+/);
+      while (rawWords.length && wordSkeleton(rawWords[rawWords.length - 1]) === "") rawWords.pop();
+      const unknown = [...rawWords.join(" ").replace("\uF65E\u0646\u064F\u0640", "")]
+        .filter((c) => c >= "\uE000" && c <= "\uF8FF" && !(c in INDOPAK_PLAIN_SIGNS));
+      if (unknown.length) {
+        fail(key, "Indo-Pak Naskh text keeps a private glyph: " + unknown.map((c) => "U+" + c.charCodeAt(0).toString(16)).join(" "));
+      }
+      [["", ayah.text], [" (Indo-Pak)", ip], [" (Indo-Pak Naskh)", naskh]].forEach(function (script) {
         const tokens = script[1].split(/\s+/).filter(function (t) { return t && wordSkeleton(t) !== ""; });
         let ayahUnmatched = 0;
         tokens.forEach(function (tok, i) {

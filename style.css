@@ -2407,13 +2407,14 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 /* Indo-Pak mushaf: the text in the bundled Indo-Pak Nastaleeq font it was written for (it
-   works offline; some words and signs are this font's own glyphs). The end-of-ayah marker
-   is that font's numbered ornament, with the ayah's closing pause mark set on top of it. */
+   works offline; some words and signs are this font's own glyphs). "indopak-naskh" keeps
+   the Uthmani-style faces for the words, written in plain Unicode. Both draw the end-of-ayah
+   marker as that font's numbered ornament, with the closing pause mark set on top of it. */
 html[data-mushaf="indopak"] {
   --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
 }
 
-html[data-mushaf="indopak"] .ayat-num {
+html[data-mushaf^="indopak"] .ayat-num {
   display: inline;
   min-width: 0;
   height: auto;
@@ -2428,7 +2429,7 @@ html[data-mushaf="indopak"] .ayat-num {
   vertical-align: baseline;
 }
 
-html[data-mushaf="indopak"] .ayat-item.is-reciting .ayat-num {
+html[data-mushaf^="indopak"] .ayat-item.is-reciting .ayat-num {
   background: none;
   color: var(--md-primary);
 }
@@ -3327,6 +3328,12 @@ tr.playing.audio-paused .audio-play-btn {
   background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* Three mushaf scripts share a phone's width: let a long name wrap rather than spill. */
+#mushaf-script-group .settings-role-btn {
+  padding: 0.25rem 0.5rem;
+  white-space: normal;
 }
 
 .settings-role-badge {
