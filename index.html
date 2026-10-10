@@ -268,13 +268,20 @@
             Ayat
           </div>
           <div class="settings-row">
-            <label>Tap a word for its meaning</label>
-            <div class="settings-role-group" id="word-meanings-group">
+            <label>Word meanings</label>
+            <span class="settings-hint" id="word-meanings-tap-label">When you tap a word</span>
+            <div class="settings-role-group" id="word-meanings-group" role="group" aria-labelledby="word-meanings-tap-label">
               <button type="button" class="btn btn-sm settings-role-btn active" data-word-meanings="off">Off</button>
               <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="simple">Meaning</button>
               <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="grammar">+ Grammar</button>
             </div>
-            <p class="settings-hint">Meaning: just the Urdu. + Grammar: its parts and their grammar too.</p>
+            <span class="settings-hint" id="ayah-words-label">Always, under each ayah <span class="settings-role-badge">Experimental</span></span>
+            <div class="settings-role-group" id="ayah-words-group" role="group" aria-labelledby="ayah-words-label">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar">+ Grammar</button>
+            </div>
+            <p class="settings-hint">Meaning: the Urdu. + Grammar: its parts and grammar too.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
@@ -283,15 +290,6 @@
               <span class="settings-toggle-switch"></span>
             </label>
             <p class="settings-hint">Says the word as quran.com recites it. Needs internet the first time.</p>
-          </div>
-          <div class="settings-row">
-            <label>Word meanings under each ayah <span class="settings-role-badge">Experimental</span></label>
-            <div class="settings-role-group" id="ayah-words-group">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off">Off</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple">Meaning</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar">+ Grammar</button>
-            </div>
-            <p class="settings-hint">Meaning: Urdu under each word. + Grammar: a card per word with its parts.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
