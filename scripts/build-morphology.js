@@ -112,6 +112,16 @@ function packSegment(text, pos, featureStr) {
   return out;
 }
 
+/*
+ * Where the corpus file joins بَعْدَ مَا into one word (2:181, 8:6, 13:37), its بَعْدَ
+ * lost the case every other بَعْدَ carries (2:120:19 and the rest: منصوب).
+ */
+const FEATURE_FIXES = {
+  "2:181:3:1": "|ACC",
+  "8:6:4:1": "|ACC",
+  "13:37:8:1": "|ACC"
+};
+
 async function main() {
   const text = await readCorpus();
 
@@ -128,7 +138,7 @@ async function main() {
     const wordIndex = Number(key[2]) - 1;
     const words = ayat[ayahKey] || (ayat[ayahKey] = []);
     while (words.length <= wordIndex) words.push([]);
-    words[wordIndex].push(packSegment(cols[1], cols[2], cols[3]));
+    words[wordIndex].push(packSegment(cols[1], cols[2], cols[3] + (FEATURE_FIXES[cols[0]] || "")));
     segCount++;
   });
 

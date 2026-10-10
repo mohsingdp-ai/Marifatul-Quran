@@ -3892,7 +3892,10 @@
     var labels = window.MQ_MORPH_UR;
     if (!labels) return "";
     var seg = segs[index];
-    var text = labels.grammar[seg[3] || ""] || labels.posFallback[seg[2]] || "";
+    var role = seg[3] || "";
+    // The question أَ prefix (أَلَمْ) is filed under N too, but it is a حرف, not an اسم.
+    var byPos = seg[1] === 1 && seg[2] === "N" ? "" : labels.grammarByPos[role + "|" + seg[2]];
+    var text = byPos || labels.grammar[role] || labels.posFallback[seg[2]] || "";
     var extras = String(seg[6] || "").split(",").filter(Boolean).map(function (f) {
       return labels.extra[f] || "";
     }).filter(Boolean);
