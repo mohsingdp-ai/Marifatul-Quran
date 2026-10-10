@@ -3206,6 +3206,13 @@ html[data-hifz="off"] .col-hifz {
   cursor: progress;
 }
 
+/* Off / Meaning / + Grammar: tighter, so the three choices stay on one line on a 360 px phone. */
+#word-meanings-group .settings-role-btn,
+#ayah-words-group .settings-role-btn {
+  padding: 0 0.3rem;
+  gap: 0.25rem;
+}
+
 /* Three mushaf scripts share a phone's width: let a long name wrap rather than spill. */
 #mushaf-script-group .settings-role-btn {
   padding: 0.25rem 0.5rem;

@@ -478,24 +478,6 @@
     persistPlaybackTimer = setTimeout(savePlaybackPersist, 500);
   }
 
-  function getShowOnlyRecordedPara() {
-    var v = localStorage.getItem("show_only_recorded_para");
-    return v === null ? true : v === "true";
-  }
-
-  function setShowOnlyRecordedPara(val) {
-    localStorage.setItem("show_only_recorded_para", val ? "true" : "false");
-  }
-
-  function getShowOnlyRecordedRuku() {
-    var v = localStorage.getItem("show_only_recorded_ruku");
-    return v === null ? true : v === "true";
-  }
-
-  function setShowOnlyRecordedRuku(val) {
-    localStorage.setItem("show_only_recorded_ruku", val ? "true" : "false");
-  }
-
   function getValidatedRukus() {
     try { return JSON.parse(localStorage.getItem("validated_rukus") || "{}"); }
     catch (e) { return {}; }
@@ -998,14 +980,35 @@
   }
 
   /*
+   * How much a tapped word's box says: just its meaning, or its parts and their grammar too
+   * (the default, and all the box ever showed before this choice existed).
+   */
+  var WORD_DETAIL_PREF_KEY = "mq_pref_word_detail";
+
+  function wordMeaningsSimple() {
+    try {
+      return localStorage.getItem(WORD_DETAIL_PREF_KEY) === "simple";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordMeaningsSimple(on) {
+    try {
+      localStorage.setItem(WORD_DETAIL_PREF_KEY, on ? "simple" : "grammar");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /*
    * The Urdu meaning printed under every word, so a reader can follow word by word without
-   * tapping. Opt-in: it roughly doubles the height of each ayah.
+   * tapping. Opt-in: it roughly doubles the height of each ayah. One or the other with the
+   * word cards, which carry the same meaning: with both saved on, the cards win.
    */
   var WORD_GLOSS_PREF_KEY = "mq_pref_word_gloss";
 
   function wordGlossEnabled() {
     try {
-      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true";
+      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
     } catch (e) {
       return false;
     }
@@ -1808,8 +1811,6 @@
     if (!wrap) return null;
     var state = {
       para: scrollBasePara != null ? String(scrollBasePara) : String(paraSelect.value),
-      filterPara: getShowOnlyRecordedPara(),
-      filterRuku: getShowOnlyRecordedRuku(),
       scrollTop: wrap.scrollTop
     };
     var rows = tbody.querySelectorAll("tr[data-global-index]");
@@ -1829,8 +1830,6 @@
   function restoreTableViewState(state) {
     if (!state) return;
     if (state.para !== paraSelect.value) return;
-    if (state.filterPara !== getShowOnlyRecordedPara()) return;
-    if (state.filterRuku !== getShowOnlyRecordedRuku()) return;
     var wrap = document.querySelector(".table-wrapper");
     if (!wrap) return;
     requestAnimationFrame(function () {
@@ -1870,9 +1869,8 @@
     });
   }
 
+  /** Only paras with a recording are offered. */
   function updateParaSelect() {
-    var filterPara = getShowOnlyRecordedPara();
-
     // Cache all options once (iOS Safari doesn't support option.hidden, so we remove/re-add from DOM)
     if (!allParaOptions) {
       allParaOptions = Array.from(paraSelect.options);
@@ -1885,13 +1883,8 @@
 
     // Re-add only the ones that should be visible
     allParaOptions.forEach(function (opt) {
-      var show = true;
-      var para = parseInt(opt.value, 10);
-      if (filterPara) {
-        var items = indexedData[para] || [];
-        show = items.some(hasRecording);
-      }
-      if (show) paraSelect.appendChild(opt);
+      var items = indexedData[parseInt(opt.value, 10)] || [];
+      if (items.some(hasRecording)) paraSelect.appendChild(opt);
     });
 
     // When fetch failed or filter removed every option (e.g. on mobile), show all paras so the app is usable
@@ -1909,7 +1902,7 @@
 
   /**
    * @param {{ skipViewRestore?: boolean, scrollBasePara?: string }} [options]
-   *   skipViewRestore — filters/list changed in a way that invalidates scroll (e.g. para/ruku toggles).
+   *   skipViewRestore — filters/list changed in a way that invalidates scroll.
    *   scrollBasePara — para the old `tbody` was built for when `para-select` has already changed.
    */
   function renderTable(options) {
@@ -1921,16 +1914,11 @@
     else stickyPlaybackResume = null;
     var canUpload = hasGitHubToken();
     var showActions = isAdmin();
-    var filterRuku = getShowOnlyRecordedRuku();
-
     // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
 
-    var filtered = getFilteredData();
-
-    if (filterRuku) {
-      filtered = filtered.filter(hasRecording);
-    }
+    // Only rukus with a recording are listed.
+    var filtered = getFilteredData().filter(hasRecording);
 
     var resumeIndex = stickyPlaybackResume ? stickyPlaybackResume.globalIndex : null;
     var willResume = resumeIndex != null && filtered.some(function (item) {
@@ -4197,10 +4185,12 @@
     pop.hidden = false;
     positionWordPopover(pop, wordEl);
 
+    // The simple box never shows parts, so it never loads them.
+    var simple = wordMeaningsSimple();
     Promise.all([
       getAyahWords(para, surahNumber, ayahNumber),
-      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
-      getStemMeanings()
+      simple ? null : getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
+      simple ? null : getStemMeanings()
     ]).then(function (results) {
       if (token !== wordPopToken || pop.hidden) return;
       var words = results[0];
@@ -4533,15 +4523,12 @@
   var roleBadge = document.getElementById("role-badge");
   var adminSection = document.getElementById("admin-section");
   var ghTokenInput = document.getElementById("gh-token-input");
-  var togglePara = document.getElementById("show-only-recorded-para");
-  var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
-  var prefWordMeanings = document.getElementById("pref-word-meanings");
+  var wordMeaningsGroup = document.getElementById("word-meanings-group");
   var prefTranslation = document.getElementById("pref-translation");
-  var prefWordGloss = document.getElementById("pref-word-gloss");
+  var ayahWordsGroup = document.getElementById("ayah-words-group");
   var prefWordSound = document.getElementById("pref-word-sound");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
-  var prefWordTable = document.getElementById("pref-word-table");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -4707,12 +4694,11 @@
   }
 
   function syncSettingsUI() {
-    if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
+    syncWordMeaningsUI();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
-    if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
+    syncAyahWordsUI();
     if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
-    if (prefWordTable) prefWordTable.checked = wordTableEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     setActive(roleUserBtn, !admin);
@@ -4723,8 +4709,6 @@
     if (admin && ghTokenInput) {
       ghTokenInput.value = getGitHubToken();
     }
-    togglePara.checked = getShowOnlyRecordedPara();
-    toggleRuku.checked = getShowOnlyRecordedRuku();
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
       setActive(btn, btn.dataset.mode === mode);
@@ -4805,19 +4789,23 @@
     });
   }
 
-  togglePara.addEventListener("change", function () {
-    setShowOnlyRecordedPara(this.checked);
-    renderTable({ skipViewRestore: true });
-  });
+  /** Off, Meaning or + Grammar: the first is the old on/off switch, the rest the box's detail. */
+  function syncWordMeaningsUI() {
+    if (!wordMeaningsGroup) return;
+    var level = !wordMeaningsEnabled() ? "off" : wordMeaningsSimple() ? "simple" : "grammar";
+    wordMeaningsGroup.querySelectorAll("[data-word-meanings]").forEach(function (btn) {
+      setActive(btn, btn.dataset.wordMeanings === level);
+    });
+  }
 
-  toggleRuku.addEventListener("change", function () {
-    setShowOnlyRecordedRuku(this.checked);
-    renderTable({ skipViewRestore: true });
-  });
-
-  if (prefWordMeanings) {
-    prefWordMeanings.addEventListener("change", function () {
-      setWordMeaningsEnabled(this.checked);
+  if (wordMeaningsGroup) {
+    wordMeaningsGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-word-meanings]");
+      if (!btn) return;
+      var level = btn.dataset.wordMeanings;
+      setWordMeaningsEnabled(level !== "off");
+      if (level !== "off") setWordMeaningsSimple(level === "simple");
+      syncWordMeaningsUI();
       renderTable();
     });
   }
@@ -4840,9 +4828,22 @@
     document.fonts.ready.then(function () { sizeGlossCells(tbody); });
   }
 
-  if (prefWordGloss) {
-    prefWordGloss.addEventListener("change", function () {
-      setWordGlossEnabled(this.checked);
+  /** Off, Meaning (Urdu under each word) or + Grammar (the word cards): one at a time. */
+  function syncAyahWordsUI() {
+    if (!ayahWordsGroup) return;
+    var level = wordTableEnabled() ? "grammar" : wordGlossEnabled() ? "simple" : "off";
+    ayahWordsGroup.querySelectorAll("[data-ayah-words]").forEach(function (btn) {
+      setActive(btn, btn.dataset.ayahWords === level);
+    });
+  }
+
+  if (ayahWordsGroup) {
+    ayahWordsGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-ayah-words]");
+      if (!btn) return;
+      setWordGlossEnabled(btn.dataset.ayahWords === "simple");
+      setWordTableEnabled(btn.dataset.ayahWords === "grammar");
+      syncAyahWordsUI();
       renderTable();
     });
   }
@@ -4850,13 +4851,6 @@
   if (prefAyahGlossSwitch) {
     prefAyahGlossSwitch.addEventListener("change", function () {
       setAyahGlossSwitchEnabled(this.checked);
-      renderTable();
-    });
-  }
-
-  if (prefWordTable) {
-    prefWordTable.addEventListener("change", function () {
-      setWordTableEnabled(this.checked);
       renderTable();
     });
   }
