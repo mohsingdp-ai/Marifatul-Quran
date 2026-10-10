@@ -8,12 +8,6 @@
 /* ================================================================== */
 /* Design tokens                                                       */
 /* ================================================================== */
-@font-face {
-  font-family: "IndoPak Nastaleeq";
-  src: url("asset/fonts/indopak-nastaleeq.woff2") format("woff2");
-  font-display: swap;
-}
-
 :root {
   color-scheme: light;
 
@@ -2406,10 +2400,11 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   vertical-align: middle;
 }
 
-/* Indo-Pak mushaf: the text in the bundled Indo-Pak Nastaleeq font it was written for (it
-   works offline; some words and signs are this font's own glyphs). "indopak-naskh" keeps
-   the Uthmani-style faces for the words, written in plain Unicode. Both draw the end-of-ayah
-   marker as that font's numbered ornament, with the closing pause mark set on top of it. */
+/* Indo-Pak mushaf: the text in the bundled Indo-Pak Nastaleeq font, "AlQuran IndoPak by
+   QuranWBW" v2.100, registered by app.js (it works offline; some words and signs are this
+   font's own glyphs). "indopak-naskh" keeps the Uthmani-style faces for the words, written
+   in plain Unicode. Both draw the end-of-ayah marker as that font's numbered ornament, with
+   the closing pause mark set on top of it. */
 html[data-mushaf="indopak"] {
   --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
 }

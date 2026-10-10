@@ -45,8 +45,9 @@
   /* Mushaf script: the Indo-Pak text (verses-indopak.js, fetched here rather than up front
      so it never holds up first paint) in its Nastaleeq font ("indopak", the default) or in
      the Uthmani-style Naskh faces ("indopak-naskh"), or v4's Uthmani text (verses.js).
-     html[data-mushaf] says which is on screen; it switches only when that text is in hand,
-     so the ayat never show one script in another's style. */
+     html[data-mushaf] says which is on screen; it switches only when that text and the
+     Indo-Pak font (both faces draw its ayah ornaments) are in hand, so the ayat never show
+     one script in another's style or as empty boxes. */
   var MUSHAF_SCRIPTS = ["uthmani", "indopak", "indopak-naskh"];
 
   function getMushafScript() {
@@ -69,23 +70,54 @@
     return (document.documentElement.getAttribute("data-mushaf") || "").indexOf("indopak") === 0;
   }
 
-  function applyMushafScript(render) {
-    var next = getMushafScript();
-    if (next !== "uthmani" && typeof QURAN_VERSES_INDOPAK === "undefined") {
-      if (!document.getElementById("indopak-verses")) {
-        var s = document.createElement("script");
-        s.id = "indopak-verses";
-        s.src = "verses-indopak.js";
-        s.onload = function () { applyMushafScript(true); };
-        // Offline before it was ever cached: stay on Uthmani, try again on the next pick.
-        s.onerror = function () { s.remove(); };
-        document.head.appendChild(s);
-      }
-      next = "uthmani";
+  var indoPakReady = null;
+  var indoPakFace = null;
+
+  /** The Indo-Pak text and font, loaded once; a failed load is tried again on the next call. */
+  function loadIndoPak() {
+    if (indoPakReady) return indoPakReady;
+    var text = typeof QURAN_VERSES_INDOPAK !== "undefined" ? null : new Promise(function (ok, no) {
+      var s = document.createElement("script");
+      s.src = "verses-indopak.js";
+      // A cut-off file loads without defining the text; drop it so the next try fetches again.
+      s.onload = function () { if (typeof QURAN_VERSES_INDOPAK === "undefined") { s.remove(); no(); } else ok(); };
+      s.onerror = function () { s.remove(); no(); };
+      document.head.appendChild(s);
+    });
+    // Registered here rather than in style.css: a face that failed once stays failed, so a
+    // retry needs a fresh one.
+    if (!indoPakFace || indoPakFace.status === "error") {
+      indoPakFace = new FontFace("IndoPak Nastaleeq", 'url("asset/fonts/indopak-nastaleeq.woff2") format("woff2")');
+      document.fonts.add(indoPakFace);
     }
-    if (document.documentElement.getAttribute("data-mushaf") === next) return;
-    document.documentElement.setAttribute("data-mushaf", next);
-    if (render) renderTable();
+    indoPakReady = Promise.all([text, indoPakFace.load()]);
+    indoPakReady.catch(function () { indoPakReady = null; });
+    return indoPakReady;
+  }
+
+  function showMushafScript(script, render, failed) {
+    var note = document.getElementById("mushaf-script-note");
+    if (note) note.hidden = !failed;
+    if (document.documentElement.getAttribute("data-mushaf") !== script) {
+      document.documentElement.setAttribute("data-mushaf", script);
+      hideWordPopover(); // its word is redrawn away
+      if (render) renderTable();
+    }
+    syncMushafScriptUI();
+  }
+
+  function applyMushafScript(render) {
+    var want = getMushafScript();
+    if (want !== "uthmani") {
+      // Offline before it was ever cached: stay on Uthmani with a note; the next pick retries.
+      loadIndoPak().then(function () {
+        if (getMushafScript() === want) showMushafScript(want, true);
+      }, function () {
+        if (getMushafScript() === want) showMushafScript("uthmani", true, true);
+      });
+      if (document.documentElement.getAttribute("data-mushaf")) return;
+    }
+    showMushafScript("uthmani", render);
   }
 
   applyMushafScript(false);
@@ -4350,9 +4382,10 @@
   var fontSizeValue = document.getElementById("font-size-value");
   var mushafScriptGroup = document.getElementById("mushaf-script-group");
 
+  /** Lights the script on screen, which is the saved choice unless that one failed to load. */
   function syncMushafScriptUI() {
     if (!mushafScriptGroup) return;
-    var script = getMushafScript();
+    var script = document.documentElement.getAttribute("data-mushaf");
     mushafScriptGroup.querySelectorAll("[data-mushaf-script]").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mushafScript === script);
     });

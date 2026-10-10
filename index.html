@@ -25,6 +25,9 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <link rel="stylesheet" href="style.css">
+  <!-- The default Indo-Pak mushaf: app.js switches to it once both are in. -->
+  <link rel="preload" href="asset/fonts/indopak-nastaleeq.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="verses-indopak.js" as="script">
 </head>
 <body>
   <!-- Save corrected ayah timings without leaving the list. Only ever shown on a local run,
@@ -245,6 +248,7 @@
               <button type="button" class="btn btn-sm settings-role-btn active" data-mushaf-script="indopak">Indo-Pak</button>
               <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="indopak-naskh">Indo-Pak Naskh</button>
             </div>
+            <p class="settings-hint" id="mushaf-script-note" aria-live="polite" hidden>Indo-Pak text needs internet once — showing Uthmani.</p>
           </div>
         </div>
 
