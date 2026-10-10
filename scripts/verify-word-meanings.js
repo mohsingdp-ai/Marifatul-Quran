@@ -252,6 +252,7 @@ async function main() {
 
       // 3. every tappable word of the app's own text, in either script, must find its entry
       if (!indoPak[key]) fail(key, "no Indo-Pak text in verses-indopak.js");
+      if (!segs) fail(key, "no word parts in asset/morphology/para-" + row.para + ".json");
       const ip = indoPak[key] || "";
       const naskh = indoPakNaskhText(ip);
       // Every private glyph in the words must have a plain form (the closing marks keep theirs).

@@ -52,7 +52,8 @@ test("every Indo-Pak word, in either face, finds the meaning at its own place", 
   const indoPak = new Function(fs.readFileSync(path.join(__dirname, "..", "verses-indopak.js"), "utf8") +
     "return QURAN_VERSES_INDOPAK;")();
   const rowsByKey = {};
-  for (let n = 1; n <= 30; n++) Object.assign(rowsByKey, para(n));
+  const partsByKey = {};
+  for (let n = 1; n <= 30; n++) { Object.assign(rowsByKey, para(n)); Object.assign(partsByKey, morph(n)); }
   for (const [key, text] of Object.entries(indoPak)) {
     const words = asList(rowsByKey[key]);
     for (const [face, t] of [["Indo-Pak", text], ["Naskh", indoPakNaskhText(text)]]) {
@@ -61,6 +62,7 @@ test("every Indo-Pak word, in either face, finds the meaning at its own place", 
       let half = 0;
       t.split(/\s+/).filter((tok) => tok && wordSkeleton(tok) !== "").forEach((tok, i) => {
         assert.strictEqual(findWordMeaning(words, tok, i), words[j], key + " " + face + " word " + (i + 1));
+        assert.ok(findWordSegments(partsByKey[key], i, tok), key + " " + face + " word " + (i + 1) + " has parts");
         const whole = wordSkeleton(tok) === wordSkeleton(words[j].text_uthmani);
         const halves = words[j].text_uthmani.split(/\s+/).filter((h) => wordSkeleton(h) !== "").length;
         if (whole || ++half === halves) { j++; half = 0; }
@@ -76,6 +78,7 @@ test("a split word takes its own half of the corpus word", () => {
   assert.strictEqual(findWordSegments(m, 12, "مَا")[0], m[11][0]);
   const n = morph(23)["37:130"]; // إِلْ يَاسِينَ, kept one word with a zero-width non-joiner
   assert.strictEqual(findWordSegments(n, 2, "اِلْ‌یَاسِیْنَ"), n[2]);
+  assert.ok(!wordSkeleton("اِلْ‌یَاسِیْنَ").includes("\u200C"));
 });
 
 test("Indo-Pak and Uthmani spellings share a skeleton; pause marks have none", () => {
