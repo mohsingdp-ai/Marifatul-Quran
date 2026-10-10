@@ -1,0 +1,766 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T00:00:00Z",
+  "title": "Design System: Marifatul Quran",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Deep Sage",
+        "canonical": "#33695a",
+        "tonalRamp": [
+          "#19332c",
+          "#2b594d",
+          "#3e7f6d",
+          "#50a58d",
+          "#76bca9",
+          "#9fd0c3",
+          "#c8e4dc",
+          "#eef7f4"
+        ]
+      },
+      "on-primary": {
+        "role": "primary",
+        "displayName": "On Primary",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5e5e5e",
+          "#7a7a7a",
+          "#999999",
+          "#b8b8b8",
+          "#d6d6d6",
+          "#f2f2f2"
+        ]
+      },
+      "primary-container": {
+        "role": "primary",
+        "displayName": "Sage Wash",
+        "canonical": "#dcebe5",
+        "tonalRamp": [
+          "#1c3128",
+          "#305446",
+          "#457863",
+          "#599c81",
+          "#7db59f",
+          "#a4cbbb",
+          "#cbe1d8",
+          "#eff6f3"
+        ]
+      },
+      "on-primary-container": {
+        "role": "primary",
+        "displayName": "On Primary Container",
+        "canonical": "#123b31",
+        "tonalRamp": [
+          "#15372f",
+          "#246052",
+          "#348974",
+          "#43b197",
+          "#6bc7b1",
+          "#97d8c8",
+          "#c4e9e0",
+          "#edf8f5"
+        ]
+      },
+      "tertiary": {
+        "role": "tertiary",
+        "displayName": "Muted Sage Ink",
+        "canonical": "#4a6a62",
+        "tonalRamp": [
+          "#1f2d2a",
+          "#374e48",
+          "#4e6f67",
+          "#659085",
+          "#87aba2",
+          "#abc4be",
+          "#cfddda",
+          "#f0f5f3"
+        ]
+      },
+      "success-container": {
+        "role": "success",
+        "displayName": "Success Container",
+        "canonical": "#d6efe3",
+        "tonalRamp": [
+          "#153727",
+          "#255f43",
+          "#358860",
+          "#45b07d",
+          "#6cc69b",
+          "#98d7b9",
+          "#c4e8d7",
+          "#edf8f2"
+        ]
+      },
+      "on-success-container": {
+        "role": "success",
+        "displayName": "On Success Container",
+        "canonical": "#0f3d29",
+        "tonalRamp": [
+          "#153728",
+          "#246046",
+          "#348964",
+          "#43b182",
+          "#6bc79f",
+          "#97d8bc",
+          "#c4e9d9",
+          "#edf8f3"
+        ]
+      },
+      "playing": {
+        "role": "secondary",
+        "displayName": "Soft Lilac",
+        "canonical": "#e7e3f6",
+        "tonalRamp": [
+          "#1c1537",
+          "#312460",
+          "#463489",
+          "#5b43b1",
+          "#7e6bc7",
+          "#a597d8",
+          "#ccc4e9",
+          "#efedf8"
+        ]
+      },
+      "on-playing": {
+        "role": "secondary",
+        "displayName": "On Playing",
+        "canonical": "#4e4583",
+        "tonalRamp": [
+          "#1e1a32",
+          "#342e57",
+          "#4a417c",
+          "#5f54a0",
+          "#8379b9",
+          "#a8a1ce",
+          "#cdcae3",
+          "#efeef6"
+        ]
+      },
+      "error": {
+        "role": "error",
+        "displayName": "Error",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "#371715",
+          "#602824",
+          "#893834",
+          "#b14943",
+          "#c7706b",
+          "#d89b97",
+          "#e9c6c4",
+          "#f8eded"
+        ]
+      },
+      "error-container": {
+        "role": "error",
+        "displayName": "Error Container",
+        "canonical": "#fbe4e1",
+        "tonalRamp": [
+          "#371915",
+          "#602b24",
+          "#893e34",
+          "#b15043",
+          "#c7766b",
+          "#d89f97",
+          "#e9c8c4",
+          "#f8eeed"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Misty Sage Ground",
+        "canonical": "#eef3f1",
+        "tonalRamp": [
+          "#202d28",
+          "#374e45",
+          "#4e6f62",
+          "#65907f",
+          "#87ab9d",
+          "#abc4ba",
+          "#cfddd8",
+          "#f0f4f3"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#424242",
+          "#5e5e5e",
+          "#7a7a7a",
+          "#999999",
+          "#b8b8b8",
+          "#d6d6d6",
+          "#f2f2f2"
+        ]
+      },
+      "surface-container-low": {
+        "role": "neutral",
+        "displayName": "Surface Container Low",
+        "canonical": "#f5f8f7",
+        "tonalRamp": [
+          "#202d28",
+          "#374e46",
+          "#4e6f64",
+          "#659082",
+          "#87ab9f",
+          "#abc4bc",
+          "#cfddd9",
+          "#f0f4f3"
+        ]
+      },
+      "surface-container": {
+        "role": "neutral",
+        "displayName": "Surface Container",
+        "canonical": "#e9efed",
+        "tonalRamp": [
+          "#202c28",
+          "#384d46",
+          "#4f6d63",
+          "#678e81",
+          "#89a99e",
+          "#acc3bb",
+          "#d0ddd8",
+          "#f0f4f3"
+        ]
+      },
+      "surface-container-high": {
+        "role": "neutral",
+        "displayName": "Surface Container High",
+        "canonical": "#e2eae7",
+        "tonalRamp": [
+          "#202c28",
+          "#384d45",
+          "#4f6d62",
+          "#678e7f",
+          "#89a99d",
+          "#acc3ba",
+          "#d0ddd8",
+          "#f0f4f3"
+        ]
+      },
+      "on-surface": {
+        "role": "neutral",
+        "displayName": "Sage Ink",
+        "canonical": "#1a2925",
+        "tonalRamp": [
+          "#1e2f2a",
+          "#335149",
+          "#497368",
+          "#5f9687",
+          "#82b0a4",
+          "#a8c8bf",
+          "#cddfda",
+          "#eff5f4"
+        ]
+      },
+      "on-surface-variant": {
+        "role": "neutral",
+        "displayName": "Sage Grey",
+        "canonical": "#5a6c67",
+        "tonalRamp": [
+          "#232a28",
+          "#3c4845",
+          "#566762",
+          "#6f867f",
+          "#90a29d",
+          "#b1beba",
+          "#d2dad8",
+          "#f1f3f3"
+        ]
+      },
+      "outline": {
+        "role": "neutral",
+        "displayName": "Outline",
+        "canonical": "#7d918b",
+        "tonalRamp": [
+          "#232928",
+          "#3d4845",
+          "#566661",
+          "#70857e",
+          "#90a29c",
+          "#b2beba",
+          "#d3dad8",
+          "#f1f3f3"
+        ]
+      },
+      "outline-variant": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dfe8e4",
+        "tonalRamp": [
+          "#202d27",
+          "#374d44",
+          "#4f6e60",
+          "#668e7d",
+          "#88aa9b",
+          "#acc3b9",
+          "#d0ddd7",
+          "#f0f4f2"
+        ]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "Mint Sage",
+        "canonical": "#8fcdb9",
+        "tonalRamp": [
+          "#18352b",
+          "#295c4b",
+          "#3a826b",
+          "#4ca98b",
+          "#72c0a7",
+          "#9cd3c1",
+          "#c7e6dc",
+          "#edf7f4"
+        ]
+      },
+      "on-primary-dark": {
+        "role": "primary",
+        "displayName": "On Primary Dark",
+        "canonical": "#0f1714",
+        "tonalRamp": [
+          "#1e2e28",
+          "#345046",
+          "#4a7263",
+          "#619481",
+          "#84ae9e",
+          "#a9c7bb",
+          "#cedfd8",
+          "#f0f5f3"
+        ]
+      },
+      "primary-container-dark": {
+        "role": "primary",
+        "displayName": "Sage Wash (dark)",
+        "canonical": "#20332d",
+        "tonalRamp": [
+          "#1d2f29",
+          "#335148",
+          "#497466",
+          "#5e9685",
+          "#82b0a2",
+          "#a7c8be",
+          "#cde0da",
+          "#eff5f3"
+        ]
+      },
+      "on-primary-container-dark": {
+        "role": "primary",
+        "displayName": "On Primary Container Dark",
+        "canonical": "#cdeee3",
+        "tonalRamp": [
+          "#15372c",
+          "#24604c",
+          "#34896d",
+          "#43b18d",
+          "#6bc7a8",
+          "#97d8c2",
+          "#c4e9dc",
+          "#edf8f4"
+        ]
+      },
+      "success-container-dark": {
+        "role": "success",
+        "displayName": "Success Container Dark",
+        "canonical": "#1f3a2f",
+        "tonalRamp": [
+          "#1b3228",
+          "#2e5646",
+          "#427b64",
+          "#55a081",
+          "#7ab89f",
+          "#a2cdbc",
+          "#cae3d8",
+          "#eef6f3"
+        ]
+      },
+      "on-success-container-dark": {
+        "role": "success",
+        "displayName": "On Success Container Dark",
+        "canonical": "#b9f3d6",
+        "tonalRamp": [
+          "#153726",
+          "#246042",
+          "#34895e",
+          "#43b17a",
+          "#6bc799",
+          "#97d8b8",
+          "#c4e9d6",
+          "#edf8f2"
+        ]
+      },
+      "playing-dark": {
+        "role": "secondary",
+        "displayName": "Soft Lilac (dark)",
+        "canonical": "#2a2740",
+        "tonalRamp": [
+          "#1f1d30",
+          "#363252",
+          "#4d4775",
+          "#645d98",
+          "#8680b2",
+          "#aaa6c9",
+          "#cfcce0",
+          "#f0eff5"
+        ]
+      },
+      "on-playing-dark": {
+        "role": "secondary",
+        "displayName": "On Playing Dark",
+        "canonical": "#c9c2f2",
+        "tonalRamp": [
+          "#1a1537",
+          "#2d2460",
+          "#403489",
+          "#5343b1",
+          "#786bc7",
+          "#a197d8",
+          "#c9c4e9",
+          "#eeedf8"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Night Sage Ground",
+        "canonical": "#111715",
+        "tonalRamp": [
+          "#212c28",
+          "#384c46",
+          "#506d63",
+          "#688d81",
+          "#8aa89e",
+          "#adc2bb",
+          "#d0dcd8",
+          "#f0f4f3"
+        ]
+      },
+      "card-dark": {
+        "role": "neutral",
+        "displayName": "Card (dark)",
+        "canonical": "#1a2320",
+        "tonalRamp": [
+          "#212c28",
+          "#394c46",
+          "#506c63",
+          "#688c80",
+          "#8aa89e",
+          "#adc2bb",
+          "#d0dcd8",
+          "#f0f4f3"
+        ]
+      },
+      "raised-dark": {
+        "role": "neutral",
+        "displayName": "Raised Dark",
+        "canonical": "#212c28",
+        "tonalRamp": [
+          "#212c28",
+          "#394c45",
+          "#516c62",
+          "#698c7f",
+          "#8aa89d",
+          "#adc2ba",
+          "#d0dcd8",
+          "#f0f4f3"
+        ]
+      },
+      "on-surface-dark": {
+        "role": "neutral",
+        "displayName": "On Surface Dark",
+        "canonical": "#e5eeeb",
+        "tonalRamp": [
+          "#1e2e29",
+          "#345047",
+          "#4b7265",
+          "#619483",
+          "#84aea0",
+          "#a9c7bd",
+          "#cedfd9",
+          "#f0f5f3"
+        ]
+      },
+      "on-surface-variant-dark": {
+        "role": "neutral",
+        "displayName": "On Surface Variant Dark",
+        "canonical": "#9bb0a9",
+        "tonalRamp": [
+          "#222b28",
+          "#3b4a45",
+          "#536962",
+          "#6c897f",
+          "#8da59d",
+          "#afc0ba",
+          "#d1dbd8",
+          "#f1f4f3"
+        ]
+      },
+      "outline-dark": {
+        "role": "neutral",
+        "displayName": "Outline Dark",
+        "canonical": "#5f7670",
+        "tonalRamp": [
+          "#222a28",
+          "#3b4946",
+          "#546963",
+          "#6d8881",
+          "#8ea49e",
+          "#b0bfbb",
+          "#d2dbd8",
+          "#f1f4f3"
+        ]
+      },
+      "outline-variant-dark": {
+        "role": "neutral",
+        "displayName": "Outline Variant Dark",
+        "canonical": "#26322e",
+        "tonalRamp": [
+          "#212b28",
+          "#394b45",
+          "#516b63",
+          "#6a8b80",
+          "#8ba79e",
+          "#aec1bb",
+          "#d1dcd8",
+          "#f1f4f3"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "App name, Ruku n, progress count."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Guide overlay titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default UI text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Ayah keys and counts, tabular numerals."
+      },
+      "chip": {
+        "displayName": "Chip",
+        "purpose": "Status chips and badges."
+      },
+      "mushaf": {
+        "displayName": "Mushaf",
+        "purpose": "Ayat. Fixed faces, never restyled; size scales with --mushaf-scale."
+      },
+      "urdu": {
+        "displayName": "Urdu",
+        "purpose": "Translation and word glosses."
+      }
+    },
+    "shadows": [
+      {
+        "name": "elevation-1",
+        "value": "0 1px 2px rgba(20,40,34,0.05), 0 1px 3px rgba(20,40,34,0.05)",
+        "dark": "0 1px 2px rgba(0,0,0,0.3)",
+        "purpose": "Cards at rest."
+      },
+      {
+        "name": "elevation-2",
+        "value": "0 2px 8px rgba(20,40,34,0.07)",
+        "dark": "0 2px 8px rgba(0,0,0,0.35)",
+        "purpose": "Under the playing card's ring."
+      },
+      {
+        "name": "elevation-3",
+        "value": "0 8px 24px rgba(20,40,34,0.1)",
+        "dark": "0 8px 24px rgba(0,0,0,0.4)",
+        "purpose": "Menu, dialogs, guide caption."
+      },
+      {
+        "name": "elevation-4",
+        "value": "0 12px 32px rgba(20,40,34,0.12)",
+        "dark": "0 12px 32px rgba(0,0,0,0.45)",
+        "purpose": "Word popover."
+      },
+      {
+        "name": "playing-ring",
+        "value": "0 0 0 2px var(--md-primary-container), var(--md-elevation-2)",
+        "purpose": "Playing ruku card."
+      },
+      {
+        "name": "dock",
+        "value": "0 -6px 24px rgba(20,40,34,0.08)",
+        "purpose": "Docked player, cast upward."
+      }
+    ],
+    "motion": [
+      {
+        "name": "easing-standard",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "State changes."
+      },
+      {
+        "name": "easing-emphasized",
+        "value": "cubic-bezier(0.05, 0.7, 0.1, 1)",
+        "purpose": "Dock slide-in, menu and dialog scale-in, switch handle."
+      },
+      {
+        "name": "duration-short",
+        "value": "150ms",
+        "purpose": "Hover, chips, switches, menu."
+      },
+      {
+        "name": "duration-medium",
+        "value": "300ms",
+        "purpose": "Dialogs, docked player."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "xs",
+        "value": "380px"
+      },
+      {
+        "name": "sm",
+        "value": "560px"
+      },
+      {
+        "name": "md",
+        "value": "640px"
+      },
+      {
+        "name": "lg",
+        "value": "768px"
+      },
+      {
+        "name": "touch",
+        "value": "(pointer: coarse)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Play Pill",
+      "kind": "button",
+      "refersTo": "play-pill",
+      "description": "The one obvious Play per ruku card; filled sage while playing.",
+      "html": "<button class=\"ds-play\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"currentColor\"><path d=\"M8 5v14l11-7z\"/></svg>Play</button> <button class=\"ds-play is-playing\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"currentColor\"><path d=\"M6 19h4V5H6zm8-14v14h4V5z\"/></svg>Pause</button>",
+      "css": ".ds-play{display:inline-flex;align-items:center;gap:.35rem;height:44px;padding:0 1.1rem 0 .85rem;border:0;border-radius:9999px;background:var(--md-primary-container,#dcebe5);color:var(--md-on-primary-container,#123b31);font:500 .9375rem Rubik,system-ui,sans-serif;cursor:pointer;transition:background 150ms cubic-bezier(.2,0,0,1)}.ds-play:hover{background:color-mix(in srgb,var(--md-on-primary-container,#123b31) 8%,var(--md-primary-container,#dcebe5))}.ds-play.is-playing{background:var(--md-primary,#33695a);color:var(--md-on-primary,#fff)}.ds-play:focus-visible{outline:2px solid var(--md-primary,#33695a);outline-offset:2px}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled sage pill for dialog and settings actions.",
+      "html": "<button class=\"ds-btn\">Download para</button>",
+      "css": ".ds-btn{min-height:40px;padding:0 1.5rem;border:0;border-radius:9999px;background:var(--md-primary,#33695a);color:var(--md-on-primary,#fff);font:500 .875rem/1.25rem Rubik,system-ui,sans-serif;letter-spacing:.01em;cursor:pointer;transition:background 150ms,box-shadow 150ms}.ds-btn:hover{background:color-mix(in srgb,var(--md-on-primary,#fff) 8%,var(--md-primary,#33695a));box-shadow:0 1px 2px rgba(20,40,34,.05),0 1px 3px rgba(20,40,34,.05)}.ds-btn:focus-visible{outline:2px solid var(--md-primary,#33695a);outline-offset:2px}"
+    },
+    {
+      "name": "Para Chip",
+      "kind": "nav",
+      "refersTo": "para-chip",
+      "description": "Sideways row of para chips; current para filled sage.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-para on\"><span>1</span>Alif Lam Mim</button><button class=\"ds-para\"><span>2</span>Sayaqul</button></div>",
+      "css": ".ds-chips{display:flex;gap:.5rem;padding:.5rem;background:var(--md-surface,#eef3f1)}.ds-para{display:inline-flex;align-items:center;gap:.5rem;min-height:44px;padding:0 .95rem 0 .35rem;border:0;border-radius:9999px;background:var(--md-card,#fff);color:var(--md-on-surface-variant,#5a6c67);font:400 .875rem Rubik,system-ui,sans-serif;cursor:pointer}.ds-para span{display:grid;place-items:center;min-width:32px;height:32px;border-radius:9999px;background:var(--md-surface,#eef3f1);color:var(--md-on-surface,#1a2925);font-weight:600}.ds-para:hover{background:var(--md-surface-container-low,#f5f8f7)}.ds-para.on{background:var(--md-primary,#33695a);color:var(--md-on-primary,#fff)}.ds-para.on span{background:color-mix(in srgb,#fff 22%,transparent);color:#fff}.ds-para:focus-visible{outline:2px solid var(--md-primary,#33695a);outline-offset:2px}"
+    },
+    {
+      "name": "Status Chips",
+      "kind": "chip",
+      "refersTo": "status-memorized",
+      "description": "Pastel ruku status: Heard, Memorized, Playing.",
+      "html": "<span class=\"ds-st heard\">Heard</span> <span class=\"ds-st mem\">Memorized</span> <span class=\"ds-st play\">Playing</span>",
+      "css": ".ds-st{display:inline-block;padding:0 .6rem;border-radius:9999px;font:500 .75rem/1.375rem Rubik,system-ui,sans-serif}.ds-st.heard{background:var(--md-surface-container-high,#e2eae7);color:var(--md-on-surface-variant,#5a6c67)}.ds-st.mem{background:var(--md-success-container,#d6efe3);color:var(--md-on-success-container,#0f3d29)}.ds-st.play{background:var(--calm-playing,#e7e3f6);color:var(--calm-on-playing,#4e4583)}"
+    },
+    {
+      "name": "Ruku Card",
+      "kind": "card",
+      "refersTo": "ruku-card",
+      "description": "White 20px card: title + status, surah line, action row. Playing adds a sage ring.",
+      "html": "<div class=\"ds-card playing\"><div class=\"ds-t\">Ruku 1 <span class=\"ds-st2\">Playing</span></div><div class=\"ds-s\">Al-Baqarah · البقرة</div><button class=\"ds-pp\">Pause</button></div>",
+      "css": ".ds-card{max-width:360px;padding:.85rem .5rem .6rem 1rem;border-radius:20px;background:var(--md-card,#fff);box-shadow:0 1px 2px rgba(20,40,34,.05),0 1px 3px rgba(20,40,34,.05);font-family:Rubik,system-ui,sans-serif;transition:box-shadow 150ms}.ds-card.playing{box-shadow:0 0 0 2px var(--md-primary-container,#dcebe5),0 2px 8px rgba(20,40,34,.07)}.ds-t{display:flex;gap:.5rem;align-items:center;font:600 1.0625rem/1.5rem Rubik,system-ui,sans-serif;color:var(--md-on-surface,#1a2925)}.ds-st2{padding:0 .6rem;border-radius:9999px;font:500 .75rem/1.375rem Rubik;background:var(--calm-playing,#e7e3f6);color:var(--calm-on-playing,#4e4583)}.ds-s{font-size:.875rem;line-height:1.5rem;color:var(--md-on-surface-variant,#5a6c67)}.ds-pp{margin:.5rem 0 .4rem;height:44px;padding:0 1.1rem;border:0;border-radius:9999px;background:var(--md-primary,#33695a);color:#fff;font:500 .9375rem Rubik}"
+    },
+    {
+      "name": "Reciting Ayah",
+      "kind": "custom",
+      "refersTo": "ayah-reciting",
+      "description": "Sage wash block and filled key pill on the ayah being recited.",
+      "html": "<div class=\"ds-ayah\"><span class=\"ds-key\">▶ 2:3</span><p dir=\"rtl\">الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ</p></div>",
+      "css": ".ds-ayah{padding:.35rem .6rem .4rem;border-radius:16px;background:var(--md-primary-container,#dcebe5)}.ds-ayah p{margin:.3rem 0;font:1.6rem/2 'IndoPak Nastaleeq','Traditional Arabic',serif;color:var(--md-on-surface,#1a2925)}.ds-key{display:inline-flex;align-items:center;height:32px;padding:0 .6rem;border-radius:9999px;background:var(--md-primary,#33695a);color:var(--md-on-primary,#fff);font:600 .8125rem Rubik,system-ui,sans-serif;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Settings Switch",
+      "kind": "input",
+      "refersTo": "settings-group",
+      "description": "52x32 switch; handle grows and gains a check when on.",
+      "html": "<label class=\"ds-sw\"><input type=\"checkbox\" checked><span></span>Word meanings</label>",
+      "css": ".ds-sw{display:flex;align-items:center;gap:.75rem;font:500 .875rem Rubik,system-ui,sans-serif;color:var(--md-on-surface,#1a2925);cursor:pointer}.ds-sw input{position:absolute;opacity:0}.ds-sw span{position:relative;width:52px;height:32px;box-sizing:border-box;border-radius:9999px;border:2px solid var(--md-outline,#7d918b);background:var(--md-surface-container-highest,#d9e3e0);transition:background 150ms}.ds-sw span::after{content:'';position:absolute;top:50%;left:6px;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:var(--md-outline,#7d918b);transition:all 150ms cubic-bezier(.05,.7,.1,1)}.ds-sw input:checked+span{background:var(--md-primary,#33695a);border-color:var(--md-primary,#33695a)}.ds-sw input:checked+span::after{width:24px;height:24px;margin-top:-12px;left:24px;background:var(--md-on-primary,#fff)}.ds-sw input:focus-visible+span{outline:2px solid var(--md-primary,#33695a);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Study Desk",
+    "overview": "A calm, modern study app in the quran.com / Tarteel class. Misty sage ground, white rounded cards, one sage accent, soft pastel status chips. The mushaf and the teacher's voice lead; the interface stays quiet around them. No coloured header bands, no themed cultural ornament.\n\nPhone-first, one-handed, dense enough to show several rukus per screen. Light and dark are both first-class: every colour is a role token with a value per theme, never a hard-coded hex.",
+    "keyCharacteristics": [
+      "Tinted ground, white (light) or one-step-up (dark) cards.",
+      "One accent: sage. Filled sage means \"current\" or \"playing\".",
+      "Pills for every action and chip; 20px-radius cards.",
+      "Near-flat; tone does the lifting, shadows are soft and low.",
+      "Rubik for the UI, bundled; the mushaf keeps its own faces."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Sage is the only accent. Filled sage = current or playing; Sage Wash = available. Nothing else gets the accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The Status Pastel Rule",
+        "body": "Status is said by a soft chip, never by recolouring the card: Memorized green, Playing lilac, Heard and Paused neutral. Later state wins (Heard < Memorized < Playing/Paused).",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Themes Rule",
+        "body": "Any new colour ships as a role token with both a light and a dark value. player.html carries the same values.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed Mushaf Rule",
+        "body": "The mushaf faces (IndoPak Nastaleeq, Uthmani stack, Indo-Pak Naskh) are fixed. Never restyle, recolour or swap them; highlight with a wash behind the words, not colour on them.",
+        "section": "typography"
+      },
+      {
+        "name": "The Bundled Font Rule",
+        "body": "Every UI face ships inside the app. No Google Fonts, no CDN.",
+        "section": "typography"
+      },
+      {
+        "name": "The 44px Rule",
+        "body": "On coarse pointers every tappable control is at least 44x44px. Where the eye wants something smaller (32px ayah key pills), transparent borders outside the painted background carry the target to 44px.",
+        "section": "layout"
+      },
+      {
+        "name": "The Soft Lift Rule",
+        "body": "No hard or offset shadows, no borders as depth. Lift is soft, low and tinted.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the `--md-*` role tokens for every colour, with light and dark values.",
+      "Do make every touch control 44px on coarse pointers.",
+      "Do put new surfaces on white/raised cards at 20px over the misty ground.",
+      "Do say state with a pastel chip or a filled sage pill.",
+      "Do ship any new UI face as a bundled woff2."
+    ],
+    "donts": [
+      "Don't restyle, recolour or replace the mushaf faces.",
+      "Don't load fonts from Google Fonts or any CDN.",
+      "Don't add a coloured app bar, gold rules or themed ornament.",
+      "Don't add a second accent colour; lilac is for \"Playing\" only.",
+      "Don't use hard, offset or dark heavy shadows in light theme.",
+      "Don't add small uppercase tracked labels above titles.",
+      "Don't change the Settings word-switch rows' markup; restyle only via shared tokens/classes."
+    ]
+  }
+}

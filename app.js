@@ -15,7 +15,7 @@
     document.documentElement.setAttribute("data-theme", t);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", t === "dark" ? "#062a2a" : "#0a3d3d");
+      meta.setAttribute("content", t === "dark" ? "#111715" : "#eef3f1");
     }
   }
 
@@ -183,16 +183,62 @@
     return PARA_NAMES[Number(n) - 1] || ["", ""];
   }
 
-  /** The stepper's face: "Para N" over the para's name. */
+  /** The para chips and the progress card's para name follow the select. */
   function syncParaFace() {
-    var num = document.getElementById("para-picker-num");
-    var name = document.getElementById("para-picker-name");
-    if (!num || !name) return;
     var n = paraSelect.value;
-    num.textContent = "Para " + n;
-    name.textContent = paraName(n)[0];
-    name.title = paraName(n)[1];
+    var meterName = document.getElementById("hifz-meter-name");
+    if (meterName) meterName.textContent = paraName(n)[0];
+    syncParaChips();
   }
+
+  /**
+   * One chip per para the select offers (the recorded-only filter trims both alike). Rebuilt
+   * only when that list changes; otherwise just the pressed chip moves, and it is scrolled
+   * into view so the current para is never off to the side.
+   */
+  var paraChips = document.getElementById("para-chips");
+  var paraChipsKey = "";
+
+  function syncParaChips() {
+    if (!paraChips) return;
+    var values = Array.prototype.map.call(paraSelect.options, function (o) { return o.value; });
+    if (values.join(",") !== paraChipsKey) {
+      paraChipsKey = values.join(",");
+      paraChips.textContent = "";
+      values.forEach(function (v) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "para-chip";
+        b.dataset.para = v;
+        b.setAttribute("aria-label", "Para " + v + ", " + paraName(v)[1]);
+        b.innerHTML = "<span class=\"para-chip-num\">" + v + "</span>" +
+          "<span class=\"para-chip-name\">" + escapeHtml(paraName(v)[1]) + "</span>";
+        paraChips.appendChild(b);
+      });
+    }
+    var current = null;
+    Array.prototype.forEach.call(paraChips.children, function (b) {
+      var on = b.dataset.para === paraSelect.value;
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      if (on) current = b;
+    });
+    if (current) {
+      var box = paraChips.getBoundingClientRect();
+      var r = current.getBoundingClientRect();
+      if (r.left < box.left || r.right > box.right) {
+        paraChips.scrollLeft += r.left - box.left - (box.width - r.width) / 2;
+      }
+    }
+  }
+
+  if (paraChips) paraChips.addEventListener("click", function (e) {
+    var b = e.target.closest(".para-chip");
+    if (!b || b.dataset.para === paraSelect.value) return;
+    var basePara = tableRenderedPara;
+    paraSelect.value = b.dataset.para;
+    renderTable({ scrollBasePara: basePara });
+    syncParaStepButtons();
+  });
 
   // The native list shows the names too.
   Array.prototype.forEach.call(paraSelect.options, function (opt) {
@@ -676,6 +722,7 @@
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
     var fill = document.getElementById("hifz-meter-fill");
     fill.style.width = pct + "%";
+    meter.style.setProperty("--pct", String(pct));
     var bar = meter.querySelector(".hifz-meter-bar");
     if (bar) bar.setAttribute("aria-valuenow", String(pct));
 
@@ -1297,13 +1344,16 @@
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
-        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        "<div class=\"ayah-tools\">" +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG +
+          "<span class=\"ayah-key\" dir=\"ltr\">" + entry.surahNumber + ":" + a.n + "</span></button>" +
         (glossSwitch
           ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
           : "") +
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
           : "") +
+        "</div>" +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
         ayahNumHtml(a) +
         (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
@@ -1682,7 +1732,7 @@
       : "";
     var rukuLine =
       "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span>" + checkTag + "</span>" +
-      "<span class=\"ruku-title-narrow\">Para " + row.para + " \u00b7 " + rukuTag + checkTag + "</span>";
+      "<span class=\"ruku-title-narrow\">Ruku " + rukuTag.replace(/R/g, "") + checkTag + "</span>";
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
@@ -2787,11 +2837,8 @@
       return;
     }
 
-    titleEl.textContent = "Para " + row.para + " · Ruku " + rukuDisplay(row);
-    metaEl.textContent = row.surah + " · " + versesText(row.verses);
-    if (parseInt(paraSelect.value, 10) !== row.para) {
-      metaEl.textContent += " · Para " + row.para;
-    }
+    titleEl.textContent = "Ruku " + String(rukuDisplay(row)).replace(/R/g, "") + " · " + row.surah;
+    metaEl.textContent = "Para " + row.para + " · Ayah " + versesText(row.verses);
     gotoBtn.disabled = false;
 
     if (badge) {
@@ -3146,6 +3193,8 @@
       if (gi == null) return;
       var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
       if (tr) {
+        // Nothing is playing any more; the card must not keep saying so.
+        tr.classList.remove("playing", "audio-paused");
         var cell = tr.querySelector(".audio-cell");
         if (cell) {
           cell.innerHTML = "";
@@ -5825,8 +5874,8 @@
   var GUIDE_STEPS = [
     {
       title: "Choose a Para (Juz)",
-      body: "Tap here to pick a Para from 1–30. Its rukus appear in the list below.",
-      selector: "#para-picker-btn",
+      body: "Tap a Para here; swipe sideways for all 30. Its rukus appear in the list below.",
+      selector: "#para-chips .para-chip[aria-pressed=\"true\"]",
     },
     {
       title: "Play a recording",
@@ -5845,7 +5894,7 @@
     },
     {
       title: "Track memorization (Hifz)",
-      body: "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
+      body: "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The ring above the list shows your progress for this Para.",
       selector: "#ruku-tbody .hifz-mark",
     },
   ];
@@ -5905,10 +5954,10 @@
     var caption = document.createElement("div");
     caption.className = "mq-guide-caption";
     caption.innerHTML =
-      '<div class="mq-guide-step-label"></div>' +
       '<div class="mq-guide-title"></div>' +
       '<p class="mq-guide-body"></p>' +
       '<div class="mq-guide-actions">' +
+      '  <span class="mq-guide-step-label"></span>' +
       '  <button type="button" class="mq-guide-skip">Skip</button>' +
       '  <button type="button" class="mq-guide-next"></button>' +
       '</div>';
@@ -5933,7 +5982,7 @@
       var target = guideTargetRect(step);
       var vh = window.innerHeight;
 
-      labelEl.textContent = "Step " + (index + 1) + " of " + GUIDE_STEPS.length;
+      labelEl.textContent = (index + 1) + " of " + GUIDE_STEPS.length;
       titleEl.textContent = step.title;
       bodyEl.textContent = step.body;
       nextBtn.textContent = (index === GUIDE_STEPS.length - 1) ? "Got it" : "Next";

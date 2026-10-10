@@ -28,13 +28,14 @@
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#062a2a">
+  <meta name="theme-color" content="#eef3f1">
 
   <!-- iOS home-screen support -->
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="MQ Ruku">
   <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" href="icon-192.png" type="image/png">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -146,6 +147,9 @@
             <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
           </div>
         </div>
+        <!-- The paras as a row of chips, scrolled sideways; app.js fills it from the select
+             above, which stays the value store (and the list the recorded-only filter trims). -->
+        <div class="para-chips" id="para-chips" role="group" aria-label="Choose a para"></div>
       </div>
       <div class="toolbar-bottom">
         <div class="toolbar-now-playing" id="toolbar-now-playing" aria-live="polite">
@@ -177,7 +181,10 @@
     <div class="hifz-meter" id="hifz-meter" aria-live="polite">
       <div class="hifz-meter-head">
         <span class="hifz-meter-para" id="hifz-meter-para">Para 1</span>
-        <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
+        <span class="hifz-meter-sub">
+          <span class="hifz-meter-name" id="hifz-meter-name" lang="ar" dir="rtl"></span>
+          <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
+        </span>
       </div>
       <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="hifz-meter-fill" id="hifz-meter-fill"></div>
@@ -219,7 +226,7 @@
         <!-- General -->
         <div class="settings-group">
           <div class="settings-group-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
             General
           </div>
           <div class="settings-row">
