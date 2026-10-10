@@ -287,13 +287,14 @@
             <p class="settings-hint">Says the word as quran.com recites it. Needs internet the first time.</p>
           </div>
           <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Meaning under every word <span class="settings-role-badge">Experimental</span></span>
-              <input type="checkbox" id="pref-word-gloss" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-            <div class="settings-preview" data-preview="gloss" role="group" aria-label="Preview"></div>
-            <p class="settings-hint">Urdu under each word.</p>
+            <label>Word meanings under each ayah <span class="settings-role-badge">Experimental</span></label>
+            <div class="settings-role-group" id="ayah-words-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar">+ Grammar</button>
+            </div>
+            <div class="settings-preview" data-preview="words" role="group" aria-label="Preview"></div>
+            <p class="settings-hint">Meaning: Urdu under each word. + Grammar: a card per word with its parts.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
@@ -303,15 +304,6 @@
             </label>
             <div class="settings-preview" data-preview="switch" role="group" aria-label="Preview"></div>
             <p class="settings-hint">A button by each ayah to hide or show its meanings, to test yourself.</p>
-          </div>
-          <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Word cards under each ayah <span class="settings-role-badge">Experimental</span></span>
-              <input type="checkbox" id="pref-word-table" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-            <div class="settings-preview" data-preview="cards" role="group" aria-label="Preview"></div>
-            <p class="settings-hint">A card for each word: its meaning, parts and grammar.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">

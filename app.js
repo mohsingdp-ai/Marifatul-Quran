@@ -955,13 +955,14 @@
 
   /*
    * The Urdu meaning printed under every word, so a reader can follow word by word without
-   * tapping. Opt-in: it roughly doubles the height of each ayah.
+   * tapping. Opt-in: it roughly doubles the height of each ayah. One or the other with the
+   * word cards, which carry the same meaning: with both saved on, the cards win.
    */
   var WORD_GLOSS_PREF_KEY = "mq_pref_word_gloss";
 
   function wordGlossEnabled() {
     try {
-      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true";
+      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
     } catch (e) {
       return false;
     }
@@ -1131,7 +1132,7 @@
           : "Off: the words can't be tapped."
       };
     },
-    gloss: function () { return { gloss: wordGlossEnabled() }; },
+    words: function () { return { gloss: wordGlossEnabled(), table: wordTableEnabled() }; },
     "switch": function () {
       var gloss = wordGlossEnabled();
       var table = wordTableEnabled();
@@ -1139,10 +1140,9 @@
         gloss: gloss,
         table: table,
         glossSwitch: ayahGlossSwitchEnabled(),
-        note: ayahGlossSwitchEnabled() && !gloss && !table ? "Meanings start hidden, as the switch above is off. Tap the button." : ""
+        note: ayahGlossSwitchEnabled() && !gloss && !table ? "Meanings start hidden, as the choice above is Off. Tap the button." : ""
       };
     },
-    cards: function () { return { table: wordTableEnabled() }; },
     translation: function () { return { translation: translationEnabled() }; }
   };
 
@@ -4546,10 +4546,9 @@
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var wordMeaningsGroup = document.getElementById("word-meanings-group");
   var prefTranslation = document.getElementById("pref-translation");
-  var prefWordGloss = document.getElementById("pref-word-gloss");
+  var ayahWordsGroup = document.getElementById("ayah-words-group");
   var prefWordSound = document.getElementById("pref-word-sound");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
-  var prefWordTable = document.getElementById("pref-word-table");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
@@ -4676,10 +4675,9 @@
   function syncSettingsUI() {
     syncWordMeaningsUI();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
-    if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
+    syncAyahWordsUI();
     if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
-    if (prefWordTable) prefWordTable.checked = wordTableEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
@@ -4810,23 +4808,30 @@
     document.fonts.ready.then(function () { sizeGlossCells(tbody); });
   }
 
-  if (prefWordGloss) {
-    prefWordGloss.addEventListener("change", function () {
-      setWordGlossEnabled(this.checked);
+  /** Off, Meaning (Urdu under each word) or + Grammar (the word cards): one at a time. */
+  function syncAyahWordsUI() {
+    if (!ayahWordsGroup) return;
+    var level = wordTableEnabled() ? "grammar" : wordGlossEnabled() ? "simple" : "off";
+    ayahWordsGroup.querySelectorAll("[data-ayah-words]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.ayahWords === level);
+    });
+  }
+
+  if (ayahWordsGroup) {
+    ayahWordsGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-ayah-words]");
+      if (!btn) return;
+      setWordGlossEnabled(btn.dataset.ayahWords === "simple");
+      setWordTableEnabled(btn.dataset.ayahWords === "grammar");
+      syncAyahWordsUI();
       renderTable();
+      renderSettingsPreviews();
     });
   }
 
   if (prefAyahGlossSwitch) {
     prefAyahGlossSwitch.addEventListener("change", function () {
       setAyahGlossSwitchEnabled(this.checked);
-      renderTable();
-    });
-  }
-
-  if (prefWordTable) {
-    prefWordTable.addEventListener("change", function () {
-      setWordTableEnabled(this.checked);
       renderTable();
     });
   }

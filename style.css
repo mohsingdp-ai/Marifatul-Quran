@@ -3489,7 +3489,7 @@ tr.playing.audio-paused .audio-play-btn {
   margin-bottom: 0.5rem;
 }
 
-.settings-preview[data-preview="cards"] .wt-card:nth-child(n+3),
+.settings-preview[data-preview="words"] .wt-card:nth-child(n+3),
 .settings-preview[data-preview="switch"] .wt-card:nth-child(n+2) {
   display: none;
 }
