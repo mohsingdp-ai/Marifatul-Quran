@@ -8,6 +8,12 @@
 /* ================================================================== */
 /* Design tokens                                                       */
 /* ================================================================== */
+@font-face {
+  font-family: "IndoPak Nastaleeq";
+  src: url("asset/fonts/indopak-nastaleeq.woff2") format("woff2");
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
 
@@ -88,6 +94,8 @@
   /* --- Type --- */
   --md-font: "Segoe UI", system-ui, sans-serif;
   --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
+  /* The ayat themselves. Indo-Pak text (Settings > Mushaf script) swaps this below. */
+  --mushaf-font: var(--md-font-arabic);
 
   /* Legacy names. Rules written against the old palette (and branches that add to it) keep
      resolving to the matching M3 role. */
@@ -1843,7 +1851,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .ayat-body {
-  font-family: var(--md-font-arabic);
+  font-family: var(--mushaf-font);
   font-size: calc(1.6rem * var(--mushaf-scale, 1));
   line-height: 2.15;
   color: var(--md-on-surface);
@@ -2113,7 +2121,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .wpop-word {
-  font-family: var(--md-font-arabic);
+  font-family: var(--mushaf-font);
   font-size: 1.45rem;
   line-height: 1.9;
   color: var(--md-on-surface);
@@ -2396,6 +2404,38 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   line-height: 1;
   color: var(--md-tertiary);
   vertical-align: middle;
+}
+
+/* Indo-Pak mushaf: the text in the bundled Indo-Pak Nastaleeq font it was written for (it
+   works offline; some words and signs are this font's own glyphs). "indopak-naskh" keeps
+   the Uthmani-style faces for the words, written in plain Unicode. Both draw the end-of-ayah
+   marker as that font's numbered ornament, with the closing pause mark set on top of it. */
+html[data-mushaf="indopak"] {
+  --mushaf-font: "IndoPak Nastaleeq", var(--md-font-arabic);
+}
+
+html[data-mushaf^="indopak"] .ayat-num {
+  display: inline;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  margin-inline: 0.25em 0.3em;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  font-family: "IndoPak Nastaleeq";
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: baseline;
+}
+
+html[data-mushaf^="indopak"] .ayat-item.is-reciting .ayat-num {
+  background: none;
+  color: var(--md-primary);
+}
+
+.ayat-num-mark {
+  color: var(--md-on-surface);
 }
 
 .ayat-source {
@@ -3288,6 +3328,12 @@ tr.playing.audio-paused .audio-play-btn {
   background: currentColor;
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+/* Three mushaf scripts share a phone's width: let a long name wrap rather than spill. */
+#mushaf-script-group .settings-role-btn {
+  padding: 0.25rem 0.5rem;
+  white-space: normal;
 }
 
 .settings-role-badge {
