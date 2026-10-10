@@ -268,13 +268,14 @@
             Ayat
           </div>
           <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Tap a word for its meaning</span>
-              <input type="checkbox" id="pref-word-meanings" />
-              <span class="settings-toggle-switch"></span>
-            </label>
+            <label>Tap a word for its meaning</label>
+            <div class="settings-role-group" id="word-meanings-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-word-meanings="off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="simple">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="grammar">+ Grammar</button>
+            </div>
             <div class="settings-preview" data-preview="tap" role="group" aria-label="Preview"></div>
-            <p class="settings-hint">Tap a word for its meaning, its parts and their grammar.</p>
+            <p class="settings-hint">Meaning: just the Urdu. + Grammar: its parts and their grammar too.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">

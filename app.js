@@ -934,6 +934,26 @@
   }
 
   /*
+   * How much a tapped word's box says: just its meaning, or its parts and their grammar too
+   * (the default, and all the box ever showed before this choice existed).
+   */
+  var WORD_DETAIL_PREF_KEY = "mq_pref_word_detail";
+
+  function wordMeaningsSimple() {
+    try {
+      return localStorage.getItem(WORD_DETAIL_PREF_KEY) === "simple";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setWordMeaningsSimple(on) {
+    try {
+      localStorage.setItem(WORD_DETAIL_PREF_KEY, on ? "simple" : "grammar");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /*
    * The Urdu meaning printed under every word, so a reader can follow word by word without
    * tapping. Opt-in: it roughly doubles the height of each ayah.
    */
@@ -4185,10 +4205,12 @@
     pop.hidden = false;
     positionWordPopover(pop, wordEl);
 
+    // The simple box never shows parts, so it never loads them.
+    var simple = wordMeaningsSimple();
     Promise.all([
       getAyahWords(para, surahNumber, ayahNumber),
-      getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
-      getStemMeanings()
+      simple ? null : getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
+      simple ? null : getStemMeanings()
     ]).then(function (results) {
       if (token !== wordPopToken || pop.hidden) return;
       var words = results[0];
@@ -4522,7 +4544,7 @@
   var adminSection = document.getElementById("admin-section");
   var ghTokenInput = document.getElementById("gh-token-input");
   var prefMediaNotif = document.getElementById("pref-media-notification");
-  var prefWordMeanings = document.getElementById("pref-word-meanings");
+  var wordMeaningsGroup = document.getElementById("word-meanings-group");
   var prefTranslation = document.getElementById("pref-translation");
   var prefWordGloss = document.getElementById("pref-word-gloss");
   var prefWordSound = document.getElementById("pref-word-sound");
@@ -4652,7 +4674,7 @@
   }
 
   function syncSettingsUI() {
-    if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
+    syncWordMeaningsUI();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
     if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
     if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
@@ -4748,10 +4770,25 @@
     });
   }
 
-  if (prefWordMeanings) {
-    prefWordMeanings.addEventListener("change", function () {
-      setWordMeaningsEnabled(this.checked);
+  /** Off, Meaning or + Grammar: the first is the old on/off switch, the rest the box's detail. */
+  function syncWordMeaningsUI() {
+    if (!wordMeaningsGroup) return;
+    var level = !wordMeaningsEnabled() ? "off" : wordMeaningsSimple() ? "simple" : "grammar";
+    wordMeaningsGroup.querySelectorAll("[data-word-meanings]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.wordMeanings === level);
+    });
+  }
+
+  if (wordMeaningsGroup) {
+    wordMeaningsGroup.addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-word-meanings]");
+      if (!btn) return;
+      var level = btn.dataset.wordMeanings;
+      setWordMeaningsEnabled(level !== "off");
+      if (level !== "off") setWordMeaningsSimple(level === "simple");
+      syncWordMeaningsUI();
       renderTable();
+      renderSettingsPreviews();
     });
   }
 
