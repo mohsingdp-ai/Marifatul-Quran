@@ -433,24 +433,6 @@
     persistPlaybackTimer = setTimeout(savePlaybackPersist, 500);
   }
 
-  function getShowOnlyRecordedPara() {
-    var v = localStorage.getItem("show_only_recorded_para");
-    return v === null ? true : v === "true";
-  }
-
-  function setShowOnlyRecordedPara(val) {
-    localStorage.setItem("show_only_recorded_para", val ? "true" : "false");
-  }
-
-  function getShowOnlyRecordedRuku() {
-    var v = localStorage.getItem("show_only_recorded_ruku");
-    return v === null ? true : v === "true";
-  }
-
-  function setShowOnlyRecordedRuku(val) {
-    localStorage.setItem("show_only_recorded_ruku", val ? "true" : "false");
-  }
-
   function getValidatedRukus() {
     try { return JSON.parse(localStorage.getItem("validated_rukus") || "{}"); }
     catch (e) { return {}; }
@@ -1828,8 +1810,6 @@
     if (!wrap) return null;
     var state = {
       para: scrollBasePara != null ? String(scrollBasePara) : String(paraSelect.value),
-      filterPara: getShowOnlyRecordedPara(),
-      filterRuku: getShowOnlyRecordedRuku(),
       scrollTop: wrap.scrollTop
     };
     var rows = tbody.querySelectorAll("tr[data-global-index]");
@@ -1849,8 +1829,6 @@
   function restoreTableViewState(state) {
     if (!state) return;
     if (state.para !== paraSelect.value) return;
-    if (state.filterPara !== getShowOnlyRecordedPara()) return;
-    if (state.filterRuku !== getShowOnlyRecordedRuku()) return;
     var wrap = document.querySelector(".table-wrapper");
     if (!wrap) return;
     requestAnimationFrame(function () {
@@ -1890,9 +1868,8 @@
     });
   }
 
+  /** Only paras with a recording are offered. */
   function updateParaSelect() {
-    var filterPara = getShowOnlyRecordedPara();
-
     // Cache all options once (iOS Safari doesn't support option.hidden, so we remove/re-add from DOM)
     if (!allParaOptions) {
       allParaOptions = Array.from(paraSelect.options);
@@ -1905,13 +1882,8 @@
 
     // Re-add only the ones that should be visible
     allParaOptions.forEach(function (opt) {
-      var show = true;
-      var para = parseInt(opt.value, 10);
-      if (filterPara) {
-        var items = indexedData[para] || [];
-        show = items.some(hasRecording);
-      }
-      if (show) paraSelect.appendChild(opt);
+      var items = indexedData[parseInt(opt.value, 10)] || [];
+      if (items.some(hasRecording)) paraSelect.appendChild(opt);
     });
 
     // When fetch failed or filter removed every option (e.g. on mobile), show all paras so the app is usable
@@ -1929,7 +1901,7 @@
 
   /**
    * @param {{ skipViewRestore?: boolean, scrollBasePara?: string }} [options]
-   *   skipViewRestore — filters/list changed in a way that invalidates scroll (e.g. para/ruku toggles).
+   *   skipViewRestore — filters/list changed in a way that invalidates scroll.
    *   scrollBasePara — para the old `tbody` was built for when `para-select` has already changed.
    */
   function renderTable(options) {
@@ -1941,16 +1913,11 @@
     else stickyPlaybackResume = null;
     var canUpload = hasGitHubToken();
     var showActions = isAdmin();
-    var filterRuku = getShowOnlyRecordedRuku();
-
     // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
 
-    var filtered = getFilteredData();
-
-    if (filterRuku) {
-      filtered = filtered.filter(hasRecording);
-    }
+    // Only rukus with a recording are listed.
+    var filtered = getFilteredData().filter(hasRecording);
 
     var resumeIndex = stickyPlaybackResume ? stickyPlaybackResume.globalIndex : null;
     var willResume = resumeIndex != null && filtered.some(function (item) {
@@ -4554,8 +4521,6 @@
   var roleBadge = document.getElementById("role-badge");
   var adminSection = document.getElementById("admin-section");
   var ghTokenInput = document.getElementById("gh-token-input");
-  var togglePara = document.getElementById("show-only-recorded-para");
-  var toggleRuku = document.getElementById("show-only-recorded-ruku");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var prefWordMeanings = document.getElementById("pref-word-meanings");
   var prefTranslation = document.getElementById("pref-translation");
@@ -4703,8 +4668,6 @@
     if (admin && ghTokenInput) {
       ghTokenInput.value = getGitHubToken();
     }
-    togglePara.checked = getShowOnlyRecordedPara();
-    toggleRuku.checked = getShowOnlyRecordedRuku();
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === mode);
@@ -4784,16 +4747,6 @@
       });
     });
   }
-
-  togglePara.addEventListener("change", function () {
-    setShowOnlyRecordedPara(this.checked);
-    renderTable({ skipViewRestore: true });
-  });
-
-  toggleRuku.addEventListener("change", function () {
-    setShowOnlyRecordedRuku(this.checked);
-    renderTable({ skipViewRestore: true });
-  });
 
   if (prefWordMeanings) {
     prefWordMeanings.addEventListener("change", function () {
