@@ -1175,10 +1175,11 @@
   /**
    * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
    * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
-   * them inside neighbouring words, so they can never be matched to a meaning.
+   * them inside neighbouring words, so they can never be matched to a meaning. A word is
+   * tappable when a tap does something: opens its meaning, plays its sound, or both.
    */
   function ayahWordsHtml(text, gloss) {
-    var tap = wordMeaningsEnabled();
+    var tap = wordMeaningsEnabled() || wordSoundOnTap();
     if (!tap && !gloss) return escapeHtml(text);
     // Without tapping on, the words still need a wrapper to hang the gloss under.
     var cls = tap ? "ayah-word" : "gloss-word";
@@ -4002,7 +4003,9 @@
     var item = wordEl.closest(".ayat-item");
     var row = ayatTr ? data[ayatTr.dataset.ayatFor] : null;
     if (!row || !item) return;
-    openWordMeaning(wordEl, row.para, row.surahNumber, parseInt(item.dataset.ayah, 10));
+    var ayahNumber = parseInt(item.dataset.ayah, 10);
+    if (wordMeaningsEnabled()) openWordMeaning(wordEl, row.para, row.surahNumber, ayahNumber);
+    else playTappedWordOnly(wordEl, row.para, row.surahNumber, ayahNumber);
     prefetchRukuWords(ayatTr.dataset.ayatFor);
   }
 
@@ -4088,17 +4091,37 @@
     });
   }
 
+  function tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber) {
+    var word = wordEl.firstChild.nodeValue.trim();
+    return getAyahWords(para, surahNumber, ayahNumber).then(function (words) {
+      return wordAudioUrl(words, word, Number(wordEl.dataset.w), surahNumber, ayahNumber);
+    });
+  }
+
+  function playWordSoundFrom(urlPromise, failed) {
+    urlPromise.then(function (url) {
+      if (url) playWordSound(url, failed);
+      else failed();
+    });
+  }
+
   function playPopWordSound() {
     var sound = popWordSound;
     if (!sound) return;
-    sound.url.then(function (url) {
-      function failed() {
-        sound.failed = true;
-        var note = popWordSound === sound && wordPopoverEl && wordPopoverEl.querySelector(".wpop-sound-note");
-        if (note) note.textContent = "Sound needs internet";
-      }
-      if (url) playWordSound(url, failed);
-      else failed();
+    playWordSoundFrom(sound.url, function () {
+      sound.failed = true;
+      var note = popWordSound === sound && wordPopoverEl && wordPopoverEl.querySelector(".wpop-sound-note");
+      if (note) note.textContent = "Sound needs internet";
+    });
+  }
+
+  /** Meanings off, sound on: the tap just says the word, with a flash to show it was heard. */
+  function playTappedWordOnly(wordEl, para, surahNumber, ayahNumber) {
+    wordEl.classList.remove("is-sounding");
+    void wordEl.offsetWidth; // restart the flash on a quick second tap
+    wordEl.classList.add("is-sounding");
+    playWordSoundFrom(tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber), function () {
+      wordEl.classList.remove("is-sounding"); // no box to say why, so just stay quiet
     });
   }
 
@@ -4107,12 +4130,7 @@
     var token = ++wordPopToken;
     var word = wordEl.firstChild.nodeValue.trim();
     var wordIndex = Number(wordEl.dataset.w);
-    var sound = popWordSound = {
-      url: getAyahWords(para, surahNumber, ayahNumber).then(function (words) {
-        return wordAudioUrl(words, word, wordIndex, surahNumber, ayahNumber);
-      }),
-      failed: false
-    };
+    var sound = popWordSound = { url: tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber), failed: false };
     if (wordSoundOnTap()) playPopWordSound();
 
     // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (۞)
@@ -4706,6 +4724,7 @@
   if (prefWordSound) {
     prefWordSound.addEventListener("change", function () {
       setWordSoundOnTap(this.checked);
+      renderTable(); // words turn tappable, or back to plain text
     });
   }
 

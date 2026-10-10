@@ -116,3 +116,26 @@ test("a tapped word plays quran.com's file for its own place, in every script", 
     assert.strictEqual(f[f.length - 1], "002_282_128.mp3");
   }
 });
+
+test("words are tappable when either the meaning or the sound switch is on", () => {
+  const store = {};
+  const localStorage = { getItem: (k) => (k in store ? store[k] : null) };
+  const { ayahWordsHtml } = new Function("localStorage", "escapeHtml",
+    "var WORD_MEANINGS_PREF_KEY = 'mq_pref_word_meanings', WORD_SOUND_PREF_KEY = 'mq_pref_word_sound';" +
+    grab("ayahWordsHtml") + grab("glossCellsHtml") + grab("wordSkeleton") +
+    grab("wordMeaningsEnabled") + grab("wordSoundOnTap") + "return { ayahWordsHtml };")(localStorage, (t) => t);
+  const text = "ذَٰلِكَ ٱلْكِتَٰبُ";
+  for (const [meanings, sound, cls] of [["true", "true", "ayah-word"], ["true", "false", "ayah-word"],
+    ["false", "true", "ayah-word"], ["false", "false", null]]) {
+    store.mq_pref_word_meanings = meanings;
+    store.mq_pref_word_sound = sound;
+    const plain = ayahWordsHtml(text, false);
+    const gloss = ayahWordsHtml(text, true);
+    if (cls) assert.ok(plain.includes("class=\"" + cls + "\""), meanings + "/" + sound);
+    else assert.strictEqual(plain, text);
+    assert.ok(gloss.includes("class=\"" + (cls || "gloss-word") + "\""), "gloss " + meanings + "/" + sound);
+  }
+  delete store.mq_pref_word_sound; // never set: the sound defaults on
+  store.mq_pref_word_meanings = "false";
+  assert.ok(ayahWordsHtml(text, false).includes("ayah-word"));
+});
