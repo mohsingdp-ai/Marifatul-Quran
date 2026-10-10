@@ -8,6 +8,15 @@
       // Hifz tracking on by default; set before first paint to avoid a flash of the meter/column.
       var h = localStorage.getItem("hifz_enabled");
       document.documentElement.setAttribute("data-hifz", h === "false" ? "off" : "on");
+      // Urdu readers: right to left from the first paint, and the page held back until i18n.js
+      // has put the Urdu words in (it shows the page; the timer is only a safety net).
+      if (localStorage.getItem("ui_lang") === "ur") {
+        var d = document.documentElement;
+        d.setAttribute("lang", "ur");
+        d.setAttribute("dir", "rtl");
+        d.classList.add("i18n-pending");
+        setTimeout(function () { d.classList.remove("i18n-pending"); }, 3000);
+      }
       // The Indo-Pak mushaf (the default): fetch its text and font early; app.js switches once
       // both are in. Uthmani readers skip them here (the service worker still keeps a copy).
       if (localStorage.getItem("mushaf_script") !== "uthmani") {
@@ -24,7 +33,7 @@
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marifatul Quran - Ruku Recordings</title>
+  <title data-i18n="header.pageTitle">Marifatul Quran - Ruku Recordings</title>
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json">
@@ -43,7 +52,7 @@
        and only once there is something to save. -->
   <div class="timing-save-bar" id="timing-save-bar" hidden>
     <span class="timing-save-count" id="timing-save-count"></span>
-    <button type="button" class="timing-save-btn" id="timing-save-btn">Save to timings.js</button>
+    <button type="button" class="timing-save-btn" id="timing-save-btn" data-i18n="timing.save">Save to timings.js</button>
   </div>
 
   <div id="mq-audio-host" class="mq-audio-host" aria-hidden="true"></div>
@@ -51,41 +60,41 @@
     <div class="header-brand">
       <img class="header-logo" src="icon-192.png" width="44" height="44" alt="" aria-hidden="true">
       <div class="header-text">
-        <h1>Marifatul Quran</h1>
-        <p class="subtitle">Ruku Recordings</p>
+        <h1 data-i18n="header.title">Marifatul Quran</h1>
+        <p class="subtitle" data-i18n="header.subtitle">Ruku Recordings</p>
       </div>
     </div>
     <!-- Install lives in the app bar as well as the menu; the same script drives both. -->
     <div class="header-install-wrap" id="install-header-wrap">
-      <button type="button" class="btn-toolbar-menu header-install" id="install-header-btn" aria-label="Install app" title="Install this app on your phone">
+      <button type="button" class="btn-toolbar-menu header-install" id="install-header-btn" aria-label="Install app" title="Install this app on your phone" data-i18n-aria="install.app" data-i18n-title="install.headerTitle">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M8 1.5h8a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-15a3 3 0 0 1 3-3zm-1 3h10v13H7z"/><path d="M12 6.75v5.5M9.6 10.2 12 12.6l2.4-2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="20" r="1.1" fill="currentColor" opacity="0.55"/></svg>
       </button>
-      <span class="header-install-badge" aria-hidden="true">New</span>
+      <span class="header-install-badge" aria-hidden="true" data-i18n="install.new">New</span>
     </div>
     <div class="toolbar-menu-wrap header-menu">
-      <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" aria-expanded="false">
+      <button type="button" class="btn-toolbar-menu" id="toolbar-menu-btn" aria-label="Menu" data-i18n-aria="menu.menu" aria-expanded="false">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
       </button>
       <div class="toolbar-menu-dropdown" id="toolbar-menu-dropdown">
         <button type="button" class="toolbar-menu-item" id="download-para-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download para
+          <span data-i18n="menu.downloadPara">Download para</span>
         </button>
         <button type="button" class="toolbar-menu-item" id="install-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          Install app
+          <span data-i18n="install.app">Install app</span>
         </button>
-        <button type="button" class="toolbar-menu-item" id="share-bulk-links-btn" title="Select rukus as tiles, then copy or share title + player link text (opaque link when available)">
+        <button type="button" class="toolbar-menu-item" id="share-bulk-links-btn" data-i18n-title="menu.shareRukusTitle" title="Select rukus as tiles, then copy or share title + player link text (opaque link when available)">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Share rukus
+          <span data-i18n="menu.shareRukus">Share rukus</span>
         </button>
-        <button type="button" class="toolbar-menu-item" id="show-guide-btn" title="Replay the first-run guided walkthrough">
+        <button type="button" class="toolbar-menu-item" id="show-guide-btn" data-i18n-title="menu.showGuideTitle" title="Replay the first-run guided walkthrough">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          Show walkthrough
+          <span data-i18n="menu.showGuide">Show walkthrough</span>
         </button>
         <button type="button" class="toolbar-menu-item" id="settings-btn">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
+          <span data-i18n="menu.settings">Settings</span>
         </button>
       </div>
     </div>
@@ -95,12 +104,12 @@
     <div class="controls toolbar">
       <div class="toolbar-top">
         <div class="controls-left">
-          <label for="para-select" class="sr-only">Para (Juz)</label>
-          <button type="button" class="btn-para-step" id="para-prev" aria-label="Previous Para" title="Previous Para">
+          <label for="para-select" class="sr-only" data-i18n="para.selectLabel">Para (Juz)</label>
+          <button type="button" class="btn-para-step" id="para-prev" aria-label="Previous Para" title="Previous Para" data-i18n-aria="para.prev" data-i18n-title="para.prev">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
           </button>
           <div class="para-picker">
-          <select id="para-select" aria-label="Select Para">
+          <select id="para-select" aria-label="Select Para" data-i18n-aria="para.select">
             <option value="1" selected>Para 1</option>
             <option value="2">Para 2</option>
             <option value="3">Para 3</option>
@@ -132,24 +141,24 @@
             <option value="29">Para 29</option>
             <option value="30">Para 30</option>
           </select>
-          <button type="button" class="para-picker-face" id="para-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="para-menu" title="Choose a para">
+          <button type="button" class="para-picker-face" id="para-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="para-menu" title="Choose a para" data-i18n-title="para.choose">
             <span class="para-picker-num" id="para-picker-num">Para 1</span>
             <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
           </button>
-          <div class="para-menu" id="para-menu" role="listbox" aria-label="Choose a para" hidden></div>
+          <div class="para-menu" id="para-menu" role="listbox" aria-label="Choose a para" data-i18n-aria="para.choose" hidden></div>
           </div>
-          <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para">
+          <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para" data-i18n-aria="para.next" data-i18n-title="para.next">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </button>
-          <div class="toolbar-volume-wrap" title="Volume">
+          <div class="toolbar-volume-wrap" title="Volume" data-i18n-title="dock.volume">
             <span class="toolbar-volume-icon" aria-hidden="true">🔊</span>
-            <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" />
+            <input type="range" id="toolbar-volume" class="toolbar-volume-range" min="0" max="100" step="1" value="100" aria-label="Volume" data-i18n-aria="dock.volume" />
           </div>
         </div>
       </div>
       <div class="toolbar-bottom">
         <div class="toolbar-now-playing" id="toolbar-now-playing" aria-live="polite">
-          <button type="button" class="btn-toolbar-transport" id="toolbar-play-pause-btn" disabled title="Play or pause" aria-label="Play or pause">
+          <button type="button" class="btn-toolbar-transport" id="toolbar-play-pause-btn" disabled title="Play or pause" aria-label="Play or pause" data-i18n-title="dock.playPause" data-i18n-aria="dock.playPause">
             <span id="toolbar-transport-icon" class="toolbar-transport-icon"></span>
           </button>
           <span class="toolbar-now-playing-badge" id="toolbar-now-playing-badge" hidden></span>
@@ -157,7 +166,7 @@
             <span class="toolbar-now-playing-title" id="toolbar-now-playing-title">No track selected</span>
             <span class="toolbar-now-playing-meta" id="toolbar-now-playing-meta">Play a recording from the list below.</span>
           </div>
-          <button type="button" class="btn-toolbar-locate" id="goto-playing-btn" title="Scroll to current track in the list" aria-label="Scroll to current track in list" disabled>
+          <button type="button" class="btn-toolbar-locate" id="goto-playing-btn" title="Scroll to current track in the list" aria-label="Scroll to current track in list" data-i18n-title="dock.locateTitle" data-i18n-aria="dock.locate" disabled>
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
           </button>
           <div class="toolbar-progress-bar" id="toolbar-progress-bar">
@@ -167,7 +176,7 @@
         <!-- The same menu as the app bar's, reachable while the bar is docked; the dropdown
              moves to whichever button opened it. -->
         <div class="toolbar-menu-wrap dock-menu">
-          <button type="button" class="btn-toolbar-menu" id="dock-menu-btn" aria-label="Menu" aria-expanded="false">
+          <button type="button" class="btn-toolbar-menu" id="dock-menu-btn" aria-label="Menu" data-i18n-aria="menu.menu" aria-expanded="false">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg>
           </button>
         </div>
@@ -179,7 +188,7 @@
         <span class="hifz-meter-para" id="hifz-meter-para">Para 1</span>
         <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
       </div>
-      <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" data-i18n-aria="hifz.progressAria" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div class="hifz-meter-fill" id="hifz-meter-fill"></div>
       </div>
       <div class="hifz-meter-counts" id="hifz-meter-counts"></div>
@@ -189,13 +198,13 @@
       <table class="ruku-table" id="ruku-table">
         <thead>
           <tr>
-            <th class="col-hifz">Hifz</th>
-            <th>Ruku #</th>
-            <th>Surah</th>
-            <th>Verses</th>
-            <th>Arabic</th>
-            <th>Audio</th>
-            <th>Action</th>
+            <th class="col-hifz" data-i18n="para.colHifz">Hifz</th>
+            <th data-i18n="para.colRuku">Ruku #</th>
+            <th data-i18n="para.colSurah">Surah</th>
+            <th data-i18n="para.colVerses">Verses</th>
+            <th data-i18n="para.colArabic">Arabic</th>
+            <th data-i18n="para.colAudio">Audio</th>
+            <th data-i18n="para.colAction">Action</th>
           </tr>
         </thead>
         <tbody id="ruku-tbody">
@@ -210,54 +219,72 @@
     <div class="modal-backdrop" id="settings-modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title">Settings</h2>
-        <button type="button" class="modal-close-btn" id="settings-close-btn" aria-label="Close">
+        <h2 class="modal-title" data-i18n="settings.title">Settings</h2>
+        <button type="button" class="modal-close-btn" id="settings-close-btn" aria-label="Close" data-i18n-aria="settings.close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
       <div class="settings-form">
+        <!-- Language -->
+        <div class="settings-group">
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg>
+            <span id="ui-lang-label" data-i18n="settings.language">Language</span>
+          </div>
+          <div class="settings-row">
+            <div class="settings-role-group" id="ui-lang-group" role="group" aria-labelledby="ui-lang-label">
+              <button type="button" class="btn btn-sm settings-role-btn" data-ui-lang="en" lang="en">English</button>
+              <!-- No lang="ur" here. In Chrome (seen on Linux, measured with DevTools) an Urdu-tagged
+                   word on the page made the para name and other Arabic text fall back to a Nastaliq
+                   font, in English mode too. Cost: a screen reader reads this word in the page's voice. -->
+              <button type="button" class="btn btn-sm settings-role-btn" data-ui-lang="ur">اردو</button>
+            </div>
+            <p class="settings-hint" data-i18n="settings.languageHint">Buttons, titles and messages. The Quran text and its translation stay as they are.</p>
+          </div>
+        </div>
+
         <!-- General -->
         <div class="settings-group">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
-            General
+            <span data-i18n="settings.general">General</span>
           </div>
           <div class="settings-row">
             <div class="settings-row-inline">
-              <label>Role</label>
+              <label data-i18n="settings.role">Role</label>
               <span class="settings-role-badge" id="role-badge">User</span>
             </div>
             <div class="settings-role-group">
-              <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn">User</button>
-              <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn">Admin</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn" data-i18n="settings.user">User</button>
+              <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn" data-i18n="settings.admin">Admin</button>
             </div>
           </div>
           <div class="settings-row">
-            <label>Appearance</label>
+            <label data-i18n="settings.appearance">Appearance</label>
             <div class="settings-role-group" id="theme-mode-group">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-ui-theme="dark">Dark</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-ui-theme="light">Light</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ui-theme="dark" data-i18n="settings.dark">Dark</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ui-theme="light" data-i18n="settings.light">Light</button>
             </div>
           </div>
           <div class="settings-row">
-            <label>Mushaf text size</label>
+            <label data-i18n="settings.mushafSize">Mushaf text size</label>
             <div class="settings-volume-row">
               <div class="settings-role-group">
-                <button type="button" class="btn btn-sm settings-role-btn" id="font-smaller-btn" aria-label="Smaller mushaf text">A−</button>
-                <button type="button" class="btn btn-sm settings-role-btn" id="font-larger-btn" aria-label="Larger mushaf text">A+</button>
+                <button type="button" class="btn btn-sm settings-role-btn" id="font-smaller-btn" aria-label="Smaller mushaf text" data-i18n-aria="settings.smallerText">A−</button>
+                <button type="button" class="btn btn-sm settings-role-btn" id="font-larger-btn" aria-label="Larger mushaf text" data-i18n-aria="settings.largerText">A+</button>
               </div>
               <span class="settings-volume-value" id="font-size-value" aria-live="polite">100%</span>
-              <button type="button" class="btn btn-sm" id="font-reset-btn">Reset</button>
+              <button type="button" class="btn btn-sm" id="font-reset-btn" data-i18n="settings.reset">Reset</button>
             </div>
           </div>
           <div class="settings-row">
-            <label>Mushaf script</label>
+            <label data-i18n="settings.mushafScript">Mushaf script</label>
             <div class="settings-role-group" id="mushaf-script-group">
-              <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="uthmani">Uthmani</button>
-              <button type="button" class="btn btn-sm settings-role-btn active" data-mushaf-script="indopak">Indo-Pak</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="indopak-naskh">Indo-Pak Naskh</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="uthmani" data-i18n="settings.uthmani">Uthmani</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" data-mushaf-script="indopak" data-i18n="settings.indopak">Indo-Pak</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="indopak-naskh" data-i18n="settings.indopakNaskh">Indo-Pak Naskh</button>
             </div>
-            <p class="settings-hint" id="mushaf-script-note" aria-live="polite" hidden>Indo-Pak couldn't load — showing Uthmani. It will try again when you pick it.</p>
+            <p class="settings-hint" id="mushaf-script-note" aria-live="polite" hidden data-i18n="settings.mushafScriptNote">Indo-Pak couldn't load — showing Uthmani. It will try again when you pick it.</p>
           </div>
         </div>
 
@@ -265,47 +292,47 @@
         <div class="settings-group">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            Ayat
+            <span data-i18n="settings.ayat">Ayat</span>
           </div>
           <div class="settings-row">
-            <label>Word meanings <span class="settings-role-badge">Experimental</span></label>
-            <span class="settings-hint" id="word-meanings-tap-label">When you tap a word</span>
+            <label><span data-i18n="settings.wordMeanings">Word meanings</span> <span class="settings-role-badge" data-i18n="settings.experimental">Experimental</span></label>
+            <span class="settings-hint" id="word-meanings-tap-label" data-i18n="settings.wordTap">When you tap a word</span>
             <div class="settings-role-group" id="word-meanings-group" role="group" aria-labelledby="word-meanings-tap-label">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-word-meanings="off">Off</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="simple">Meaning</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="grammar">+ Grammar</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" data-word-meanings="off" data-i18n="settings.off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="simple" data-i18n="settings.meaning">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="grammar" data-i18n="settings.grammar">+ Grammar</button>
             </div>
-            <span class="settings-hint" id="ayah-words-label">Always, under each ayah</span>
+            <span class="settings-hint" id="ayah-words-label" data-i18n="settings.ayahWords">Always, under each ayah</span>
             <div class="settings-role-group" id="ayah-words-group" role="group" aria-labelledby="ayah-words-label">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off">Off</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple">Meaning</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar">+ Grammar</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off" data-i18n="settings.off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple" data-i18n="settings.meaning">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar" data-i18n="settings.grammar">+ Grammar</button>
             </div>
-            <p class="settings-hint">Meaning: the Urdu. + Grammar: its parts and grammar too.</p>
+            <p class="settings-hint" data-i18n="settings.wordMeaningsHint">Meaning: the Urdu. + Grammar: its parts and grammar too.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Play word sound on tap</span>
+              <span class="settings-toggle-text" data-i18n="settings.wordSound">Play word sound on tap</span>
               <input type="checkbox" id="pref-word-sound" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">Says the word as quran.com recites it. Needs internet the first time.</p>
+            <p class="settings-hint" data-i18n="settings.wordSoundHint">Says the word as quran.com recites it. Needs internet the first time.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
-              <span class="settings-toggle-text"><svg class="settings-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>Meaning switch on each ayah</span>
+              <span class="settings-toggle-text"><svg class="settings-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-i18n="settings.glossSwitch">Meaning switch on each ayah</span></span>
               <input type="checkbox" id="pref-ayah-gloss-switch" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">A button by each ayah to hide or show its meanings, to test yourself.</p>
+            <p class="settings-hint" data-i18n="settings.glossSwitchHint">A button by each ayah to hide or show its meanings, to test yourself.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Urdu translation (Maulana Maududi)</span>
+              <span class="settings-toggle-text" data-i18n="settings.translation">Urdu translation (Maulana Maududi)</span>
               <input type="checkbox" id="pref-translation" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">The whole ayah's meaning, under it.</p>
+            <p class="settings-hint" data-i18n="settings.translationHint">The whole ayah's meaning, under it.</p>
           </div>
         </div>
 
@@ -313,19 +340,19 @@
         <div class="settings-group">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Playback
+            <span data-i18n="settings.playback">Playback</span>
           </div>
           <div class="settings-row">
-            <label>After ruku ends</label>
+            <label data-i18n="settings.afterRuku">After ruku ends</label>
             <div class="settings-role-group" id="playback-mode-group">
-              <button type="button" class="btn btn-sm settings-role-btn active" data-mode="none">Stop</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-mode="loop">Loop</button>
-              <button type="button" class="btn btn-sm settings-role-btn" data-mode="next">Next</button>
+              <button type="button" class="btn btn-sm settings-role-btn active" data-mode="none" data-i18n="settings.stop">Stop</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="loop" data-i18n="settings.loop">Loop</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-mode="next" data-i18n="settings.nextRuku">Next</button>
             </div>
           </div>
           <div class="settings-row">
             <div class="settings-row-inline">
-              <label for="default-speed-select">Default speed</label>
+              <label for="default-speed-select" data-i18n="settings.defaultSpeed">Default speed</label>
               <select id="default-speed-select" class="settings-speed-select">
                 <option value="0.75">0.75x</option>
                 <option value="1" selected>1x</option>
@@ -337,7 +364,7 @@
             </div>
           </div>
           <div class="settings-row">
-            <label for="settings-volume-range">Volume</label>
+            <label for="settings-volume-range" data-i18n="settings.volume">Volume</label>
             <div class="settings-volume-row">
               <input type="range" id="settings-volume-range" class="settings-volume-range" min="0" max="100" step="1" value="100" aria-valuemin="0" aria-valuemax="100" />
               <span class="settings-volume-value" id="settings-volume-value">100%</span>
@@ -345,7 +372,7 @@
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Lock screen notification</span>
+              <span class="settings-toggle-text" data-i18n="settings.lockScreen">Lock screen notification</span>
               <input type="checkbox" id="pref-media-notification" />
               <span class="settings-toggle-switch"></span>
             </label>
@@ -359,21 +386,21 @@
         <div class="settings-group">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7.4L12 17.3 5.7 21.4 8 14 2 9.4h7.6z"/></svg>
-            Hifz progress
+            <span data-i18n="settings.hifzProgress">Hifz progress</span>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Hifz tracking</span>
+              <span class="settings-toggle-text" data-i18n="settings.hifzTracking">Hifz tracking</span>
               <input type="checkbox" id="hifz-enabled-toggle" />
               <span class="settings-toggle-switch"></span>
             </label>
           </div>
           <div class="settings-row" id="hifz-io-section">
-            <p class="settings-hint">Back up your memorization progress or move it to another device.</p>
+            <p class="settings-hint" data-i18n="settings.hifzBackupHint">Back up your memorization progress or move it to another device.</p>
             <div class="hifz-actions-row">
-              <button type="button" class="btn btn-sm" id="hifz-export-btn">Export</button>
-              <button type="button" class="btn btn-sm" id="hifz-import-btn">Import</button>
-              <button type="button" class="btn btn-sm btn-danger" id="hifz-reset-btn">Reset</button>
+              <button type="button" class="btn btn-sm" id="hifz-export-btn" data-i18n="settings.export">Export</button>
+              <button type="button" class="btn btn-sm" id="hifz-import-btn" data-i18n="settings.import">Import</button>
+              <button type="button" class="btn btn-sm btn-danger" id="hifz-reset-btn" data-i18n="settings.hifzReset">Reset</button>
             </div>
             <input type="file" id="hifz-import-file" accept="application/json,.json" hidden />
             <p class="settings-hint" id="hifz-io-status" aria-live="polite"></p>
@@ -384,7 +411,7 @@
         <div class="settings-group">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Storage
+            <span data-i18n="settings.storage">Storage</span>
           </div>
           <div class="settings-row">
             <div class="settings-download-row">
@@ -398,16 +425,16 @@
         <div class="settings-group settings-admin-section" id="admin-section" style="display:none">
           <div class="settings-group-header">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Admin
+            <span data-i18n="settings.admin">Admin</span>
           </div>
           <div class="settings-row">
-            <label for="gh-token-input">GitHub Token</label>
-            <input type="password" id="gh-token-input" placeholder="Paste token here…" autocomplete="off">
+            <label for="gh-token-input" data-i18n="settings.ghToken">GitHub Token</label>
+            <input type="password" id="gh-token-input" placeholder="Paste token here…" data-i18n-placeholder="settings.ghTokenPlaceholder" autocomplete="off">
           </div>
         </div>
       </div>
       <div class="settings-actions">
-        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">Clear Cache</button>
+        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn" data-i18n="settings.clearCache">Clear Cache</button>
       </div>
     </div>
   </div>
@@ -417,8 +444,8 @@
     <div class="modal-backdrop" id="share-para-file-modal-backdrop"></div>
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="share-para-file-modal-title">Share as file</h2>
-        <button type="button" class="modal-close-btn" id="share-para-file-close-btn" aria-label="Close">
+        <h2 class="modal-title" id="share-para-file-modal-title" data-i18n="share.fileTitle">Share as file</h2>
+        <button type="button" class="modal-close-btn" id="share-para-file-close-btn" aria-label="Close" data-i18n-aria="share.close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -426,10 +453,10 @@
         <p class="settings-hint" id="share-para-file-progress"></p>
         <pre class="share-para-wa-preview" id="share-para-file-preview"></pre>
         <div class="modal-actions share-para-wa-actions share-para-file-actions">
-          <button type="button" class="btn btn-sm" id="share-para-file-share-all-btn">Share all recordings</button>
+          <button type="button" class="btn btn-sm" id="share-para-file-share-all-btn" data-i18n="share.shareAll">Share all recordings</button>
           <div class="share-para-file-actions-row">
-            <button type="button" class="btn btn-sm" id="share-para-file-share-btn">Share this ruku</button>
-            <button type="button" class="btn btn-sm" id="share-para-file-next-btn">Next ruku</button>
+            <button type="button" class="btn btn-sm" id="share-para-file-share-btn" data-i18n="share.shareThis">Share this ruku</button>
+            <button type="button" class="btn btn-sm" id="share-para-file-next-btn" data-i18n="share.nextRuku">Next ruku</button>
           </div>
         </div>
       </div>
@@ -441,8 +468,8 @@
     <div class="modal-backdrop" id="share-bulk-links-modal-backdrop"></div>
     <div class="modal-content modal-content-wide share-bulk-links-sheet">
       <div class="modal-header">
-        <h2 class="modal-title" id="share-bulk-links-modal-title">Share ruku links</h2>
-        <button type="button" class="modal-close-btn" id="share-bulk-links-close-btn" aria-label="Close">
+        <h2 class="modal-title" id="share-bulk-links-modal-title" data-i18n="share.linksTitle">Share ruku links</h2>
+        <button type="button" class="modal-close-btn" id="share-bulk-links-close-btn" aria-label="Close" data-i18n-aria="share.close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -450,26 +477,27 @@
         <!-- <p class="settings-hint share-bulk-links-intro">Tap tiles to select. <strong>Copy text</strong> or <strong>Share…</strong> builds one block per ruku (title + player link).</p> -->
         <div class="share-bulk-links-toolbar">
           <div class="share-bulk-links-toolbar-btns">
-            <button type="button" class="btn btn-sm btn-primary share-bulk-pill-btn" id="share-bulk-links-select-all-btn">Select all</button>
-            <button type="button" class="btn btn-sm btn-outline share-bulk-pill-btn" id="share-bulk-links-clear-btn">Clear</button>
+            <button type="button" class="btn btn-sm btn-primary share-bulk-pill-btn" id="share-bulk-links-select-all-btn" data-i18n="share.selectAll">Select all</button>
+            <button type="button" class="btn btn-sm btn-outline share-bulk-pill-btn" id="share-bulk-links-clear-btn" data-i18n="share.clear">Clear</button>
           </div>
           <span class="share-bulk-links-count" id="share-bulk-links-count">0 selected</span>
         </div>
-        <div class="share-bulk-links-list" id="share-bulk-links-list" role="group" aria-label="Rukus in this Para"></div>
+        <div class="share-bulk-links-list" id="share-bulk-links-list" role="group" aria-label="Rukus in this Para" data-i18n-aria="share.listAria"></div>
         <div class="modal-actions share-para-wa-actions share-bulk-links-footer">
           <button type="button" class="btn btn-sm btn-outline share-bulk-footer-btn" id="share-bulk-links-copy-btn">
             <svg class="share-bulk-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copy text
+            <span data-i18n="share.copyText">Copy text</span>
           </button>
           <button type="button" class="btn btn-sm btn-primary share-bulk-footer-btn" id="share-bulk-links-share-btn">
             <svg class="share-bulk-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Share…
+            <span data-i18n="share.share">Share…</span>
           </button>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="data.js"></script>
   <script src="verses.js"></script>
   <script src="timings.js"></script>
@@ -526,17 +554,17 @@
         }
 
         if (isStandalone || rememberedInstalled()) {
-          alert("The app is already installed. Open it from your home screen or app drawer.\n\nTo reinstall, remove it first, then tap Install app again in the browser.");
+          alert(I18N.t("install.alreadyInstalled"));
           return;
         }
 
         var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
         if (isIOS) {
-          alert("To install on iOS:\n\n1. Tap the Share button \u{1F4E4} at the bottom of Safari\n2. Tap \u201CAdd to Home Screen\u201D\n3. Tap \u201CAdd\u201D");
+          alert(I18N.t("install.ios"));
           return;
         }
 
-        alert("To install:\n\nIn Chrome: tap the menu (\u22EE) then \u201CAdd to Home Screen\u201D or \u201CInstall app\u201D\nIn Edge: tap the menu then \u201CApps \u2192 Install this site as an app\u201D");
+        alert(I18N.t("install.generic"));
       });
 
       // Hide install button when running as installed PWA (unless reinstalling)
@@ -578,9 +606,9 @@
         setTimeout(function () {
           var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
           if (isIOS) {
-            alert("App data cleared! To complete reinstallation:\n\n1. Go to your Home Screen and delete this app\n2. Open Safari and visit this page again\n3. Tap Share \u{1F4E4} \u2192 \u201CAdd to Home Screen\u201D");
+            alert(I18N.t("install.clearedIos"));
           } else {
-            alert("App data cleared! To complete reinstallation:\n\n1. Remove this app from your Home Screen / App drawer\n2. Open Chrome and visit this page again\n3. Tap Install App");
+            alert(I18N.t("install.clearedOther"));
           }
         }, 500);
       }
