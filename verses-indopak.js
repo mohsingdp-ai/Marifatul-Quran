@@ -1,6 +1,7 @@
 /**
- * Indo-Pak (Nastaleeq) Arabic ayah text, keyed "surah:ayah", shown in place of verses.js when
- * Settings > Mushaf script is Indo-Pak. Built by scripts/indopak-verses.js from QUL; do not edit.
+ * Indo-Pak (Nastaleeq) Arabic ayah text, keyed "surah:ayah", shown in place of verses.js
+ * unless Settings > Mushaf script is Uthmani (Indo-Pak is the default). Built by
+ * scripts/indopak-verses.js from QUL; do not edit.
  */
 const QURAN_VERSES_INDOPAK = {
   "1:1": "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِیْمِ ۟",

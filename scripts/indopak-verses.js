@@ -6,8 +6,9 @@
  *
  * Source: QUL "Indopak Nastaleeq script - Word by Word" (qul.tarteel.ai/resources/quran-script/59),
  * a JSON keyed "surah:ayah:word". Its words line up with quran.com's word lists, so tapped
- * words find their meanings. The text is written for the KFGQPC IndoPak Nastaleeq font in
- * asset/fonts: some words and signs are that font's private-use glyphs, kept as they are.
+ * words find their meanings. The text is written for an IndoPak Nastaleeq font; the one in
+ * asset/fonts is "AlQuran IndoPak by QuranWBW" v2.100, which draws the same private-use
+ * glyphs (some words and signs), kept as they are.
  * Each ayah ends in a token holding its closing pause marks and the font's numbered
  * ornament. The plain ornament (U+F500..U+F61D, and U+F61E, the unnumbered ring after the
  * Fatiha's basmala) is dropped: the app draws it from the ayah number, since the Fatiha's
@@ -61,8 +62,9 @@ fs.readFileSync(versesPath, "utf8").split("\n").forEach((line) => {
 });
 fs.writeFileSync(outPath, [
   "/**",
-  " * Indo-Pak (Nastaleeq) Arabic ayah text, keyed \"surah:ayah\", shown in place of verses.js when",
-  " * Settings > Mushaf script is Indo-Pak. Built by scripts/indopak-verses.js from QUL; do not edit.",
+  " * Indo-Pak (Nastaleeq) Arabic ayah text, keyed \"surah:ayah\", shown in place of verses.js",
+  " * unless Settings > Mushaf script is Uthmani (Indo-Pak is the default). Built by",
+  " * scripts/indopak-verses.js from QUL; do not edit.",
   " */",
   "const QURAN_VERSES_INDOPAK = {",
   out.join(",\n"),
