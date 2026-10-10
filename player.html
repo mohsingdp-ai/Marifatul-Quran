@@ -940,7 +940,8 @@ async function initFromParaRukuQuery() {
     // Urdu shows the surah's Arabic name and the bare ruku number; English stays as before.
     const ur = I18N.lang() === 'ur';
     const surah = ur ? (row.surahArabic || row.surah) : row.surah;
-    const label = i18n('player.trackLabel', { para, ruku: ur ? String(ruku).replace(/R/g, '') : ruku, surah, verses: row.verses });
+    const rukuNum = ur ? String(ruku).replace(/R/g, '') : ruku;
+    const label = i18n('player.trackLabel', { para, ruku: rukuNum, surah, verses: row.verses });
 
     files = [];
     currentIndex = -1;
@@ -948,7 +949,7 @@ async function initFromParaRukuQuery() {
 
     const dzSpan = dropzone && dropzone.querySelector('span');
     if (dzSpan) dzSpan.textContent = 'Loaded from link — drop more files to replace playlist';
-    document.title = i18n('player.docTitle', { surah, ruku: ur ? rukuNum : ruku });
+    document.title = i18n('player.docTitle', { surah, ruku: rukuNum });
 
     loadTrack(0, { autoplay: true });
     queryLoadHint.style.display = 'none';
