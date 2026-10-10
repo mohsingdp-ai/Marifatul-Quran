@@ -1,9 +1,29 @@
 /* Marifatul Quran - Ruku Player
-   Material Design 3 styling: tonal colour roles, the M3 type scale, tonal elevation with the
-   five M3 shadow levels, state layers on every interactive surface and a ripple on press
-   (material.js). Layout rules the app depends on -- the docked mini-player, the ruku card
-   grid, the share sheet, the 320px fallbacks -- are kept as they were; only the visual
-   language moved. */
+   "Calm": a quiet, modern study app. Misty sage ground, white rounded cards, one sage accent,
+   soft pastel status chips and Rubik for the interface; the mushaf keeps its own faces.
+   The colour roles keep their Material names (--md-*) so every rule written against them,
+   and branches that add to them, pick up the new palette. DESIGN.md records the system. */
+
+@font-face {
+  font-family: "Rubik";
+  src: url("asset/fonts/rubik-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rubik";
+  src: url("asset/fonts/rubik-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Rubik";
+  src: url("asset/fonts/rubik-600.woff2") format("woff2");
+  font-weight: 600 700;
+  font-display: swap;
+}
 
 /* ================================================================== */
 /* Design tokens                                                       */
@@ -11,72 +31,79 @@
 :root {
   color-scheme: light;
 
-  /* --- Colour roles (light). The brand teal, saturated, with gold for the mushaf. --- */
-  --md-primary: #0a7a7a;
+  /* --- Colour roles (light): misty sage ground, white cards, one sage accent. --- */
+  --md-primary: #33695a;
   --md-on-primary: #ffffff;
-  --md-primary-container: #b3eeec;
-  --md-on-primary-container: #002222;
-  --md-secondary: #3f6a69;
+  --md-primary-container: #dcebe5;
+  --md-on-primary-container: #123b31;
+  --md-secondary: #4f6862;
   --md-on-secondary: #ffffff;
-  --md-secondary-container: #cdeceb;
-  --md-on-secondary-container: #0b2b2b;
-  --md-tertiary: #8a6a12;
+  --md-secondary-container: #dcebe5;
+  --md-on-secondary-container: #173c33;
+  /* Tertiary was the old gold. In Calm it is a muted sage ink: surah names, the basmala,
+     ayah markers and the paused state, quieter than the accent. */
+  --md-tertiary: #4a6a62;
   --md-on-tertiary: #ffffff;
-  --md-tertiary-container: #ffe4a6;
-  --md-on-tertiary-container: #2b1d00;
+  --md-tertiary-container: #e3ece9;
+  --md-on-tertiary-container: #1f3a33;
   --md-error: #b3261e;
   --md-on-error: #ffffff;
-  --md-error-container: #f9dedc;
-  --md-on-error-container: #410e0b;
-  --md-success: #2e7d32;
+  --md-error-container: #fbe4e1;
+  --md-on-error-container: #5c1410;
+  --md-success: #22704f;
   --md-on-success: #ffffff;
-  --md-success-container: #c8e6c9;
-  --md-on-success-container: #0a2e12;
-  --md-surface: #e9f3f2;
-  --md-surface-dim: #c9dbda;
-  --md-surface-bright: #f7fcfb;
+  --md-success-container: #d6efe3;
+  --md-on-success-container: #0f3d29;
+  --md-surface: #eef3f1;
+  --md-surface-dim: #dfe7e4;
+  --md-surface-bright: #f7faf9;
   --md-surface-container-lowest: #ffffff;
-  --md-surface-container-low: #f2f8f7;
-  --md-surface-container: #dcebea;
-  --md-surface-container-high: #d0e3e2;
-  --md-surface-container-highest: #c3d9d8;
-  --md-on-surface: #0f2424;
-  --md-on-surface-variant: #3d5a59;
-  --md-outline: #6b8c8b;
-  --md-outline-variant: #b5d0cf;
-  --md-inverse-surface: #0f3535;
-  --md-inverse-on-surface: #e6f4f3;
-  --md-inverse-primary: #3ddbd9;
-  --md-scrim: rgba(3, 20, 20, 0.4);
-  --wa-color: #128c7e;
+  --md-surface-container-low: #f5f8f7;
+  --md-surface-container: #e9efed;
+  --md-surface-container-high: #e2eae7;
+  --md-surface-container-highest: #d9e3e0;
+  --md-on-surface: #1a2925;
+  --md-on-surface-variant: #5a6c67;
+  --md-outline: #7d918b;
+  --md-outline-variant: #dfe8e4;
+  --md-inverse-surface: #24332f;
+  --md-inverse-on-surface: #e9f1ee;
+  --md-inverse-primary: #8fcdb9;
+  --md-scrim: rgba(17, 30, 26, 0.36);
+  --wa-color: #2f7d5f;
 
-  /* The app bar wears the brand: deep teal with the gold rule the original masthead had. */
-  --md-app-bar: linear-gradient(135deg, #0a3d3d 0%, #0d4f4f 45%, #0f6060 100%);
-  --md-on-app-bar: #ffffff;
-  --md-app-bar-subtitle: rgba(255, 255, 255, 0.78);
+  /* Status chips on the cards: memorized is the success pair; playing gets a soft lilac so
+     it never reads as "done". */
+  --calm-playing: #e7e3f6;
+  --calm-on-playing: #4e4583;
 
-  /* Surfaces by job. "Raised" is the brightest tone in light and the lightest container in
-     dark, so a raised thing reads as closer in both themes. */
+  /* No coloured app bar: the top bar sits on the page's own ground. */
+  --md-app-bar: var(--md-surface);
+  --md-on-app-bar: var(--md-on-surface);
+  --md-app-bar-subtitle: var(--md-on-surface-variant);
+  --md-app-bar-edge: var(--md-surface);
+
+  /* Surfaces by job: white cards, sheets and menus on the tinted ground. */
   --md-card: var(--md-surface-container-lowest);
   --md-raised: var(--md-surface-container-lowest);
   --md-panel: var(--md-surface-container-lowest);
   --md-menu: var(--md-surface-container-lowest);
-  --md-dialog: var(--md-surface-container-low);
-  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d5a59'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --md-dialog: var(--md-surface);
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235a6c67'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
-  /* --- Elevation (M3 levels 1-5) --- */
-  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 3px 1px rgba(0, 0, 0, 0.15);
-  --md-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
-  --md-elevation-3: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 8px 3px rgba(0, 0, 0, 0.15);
-  --md-elevation-4: 0 2px 3px rgba(0, 0, 0, 0.3), 0 6px 10px 4px rgba(0, 0, 0, 0.15);
-  --md-elevation-5: 0 4px 4px rgba(0, 0, 0, 0.3), 0 8px 12px 6px rgba(0, 0, 0, 0.15);
+  /* --- Elevation: soft, low, tinted shadows; tone does most of the lifting. --- */
+  --md-elevation-1: 0 1px 2px rgba(20, 40, 34, 0.05), 0 1px 3px rgba(20, 40, 34, 0.05);
+  --md-elevation-2: 0 2px 8px rgba(20, 40, 34, 0.07);
+  --md-elevation-3: 0 8px 24px rgba(20, 40, 34, 0.1);
+  --md-elevation-4: 0 12px 32px rgba(20, 40, 34, 0.12);
+  --md-elevation-5: 0 16px 40px rgba(20, 40, 34, 0.14);
 
-  /* --- Shape --- */
-  --md-shape-xs: 4px;
-  --md-shape-sm: 8px;
-  --md-shape-md: 12px;
-  --md-shape-lg: 16px;
-  --md-shape-xl: 28px;
+  /* --- Shape: generous, rounded. --- */
+  --md-shape-xs: 6px;
+  --md-shape-sm: 10px;
+  --md-shape-md: 16px;
+  --md-shape-lg: 20px;
+  --md-shape-xl: 24px;
   --md-shape-full: 9999px;
 
   /* --- Motion --- */
@@ -86,13 +113,13 @@
   --md-duration-medium: 300ms;
 
   /* --- Type --- */
-  --md-font: "Segoe UI", system-ui, sans-serif;
+  --md-font: "Rubik", system-ui, sans-serif;
   --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
   /* The ayat themselves. Indo-Pak text (Settings > Mushaf script) swaps this below. */
   --mushaf-font: var(--md-font-arabic);
 
   /* Legacy names. Rules written against the old palette (and branches that add to it) keep
-     resolving to the matching M3 role. */
+     resolving to the matching role. */
   --teal-dark: var(--md-on-primary-container);
   --teal-header: var(--md-primary);
   --teal-accent: var(--md-primary);
@@ -116,61 +143,60 @@
 
 html[data-theme="dark"] {
   color-scheme: dark;
-  --md-primary: #3ddbd9;
-  --md-on-primary: #003636;
-  --md-primary-container: #0f5e5e;
-  --md-on-primary-container: #a9f6f4;
-  --md-secondary: #8fd3ce;
-  --md-on-secondary: #0d3535;
-  --md-secondary-container: #145050;
-  --md-on-secondary-container: #d3f7f5;
-  --md-tertiary: #edc65c;
-  --md-on-tertiary: #3f2e00;
-  --md-tertiary-container: #6a4f0a;
-  --md-on-tertiary-container: #ffe7ab;
+  --md-primary: #8fcdb9;
+  --md-on-primary: #0f1714;
+  --md-primary-container: #20332d;
+  --md-on-primary-container: #cdeee3;
+  --md-secondary: #a9c4bc;
+  --md-on-secondary: #12201b;
+  --md-secondary-container: #20332d;
+  --md-on-secondary-container: #d3ece4;
+  --md-tertiary: #a9c9bf;
+  --md-on-tertiary: #12201b;
+  --md-tertiary-container: #22302c;
+  --md-on-tertiary-container: #d6ebe4;
   --md-error: #ffb4ab;
   --md-on-error: #690005;
-  --md-error-container: #93000a;
+  --md-error-container: #4a1c18;
   --md-on-error-container: #ffdad6;
-  --md-success: #8fd695;
-  --md-on-success: #00390f;
-  --md-success-container: #1f5225;
-  --md-on-success-container: #b7f1b9;
-  --md-surface: #071515;
-  --md-surface-dim: #071515;
-  --md-surface-bright: #1f4242;
-  --md-surface-container-lowest: #030e0e;
-  --md-surface-container-low: #0b1f1f;
-  --md-surface-container: #0f2828;
-  --md-surface-container-high: #153434;
-  --md-surface-container-highest: #1c4040;
-  --md-on-surface: #e4f3f2;
-  --md-on-surface-variant: #a3c2c1;
-  --md-outline: #5b8281;
-  --md-outline-variant: #244848;
-  --md-inverse-surface: #e4f3f2;
-  --md-inverse-on-surface: #0f2a2a;
-  --md-inverse-primary: #0a7a7a;
+  --md-success: #8fe0b9;
+  --md-on-success: #00391f;
+  --md-success-container: #1f3a2f;
+  --md-on-success-container: #b9f3d6;
+  --md-surface: #111715;
+  --md-surface-dim: #0d1311;
+  --md-surface-bright: #26322e;
+  --md-surface-container-lowest: #0c1210;
+  --md-surface-container-low: #151d1a;
+  --md-surface-container: #1a2320;
+  --md-surface-container-high: #212c28;
+  --md-surface-container-highest: #28342f;
+  --md-on-surface: #e5eeeb;
+  --md-on-surface-variant: #9bb0a9;
+  --md-outline: #5f7670;
+  --md-outline-variant: #26322e;
+  --md-inverse-surface: #e5eeeb;
+  --md-inverse-on-surface: #1a2320;
+  --md-inverse-primary: #33695a;
   --md-scrim: rgba(0, 0, 0, 0.55);
-  --wa-color: #5fd4b4;
+  --wa-color: #7fd0b0;
 
-  --md-app-bar: linear-gradient(135deg, #062a2a 0%, #0a3d3d 50%, #0d4f4f 100%);
-  --md-on-app-bar: #ffffff;
-  --md-app-bar-subtitle: rgba(255, 255, 255, 0.75);
+  --calm-playing: #2a2740;
+  --calm-on-playing: #c9c2f2;
 
   --md-card: var(--md-surface-container);
   --md-raised: var(--md-surface-container-high);
-  --md-panel: var(--md-surface-container-low);
+  --md-panel: var(--md-surface-container);
   --md-menu: var(--md-surface-container-high);
-  --md-dialog: #123030;
-  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3c2c1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  --md-dialog: var(--md-surface);
+  --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239bb0a9'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
   /* Shadows carry less in the dark; tone does the lifting. */
-  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px 1px rgba(0, 0, 0, 0.3);
-  --md-elevation-2: 0 1px 2px rgba(0, 0, 0, 0.5), 0 2px 6px 2px rgba(0, 0, 0, 0.3);
-  --md-elevation-3: 0 1px 3px rgba(0, 0, 0, 0.5), 0 4px 8px 3px rgba(0, 0, 0, 0.3);
-  --md-elevation-4: 0 2px 3px rgba(0, 0, 0, 0.5), 0 6px 10px 4px rgba(0, 0, 0, 0.3);
-  --md-elevation-5: 0 4px 4px rgba(0, 0, 0, 0.5), 0 8px 12px 6px rgba(0, 0, 0, 0.3);
+  --md-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --md-elevation-2: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --md-elevation-3: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --md-elevation-4: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --md-elevation-5: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
 /* ================================================================== */
@@ -261,111 +287,82 @@ button {
 /* ================================================================== */
 .header {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0.4rem 0.5rem 0.25rem 1rem;
   background: var(--md-app-bar);
   color: var(--md-on-app-bar);
-  padding: 0.8rem 1.5rem 0.9rem;
-  box-shadow: var(--md-elevation-2);
-}
-
-/* The gold rule the original masthead carried: the one warm line above a teal page. */
-.header::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--md-tertiary), transparent);
 }
 
 .header-brand {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.9rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  /* Clear of the overflow menu at the right, symmetrically, so the title stays centred. */
-  padding: 0 48px;
+  gap: 0.65rem;
 }
 
 .header-logo {
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--md-shape-md);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16), var(--md-elevation-1);
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
 }
 
 .header-text {
   min-width: 0;
-  text-align: left;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.375rem;
-  line-height: 1.75rem;
-  font-weight: 500;
-  letter-spacing: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* The tagline stays for screen readers; the bar shows the name alone. */
 .header .subtitle {
-  margin: 0.1rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--md-app-bar-subtitle);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-/* Overflow menu lives in the app bar, where every Material app keeps it. */
+/* Install and the overflow menu sit together at the bar's end. */
 .header .header-menu {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  /* The transform scopes the dropdown's z-index to this wrapper, so the wrapper itself
-     must sit above the page's positioned buttons or they paint through the open menu. */
+  position: relative;
+  /* Above the page's positioned buttons, so they never paint through the open menu. */
   z-index: 60;
 }
 
-.header .btn-toolbar-menu {
-  color: var(--md-on-app-bar);
-}
-
-.header .btn-toolbar-menu:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--md-on-app-bar);
-}
-
-/* Install, in the app bar's corner, with a "New" sticker on it until the app is installed. */
 .header .header-install-wrap {
-  position: absolute;
-  left: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  position: relative;
 }
 
+.header .btn-toolbar-menu {
+  color: var(--md-on-surface-variant);
+}
+
+/* "New" until the app is installed: a sage dot at the icon's corner, clear of the glyph. */
 .header-install-badge {
   position: absolute;
-  top: -3px;
-  right: -9px;
-  padding: 1px 5px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-tertiary);
-  color: var(--md-on-tertiary);
-  font-size: 0.5625rem;
-  line-height: 1.3;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  transform: rotate(-8deg);
-  box-shadow: 0 0 0 2px #0a3d3d;
+  top: 8px;
+  right: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--md-primary);
+  box-shadow: 0 0 0 2px var(--md-app-bar);
+  font-size: 0;
   pointer-events: none;
 }
 
@@ -401,184 +398,80 @@ button {
 }
 
 
-/* The para picker: a button showing the number and the para's name, which opens the app's
-   own list below. The native <select> stays in the DOM as the value store but is never
-   shown; its popup could not take the app's palette. */
-.para-picker {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 52px;
-  min-width: 10.5rem;
-  border-left: 1px solid var(--md-outline-variant);
-  border-right: 1px solid var(--md-outline-variant);
-  transition: background-color var(--md-duration-short) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
-}
-
-.para-picker::after {
-  content: "";
-  position: absolute;
-  right: 0.45rem;
-  top: 50%;
-  width: 22px;
-  height: 22px;
-  margin-top: -11px;
-  background: var(--md-select-chevron) no-repeat center / 22px 22px;
-  pointer-events: none;
-}
-
-/* Hover only where a pointer can hover: on touch the tint would linger after a tap. */
-@media (hover: hover) {
-  .para-picker:hover {
-    background-color: color-mix(in srgb, var(--md-on-surface) 6%, transparent);
-  }
-}
-
-.controls .para-picker select {
+/* Paras: a row of chips scrolled sideways, the current one filled sage. The old stepper and
+   its list stay in the DOM for app.js (the <select> is still the value store) but are not
+   shown. */
+.toolbar-top .controls-left {
   display: none;
 }
 
-.para-picker-face {
+.para-chips {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  min-height: inherit;
-  margin: 0;
-  padding: 0.3rem 2.1rem 0.35rem 1rem;
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-/* The ring is for keyboard focus only; after a tap picks a para nothing stays lit. */
-.para-picker-face:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--md-primary);
-}
-
-/* --- The list --- */
-.para-menu {
-  --para-menu-w: min(18rem, calc(100vw - 2rem));
-  position: absolute;
-  top: calc(100% + 8px);
-  /* Centred with a negative margin, not a transform: the open animation animates transform
-     and would drop the centring for its first frames, leaving the list half off screen. */
-  left: 50%;
-  margin-left: calc(var(--para-menu-w) / -2);
-  z-index: 60;
-  width: var(--para-menu-w);
-  max-height: min(60vh, 26rem);
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* A thin bar in the list's own colours, not the platform's grey one. */
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--md-on-surface) 25%, transparent) transparent;
-  padding: 0.4rem 0;
-  background: var(--md-menu);
-  border-radius: var(--md-shape-sm);
-  box-shadow: var(--md-elevation-3);
+  gap: 0.5rem;
+  width: auto;
+  /* Run to the screen's edges on a phone, with the first chip on the page's gutter. */
+  margin: 0 -1rem;
+  padding: 0.25rem 1rem 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  animation: md-menu-in var(--md-duration-short) var(--md-easing-emphasized);
-  transform-origin: top center;
 }
 
-.para-menu[hidden] {
+.para-chips::-webkit-scrollbar {
   display: none;
 }
 
-.para-menu::-webkit-scrollbar {
-  width: 6px;
-}
-
-.para-menu::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--md-on-surface) 25%, transparent);
-  border-radius: var(--md-shape-full);
-}
-
-.para-menu::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.para-menu-item {
-  display: flex;
+.para-chip {
+  flex: none;
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  width: 100%;
-  min-height: 48px;
-  padding: 0 1rem 0 2.1rem;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 0.95rem 0 0.35rem;
   border: none;
-  background: none;
-  color: var(--md-on-surface);
-  font-size: 0.9375rem;
-  line-height: 1.25rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background var(--md-duration-short) var(--md-easing-standard);
-}
-
-.para-menu-item:hover,
-.para-menu-item:focus-visible {
-  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
-  outline: none;
-}
-
-.para-menu-item[aria-selected="true"] {
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
-}
-
-.para-menu-item[aria-selected="true"]::before {
-  content: "";
-  position: absolute;
-  left: 0.7rem;
-  width: 16px;
-  height: 16px;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
-}
-
-.para-menu-item {
-  position: relative;
-}
-
-.para-menu-name {
-  font-family: "Traditional Arabic", "Scheherazade New", serif;
-  font-size: 1.2rem;
-  line-height: 1.5;
-  color: var(--md-tertiary);
-  direction: rtl;
-  unicode-bidi: isolate;
-  white-space: nowrap;
-}
-
-.para-picker-num {
-  font-size: 0.6875rem;
-  line-height: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  border-radius: var(--md-shape-full);
+  background: var(--md-card);
   color: var(--md-on-surface-variant);
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  scroll-margin-inline: 1rem;
+  touch-action: manipulation;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
 }
 
-/* The name in gold, the way the surah names are drawn on the cards. */
-.para-picker-name {
-  font-family: "Traditional Arabic", "Scheherazade New", serif;
-  font-size: 1.25rem;
-  line-height: 1.5;
-  color: var(--md-tertiary);
-  direction: rtl;
-  unicode-bidi: isolate;
-  white-space: nowrap;
+.para-chip-num {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.3rem;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.para-chip[aria-pressed="true"] {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.para-chip[aria-pressed="true"] .para-chip-num {
+  background: color-mix(in srgb, var(--md-on-primary) 22%, transparent);
+  color: var(--md-on-primary);
+}
+
+@media (hover: hover) {
+  .para-chip:not([aria-pressed="true"]):hover {
+    background: var(--md-surface-container-low);
+    color: var(--md-on-surface);
+  }
 }
 
 .toolbar {
@@ -592,11 +485,8 @@ button {
 }
 
 .toolbar-top {
-  display: flex;
-  justify-content: center;
   width: 100%;
   min-width: 0;
-  padding: 0.15rem 0 0;
 }
 
 /* The now-playing strip has no place at rest: the active card shows all of it. It appears
@@ -627,11 +517,11 @@ button {
   bottom: 0;
   z-index: 90;
   margin: 0 auto;
-  max-width: 1200px;
+  max-width: 860px;
   box-sizing: border-box;
-  background: var(--md-surface-container-high);
-  border-radius: var(--md-shape-lg) var(--md-shape-lg) 0 0;
-  box-shadow: var(--md-elevation-3);
+  background: var(--md-card);
+  border-radius: var(--md-shape-xl) var(--md-shape-xl) 0 0;
+  box-shadow: 0 -6px 24px rgba(20, 40, 34, 0.08);
   /* bottom: 0 puts the bar *under* the home indicator or gesture bar on the phones that
      have one, which swallows the lower part of the strip -- the progress line first, then
      the transport. The inset is 0 everywhere else, so this costs those screens nothing. */
@@ -758,24 +648,22 @@ body.has-docked-player {
 
 .toolbar-now-playing.is-playing,
 .toolbar-now-playing.is-paused {
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
+  background: transparent;
+  color: var(--md-on-surface);
 }
 
 .toolbar-now-playing-badge {
   flex-shrink: 0;
-  font-size: 0.6875rem;
-  line-height: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
   font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 0.1rem 0.5rem;
+  padding: 0 0.55rem;
   border-radius: var(--md-shape-full);
 }
 
 .toolbar-now-playing-badge.is-live {
-  background: var(--md-primary);
-  color: var(--md-on-primary);
+  background: var(--calm-playing);
+  color: var(--calm-on-playing);
 }
 
 .toolbar-now-playing-badge.is-paused-state {
@@ -783,14 +671,15 @@ body.has-docked-player {
   color: var(--md-on-tertiary-container);
 }
 
-/* Linear progress along the strip's foot. */
+/* Progress: a rounded line across the top of the strip. */
 .toolbar-progress-bar {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  top: 0;
+  left: 0.75rem;
+  right: 0.75rem;
   height: 4px;
-  background: color-mix(in srgb, var(--md-primary) 18%, transparent);
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface-container-high);
   overflow: hidden;
 }
 
@@ -848,8 +737,8 @@ body.has-docked-player {
 /* Filled icon button: the strip's transport. */
 .btn-toolbar-transport {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -875,16 +764,7 @@ body.has-docked-player {
   box-shadow: none;
 }
 
-.toolbar-now-playing.is-playing .btn-toolbar-transport,
-.toolbar-now-playing.is-paused .btn-toolbar-transport {
-  background: var(--md-tertiary);
-  color: var(--md-on-tertiary);
-}
 
-.toolbar-now-playing.is-playing .btn-toolbar-transport:hover:not(:disabled),
-.toolbar-now-playing.is-paused .btn-toolbar-transport:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--md-on-tertiary) 8%, var(--md-tertiary));
-}
 
 .toolbar-transport-icon {
   position: relative;
@@ -964,8 +844,8 @@ body.has-docked-player {
   min-width: 200px;
   padding: 0.5rem 0;
   background: var(--md-menu);
-  border-radius: var(--md-shape-sm);
-  box-shadow: var(--md-elevation-2);
+  border-radius: var(--md-shape-md);
+  box-shadow: var(--md-elevation-3);
   z-index: 50;
   overflow: hidden;
   transform-origin: top right;
@@ -1100,15 +980,13 @@ body.has-docked-player {
 }
 
 .btn-primary,
-.btn-secondary,
-.btn-offline-para {
+.btn-secondary {
   background: var(--md-primary);
   color: var(--md-on-primary);
 }
 
 .btn-primary:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled),
-.btn-offline-para:hover:not(:disabled) {
+.btn-secondary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
   box-shadow: var(--md-elevation-1);
 }
@@ -1167,6 +1045,8 @@ body.has-docked-player {
 .modal.is-open {
   visibility: visible;
   opacity: 1;
+  /* Visible at once on open (it fades in), so focus can move inside straight away. */
+  transition: visibility 0s, opacity var(--md-duration-medium) var(--md-easing-standard);
 }
 
 .modal-backdrop {
@@ -1193,6 +1073,11 @@ body.has-docked-player {
 
 .modal.is-open .modal-content {
   transform: scale(1);
+}
+
+/* Focus lands on the dialog box when it opens, so a screen reader starts there. */
+.modal-content:focus {
+  outline: none;
 }
 
 .modal-content-wide {
@@ -1515,10 +1400,10 @@ body.has-docked-player {
   overflow-y: auto;
   overflow-x: hidden;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+  grid-template-columns: 1fr;
   grid-auto-rows: min-content;
   align-items: start;
-  gap: 0.65rem;
+  gap: 0.4rem;
   padding: 0.35rem 0.15rem 0.5rem 0;
   border: none;
   border-radius: 0;
@@ -1527,25 +1412,26 @@ body.has-docked-player {
 }
 
 /* Selectable outlined cards; selection fills with the secondary container and a check. */
+/* One row per ruku: key, surah, range, and the check at the end. */
 .share-bulk-links-tile {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: baseline;
   justify-content: flex-start;
-  gap: 0.3rem;
+  gap: 0.6rem;
   width: 100%;
-  min-height: 0;
+  min-height: 52px;
   height: auto;
-  padding: 0.9rem 0.65rem 0.8rem;
+  padding: 0.8rem 2.75rem 0.8rem 1rem;
   margin: 0;
-  border: 1px solid var(--md-outline-variant);
+  border: none;
   border-radius: var(--md-shape-md);
-  background: var(--md-raised);
+  background: var(--md-card);
   color: var(--md-on-surface);
   font-family: inherit;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: left;
   cursor: pointer;
   box-sizing: border-box;
   transition: border-color var(--md-duration-short), box-shadow var(--md-duration-short), background var(--md-duration-short), transform 0.1s;
@@ -1561,7 +1447,6 @@ body.has-docked-player {
 }
 
 .share-bulk-links-tile.is-selected {
-  border-color: var(--md-primary);
   background: var(--md-secondary-container);
   color: var(--md-on-secondary-container);
 }
@@ -1569,10 +1454,11 @@ body.has-docked-player {
 .share-bulk-links-tile.is-selected::after {
   content: "";
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
+  top: 50%;
+  right: 14px;
+  margin-top: -10px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   background: var(--md-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") no-repeat center / 11px 11px;
 }
@@ -1595,13 +1481,11 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .share-bulk-links-tile-surah {
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  word-break: break-word;
+  font-size: 0.875rem;
+  line-height: 1.4;
   overflow-wrap: anywhere;
-  hyphens: auto;
-  width: 100%;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .share-bulk-links-tile-verses {
@@ -1791,16 +1675,17 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   white-space: normal;
 }
 
-/* Outlined card for reading. */
+/* The ayat sheet: white, rounded at the foot, joined to its card by a hairline. */
 .ayat-panel {
-  border-radius: 0 0 var(--md-shape-md) var(--md-shape-md);
+  border-radius: 0 0 var(--md-shape-lg) var(--md-shape-lg);
+  border-top: 1px solid var(--md-outline-variant);
   background: var(--md-panel);
   box-shadow: var(--md-elevation-1);
   /* The card above casts the same shadow; clipping each one's shadow at the seam makes the
      two rows read as one surface. */
   clip-path: inset(0 -12px -12px -12px);
-  padding: 0.9rem 1rem 1rem;
-  margin: 0 0 0.75rem;
+  padding: 0.75rem 0.75rem 1rem;
+  margin: 0 0 0.625rem;
 }
 
 .ayat-head {
@@ -1809,21 +1694,15 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--md-outline-variant);
-}
-
-.ayat-item.is-reciting + .ayat-item {
-  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+  padding: 0 0.5rem 0.5rem;
 }
 
 .ayat-head-surah {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   line-height: 1.25rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--md-primary);
+  font-weight: 600;
+  color: var(--md-on-surface);
 }
 
 .ayat-head-count {
@@ -1840,8 +1719,8 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   line-height: 1.6;
   white-space: nowrap;
   overflow-x: clip;
-  color: var(--md-tertiary);
-  margin-bottom: 0.35rem;
+  color: var(--md-on-surface);
+  margin-bottom: 0.25rem;
 }
 
 .ayat-body {
@@ -1853,8 +1732,19 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   text-align-last: right;
 }
 
+/* Each ayah: its key pill on top, then the words. The reciting one sits in a soft sage
+   card. */
 .ayat-item {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.25rem;
+  padding: 0.35rem 0.6rem 0.4rem;
+  border-radius: var(--md-shape-md);
+  transition: background 0.25s ease;
+}
+
+.ayah-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .ayat-item:last-child {
@@ -1867,7 +1757,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
   font-size: 1rem;
   line-height: 2.1;
-  color: var(--md-primary);
+  color: var(--md-on-surface-variant);
   text-align: right;
   text-align-last: right;
   margin-top: 0.15rem;
@@ -1881,19 +1771,13 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
    rather than a colour on them: at this size, recolouring the Arabic changes how the script
    reads, and the point is to say "here", not to restyle the text. */
 .ayat-item.is-reciting {
-  background: color-mix(in srgb, var(--md-tertiary) 14%, transparent);
-  box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--md-tertiary) 14%, transparent);
-  border-radius: var(--md-shape-xs);
-  border-inline-start: 2px solid var(--md-tertiary);
-  padding-inline-start: 0.45rem;
-  margin-inline-start: -0.65rem;
-  transition: background 0.25s ease, box-shadow 0.25s ease;
+  background: var(--md-primary-container);
 }
 
 .ayat-item.is-reciting .ayat-num {
-  background: var(--md-tertiary);
-  color: var(--md-on-tertiary);
-  border-color: var(--md-tertiary);
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-color: var(--md-primary);
 }
 
 /* Play control on an ayah: deliberate target, so taps on the words while reading or
@@ -1903,22 +1787,42 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem;
-  margin-inline-end: 0.3rem;
+  gap: 0.3rem;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.5rem;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--md-shape-full);
   background: none;
   color: var(--md-on-surface-variant);
   cursor: pointer;
-  vertical-align: middle;
-  font-size: 1rem;
+  font-size: 0.875rem;
   line-height: 1;
+}
+
+/* "▶ 2:3": the ayah's key, and the way to play from it. */
+/* One step above the sheet in both themes. */
+.ayah-play:first-child {
+  background: var(--md-surface-container-high);
+}
+
+.ayah-key {
+  font-family: var(--md-font);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
+
+.ayat-item.is-reciting .ayah-play:first-child {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
 
 .ayah-play svg {
   display: block;
-  width: 1em;
-  height: 1em;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* The words' wrapper is there only so one ayah can be redrawn; it adds no box of its own. */
@@ -1964,9 +1868,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   border-color: var(--md-primary);
 }
 
-.ayat-item.is-reciting .ayah-play {
-  color: var(--md-tertiary);
-}
+
 
 /* Tappable word inside an ayah: quiet until pointed at, and the affordance never shifts
    the line — underline only, no background, on hover-capable pointers. */
@@ -2073,12 +1975,11 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   min-width: 0;
   padding: 0.65rem 0.9rem 0.75rem;
   border-radius: var(--md-shape-md);
-  background: var(--md-surface-container-lowest);
-  border: 1px solid var(--md-outline-variant);
+  background: var(--md-surface);
 }
 
 .wt-card .wpop-translit {
-  font-family: var(--md-font-sans, system-ui, sans-serif);
+  font-family: var(--md-font);
   text-align: left;
   text-align-last: left;
 }
@@ -2116,11 +2017,10 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   z-index: 120;
   min-width: 250px;
   max-width: min(380px, calc(100vw - 16px));
-  padding: 0.65rem 0.9rem 0.75rem;
-  border-radius: var(--md-shape-md);
-  background: var(--md-surface-container-lowest);
-  box-shadow: var(--md-elevation-3);
-  border: 1px solid var(--md-outline-variant);
+  padding: 0.75rem 1rem 0.85rem;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-raised);
+  box-shadow: var(--md-elevation-4);
 }
 
 /* The word on the right, its speaker on the left. */
@@ -2523,8 +2423,9 @@ html[data-hifz="off"] .col-hifz {
   border: none;
   border-radius: var(--md-shape-full);
   background: transparent;
-  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. */
-  color: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
+  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. The
+     outline tone still clears 3:1, so the empty circle reads as a control. */
+  color: var(--md-outline);
   cursor: pointer;
   touch-action: manipulation;
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
@@ -2532,7 +2433,7 @@ html[data-hifz="off"] .col-hifz {
 
 .hifz-mark:hover {
   background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
-  color: color-mix(in srgb, var(--md-on-surface) 55%, transparent);
+  color: var(--md-on-surface-variant);
 }
 
 .hifz-mark:active {
@@ -2588,71 +2489,81 @@ html[data-hifz="off"] .col-hifz {
   color: var(--md-on-secondary-container);
 }
 
-/* Per-Para memorization meter (signature element) */
+/* Per-para progress: a card with a ring, the count beside it, and the para's name. The ring
+   is the progressbar itself, drawn from --pct (set by renderHifzMeter). */
 .hifz-meter {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-areas:
+    "ring head"
+    "ring counts";
+  align-items: center;
+  column-gap: 0.9rem;
   margin: 0 0 0.75rem;
-  padding: 0.6rem 0.9rem 0.65rem;
-  background: var(--md-surface-container-low);
-  border-radius: var(--md-shape-md);
+  padding: 0.85rem 1rem;
+  background: var(--md-card);
+  border-radius: var(--md-shape-lg);
+  box-shadow: var(--md-elevation-1);
 }
 
-/* Each label stays whole; on a narrow phone the overall count drops to its own line,
-   still flush right, rather than either sentence breaking in the middle. */
 .hifz-meter-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.1rem 0.75rem;
-  margin-bottom: 0.4rem;
-}
-
-.hifz-meter-para,
-.hifz-meter-total {
-  white-space: nowrap;
-}
-
-.hifz-meter-total {
-  margin-left: auto;
+  grid-area: head;
+  min-width: 0;
 }
 
 .hifz-meter-para {
-  font-weight: 500;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  letter-spacing: 0.01em;
+  display: block;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 600;
   color: var(--md-on-surface);
 }
 
-.hifz-meter-total {
-  font-size: 0.75rem;
-  line-height: 1rem;
-  letter-spacing: 0.03em;
+.hifz-meter-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
   color: var(--md-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
 
-/* Linear progress indicator */
+.hifz-meter-name {
+  font-family: var(--md-font-arabic);
+  font-size: 1.05rem;
+  unicode-bidi: isolate;
+}
+
+.hifz-meter-name:empty {
+  display: none;
+}
+
+.hifz-meter-name:not(:empty) + .hifz-meter-total::before {
+  content: "\00b7";
+  margin-right: 0.5rem;
+}
+
 .hifz-meter-bar {
-  height: 6px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-highest);
-  overflow: hidden;
+  grid-area: ring;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: conic-gradient(var(--md-primary) calc(var(--pct, 0) * 1%), var(--md-surface-container-high) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
 }
 
 .hifz-meter-fill {
-  height: 100%;
-  width: 0%;
-  border-radius: var(--md-shape-full);
-  background: var(--md-primary);
-  transition: width 0.35s var(--md-easing-emphasized);
+  display: none;
 }
 
 .hifz-meter-counts {
+  grid-area: counts;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.9rem;
-  margin-top: 0.5rem;
+  gap: 0.25rem 0.9rem;
 }
 
 .hifz-meter-counts:empty {
@@ -2660,26 +2571,11 @@ html[data-hifz="off"] .col-hifz {
 }
 
 .hifz-count {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
   color: var(--md-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
-
-.hifz-count::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.hifz-count[data-kind="listened"] { color: var(--md-primary); }
 
 /* Export / import / reset buttons */
 .hifz-actions-row {
@@ -2743,22 +2639,6 @@ html[data-hifz="off"] .col-hifz {
   transform: scale(0.94);
 }
 
-tr.playing .audio-play-btn {
-  background: var(--md-tertiary);
-  color: var(--md-on-tertiary);
-}
-
-tr.playing .audio-play-btn:hover {
-  background: color-mix(in srgb, var(--md-on-tertiary) 8%, var(--md-tertiary));
-}
-
-tr.playing:not(.audio-paused) .audio-play-btn {
-  animation: playing-pulse 2s var(--md-easing-standard) infinite;
-}
-
-tr.playing.audio-paused .audio-play-btn {
-  animation: none;
-}
 
 /* Loading state: shown while the audio is fetching/buffering before it can play.
    Hides the play/pause glyph and overlays a spinner so the wait is visible. */
@@ -2789,11 +2669,6 @@ tr.playing.audio-paused .audio-play-btn {
   to { transform: rotate(360deg); }
 }
 
-@keyframes playing-pulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-tertiary) 45%, transparent); }
-  70% { box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-tertiary) 0%, transparent); }
-  100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-tertiary) 0%, transparent); }
-}
 
 .audio-time {
   flex-shrink: 0;
@@ -2912,19 +2787,18 @@ tr.playing.audio-paused .audio-play-btn {
   font-weight: 500;
   letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
-  border: 1px solid var(--md-outline);
-  border-radius: var(--md-shape-sm);
-  background: transparent;
-  color: var(--md-on-surface-variant);
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
   cursor: pointer;
-  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), border-color var(--md-duration-short) var(--md-easing-standard);
-  min-width: 2.4rem;
+  transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
+  min-width: 2.75rem;
   text-align: center;
 }
 
 .audio-speed-btn:hover {
-  background: color-mix(in srgb, var(--md-on-surface-variant) 8%, transparent);
-  color: var(--md-on-surface);
+  background: color-mix(in srgb, var(--md-on-primary-container) 8%, var(--md-primary-container));
 }
 
 /* Standard icon buttons: save offline, share, seek */
@@ -3132,20 +3006,6 @@ tr.playing.audio-paused .audio-play-btn {
 /* Mobile and small screens                                            */
 /* ================================================================== */
 @media (max-width: 768px) {
-  .header {
-    padding: 0.7rem 1rem 0.75rem;
-  }
-
-  .header-logo {
-    width: 40px;
-    height: 40px;
-  }
-
-  .header h1 {
-    font-size: 1.25rem;
-  }
-
-
   .toolbar-bottom {
     flex-direction: row;
     align-items: center;
@@ -3158,7 +3018,7 @@ tr.playing.audio-paused .audio-play-btn {
 
 @media (max-width: 640px) {
   .main {
-    padding: 8px;
+    padding: 4px 16px 24px;
   }
 
   .ayat-panel {
@@ -3226,38 +3086,12 @@ tr.playing.audio-paused .audio-play-btn {
     max-height: none;
     overflow-y: auto;
   }
-
-  .settings-actions {
-    border-radius: 0;
-  }
 }
 
 /* Very small phones */
 @media (max-width: 380px) {
-  .header h1 {
-    font-size: 1.125rem;
-  }
-
-  .toolbar-top,
   .toolbar-bottom {
     padding: 0.6rem 0.85rem;
-  }
-
-  .para-picker {
-    min-width: 8.5rem;
-  }
-
-  .para-picker-face {
-    padding-left: 0.75rem;
-  }
-
-  .btn-toolbar-locate {
-    width: 32px;
-    height: 32px;
-  }
-
-  .ruku-table {
-    font-size: 0.85rem;
   }
 }
 
@@ -3274,39 +3108,36 @@ tr.playing.audio-paused .audio-play-btn {
   overflow-y: auto;
 }
 
+/* Each group is a white rounded card on the dialog's tinted ground. */
 .settings-group {
-  padding: 0 0 0.35rem;
+  margin: 0 1rem 0.75rem;
+  padding: 0.25rem 0 0.5rem;
+  border-radius: var(--md-shape-lg);
+  background: var(--md-card);
 }
 
-.settings-group + .settings-group {
-  border-top: 1px solid var(--md-outline-variant);
-  margin-top: 0.25rem;
-}
-
-/* List subheader */
 .settings-group-header {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.85rem 1.5rem 0.25rem;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--md-primary);
+  padding: 0.85rem 1.25rem 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  color: var(--md-on-surface);
 }
 
 .settings-group-header svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  color: var(--md-primary);
 }
 
 .settings-row {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.6rem 1.5rem;
+  padding: 0.6rem 1.25rem;
 }
 
 .settings-row label {
@@ -3324,18 +3155,21 @@ tr.playing.audio-paused .audio-play-btn {
   gap: 0.75rem;
 }
 
-/* --- Segmented buttons --- */
+/* --- Segmented control: a soft track with the chosen segment filled sage. --- */
 .settings-role-group {
   display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--md-shape-full);
+  background: var(--md-surface);
 }
 
 .settings-role-group .settings-role-btn {
   flex: 1;
   min-height: 40px;
   padding: 0 0.75rem;
-  margin-left: -1px;
-  border: 1px solid var(--md-outline);
-  border-radius: 0;
+  border: none;
+  border-radius: var(--md-shape-full);
   background: transparent;
   color: var(--md-on-surface);
   font-size: 0.875rem;
@@ -3347,25 +3181,23 @@ tr.playing.audio-paused .audio-play-btn {
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
 }
 
-.settings-role-group .settings-role-btn:first-child {
-  margin-left: 0;
-  border-radius: var(--md-shape-full) 0 0 var(--md-shape-full);
-}
-
-.settings-role-group .settings-role-btn:last-child {
-  border-radius: 0 var(--md-shape-full) var(--md-shape-full) 0;
-}
-
+/* A tap leaves :hover stuck on touch screens; only a real pointer gets the tint. */
 .settings-role-group .settings-role-btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+  background: transparent;
   box-shadow: none;
+}
+
+@media (hover: hover) {
+  .settings-role-group .settings-role-btn:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
+    box-shadow: none;
+  }
 }
 
 .settings-role-group .settings-role-btn.active,
 .settings-role-group .settings-role-btn.active:hover:not(:disabled) {
-  background: var(--md-secondary-container);
-  color: var(--md-on-secondary-container);
-  z-index: 1;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
 }
 
 /* A mushaf script still loading: dimmed until the switch or the note. */
@@ -3374,18 +3206,7 @@ tr.playing.audio-paused .audio-play-btn {
   cursor: progress;
 }
 
-/* Selected segment carries a check, as the spec draws it. */
-.settings-role-group .settings-role-btn.active::before {
-  content: "";
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") no-repeat center / contain;
-}
-
-/* Off / Meaning / + Grammar: tighter, so "✓ + Grammar" stays on one line on a 360 px phone. */
+/* Off / Meaning / + Grammar: tighter, so the three choices stay on one line on a 360 px phone. */
 #word-meanings-group .settings-role-btn,
 #ayah-words-group .settings-role-btn {
   padding: 0 0.3rem;
@@ -3554,14 +3375,14 @@ tr.playing.audio-paused .audio-play-btn {
   -webkit-appearance: none;
   appearance: none;
   min-height: 36px;
-  padding: 0 2rem 0 0.75rem;
-  border-radius: var(--md-shape-sm);
-  border: 1px solid var(--md-outline);
+  padding: 0 2.25rem 0 1rem;
+  border-radius: var(--md-shape-full);
+  border: none;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  background: transparent var(--md-select-chevron) no-repeat right 0.35rem center / 20px 20px;
-  color: var(--md-on-surface);
+  background: var(--md-primary-container) var(--md-select-chevron) no-repeat right 0.35rem center / 20px 20px;
+  color: var(--md-on-primary-container);
 }
 
 .settings-speed-select:focus {
@@ -3683,20 +3504,6 @@ tr.playing.audio-paused .audio-play-btn {
   font-weight: 500;
 }
 
-.settings-actions {
-  margin-top: 0;
-  padding: 0.75rem 1.5rem 1.25rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.settings-actions .btn {
-  min-height: 40px;
-  min-width: 80px;
-  touch-action: manipulation;
-}
-
 /* ------------------------------------------------------------------ */
 /* First-run guided walkthrough overlay (mirrors native GuideOverlay)  */
 /* ------------------------------------------------------------------ */
@@ -3757,12 +3564,11 @@ tr.playing.audio-paused .audio-play-btn {
 }
 
 .mq-guide-step-label {
-  color: var(--md-primary);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  margin-right: auto;
+  color: var(--md-on-surface-variant);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  font-variant-numeric: tabular-nums;
 }
 .mq-guide-title {
   margin: 6px 0 6px;
@@ -3844,40 +3650,33 @@ tr.playing.audio-paused .audio-play-btn {
   min-width: 0;
 }
 
-/* Elevated card. */
+/* The card: "Ruku n" and its status chip with the memorized check at the right, the surah,
+   then one action row: a Play pill, the ayat toggle, and share and download at the end. The
+   transport (seek, speed, scrubber) opens under it on the card that is playing. */
 .ruku-table tbody tr[data-global-index] {
   display: grid;
-  /* Phone first: one column at the right holds share, download and the star, in that order,
-     each on its own line beside the title, the surah and the ayat chip. The listen count
-     sits to the star's left so the star lines up under the two icons. */
-  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
-    "play ruku   ruku   wa"
-    "play arabic arabic dl"
-    "play verses verses hifz"
-    "tx   tx     tx     tx";
+    "ruku  ruku   ruku  hifz hifz"
+    "surah surah  surah hifz hifz"
+    "play  verses .     wa   dl"
+    "tx    tx     tx    tx   tx"
+    "act   act    act   act  act";
   align-items: center;
-  column-gap: 0.6rem;
+  column-gap: 0.25rem;
   row-gap: 0;
-  padding: 0.55rem 0.7rem 0.55rem 0.75rem;
-  margin: 0 0 0.75rem;
+  padding: 0.85rem 0.5rem 0.4rem 1rem;
+  margin: 0 0 0.625rem;
   border: none;
-  border-radius: var(--md-shape-md);
+  border-radius: var(--md-shape-lg);
   background: var(--md-card);
   box-shadow: var(--md-elevation-1);
-  transition: background var(--md-duration-medium) var(--md-easing-standard), box-shadow var(--md-duration-short) var(--md-easing-standard);
+  transition: box-shadow var(--md-duration-short) var(--md-easing-standard);
 }
 
-.ruku-table tbody tr[data-global-index]:not(.playing):hover {
-  box-shadow: var(--md-elevation-2);
-}
-
-/* Playing: the secondary container, the way a selected list item is drawn; the gold of the
-   transport button marks it from across the room. Nothing in the grid shifts. */
+/* Playing: the card keeps its white; a soft sage ring and the filled pill say which one. */
 .ruku-table tbody tr[data-global-index].playing {
-  background: var(--md-secondary-container) !important;
-  color: var(--md-on-secondary-container);
-  box-shadow: var(--md-elevation-2);
+  box-shadow: 0 0 0 2px var(--md-primary-container), var(--md-elevation-2);
 }
 
 /* A card is one surface: the cells stop being boxes and just place text. */
@@ -3891,92 +3690,162 @@ tr.playing.audio-paused .audio-play-btn {
 
 .ruku-table tbody td::before { content: none !important; }
 
-/* The native card carries the Arabic surah name only. Specificity has to match the
-   `> td` rule above, which would otherwise put these back to block. */
-.ruku-table tbody tr[data-global-index] > td.col-surah { display: none; }
+/* The surah line uses the Surah cell; the separate Arabic cell is the table's, not the card's. */
+.ruku-table tbody tr[data-global-index] > td.col-surah-arabic { display: none; }
 
-/* Three voices in the card and no more: the ruku states it, the surah answers in gold,
-   everything else stays muted until it is worth reading. */
-.ruku-table .col-ruku {
+.ruku-table tbody tr[data-global-index] > td.col-ruku {
   grid-area: ruku;
-  font-size: 1rem;
-  line-height: 1.5rem;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-  color: var(--md-on-surface);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ruku-table tr.playing .col-ruku {
-  color: var(--md-on-secondary-container);
-}
-
-/* `> td` above sets every cell to block; this one lays its two spans out as a row. */
-.ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
-  grid-area: arabic;
-  /* Name then number on a phone ("النبأ · 78"); the wide screen flips them below. */
   display: flex;
-  flex-direction: row-reverse;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 0.3rem;
-  font-family: "Traditional Arabic", "Scheherazade New", serif;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  font-weight: 500;
-  /* Gold, not accent teal: teal means "this does something" everywhere else in the card,
-     and a surah name does nothing. */
-  color: var(--md-tertiary);
+  align-items: center;
+  gap: 0.5rem;
   min-width: 0;
+  font-size: 1.0625rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+  color: var(--md-on-surface);
   white-space: nowrap;
 }
 
-/* Harakat rise above and dip below the letters; nothing here may clip them. */
-.ruku-table .surah-ar {
-  unicode-bidi: isolate;
-  font-size: 1rem;
-  line-height: 1.5;
+.ruku-title-wide {
+  display: none;
 }
 
-.ruku-table .surah-ar::after {
-  content: " \00b7";
+/* Status chip after the title: Heard, then Memorized, then Playing or Paused, each beating
+   the one before. The words are for the eye; the controls already say it to screen readers. */
+.ruku-table .col-ruku::after {
+  flex: none;
+  padding: 0 0.6rem;
+  border-radius: var(--md-shape-full);
+  font-size: 0.75rem;
+  line-height: 1.375rem;
+  font-weight: 500;
+}
+
+.ruku-table tr:has(.hifz-plays:not([hidden])) .col-ruku::after {
+  content: "Heard" / "";
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+}
+
+.ruku-table tr:has(.hifz-mark[aria-pressed="true"]) .col-ruku::after {
+  content: "Memorized" / "";
+  background: var(--md-success-container);
+  color: var(--md-on-success-container);
+}
+
+.ruku-table tbody tr.playing[data-global-index] .col-ruku::after {
+  content: "Playing" / "";
+  background: var(--calm-playing);
+  color: var(--calm-on-playing);
+}
+
+.ruku-table tbody tr.playing.audio-paused[data-global-index] .col-ruku::after {
+  content: "Paused" / "";
+  background: var(--md-surface-container);
+  color: var(--md-on-surface-variant);
+}
+
+/* "Al-Baqarah · البقرة": the English name first, the Arabic after; the surah number is the
+   table's. */
+.ruku-table tbody tr[data-global-index] > td.col-surah {
+  grid-area: surah;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+  margin-top: 0.1rem;
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+  color: var(--md-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ruku-table .col-surah .card-surah { order: 1; }
+.ruku-table .col-surah .card-sep:nth-child(2) { order: 2; }
+.ruku-table .col-surah .card-arabic {
+  order: 3;
+  font-family: var(--md-font-arabic);
+  font-size: 1.05rem;
+  unicode-bidi: isolate;
+}
+.ruku-table .col-surah .card-num,
+.ruku-table .col-surah .card-sep:nth-child(4) { display: none; }
+
+/* Play / Pause: a pill with its word. The label follows the button's own aria-label, which
+   playback keeps in step. */
+.ruku-table .audio-play-btn {
+  grid-area: play;
+  justify-self: start;
+  width: auto;
+  height: 44px;
+  margin-top: 0.5rem;
+  margin-bottom: 0.4rem;
+  gap: 0.35rem;
+  padding: 0 1.1rem 0 0.85rem;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.ruku-table .audio-play-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ruku-table .audio-play-btn::after {
+  content: "Play" / "";
+}
+
+.ruku-table .audio-play-btn[aria-label="Pause"]::after {
+  content: "Pause" / "";
+}
+
+.ruku-table .audio-play-btn:hover {
+  background: color-mix(in srgb, var(--md-on-primary-container) 8%, var(--md-primary-container));
+  box-shadow: none;
+}
+
+.ruku-table tr.playing .audio-play-btn {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.ruku-table tr.playing .audio-play-btn:hover {
+  background: color-mix(in srgb, var(--md-on-primary) 10%, var(--md-primary));
 }
 
 .ruku-table .col-verses {
   grid-area: verses;
-  font-size: 0.8125rem;
+  justify-self: start;
+  margin-left: 0.4rem;
+  font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--md-on-surface-variant);
   white-space: nowrap;
 }
 
-/* The icon column sets the row height on a phone. At 32px the rows hug the title, the surah
-   and the chip instead of floating each in a band of air; the 20px glyphs still sit 12px
-   apart. */
-.ruku-table .audio-share-wa-btn,
-.ruku-table .audio-offline-btn,
-.ruku-table .hifz-mark {
-  width: 32px;
-  height: 32px;
-}
-
-.ruku-table .hifz-mark svg {
-  width: 20px;
-  height: 20px;
-}
-
+/* The ayat toggle: a quiet outlined pill, "Ayah 1–7 ⌄". */
 .ruku-table .col-verses .verses-toggle {
-  font-size: 0.8125rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  border-radius: var(--md-shape-full);
+  font-size: 0.875rem;
 }
 
-.ruku-table tr.playing .col-verses {
-  color: color-mix(in srgb, var(--md-on-secondary-container) 80%, transparent);
+.ruku-table .col-verses .verses-toggle-icon {
+  display: none;
 }
 
-.ruku-table tr.playing .col-verses .verses-toggle {
-  color: var(--md-on-secondary-container);
+/* The narrowest phones keep the range and drop the word. */
+@media (max-width: 380px) {
+  .ruku-table .col-verses .verses-label {
+    display: none;
+  }
 }
 
 .ruku-table .col-hifz {
@@ -3984,92 +3853,82 @@ tr.playing.audio-paused .audio-play-btn {
   justify-self: end;
   align-self: center;
   min-width: 0;
+  margin-top: -0.35rem;
 }
 
-.ruku-table .audio-share-wa-btn,
-.ruku-table .audio-offline-btn {
-  justify-self: end;
-}
-
-/* Count first, check last: the check is the item that lines up under the icons. */
+/* Count first, check last, so the check ends the row. */
 .ruku-table .hifz-controls {
   flex-direction: row-reverse;
 }
 
-/* Admin-only; on a phone it takes a line of its own after the transport. */
-.ruku-table .action-cell {
-  grid-area: auto;
-  grid-column: 1 / -1;
+.ruku-table .audio-share-wa-btn,
+.ruku-table .audio-offline-btn,
+.ruku-table .hifz-mark {
+  width: 40px;
+  height: 40px;
 }
 
-/* Let the cell's children become items of the row's grid, so the play button
-   leads the header while the transport drops to its own line. */
+.ruku-table .hifz-mark svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* The audio cell's children become items of the card's grid. */
 .ruku-table tbody tr[data-global-index] > td.col-audio { display: contents; }
 
-.ruku-table .audio-play-btn { grid-area: play; }
 .ruku-table .audio-share-wa-btn { grid-area: wa; }
 .ruku-table .audio-offline-btn { grid-area: dl; }
 
-/* Rows with nothing to play still need their cell's children placed. */
-.ruku-table .no-recording,
-.ruku-table .path-not-found { grid-area: play; white-space: nowrap; }
-
-/* A card with no recording put a text chip where every other card has its play button,
-   which started its title at a different left edge than the cards above and below it.
-   The button's footprint instead, so the column stays true down the list. The words stay
-   in the DOM at font-size 0 — invisible, still read out. */
+/* No recording: a quiet dashed pill where Play would be. */
 .ruku-table .no-recording {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px dashed var(--md-outline);
-  border-radius: 50%;
-  background: transparent;
-  font-size: 0;
-  display: flex;
+  grid-area: play;
+  justify-self: start;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-}
-
-.ruku-table .no-recording::before {
-  content: "—";
-  font-size: 1rem;
-  line-height: 1;
+  height: 36px;
+  margin: 0.5rem 0;
+  padding: 0 0.85rem;
+  border: 1px dashed var(--md-outline);
+  border-radius: var(--md-shape-full);
+  font-size: 0.8125rem;
   color: var(--md-on-surface-variant);
+  white-space: nowrap;
 }
 
-.ruku-table .audio-retry-btn { grid-area: wa; }
+/* A recording that failed to load: Retry takes Play's place and the reason gets the card's
+   full width below. */
+.ruku-table .audio-cell .path-not-found {
+  grid-area: tx;
+  justify-self: stretch;
+  margin: 0.25rem 0.5rem 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--md-shape-sm);
+}
+
+.ruku-table .audio-cell .audio-retry-btn {
+  grid-area: play;
+  justify-self: start;
+  height: 44px;
+  margin: 0.5rem 0 0.4rem;
+  padding: 0 1.1rem;
+  border-radius: var(--md-shape-full);
+}
 
 .ruku-table .audio-controls {
   grid-area: tx;
   display: none;
-  margin-top: 0.5rem;
+  margin: 0 0.5rem 0.25rem 0;
   flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.4rem;
+  row-gap: 0;
   max-width: none;
 }
 
 .ruku-table tbody tr.playing .audio-controls { display: flex; }
 
-/* On the playing card every control speaks in the container's ink. */
-.ruku-table tr.playing .audio-seek-btn,
-.ruku-table tr.playing .audio-speed-btn,
-.ruku-table tr.playing .audio-time,
-.ruku-table tr.playing .audio-share-wa-btn,
-.ruku-table tr.playing .audio-offline-btn:not(.is-saved) {
-  color: var(--md-on-secondary-container);
-}
-
-.ruku-table tr.playing .audio-speed-btn {
-  border-color: color-mix(in srgb, var(--md-on-secondary-container) 40%, transparent);
-}
-
-.ruku-table tr.playing .audio-seek-btn:hover,
-.ruku-table tr.playing .audio-speed-btn:hover {
-  background: color-mix(in srgb, var(--md-on-secondary-container) 8%, transparent);
-}
-
-/* Phone first: seek, seek, speed and the clock share a line, the scrubber takes the next.
-   The clock is one unit, "1:21 / 8:00", pushed to the right of the controls. */
+/* Seek, seek, speed and the clock share a line; the scrubber takes the next. The clock is
+   one unit, "1:21 / 8:00", pushed to the right. */
 .ruku-table .audio-seek-back-btn { order: 0; }
 .ruku-table .audio-seek-fwd-btn { order: 1; }
 .ruku-table .audio-speed-btn { order: 2; }
@@ -4079,7 +3938,7 @@ tr.playing.audio-paused .audio-play-btn {
 
 .ruku-table .audio-time-current::after {
   content: "/";
-  margin: 0 0.3rem;
+  margin-left: 0.3rem;
   opacity: 0.45;
 }
 
@@ -4095,12 +3954,11 @@ tr.playing.audio-paused .audio-play-btn {
   .ruku-table .audio-time-duration { order: 5; }
 }
 
-/* Secondary to the 44px play button that opened the row. */
 .ruku-table .audio-seek-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  min-height: 36px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
 }
 
 .ruku-table .audio-seek-btn svg {
@@ -4108,90 +3966,71 @@ tr.playing.audio-paused .audio-play-btn {
   height: 22px;
 }
 
-/* Admin-only. On its own full-width line it added a third row to every card in the list;
-   it shares the title's line now, above the hifz pill it belongs beside. */
-.ruku-table .action-cell { justify-self: start; align-self: center; }
+/* Admin tools: their own line at the card's foot. */
+.ruku-table .action-cell { grid-area: act; justify-self: start; align-self: center; padding-bottom: 0.4rem; }
 .ruku-table .validate-label { margin-top: 0; }
-.ruku-table .validate-label span { font-size: 0.7rem; height: 24px; padding: 0 8px; white-space: nowrap; }
+.ruku-table .validate-label span { font-size: 0.75rem; height: 24px; padding: 0 8px; white-space: nowrap; }
 
-/* Ayat panel spans the card it belongs to. */
+/* The ayat sheet hangs from the card it belongs to. */
 .ruku-table tbody tr.ayat-row { display: block; }
 .ruku-table tbody tr.ayat-row > td.ayat-cell { display: block; padding: 0; }
 .ruku-table tbody tr[data-global-index].has-ayat-open {
   margin-bottom: 0;
-  border-radius: var(--md-shape-md) var(--md-shape-md) 0 0;
+  border-radius: var(--md-shape-lg) var(--md-shape-lg) 0 0;
   clip-path: inset(-12px -12px 0 -12px);
 }
 
-.ruku-table tbody tr[data-global-index].playing.has-ayat-open {
-  box-shadow: var(--md-elevation-1);
-}
-
-/* Room for two lines: the surah and its ayat share the detail line, and the star with its
-   count sits at the right beside the icons, so every card's star lands on the same column. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
-    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto auto auto;
-    grid-template-areas:
-      "play ruku   ruku   act hifz wa dl"
-      "play arabic verses act hifz wa dl"
-      "tx   tx     tx     tx  tx   tx tx";
-    column-gap: 0.7rem;
-    row-gap: 0.2rem;
-    padding: 0.75rem 0.85rem;
+    padding: 1rem 0.75rem 0.5rem 1.25rem;
   }
+}
 
-  /* The check spans both rows like the icons, so check, share and download sit inline. */
-  .ruku-table .col-hifz {
-    justify-self: end;
-    align-self: center;
-  }
-
-  /* Wide screen: surah-led title, "78 النبأ", and "1–30 · 31–40" behind the book glyph. */
-  .ruku-title-wide {
-    display: inline;
-  }
-
-  .ruku-title-narrow {
-    display: none;
-  }
-
-  .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
-    flex-direction: row;
-  }
-
-  .ruku-table .surah-ar::after {
-    content: none;
-  }
-
-  .ruku-table .col-verses .verses-label {
-    display: none;
-  }
-
-  .ruku-table .col-verses .verses-toggle-icon {
-    display: block;
-  }
-
-  .ruku-table .action-cell {
-    grid-area: act;
-    grid-column: auto;
-    justify-self: end;
-  }
-
-  .ruku-table .col-verses {
-    margin-left: 0.4rem;
-  }
-
+/* ================================================================== */
+/* Touch targets                                                       */
+/* ================================================================== */
+/* On a touch screen every control is at least 44px, so a thumb lands on what it meant to.
+   The glyphs keep their size; only the target around them grows. Mouse layouts keep their
+   denser sizes. */
+@media (pointer: coarse) {
+  .btn-toolbar-menu,
+  .modal-close-btn,
+  .btn-toolbar-locate,
+  .wpop-sound,
   .ruku-table .audio-share-wa-btn,
   .ruku-table .audio-offline-btn,
-  .ruku-table .hifz-mark {
-    width: 40px;
-    height: 40px;
+  .ruku-table .hifz-mark,
+  .ruku-table .audio-seek-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
-  .ruku-table .hifz-mark svg {
-    width: 22px;
-    height: 22px;
+  .verses-toggle,
+  .audio-speed-btn,
+  .mq-guide-skip,
+  .mq-guide-next,
+  .modal .btn,
+  .settings-speed-select {
+    min-height: 44px;
+  }
+
+  .settings-volume-range {
+    height: 44px;
+  }
+
+  .audio-speed-btn {
+    min-width: 44px;
+  }
+
+  /* The ayah pills stay 32px to the eye; transparent borders, outside the painted
+     background, carry the target to 44px. */
+  .ayah-play {
+    min-width: 44px;
+    height: 44px;
+    border-block: 6px solid transparent;
+    background-clip: padding-box;
   }
 }
 
