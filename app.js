@@ -111,7 +111,6 @@
       document.documentElement.setAttribute("data-mushaf", script);
       hideWordPopover(); // its word is redrawn away
       if (render) renderTable();
-      renderSettingsPreviews();
     }
     syncMushafScriptUI();
   }
@@ -1079,7 +1078,8 @@
    */
   function toggleAyahGloss(btn) {
     var item = btn.closest(".ayat-item");
-    var row = ayatRowOf(btn);
+    var tr = btn.closest("tr[data-ayat-for]");
+    var row = tr && data[tr.dataset.ayatFor];
     var entry = row && getRukuAyat(row);
     var n = Number(item.dataset.ayah);
     var ayah = entry && entry.ayahs.filter(function (a) { return a.n === n; })[0];
@@ -1111,64 +1111,6 @@
       g.classList.remove("is-measuring");
       g.style.setProperty("--cell", Math.ceil(widest) + "px");
     });
-  }
-
-  /*
-   * Settings previews: under each word switch, ayah 1:1 drawn by the code above with that
-   * switch as set, so flipping it shows what it does. Para 1's word files are local; until
-   * they load, or if they can't, the empty slots show a quiet "…" (style.css).
-   */
-  var PREVIEW_ROW = { para: 1, rukuInPara: "R0", surahNumber: 1 };
-
-  /** What each preview draws, and a note when another switch changes what this one does. */
-  var PREVIEWS = {
-    tap: function () {
-      return { note: !wordMeaningsEnabled() && wordSoundOnTap() ? "Off: a tap only plays the word's sound." : "" };
-    },
-    sound: function () {
-      return {
-        note: wordSoundOnTap() ? "Tap a word to hear it."
-          : wordMeaningsEnabled() ? "Off: a tap opens the meaning box, without sound."
-          : "Off: the words can't be tapped."
-      };
-    },
-    words: function () { return { gloss: wordGlossEnabled(), table: wordTableEnabled() }; },
-    "switch": function () {
-      var gloss = wordGlossEnabled();
-      var table = wordTableEnabled();
-      return {
-        gloss: gloss,
-        table: table,
-        glossSwitch: ayahGlossSwitchEnabled(),
-        note: ayahGlossSwitchEnabled() && !gloss && !table ? "Meanings start hidden, as the choice above is Off. Tap the button." : ""
-      };
-    },
-    translation: function () { return { translation: translationEnabled() }; }
-  };
-
-  /** The ruku an ayah element was drawn for: its row in the list, or the Settings sample. */
-  function ayatRowOf(el) {
-    var tr = el.closest("tr.ayat-row[data-ayat-for]");
-    if (tr) return data[tr.dataset.ayatFor];
-    return el.closest(".settings-preview") ? PREVIEW_ROW : null;
-  }
-
-  /** Redraw the previews; only while Settings is open, so listeners never fetch word data. */
-  function renderSettingsPreviews() {
-    if (!settingsModal || !settingsModal.classList.contains("is-open")) return;
-    var entry = getRukuAyat(PREVIEW_ROW);
-    var ayah = entry && entry.ayahs[0];
-    Array.prototype.forEach.call(settingsModal.querySelectorAll(".settings-preview"), function (box) {
-      if (!ayah) return;
-      var show = PREVIEWS[box.dataset.preview]();
-      box.innerHTML = "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">" + ayatItemHtml(entry, ayah, show) + "</div>" +
-        (show.note ? "<p class=\"settings-hint\">" + escapeHtml(show.note) + "</p>" : "");
-      // Nothing to play here; the button stays so the row looks as it does in the list.
-      box.querySelector(".ayah-play").disabled = true;
-    });
-    fillTranslations(settingsModal, PREVIEW_ROW);
-    fillWordGlosses(settingsModal, PREVIEW_ROW);
-    fillWordTables(settingsModal, PREVIEW_ROW, entry);
   }
 
   /*
@@ -1311,29 +1253,6 @@
       "</div>";
   }
 
-  /**
-   * One ayah: its play button, the buttons beside it, its words, its end marker, and empty
-   * slots for the word cards and translation that fillWordTables and fillTranslations fill.
-   * `show` picks the parts: the ruku panel passes the settings, a Settings preview its own.
-   */
-  function ayatItemHtml(entry, a, show) {
-    return "<div class=\"ayat-item" + (show.gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
-      "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
-      (show.glossSwitch
-        ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + !!(show.table || show.gloss) + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
-        : "") +
-      (show.admin
-        ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
-        : "") +
-      "<span class=\"ayah-text\">" + ayahTextHtml(a.text, show.gloss) + "</span>" +
-      ayahNumHtml(a) +
-      (show.table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
-      (show.translation
-        ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
-        : "") +
-      "</div>";
-  }
-
   function buildAyatRow(item) {
     var row = item.row;
     var entry = getRukuAyat(row);
@@ -1368,21 +1287,33 @@
     }
 
     html += "<div class=\"ayat-body\" dir=\"rtl\" lang=\"ar\">";
+    var gloss = wordGlossEnabled();
+    var glossSwitch = ayahGlossSwitchEnabled();
+    var table = wordTableEnabled();
     // A ruku the aligner never reached has no timings at all. Show the boxes empty rather
     // than not at all, so its ayat can be placed from scratch.
     var editTimings = timingEditorEnabled()
       ? (getRukuTimings(row) || { trim: null, ayahs: [], ends: {} })
       : null;
     var editKey = editTimings ? ayatKeyFor(row) : null;
-    var show = {
-      gloss: wordGlossEnabled(),
-      glossSwitch: ayahGlossSwitchEnabled(),
-      table: wordTableEnabled(),
-      translation: translationEnabled(),
-      admin: isAdmin()
-    };
+    var showTranslation = translationEnabled();
+    var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
-      html += ayatItemHtml(entry, a, show);
+      html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG + "</button>" +
+        (glossSwitch
+          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
+          : "") +
+        (admin
+          ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
+          : "") +
+        "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
+        ayahNumHtml(a) +
+        (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
+        (showTranslation
+          ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
+          : "") +
+        "</div>";
       if (editTimings) {
         var following = entry.ayahs[ayahPos + 1];
         html += ayahTimingEditorHtml(editTimings, editKey, a.n, following ? following.n : null);
@@ -4058,12 +3989,12 @@
   function openWordFromElement(wordEl) {
     var ayatTr = wordEl.closest("tr.ayat-row[data-ayat-for]");
     var item = wordEl.closest(".ayat-item");
-    var row = ayatRowOf(wordEl);
+    var row = ayatTr ? data[ayatTr.dataset.ayatFor] : null;
     if (!row || !item) return;
     var ayahNumber = parseInt(item.dataset.ayah, 10);
     if (wordMeaningsEnabled()) openWordMeaning(wordEl, row.para, row.surahNumber, ayahNumber);
     else playTappedWordOnly(wordEl, row.para, row.surahNumber, ayahNumber);
-    if (ayatTr) prefetchRukuWords(ayatTr.dataset.ayatFor);
+    prefetchRukuWords(ayatTr.dataset.ayatFor);
   }
 
   function hideWordPopover() {
@@ -4649,18 +4580,7 @@
   function openSettings() {
     syncSettingsUI();
     settingsModal.classList.add("is-open");
-    renderSettingsPreviews();
   }
-
-  // Any switch flipped redraws the previews, after its own handler has saved it.
-  settingsModal.addEventListener("change", renderSettingsPreviews);
-  settingsModal.addEventListener("click", function (e) {
-    if (!e.target.closest || !e.target.closest(".settings-preview")) return;
-    var wordEl = e.target.closest(".ayah-word");
-    if (wordEl) openWordFromElement(wordEl);
-    var glossBtn = e.target.closest(".ayah-gloss-toggle");
-    if (glossBtn) toggleAyahGloss(glossBtn);
-  });
 
   function closeSettings() {
     settingsModal.classList.remove("is-open");
@@ -4786,7 +4706,6 @@
       if (level !== "off") setWordMeaningsSimple(level === "simple");
       syncWordMeaningsUI();
       renderTable();
-      renderSettingsPreviews();
     });
   }
 
@@ -4825,7 +4744,6 @@
       setWordTableEnabled(btn.dataset.ayahWords === "grammar");
       syncAyahWordsUI();
       renderTable();
-      renderSettingsPreviews();
     });
   }
 

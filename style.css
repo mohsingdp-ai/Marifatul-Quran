@@ -3451,49 +3451,6 @@ tr.playing.audio-paused .audio-play-btn {
   color: var(--md-on-surface-variant);
 }
 
-/* A switch's live preview: ayah 1:1 drawn by the ruku panel's own code, in a small card. */
-.settings-preview {
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--md-outline-variant);
-  border-radius: var(--md-shape-md);
-  background: var(--md-panel);
-  overflow: hidden;
-}
-
-.settings-preview .ayat-body {
-  font-size: calc(1.3rem * var(--mushaf-scale, 1));
-  line-height: 2;
-}
-
-.settings-preview .settings-hint {
-  margin: 0.25rem 0;
-}
-
-/* Word data still loading, or out of reach offline: a quiet dot where it will go. */
-.settings-preview:empty::before,
-.settings-preview .wt:empty::before,
-.settings-preview .ayah-gloss:empty::before,
-.settings-preview .ayat-translation:empty::before {
-  content: "\2026";
-  color: var(--md-on-surface-variant);
-}
-
-.settings-preview .ayah-gloss:empty,
-.settings-preview .ayat-translation:empty {
-  display: block;
-}
-
-/* One or two cards say enough; two fit side by side. */
-.settings-preview .wt {
-  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
-  margin-bottom: 0.5rem;
-}
-
-.settings-preview[data-preview="words"] .wt-card:nth-child(n+3),
-.settings-preview[data-preview="switch"] .wt-card:nth-child(n+2) {
-  display: none;
-}
-
 .settings-toggle-label input[type="checkbox"] {
   position: absolute;
   opacity: 0;
