@@ -87,3 +87,55 @@ test("Indo-Pak and Uthmani spellings share a skeleton; pause marks have none", (
   assert.strictEqual(wordSkeleton("اُ"), wordSkeleton("أُنثَىٰ"));
   for (const mark of ["ۚ", "ۙ", "ؕ"]) assert.strictEqual(wordSkeleton(mark), "");
 });
+
+test("a tapped word plays quran.com's file for its own place, in every script", () => {
+  const { wordAudioUrl } = new Function(grab("wordAudioUrl") + grab("findWordMeaning") +
+    grab("wordSkeleton") + grab("oneEditApart") + "return { wordAudioUrl };")();
+  const uthmani = new Function(fs.readFileSync(path.join(__dirname, "..", "verses.js"), "utf8") +
+    "return QURAN_VERSES;")();
+  const indoPak = new Function(fs.readFileSync(path.join(__dirname, "..", "verses-indopak.js"), "utf8") +
+    "return QURAN_VERSES_INDOPAK;")();
+  const uthmaniText = (s, a) => Object.values(uthmani).filter((e) => e.surahNumber === s)
+    .flatMap((e) => e.ayahs).find((x) => x.n === a).text;
+  const files = (n, s, a) => {
+    const words = asList(para(n)[s + ":" + a]);
+    return [uthmaniText(s, a), indoPak[s + ":" + a], indoPakNaskhText(indoPak[s + ":" + a])].map((t) =>
+      t.split(/\s+/).filter((tok) => tok && wordSkeleton(tok) !== "")
+        .map((tok, i) => wordAudioUrl(words, tok, i, s, a).replace("https://audio.qurancdn.com/wbw/", "")));
+  };
+  for (const f of files(1, 1, 1)) assert.strictEqual(f[0], "001_001_001.mp3");
+  // بَعْدَ مَا is one quran.com word: both halves play 3, and the rest stay in step.
+  for (const f of files(2, 2, 181)) {
+    assert.deepStrictEqual(f.slice(2, 5), ["002_181_003.mp3", "002_181_003.mp3", "002_181_004.mp3"]);
+    assert.strictEqual(f[f.length - 1], "002_181_013.mp3");
+  }
+  for (const f of files(13, 13, 37)) assert.strictEqual(f[7], f[8]);
+  for (const f of files(23, 37, 130)) assert.strictEqual(f[f.length - 1], "037_130_003.mp3");
+  for (const f of files(3, 2, 282)) {
+    assert.strictEqual(f[0], "002_282_001.mp3");
+    assert.strictEqual(f[f.length - 1], "002_282_128.mp3");
+  }
+});
+
+test("words are tappable when either the meaning or the sound switch is on", () => {
+  const store = {};
+  const localStorage = { getItem: (k) => (k in store ? store[k] : null) };
+  const { ayahWordsHtml } = new Function("localStorage", "escapeHtml",
+    "var WORD_MEANINGS_PREF_KEY = 'mq_pref_word_meanings', WORD_SOUND_PREF_KEY = 'mq_pref_word_sound';" +
+    grab("ayahWordsHtml") + grab("glossCellsHtml") + grab("wordSkeleton") +
+    grab("wordMeaningsEnabled") + grab("wordSoundOnTap") + "return { ayahWordsHtml };")(localStorage, (t) => t);
+  const text = "ذَٰلِكَ ٱلْكِتَٰبُ";
+  for (const [meanings, sound, cls] of [["true", "true", "ayah-word"], ["true", "false", "ayah-word"],
+    ["false", "true", "ayah-word"], ["false", "false", null]]) {
+    store.mq_pref_word_meanings = meanings;
+    store.mq_pref_word_sound = sound;
+    const plain = ayahWordsHtml(text, false);
+    const gloss = ayahWordsHtml(text, true);
+    if (cls) assert.ok(plain.includes("class=\"" + cls + "\""), meanings + "/" + sound);
+    else assert.strictEqual(plain, text);
+    assert.ok(gloss.includes("class=\"" + (cls || "gloss-word") + "\""), "gloss " + meanings + "/" + sound);
+  }
+  delete store.mq_pref_word_sound; // never set: the sound defaults on
+  store.mq_pref_word_meanings = "false";
+  assert.ok(ayahWordsHtml(text, false).includes("ayah-word"));
+});

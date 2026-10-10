@@ -1175,10 +1175,11 @@
   /**
    * Ayah text as tappable words. Standalone recitation marks (۞ ۖ ۗ ۚ) strip to an empty
    * skeleton and stay plain, unclickable text — they are not words, and quran.com glues
-   * them inside neighbouring words, so they can never be matched to a meaning.
+   * them inside neighbouring words, so they can never be matched to a meaning. A word is
+   * tappable when a tap does something: opens its meaning, plays its sound, or both.
    */
   function ayahWordsHtml(text, gloss) {
-    var tap = wordMeaningsEnabled();
+    var tap = wordMeaningsEnabled() || wordSoundOnTap();
     if (!tap && !gloss) return escapeHtml(text);
     // Without tapping on, the words still need a wrapper to hang the gloss under.
     var cls = tap ? "ayah-word" : "gloss-word";
@@ -2246,6 +2247,7 @@
   var AYAT_CHEVRON_SVG = '<svg class="verses-toggle-chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
   var GLOSS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>';
   var PLAY_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.14v14l11-7z"/></svg>';
+  var SPEAKER_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 9v6h4l5 5V4L7 9zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77"/></svg>';
   var PAUSE_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M14 19V5h4v14zm-8 0V5h4v14z"/></svg>';
   var SEEK_BACK_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>';
   var SEEK_FWD_SVG  = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6"/><path d="M21.5 8A10 10 0 1 0 19.6 17.5"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">+5</text></svg>';
@@ -2972,6 +2974,7 @@
     a.addEventListener("playing", function () { setTrackLoading(false); });
 
     a.addEventListener("play", function () {
+      lessonPausedForWord = false; // the listener took over from a word sound
       stopMediaSessionKeepalive();
       currentPlayingAudio = a;
       requestScreenWakeLock();
@@ -3988,6 +3991,9 @@
     wordPopoverEl.id = "ayah-word-pop";
     wordPopoverEl.setAttribute("role", "tooltip");
     wordPopoverEl.hidden = true;
+    wordPopoverEl.addEventListener("click", function (e) {
+      if (e.target.closest(".wpop-sound")) playPopWordSound();
+    });
     document.body.appendChild(wordPopoverEl);
     return wordPopoverEl;
   }
@@ -3997,7 +4003,9 @@
     var item = wordEl.closest(".ayat-item");
     var row = ayatTr ? data[ayatTr.dataset.ayatFor] : null;
     if (!row || !item) return;
-    openWordMeaning(wordEl, row.para, row.surahNumber, parseInt(item.dataset.ayah, 10));
+    var ayahNumber = parseInt(item.dataset.ayah, 10);
+    if (wordMeaningsEnabled()) openWordMeaning(wordEl, row.para, row.surahNumber, ayahNumber);
+    else playTappedWordOnly(wordEl, row.para, row.surahNumber, ayahNumber);
     prefetchRukuWords(ayatTr.dataset.ayatFor);
   }
 
@@ -4016,16 +4024,124 @@
     pop.style.top = top + "px";
   }
 
+  /* ------------------------------------------------------------------ */
+  /* Word sounds: a tapped word is heard as quran.com recites it. The    */
+  /* ~77k files stream from quran.com's CDN on tap; sw.js keeps each one */
+  /* heard, so it plays offline after that.                              */
+  /* ------------------------------------------------------------------ */
+
+  var WORD_SOUND_PREF_KEY = "mq_pref_word_sound";
+  var wordSoundEl = null;
+  var lessonPausedForWord = false;
+  /** The open popover's word: a promise of its file URL, and whether it failed to play. */
+  var popWordSound = null;
+
+  function wordSoundOnTap() {
+    try {
+      return localStorage.getItem(WORD_SOUND_PREF_KEY) !== "false";
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setWordSoundOnTap(on) {
+    try {
+      localStorage.setItem(WORD_SOUND_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /**
+   * quran.com's file for a tapped word. Its last number is the word's place among quran.com's
+   * words for the ayah — the row its meaning comes from — not the token's place on screen:
+   * both halves of a split بَعْدَ مَا are one quran.com word, so they share one file.
+   */
+  function wordAudioUrl(words, word, wordIndex, surahNumber, ayahNumber) {
+    var hit = words ? findWordMeaning(words, word, wordIndex) : null;
+    if (!hit) return "";
+    function pad(n) { return String(n).padStart(3, "0"); }
+    return "https://audio.qurancdn.com/wbw/" + pad(surahNumber) + "_" + pad(ayahNumber) + "_" +
+      pad(words.indexOf(hit) + 1) + ".mp3";
+  }
+
+  /** Picks the lesson up where the word cut in. A word sound never counts as a listen. */
+  function resumeLessonAfterWord() {
+    if (!lessonPausedForWord) return;
+    lessonPausedForWord = false;
+    if (mqPlayback.el && mqPlayback.activeGlobalIndex != null) mqPlayback.el.play().catch(function () {});
+  }
+
+  /** One element for every word, so a new tap cuts the last word off. */
+  function playWordSound(url, failed) {
+    if (!wordSoundEl) {
+      wordSoundEl = new Audio();
+      wordSoundEl.addEventListener("ended", resumeLessonAfterWord);
+    }
+    var a = wordSoundEl;
+    var lesson = mqPlayback.el;
+    if (lesson && !lesson.paused) {
+      lessonPausedForWord = true;
+      lesson.pause();
+    }
+    a.volume = getAudioVolume();
+    a.src = url;
+    a.play().catch(function (err) {
+      if (a.src !== url || err.name === "AbortError") return; // a newer tap took over
+      resumeLessonAfterWord();
+      if (err.name !== "NotAllowedError") failed(); // offline, or no file for this word
+    });
+  }
+
+  function tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber) {
+    var word = wordEl.firstChild.nodeValue.trim();
+    return getAyahWords(para, surahNumber, ayahNumber).then(function (words) {
+      return wordAudioUrl(words, word, Number(wordEl.dataset.w), surahNumber, ayahNumber);
+    });
+  }
+
+  function playWordSoundFrom(urlPromise, failed) {
+    urlPromise.then(function (url) {
+      if (url) playWordSound(url, failed);
+      else failed();
+    });
+  }
+
+  function playPopWordSound() {
+    var sound = popWordSound;
+    if (!sound) return;
+    playWordSoundFrom(sound.url, function () {
+      sound.failed = true;
+      var note = popWordSound === sound && wordPopoverEl && wordPopoverEl.querySelector(".wpop-sound-note");
+      if (note) note.textContent = "Sound needs internet";
+    });
+  }
+
+  /** Meanings off, sound on: the tap just says the word, with a flash to show it was heard. */
+  function playTappedWordOnly(wordEl, para, surahNumber, ayahNumber) {
+    wordEl.classList.remove("is-sounding");
+    void wordEl.offsetWidth; // restart the flash on a quick second tap
+    wordEl.classList.add("is-sounding");
+    playWordSoundFrom(tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber), function () {
+      wordEl.classList.remove("is-sounding"); // no box to say why, so just stay quiet
+    });
+  }
+
   function openWordMeaning(wordEl, para, surahNumber, ayahNumber) {
     var pop = ensureWordPopover();
     var token = ++wordPopToken;
     var word = wordEl.firstChild.nodeValue.trim();
     var wordIndex = Number(wordEl.dataset.w);
+    var sound = popWordSound = { url: tappedWordSoundUrl(wordEl, para, surahNumber, ayahNumber), failed: false };
+    if (wordSoundOnTap()) playPopWordSound();
 
-    // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (\u06DE)
+    // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (۞)
     // or pause mark into the same token, which the panel never shows.
     function head() {
-      return "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>";
+      return "<div class=\"wpop-head\">" +
+        "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>" +
+        "<span class=\"wpop-sound-note\" role=\"status\">" + (sound.failed ? "Sound needs internet" : "") + "</span>" +
+        "<button type=\"button\" class=\"wpop-sound\" aria-label=\"Play word sound\" title=\"Play word sound\">" +
+          SPEAKER_SVG + "</button>" +
+        "</div>";
     }
 
     pop.innerHTML = head() + "<div class=\"wpop-loading\">Loading\u2026</div>";
@@ -4374,6 +4490,7 @@
   var prefWordMeanings = document.getElementById("pref-word-meanings");
   var prefTranslation = document.getElementById("pref-translation");
   var prefWordGloss = document.getElementById("pref-word-gloss");
+  var prefWordSound = document.getElementById("pref-word-sound");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
   var prefWordTable = document.getElementById("pref-word-table");
   var timingSaveBar = document.getElementById("timing-save-bar");
@@ -4492,6 +4609,7 @@
     if (prefWordMeanings) prefWordMeanings.checked = wordMeaningsEnabled();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
     if (prefWordGloss) prefWordGloss.checked = wordGlossEnabled();
+    if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
     if (prefWordTable) prefWordTable.checked = wordTableEnabled();
     syncSaveTimingsUI();
@@ -4600,6 +4718,13 @@
     prefWordMeanings.addEventListener("change", function () {
       setWordMeaningsEnabled(this.checked);
       renderTable();
+    });
+  }
+
+  if (prefWordSound) {
+    prefWordSound.addEventListener("change", function () {
+      setWordSoundOnTap(this.checked);
+      renderTable(); // words turn tappable, or back to plain text
     });
   }
 

@@ -1974,6 +1974,15 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   cursor: pointer;
 }
 
+/* A word tapped just for its sound flashes, since no box opens to say it was heard. */
+.ayah-word.is-sounding {
+  animation: word-sounding 0.9s ease-out;
+}
+
+@keyframes word-sounding {
+  0%, 40% { color: var(--md-primary); }
+}
+
 @media (hover: hover) {
   .ayah-word:hover {
     text-decoration: underline dotted;
@@ -2112,6 +2121,51 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   background: var(--md-surface-container-lowest);
   box-shadow: var(--md-elevation-3);
   border: 1px solid var(--md-outline-variant);
+}
+
+/* The word on the right, its speaker on the left. */
+.wpop-head {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.wpop-head .wpop-word {
+  flex: 1;
+}
+
+.wpop-sound {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--md-primary);
+  cursor: pointer;
+}
+
+.wpop-sound:hover {
+  background: var(--md-surface-container-high);
+}
+
+.wpop-sound:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 1px;
+}
+
+.wpop-sound-note {
+  font-size: 0.75rem;
+  color: var(--md-on-surface-variant);
+}
+
+.wpop-sound-note:empty {
+  display: none;
 }
 
 .wpop-word {

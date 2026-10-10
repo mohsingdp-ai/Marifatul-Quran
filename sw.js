@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v27";
+const CACHE = "mq-v28";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -231,6 +231,26 @@ self.addEventListener("fetch", function (e) {
 
   // Never intercept GitHub API calls
   if (url.includes("api.github.com")) return;
+
+  // A tapped word's sound from quran.com, ~45 KB each. There are ~77k of them, so none is
+  // precached; each one heard is kept here for offline. The whole file is fetched, not the
+  // byte range the audio element asks for, so it can be stored and sliced like the rest.
+  if (url.indexOf("https://audio.qurancdn.com/wbw/") === 0) {
+    e.respondWith(
+      caches.open(AUDIO_CACHE).then(function (cache) {
+        return cache.match(url).then(function (cached) {
+          if (cached) return audioCacheResponse(cached, e.request);
+          return fetch(url).then(function (res) {
+            if (!res.ok) return res;
+            return cache.put(url, res.clone()).catch(function () { /* quota */ }).then(function () {
+              return audioCacheResponse(res, e.request);
+            });
+          });
+        });
+      })
+    );
+    return;
+  }
 
   // Audio files: serve from audio cache first, then network
   if (/\.(opus|ogg|wav)(\?|$)/i.test(url)) {
