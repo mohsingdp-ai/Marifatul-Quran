@@ -297,6 +297,10 @@ async function main() {
   if (mismatchAyat.length > 10) fail("...", (mismatchAyat.length - 10) + " more differences");
   for (const k of unmatchedByAyah.slice(0, 10)) fail(k, "a tapped word has no local match");
   if (unmatchedByAyah.length > 10) fail("...", (unmatchedByAyah.length - 10) + " more unmatched ayat");
+  Object.keys(noParts).forEach(function (k) {
+    for (const t of noParts[k].slice(0, 10)) fail(t + k, "a tapped word has no word parts");
+    if (noParts[k].length > 10) fail("...", (noParts[k].length - 10) + " more taps without word parts" + k);
+  });
 
   // --live: read a sample back from quran.com itself
   let liveChecked = 0;
