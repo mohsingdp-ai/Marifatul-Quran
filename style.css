@@ -213,6 +213,7 @@ html[lang="ur"] .para-picker-num {
    Nastaliq, as on Android), an Urdu page draws them in a tall Nastaliq that overruns its label. */
 html[lang="ur"] .para-picker-name,
 html[lang="ur"] .para-menu-name,
+html[lang="ur"] .hifz-meter-name,
 html[lang="ur"] .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
   font-family: "Noto Sans Arabic UI", var(--md-font-arabic);
 }
@@ -2647,71 +2648,105 @@ html[data-hifz="off"] .col-hifz {
   color: var(--md-on-secondary-container);
 }
 
-/* Per-Para memorization meter (signature element) */
+/* Per-para memorization card: a ring, the count beside it, and the para's name with the
+   overall count under it. The ring is the progressbar itself. */
 .hifz-meter {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-areas:
+    "ring head"
+    "ring counts";
+  align-items: center;
+  column-gap: 0.9rem;
   margin: 0 0 0.75rem;
-  padding: 0.6rem 0.9rem 0.65rem;
-  background: var(--md-surface-container-low);
-  border-radius: var(--md-shape-md);
+  padding: 0.75rem 1rem;
+  background: var(--md-card);
+  border-radius: var(--md-shape-lg);
+  box-shadow: var(--md-elevation-1);
 }
 
-/* Each label stays whole; on a narrow phone the overall count drops to its own line,
-   still flush right, rather than either sentence breaking in the middle. */
 .hifz-meter-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.1rem 0.75rem;
-  margin-bottom: 0.4rem;
-}
-
-.hifz-meter-para,
-.hifz-meter-total {
-  white-space: nowrap;
-}
-
-.hifz-meter-total {
-  margin-inline-start: auto;
+  grid-area: head;
+  min-width: 0;
 }
 
 .hifz-meter-para {
-  font-weight: 500;
-  font-size: 0.8125rem;
-  line-height: 1.25rem;
-  letter-spacing: 0.01em;
+  display: block;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 600;
   color: var(--md-on-surface);
 }
 
-.hifz-meter-total {
-  font-size: 0.75rem;
-  line-height: 1rem;
-  letter-spacing: 0.03em;
+.hifz-meter-sub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.375rem;
   color: var(--md-on-surface-variant);
   font-variant-numeric: tabular-nums;
 }
 
-/* Linear progress indicator */
-.hifz-meter-bar {
-  height: 6px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-highest);
-  overflow: hidden;
+.hifz-meter-name {
+  font-family: var(--md-font-arabic);
+  font-size: 1rem;
+  unicode-bidi: isolate;
 }
 
-.hifz-meter-fill {
+.hifz-meter-name:empty {
+  display: none;
+}
+
+.hifz-meter-name:not(:empty) + .hifz-meter-total::before {
+  content: "\00b7";
+  margin-inline-end: 0.5rem;
+}
+
+.hifz-meter-bar {
+  grid-area: ring;
+  width: 52px;
+  height: 52px;
+}
+
+.hifz-ring {
+  display: block;
+  width: 100%;
   height: 100%;
-  width: 0%;
-  border-radius: var(--md-shape-full);
-  background: var(--md-primary);
-  transition: width 0.35s var(--md-easing-emphasized);
+  /* The arc starts at twelve o'clock. */
+  transform: rotate(-90deg);
+}
+
+.hifz-ring circle {
+  fill: none;
+}
+
+/* The empty ring is a thin line in the outline tone (3:1 or more against the card in both
+   themes), so a para with nothing memorized still reads as a ring; the arc is thicker. */
+.hifz-ring-track {
+  stroke: var(--md-outline);
+  stroke-width: 2;
+}
+
+.hifz-ring-fill {
+  stroke: var(--md-primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 0 100;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hifz-ring-fill {
+    transition: stroke-dasharray 0.45s var(--md-easing-emphasized);
+  }
 }
 
 .hifz-meter-counts {
+  grid-area: counts;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.9rem;
-  margin-top: 0.5rem;
+  gap: 0.25rem 0.9rem;
 }
 
 .hifz-meter-counts:empty {
@@ -2723,22 +2758,11 @@ html[data-hifz="off"] .col-hifz {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.75rem;
-  line-height: 1rem;
+  line-height: 1.125rem;
   font-weight: 500;
-  letter-spacing: 0.03em;
-  color: var(--md-on-surface-variant);
+  color: var(--md-primary);
   font-variant-numeric: tabular-nums;
 }
-
-.hifz-count::before {
-  content: "";
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.hifz-count[data-kind="listened"] { color: var(--md-primary); }
 
 /* Export / import / reset buttons */
 .hifz-actions-row {

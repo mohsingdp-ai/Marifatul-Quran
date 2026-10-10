@@ -203,6 +203,8 @@
     var n = paraSelect.value;
     num.textContent = i18n("para.pickerNum", { n: n });
     name.textContent = paraName(n)[0];
+    var meterName = document.getElementById("hifz-meter-name");
+    if (meterName) meterName.textContent = paraName(n)[0];
     // The transliteration helps an English reader; in Urdu the Arabic name says it all.
     if (isUrdu()) name.removeAttribute("title");
     else name.title = paraName(n)[1];
@@ -673,8 +675,11 @@
       i18n("hifz.overall", { n: overall.memorized, total: overall.total });
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
+    // The ring's arc: pct of the circle's 100 path units. Nothing is drawn at 0, where a round
+    // cap would otherwise leave a dot; the track shows the empty ring.
     var fill = document.getElementById("hifz-meter-fill");
-    fill.style.width = pct + "%";
+    fill.style.strokeDasharray = pct + " 100";
+    fill.style.opacity = pct ? "1" : "0";
     var bar = meter.querySelector(".hifz-meter-bar");
     if (bar) bar.setAttribute("aria-valuenow", String(pct));
 
