@@ -3314,6 +3314,12 @@ tr.playing.audio-paused .audio-play-btn {
   z-index: 1;
 }
 
+/* A mushaf script still loading: dimmed until the switch or the note. */
+.settings-role-group .settings-role-btn.loading {
+  opacity: 0.6;
+  cursor: progress;
+}
+
 /* Selected segment carries a check, as the spec draws it. */
 .settings-role-group .settings-role-btn.active::before {
   content: "";

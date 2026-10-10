@@ -8,6 +8,18 @@
       // Hifz tracking on by default; set before first paint to avoid a flash of the meter/column.
       var h = localStorage.getItem("hifz_enabled");
       document.documentElement.setAttribute("data-hifz", h === "false" ? "off" : "on");
+      // The Indo-Pak mushaf (the default): fetch its text and font early; app.js switches once
+      // both are in. Uthmani readers skip them here (the service worker still keeps a copy).
+      if (localStorage.getItem("mushaf_script") !== "uthmani") {
+        [["asset/fonts/indopak-nastaleeq.woff2", "font"], ["verses-indopak.js", "script"]].forEach(function (f) {
+          var l = document.createElement("link");
+          l.rel = "preload";
+          l.href = f[0];
+          l.as = f[1];
+          if (f[1] === "font") { l.type = "font/woff2"; l.crossOrigin = "anonymous"; }
+          document.head.appendChild(l);
+        });
+      }
     })();
   </script>
   <meta charset="UTF-8">
@@ -25,9 +37,6 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <link rel="stylesheet" href="style.css">
-  <!-- The default Indo-Pak mushaf: app.js switches to it once both are in. -->
-  <link rel="preload" href="asset/fonts/indopak-nastaleeq.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="verses-indopak.js" as="script">
 </head>
 <body>
   <!-- Save corrected ayah timings without leaving the list. Only ever shown on a local run,
@@ -248,7 +257,7 @@
               <button type="button" class="btn btn-sm settings-role-btn active" data-mushaf-script="indopak">Indo-Pak</button>
               <button type="button" class="btn btn-sm settings-role-btn" data-mushaf-script="indopak-naskh">Indo-Pak Naskh</button>
             </div>
-            <p class="settings-hint" id="mushaf-script-note" aria-live="polite" hidden>Indo-Pak text needs internet once — showing Uthmani.</p>
+            <p class="settings-hint" id="mushaf-script-note" aria-live="polite" hidden>Indo-Pak couldn't load — showing Uthmani. It will try again when you pick it.</p>
           </div>
         </div>
 

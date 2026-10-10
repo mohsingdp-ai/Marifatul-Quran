@@ -42,10 +42,10 @@
 
   applyFontScale(getFontScale());
 
-  /* Mushaf script: the Indo-Pak text (verses-indopak.js, fetched here rather than up front
-     so it never holds up first paint) in its Nastaleeq font ("indopak", the default) or in
-     the Uthmani-style Naskh faces ("indopak-naskh"), or v4's Uthmani text (verses.js).
-     html[data-mushaf] says which is on screen; it switches only when that text and the
+  /* Mushaf script: the Indo-Pak text (verses-indopak.js, preloaded by index.html when Indo-Pak
+     is the choice and run from here, so it never holds up first paint) in its Nastaleeq font
+     ("indopak", the default) or in the Uthmani-style Naskh faces ("indopak-naskh"), or v4's
+     Uthmani text (verses.js). html[data-mushaf] says which is on screen; it switches only when that text and the
      Indo-Pak font (both faces draw its ayah ornaments) are in hand, so the ayat never show
      one script in another's style or as empty boxes. */
   var MUSHAF_SCRIPTS = ["uthmani", "indopak", "indopak-naskh"];
@@ -80,17 +80,26 @@
       var s = document.createElement("script");
       s.src = "verses-indopak.js";
       // A cut-off file loads without defining the text; drop it so the next try fetches again.
-      s.onload = function () { if (typeof QURAN_VERSES_INDOPAK === "undefined") { s.remove(); no(); } else ok(); };
-      s.onerror = function () { s.remove(); no(); };
+      s.onload = function () {
+        if (typeof QURAN_VERSES_INDOPAK !== "undefined") return ok();
+        s.remove();
+        no(new Error("verses-indopak.js loaded without its text"));
+      };
+      s.onerror = function () { s.remove(); no(new Error("verses-indopak.js failed to load")); };
       document.head.appendChild(s);
     });
     // Registered here rather than in style.css: a face that failed once stays failed, so a
     // retry needs a fresh one.
     if (!indoPakFace || indoPakFace.status === "error") {
+      if (indoPakFace) document.fonts.delete(indoPakFace);
       indoPakFace = new FontFace("IndoPak Nastaleeq", 'url("asset/fonts/indopak-nastaleeq.woff2") format("woff2")');
       document.fonts.add(indoPakFace);
     }
-    indoPakReady = Promise.all([text, indoPakFace.load()]);
+    // A stalled request would never settle; give up after a while so the next pick retries.
+    var timeout = new Promise(function (ok, no) {
+      setTimeout(function () { no(new Error("Indo-Pak text or font took over 15 s")); }, 15000);
+    });
+    indoPakReady = Promise.race([Promise.all([text, indoPakFace.load()]), timeout]);
     indoPakReady.catch(function () { indoPakReady = null; });
     return indoPakReady;
   }
@@ -109,10 +118,12 @@
   function applyMushafScript(render) {
     var want = getMushafScript();
     if (want !== "uthmani") {
-      // Offline before it was ever cached: stay on Uthmani with a note; the next pick retries.
+      // Offline before it was ever cached, a cut-off file or a failed font: stay on Uthmani
+      // with a note; the next pick retries.
       loadIndoPak().then(function () {
         if (getMushafScript() === want) showMushafScript(want, true);
-      }, function () {
+      }, function (err) {
+        console.warn("Indo-Pak mushaf not loaded:", err);
         if (getMushafScript() === want) showMushafScript("uthmani", true, true);
       });
       if (document.documentElement.getAttribute("data-mushaf")) return;
@@ -905,7 +916,7 @@
    * back out here; the font's other private-use glyphs are signs.
    */
   function wordSkeleton(tok) {
-    var s = tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
+    return tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
       .replace(/\uF668/g, "\u0641\u064A").replace(/\uF669/g, "\u0643\u064A")
       .replace(/\uF666/g, "\u062B\u0644\u062B\u064A")
       .replace(/\uF658/g, "\u0648\u0644\u064A\u062A\u0644\u0637\u0641")
@@ -913,9 +924,8 @@
       .replace(/[\u0649\u06CC\u0626]/g, "\u064A")
       .replace(/\u06A9/g, "\u0643")
       .replace(/\u0624/g, "\u0648")
-      .replace(/\s+/g, "");
-    // A word that is all alif (اُ before a ligature) must stay a word, not a mark.
-    return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
+      .replace(/\s+/g, "")
+      .replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "");
   }
 
   /*
@@ -4382,12 +4392,15 @@
   var fontSizeValue = document.getElementById("font-size-value");
   var mushafScriptGroup = document.getElementById("mushaf-script-group");
 
-  /** Lights the script on screen, which is the saved choice unless that one failed to load. */
+  /** Lights the script on screen, which is the saved choice unless that one is still loading
+      or failed to load. */
   function syncMushafScriptUI() {
     if (!mushafScriptGroup) return;
     var script = document.documentElement.getAttribute("data-mushaf");
     mushafScriptGroup.querySelectorAll("[data-mushaf-script]").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mushafScript === script);
+      btn.classList.remove("loading");
+      btn.removeAttribute("aria-busy");
     });
   }
 
@@ -4396,6 +4409,11 @@
     if (!btn) return;
     setMushafScript(btn.dataset.mushafScript);
     syncMushafScriptUI();
+    // Marked until the switch, or the note, clears it.
+    if (document.documentElement.getAttribute("data-mushaf") !== btn.dataset.mushafScript) {
+      btn.classList.add("loading");
+      btn.setAttribute("aria-busy", "true");
+    }
     applyMushafScript(true);
   });
 
