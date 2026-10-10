@@ -4273,6 +4273,11 @@ tr.playing.audio-paused .audio-play-btn {
   transform: translateX(-22px);
 }
 
+/* Previous / next para: the arrows point the way Urdu reads. */
+[dir="rtl"] .btn-para-step svg {
+  transform: scaleX(-1);
+}
+
 [dir="rtl"] .settings-speed-select {
   background-position: left 0.35rem center;
 }
