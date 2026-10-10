@@ -285,9 +285,10 @@
   };
 
   /*
-   * Tags the corpus uses for both a noun and a particle: مَنْ / كَيْفَ asking a question are
-   * اسمِ استفہام and مَن / أَيْنَ starting a condition are اسمِ شرط, where هَلْ and إِنْ are
-   * حروف; the لْ of فَلْيَصُمْهُ is لامِ امر, not a verb. Keyed "<tag>|<part of speech>".
+   * Tags the corpus puts on more than one part of speech: مَنْ / كَيْفَ asking a question
+   * are اسمِ استفہام and مَن / أَيْنَ starting a condition are اسمِ شرط, where هَلْ and إِنْ
+   * are حروف; the لْ of فَلْيَصُمْهُ is لامِ امر, not فعل امر. Keyed "<tag>|<part of speech>".
+   * The question أَ prefix is filed under N too; segmentLabel in app.js skips it.
    */
   var GRAMMAR_BY_POS = {
     "INTG|N": "اسمِ استفہام",

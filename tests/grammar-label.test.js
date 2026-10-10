@@ -33,7 +33,7 @@ test("noun and particle forms of one tag get their own names", () => {
   assert.strictEqual(labelOf("2:43:1", "IMPV"), "فعل امر");       // أَقِيمُوا۟
 });
 
-test("the split بَعْدَ مَا keeps بَعْدَ's case", () => {
+test("the joined بَعْدَ مَا keeps بَعْدَ's case", () => {
   for (const ref of ["2:181:3", "8:6:4", "13:37:8"]) assert.strictEqual(labelOf(ref, "T"), "ظرفِ زمان (منصوب)", ref);
 });
 

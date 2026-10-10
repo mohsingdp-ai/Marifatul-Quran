@@ -113,8 +113,9 @@ function packSegment(text, pos, featureStr) {
 }
 
 /*
- * Where the corpus file joins بَعْدَ مَا into one word (2:181, 8:6, 13:37), its بَعْدَ
- * lost the case every other بَعْدَ carries (2:120:19 and the rest: منصوب).
+ * Where the corpus file joins بَعْدَ مَا into one word (2:181, 8:6, 13:37), its بَعْدَ has
+ * no case, though every other بَعْدَ (59 of them, e.g. 2:120:19) is منصوب. بَعْدِ after مِن
+ * is مجرور, and the fixed بَعْدُ rightly has none.
  */
 const FEATURE_FIXES = {
   "2:181:3:1": "|ACC",
