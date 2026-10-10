@@ -8,8 +8,10 @@
  * Checks, for every ayah the app shows:
  *   1. the entry exists in the para file;
  *   2. every [text, transliteration, urdu] triple equals the quran.com source in .cache;
- *   3. every tappable word of verses.js finds its entry by the same skeleton match the
- *      app uses — otherwise the card would show no transliteration or Urdu for it.
+ *   3. every tappable word of verses.js, of verses-indopak.js (the Indo-Pak mushaf), and of
+ *      that text made plain for the Naskh faces (indopak-plain.js) finds its entry by the
+ *      same skeleton match the app uses — otherwise the card would show no transliteration
+ *      or Urdu for it. The plain text must keep no private-use glyph in its words.
  *
  * Source for 2 is .cache/urdu-wbw (what the build read); --live re-checks a sample
  * against api.quran.com so a stale cache cannot pass unnoticed.
@@ -25,6 +27,7 @@ const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
 const MORPH_DIR = path.join(ROOT, "asset", "morphology");
 const FIXES = path.join(ROOT, "word-gloss-fixes.csv");
 const LABELS = require("../morphology-labels.js").MQ_MORPH_UR;
+const { INDOPAK_PLAIN_SIGNS, indoPakPlainWords } = require("../indopak-plain.js");
 const STEMS = JSON.parse(fs.readFileSync(path.join(ROOT, "stem-meanings.json"), "utf8"));
 
 function readFixes() {
@@ -89,11 +92,41 @@ function paraAyahs() {
 
 /** The app's skeleton, copied so the check fails when the app's matching would. */
 function wordSkeleton(tok) {
-  return tok.replace(/[\u0654\u0655]/g, "\u0621")
-    .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF]/g, "")
-    .replace(/[\u0622\u0623\u0625\u0671]/g, "\u0627")
-    .replace(/\s+/g, "")
-    .trim();
+  var s = tok.replace(/[\uF664\uF665]/g, "\u0646\u062B\u064A").replace(/\uF667/g, "\u0644\u064A")
+    .replace(/\uF668/g, "\u0641\u064A").replace(/\uF669/g, "\u0643\u064A")
+    .replace(/\uF666/g, "\u062B\u0644\u062B\u064A")
+    .replace(/\uF658/g, "\u0648\u0644\u064A\u062A\u0644\u0637\u0641")
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED\u0640\u200B-\u200F\uFEFF\uE000-\uF8FF]/g, "")
+    .replace(/[\u0649\u06CC\u0626]/g, "\u064A")
+    .replace(/\u06A9/g, "\u0643")
+    .replace(/\u0624/g, "\u0648")
+    .replace(/\s+/g, "");
+  // A word that is all alif (اُ before a ligature) must stay a word, not a mark.
+  return s.replace(/[\u0621-\u0623\u0625\u0627\u0671]/g, "") || s;
+}
+
+/** The app's indoPakNaskhText, copied for the same reason. */
+function indoPakNaskhText(text) {
+  const words = text.split(/\s+/);
+  const end = [];
+  while (words.length && wordSkeleton(words[words.length - 1]) === "") end.unshift(words.pop());
+  return indoPakPlainWords(words.join(" ")) + (end.length ? " " + end.join(" ") : "");
+}
+
+/** The app's word-parts lookup (findWordSegments), copied for the same reason. */
+function findWordSegments(words, wordIndex, wordText) {
+  if (!words) return null;
+  const join = (segs) => segs.map((x) => x[0]).join("");
+  const target = wordSkeleton(wordText);
+  const atIndex = words[wordIndex];
+  if (atIndex && wordSkeleton(join(atIndex)) === target) return atIndex;
+  const holds = (seg) => !!seg && seg[0].split(/\s+/).some((p) => wordSkeleton(p) === target);
+  const before = words[wordIndex - 1];
+  if (atIndex && holds(atIndex[0])) return [atIndex[0]];
+  if (before && holds(before[before.length - 1])) return [before[before.length - 1]];
+  for (const w of words) if (wordSkeleton(join(w)) === target) return w;
+  if (atIndex && oneEditApart(wordSkeleton(join(atIndex)), target)) return atIndex;
+  return null;
 }
 
 /** The app's one-letter tolerance, copied for the same reason. */
@@ -151,6 +184,7 @@ function getJson(url) {
 async function main() {
   const { data, byPara } = paraAyahs();
   const verses = evalFile("verses.js", "QURAN_VERSES");
+  const indoPak = evalFile("verses-indopak.js", "QURAN_VERSES_INDOPAK");
 
   const files = {};
   for (const p of Object.keys(byPara)) {
@@ -184,6 +218,7 @@ async function main() {
   const missingAyat = [];
   const mismatchAyat = [];
   const unmatchedByAyah = [];
+  const noParts = { "": [], " (Indo-Pak)": [], " (Indo-Pak Naskh)": [] };
   const liveSample = [];
   const keyToPara = {};
 
@@ -215,19 +250,33 @@ async function main() {
         if (!t[2]) emptyGloss++;
       });
 
-      // 3. every tappable word of the app's own text must find its entry
-      const tokens = ayah.text.split(/\s+/).filter(function (t) { return t && wordSkeleton(t) !== ""; });
-      let ayahUnmatched = 0;
-      tokens.forEach(function (tok, i) {
-        const target = wordSkeleton(tok);
-        let hit = local.some(function (t) {
-          if (wordSkeleton(t[0]) === target) return true;
-          return t[0].split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+      // 3. every tappable word of the app's own text, in either script, must find its entry
+      if (!indoPak[key]) fail(key, "no Indo-Pak text in verses-indopak.js");
+      const ip = indoPak[key] || "";
+      const naskh = indoPakNaskhText(ip);
+      // Every private glyph in the words must have a plain form (the closing marks keep theirs).
+      const rawWords = ip.split(/\s+/);
+      while (rawWords.length && wordSkeleton(rawWords[rawWords.length - 1]) === "") rawWords.pop();
+      const unknown = [...rawWords.join(" ").replace("\uF65E\u0646\u064F\u0640", "")]
+        .filter((c) => c >= "\uE000" && c <= "\uF8FF" && !(c in INDOPAK_PLAIN_SIGNS));
+      if (unknown.length) {
+        fail(key, "Indo-Pak Naskh text keeps a private glyph: " + unknown.map((c) => "U+" + c.charCodeAt(0).toString(16)).join(" "));
+      }
+      [["", ayah.text], [" (Indo-Pak)", ip], [" (Indo-Pak Naskh)", naskh]].forEach(function (script) {
+        const tokens = script[1].split(/\s+/).filter(function (t) { return t && wordSkeleton(t) !== ""; });
+        let ayahUnmatched = 0;
+        tokens.forEach(function (tok, i) {
+          const target = wordSkeleton(tok);
+          let hit = local.some(function (t) {
+            if (wordSkeleton(t[0]) === target) return true;
+            return t[0].split(/\s+/).some(function (p) { return wordSkeleton(p) === target; });
+          });
+          if (!hit && local[i]) hit = oneEditApart(wordSkeleton(local[i][0]), target);
+          if (!hit) { unmatchedWords++; ayahUnmatched++; }
+          if (segs && !findWordSegments(segs, i, tok)) noParts[script[0]].push(key + " " + tok);
         });
-        if (!hit && local[i]) hit = oneEditApart(wordSkeleton(local[i][0]), target);
-        if (!hit) { unmatchedWords++; ayahUnmatched++; }
+        if (ayahUnmatched) unmatchedByAyah.push(key + script[0]);
       });
-      if (ayahUnmatched) unmatchedByAyah.push(key);
 
       if (liveSample.length < liveCount && ayatChecked % Math.max(1, Math.floor(6236 / liveCount)) === 0) {
         liveSample.push({ key: key, local: local });
@@ -272,6 +321,10 @@ async function main() {
   console.log("ayat differing source:   " + mismatchAyat.length);
   console.log("ayat with unmatched tap: " + unmatchedByAyah.length + "   (" + unmatchedWords + " words)");
   console.log("unexpected extra keys:   " + extraKeys);
+  Object.keys(noParts).forEach(function (k) {
+    console.log("taps without word parts" + (k || " (Uthmani)") + ": " + noParts[k].length +
+      (noParts[k].length ? "   " + noParts[k].slice(0, 6).join(", ") : ""));
+  });
   if (liveCount) console.log("live quran.com sampled:  " + liveChecked + " ayat");
 
   if (!problems.length) {
