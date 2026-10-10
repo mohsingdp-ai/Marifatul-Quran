@@ -54,6 +54,7 @@
   --md-app-bar: linear-gradient(135deg, #0a3d3d 0%, #0d4f4f 45%, #0f6060 100%);
   --md-on-app-bar: #ffffff;
   --md-app-bar-subtitle: rgba(255, 255, 255, 0.78);
+  --md-app-bar-edge: #0a3d3d;
 
   /* Surfaces by job. "Raised" is the brightest tone in light and the lightest container in
      dark, so a raised thing reads as closer in both themes. */
@@ -157,6 +158,7 @@ html[data-theme="dark"] {
   --md-app-bar: linear-gradient(135deg, #062a2a 0%, #0a3d3d 50%, #0d4f4f 100%);
   --md-on-app-bar: #ffffff;
   --md-app-bar-subtitle: rgba(255, 255, 255, 0.75);
+  --md-app-bar-edge: #062a2a;
 
   --md-card: var(--md-surface-container);
   --md-raised: var(--md-surface-container-high);
@@ -365,7 +367,7 @@ button {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transform: rotate(-8deg);
-  box-shadow: 0 0 0 2px #0a3d3d;
+  box-shadow: 0 0 0 2px var(--md-app-bar-edge);
   pointer-events: none;
 }
 
@@ -1100,15 +1102,13 @@ body.has-docked-player {
 }
 
 .btn-primary,
-.btn-secondary,
-.btn-offline-para {
+.btn-secondary {
   background: var(--md-primary);
   color: var(--md-on-primary);
 }
 
 .btn-primary:hover:not(:disabled),
-.btn-secondary:hover:not(:disabled),
-.btn-offline-para:hover:not(:disabled) {
+.btn-secondary:hover:not(:disabled) {
   background: color-mix(in srgb, var(--md-on-primary) 8%, var(--md-primary));
   box-shadow: var(--md-elevation-1);
 }
@@ -1167,6 +1167,8 @@ body.has-docked-player {
 .modal.is-open {
   visibility: visible;
   opacity: 1;
+  /* Visible at once on open (it fades in), so focus can move inside straight away. */
+  transition: visibility 0s, opacity var(--md-duration-medium) var(--md-easing-standard);
 }
 
 .modal-backdrop {
@@ -1193,6 +1195,11 @@ body.has-docked-player {
 
 .modal.is-open .modal-content {
   transform: scale(1);
+}
+
+/* Focus lands on the dialog box when it opens, so a screen reader starts there. */
+.modal-content:focus {
+  outline: none;
 }
 
 .modal-content-wide {
@@ -2523,8 +2530,9 @@ html[data-hifz="off"] .col-hifz {
   border: none;
   border-radius: var(--md-shape-full);
   background: transparent;
-  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. */
-  color: color-mix(in srgb, var(--md-on-surface) 40%, transparent);
+  /* Greyed out until the ruku is memorized: the green belongs to the done state alone. The
+     outline tone still clears 3:1, so the empty circle reads as a control. */
+  color: var(--md-outline);
   cursor: pointer;
   touch-action: manipulation;
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard), transform var(--md-duration-short) var(--md-easing-emphasized);
@@ -2532,7 +2540,7 @@ html[data-hifz="off"] .col-hifz {
 
 .hifz-mark:hover {
   background: color-mix(in srgb, var(--md-on-surface) 8%, transparent);
-  color: color-mix(in srgb, var(--md-on-surface) 55%, transparent);
+  color: var(--md-on-surface-variant);
 }
 
 .hifz-mark:active {
@@ -3226,10 +3234,6 @@ tr.playing.audio-paused .audio-play-btn {
     max-height: none;
     overflow-y: auto;
   }
-
-  .settings-actions {
-    border-radius: 0;
-  }
 }
 
 /* Very small phones */
@@ -3676,20 +3680,6 @@ tr.playing.audio-paused .audio-play-btn {
   font-weight: 500;
 }
 
-.settings-actions {
-  margin-top: 0;
-  padding: 0.75rem 1.5rem 1.25rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.settings-actions .btn {
-  min-height: 40px;
-  min-width: 80px;
-  touch-action: manipulation;
-}
-
 /* ------------------------------------------------------------------ */
 /* First-run guided walkthrough overlay (mirrors native GuideOverlay)  */
 /* ------------------------------------------------------------------ */
@@ -4004,8 +3994,15 @@ tr.playing.audio-paused .audio-play-btn {
 .ruku-table .audio-offline-btn { grid-area: dl; }
 
 /* Rows with nothing to play still need their cell's children placed. */
-.ruku-table .no-recording,
-.ruku-table .path-not-found { grid-area: play; white-space: nowrap; }
+.ruku-table .no-recording { grid-area: play; white-space: nowrap; }
+
+/* A recording that failed to load: Retry takes the play button's place, so the title keeps
+   its left edge, and the reason gets the card's full width below. */
+.ruku-table .audio-cell .path-not-found {
+  grid-area: tx;
+  justify-self: start;
+  margin-top: 0.5rem;
+}
 
 /* A card with no recording put a text chip where every other card has its play button,
    which started its title at a different left edge than the cards above and below it.
@@ -4031,7 +4028,14 @@ tr.playing.audio-paused .audio-play-btn {
   color: var(--md-on-surface-variant);
 }
 
-.ruku-table .audio-retry-btn { grid-area: wa; }
+.ruku-table .audio-cell .audio-retry-btn {
+  grid-area: play;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+}
 
 .ruku-table .audio-controls {
   grid-area: tx;
@@ -4048,7 +4052,8 @@ tr.playing.audio-paused .audio-play-btn {
 .ruku-table tr.playing .audio-speed-btn,
 .ruku-table tr.playing .audio-time,
 .ruku-table tr.playing .audio-share-wa-btn,
-.ruku-table tr.playing .audio-offline-btn:not(.is-saved) {
+.ruku-table tr.playing .audio-offline-btn:not(.is-saved),
+.ruku-table tr.playing .hifz-mark:not([aria-pressed="true"]) {
   color: var(--md-on-secondary-container);
 }
 
@@ -4185,6 +4190,56 @@ tr.playing.audio-paused .audio-play-btn {
   .ruku-table .hifz-mark svg {
     width: 22px;
     height: 22px;
+  }
+}
+
+/* ================================================================== */
+/* Touch targets                                                       */
+/* ================================================================== */
+/* On a touch screen every control is at least 44px, so a thumb lands on what it meant to.
+   The glyphs keep their size; only the target around them grows. Mouse layouts keep their
+   denser sizes. */
+@media (pointer: coarse) {
+  .btn-toolbar-menu,
+  .modal-close-btn,
+  .btn-toolbar-transport,
+  .btn-toolbar-locate,
+  .ruku-table .audio-share-wa-btn,
+  .ruku-table .audio-offline-btn,
+  .ruku-table .hifz-mark,
+  .ruku-table .audio-seek-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .verses-toggle,
+  .settings-form .btn,
+  .settings-speed-select {
+    min-height: 44px;
+  }
+
+  .settings-volume-range {
+    height: 44px;
+  }
+
+  /* 44px square around the same 1em glyph. The negative margins give back what the target
+     added, so the glyph and the first word stay where they were. */
+  .ayah-play {
+    min-width: 44px;
+    min-height: 44px;
+    margin-block: -0.5rem;
+    margin-inline: calc(-0.5rem - 1px) calc(0.3rem - 0.5rem - 1px);
+  }
+}
+
+/* On a phone the icon column sets the card's height; its 44px targets carry their own air,
+   so the card's padding steps back. */
+@media (pointer: coarse) and (max-width: 640px) {
+  .ruku-table tbody tr[data-global-index] {
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 }
 

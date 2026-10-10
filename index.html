@@ -134,7 +134,7 @@
           </select>
           <button type="button" class="para-picker-face" id="para-picker-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="para-menu" title="Choose a para">
             <span class="para-picker-num" id="para-picker-num">Para 1</span>
-            <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
+            <span class="para-picker-name" id="para-picker-name" lang="ar" dir="rtl"></span>
           </button>
           <div class="para-menu" id="para-menu" role="listbox" aria-label="Choose a para" hidden></div>
           </div>
@@ -208,9 +208,9 @@
   <!-- Settings Modal -->
   <div class="modal" id="settings-modal">
     <div class="modal-backdrop" id="settings-modal-backdrop"></div>
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title" tabindex="-1">
       <div class="modal-header">
-        <h2 class="modal-title">Settings</h2>
+        <h2 class="modal-title" id="settings-modal-title">Settings</h2>
         <button type="button" class="modal-close-btn" id="settings-close-btn" aria-label="Close">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
@@ -438,6 +438,12 @@
               <span class="download-all-status" id="download-all-status"></span>
             </div>
           </div>
+          <div class="settings-row">
+            <p class="settings-hint">Frees space on this phone. Saved recordings will need downloading again.</p>
+            <div class="hifz-actions-row">
+              <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">Clear Cache</button>
+            </div>
+          </div>
         </div>
 
         <!-- Admin -->
@@ -452,16 +458,13 @@
           </div>
         </div>
       </div>
-      <div class="settings-actions">
-        <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn">Clear Cache</button>
-      </div>
     </div>
   </div>
 
   <!-- Share Para rukus as audio files + caption (one per share) -->
   <div class="modal" id="share-para-file-modal" aria-hidden="true">
     <div class="modal-backdrop" id="share-para-file-modal-backdrop"></div>
-    <div class="modal-content">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="share-para-file-modal-title" tabindex="-1">
       <div class="modal-header">
         <h2 class="modal-title" id="share-para-file-modal-title">Share as file</h2>
         <button type="button" class="modal-close-btn" id="share-para-file-close-btn" aria-label="Close">
@@ -485,7 +488,7 @@
   <!-- Share multiple ruku player links as one text block (?para= & ruku=) -->
   <div class="modal" id="share-bulk-links-modal" aria-hidden="true">
     <div class="modal-backdrop" id="share-bulk-links-modal-backdrop"></div>
-    <div class="modal-content modal-content-wide share-bulk-links-sheet">
+    <div class="modal-content modal-content-wide share-bulk-links-sheet" role="dialog" aria-modal="true" aria-labelledby="share-bulk-links-modal-title" tabindex="-1">
       <div class="modal-header">
         <h2 class="modal-title" id="share-bulk-links-modal-title">Share ruku links</h2>
         <button type="button" class="modal-close-btn" id="share-bulk-links-close-btn" aria-label="Close">

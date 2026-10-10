@@ -3151,7 +3151,7 @@
           cell.innerHTML = "";
           var msg = document.createElement("span");
           msg.className = "path-not-found";
-          msg.textContent = "Path Not found";
+          msg.textContent = "Audio didn't load. Check your internet, then tap Retry.";
           cell.appendChild(msg);
           cell.appendChild(buildAudioRetryBtn(gi));
         }
@@ -4509,13 +4509,19 @@
   var fontSizeValue = document.getElementById("font-size-value");
   var mushafScriptGroup = document.getElementById("mushaf-script-group");
 
+  /** Marks one segment of a Settings button group as chosen, for the eye and for screen readers. */
+  function setActive(btn, on) {
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+
   /** Lights the script on screen, which is the saved choice unless that one is still loading
       or failed to load. */
   function syncMushafScriptUI() {
     if (!mushafScriptGroup) return;
     var script = document.documentElement.getAttribute("data-mushaf");
     mushafScriptGroup.querySelectorAll("[data-mushaf-script]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.mushafScript === script);
+      setActive(btn, btn.dataset.mushafScript === script);
       btn.classList.remove("loading");
       btn.removeAttribute("aria-busy");
     });
@@ -4590,13 +4596,59 @@
     }
   }
 
+  /*
+   * The three dialogs (Settings and the two share sheets) behave as dialogs: opening one moves
+   * focus inside, Tab stays inside, Escape closes it, and closing hands focus back to the
+   * control that opened it -- the menu button, when that control was a menu item.
+   */
+  var dialogOpener = null;
+
+  function focusDialog(modal) {
+    hideWordPopover();
+    var opener = document.activeElement;
+    var menuWrap = opener && opener.closest ? opener.closest(".toolbar-menu-wrap") : null;
+    dialogOpener = menuWrap ? menuWrap.querySelector(".btn-toolbar-menu") : opener;
+    var box = modal.querySelector(".modal-content");
+    if (box) box.focus();
+  }
+
+  function restoreDialogFocus() {
+    var el = dialogOpener;
+    dialogOpener = null;
+    if (el && el.focus && document.contains(el)) el.focus();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var open = document.querySelector(".modal.is-open");
+    if (!open) return;
+    if (e.key === "Escape") {
+      var close = open.querySelector(".modal-close-btn");
+      if (close) close.click();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var stops = Array.prototype.filter.call(
+      open.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])"),
+      function (el) { return !el.disabled && el.getClientRects().length > 0; });
+    if (!stops.length) return;
+    var first = stops[0];
+    var last = stops[stops.length - 1];
+    var at = document.activeElement;
+    if (!open.contains(at) || (e.shiftKey && at === first) || (!e.shiftKey && at === last)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+    }
+  });
+
   function openSettings() {
     syncSettingsUI();
     settingsModal.classList.add("is-open");
+    focusDialog(settingsModal);
   }
 
   function closeSettings() {
     settingsModal.classList.remove("is-open");
+    restoreDialogFocus();
     // Save token if admin
     if (isAdmin() && ghTokenInput) {
       var val = ghTokenInput.value.trim();
@@ -4614,8 +4666,8 @@
     if (prefWordTable) prefWordTable.checked = wordTableEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
-    roleUserBtn.classList.toggle("active", !admin);
-    roleAdminBtn.classList.toggle("active", admin);
+    setActive(roleUserBtn, !admin);
+    setActive(roleAdminBtn, admin);
     roleBadge.textContent = admin ? "Admin" : "User";
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
     adminSection.style.display = admin ? "" : "none";
@@ -4626,7 +4678,7 @@
     toggleRuku.checked = getShowOnlyRecordedRuku();
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.mode === mode);
+      setActive(btn, btn.dataset.mode === mode);
     });
     speedSelect.value = String(getDefaultSpeed());
     syncVolumeUI();
@@ -4635,7 +4687,7 @@
     var th = getUiTheme();
     if (themeModeGroup) {
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
-        btn.classList.toggle("active", btn.dataset.uiTheme === th);
+        setActive(btn, btn.dataset.uiTheme === th);
       });
     }
     if (prefMediaNotif) {
@@ -4868,7 +4920,7 @@
     if (!btn) return;
     setPlaybackMode(btn.dataset.mode);
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (b) {
-      b.classList.toggle("active", b === btn);
+      setActive(b, b === btn);
     });
   });
 
@@ -4884,7 +4936,7 @@
       setUiTheme(next);
       applyUiTheme(next);
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (b) {
-        b.classList.toggle("active", b === btn);
+        setActive(b, b === btn);
       });
     });
   }
@@ -5460,12 +5512,14 @@
     populateShareBulkLinksModal(paraNum);
     shareBulkModal.classList.add("is-open");
     shareBulkModal.setAttribute("aria-hidden", "false");
+    focusDialog(shareBulkModal);
   }
 
   function closeShareBulkLinksModal() {
     if (!shareBulkModal) return;
     shareBulkModal.classList.remove("is-open");
     shareBulkModal.setAttribute("aria-hidden", "true");
+    restoreDialogFocus();
     if (shareBulkListEl) shareBulkListEl.textContent = "";
   }
 
@@ -5598,12 +5652,14 @@
     updateShareFileModal();
     shareFileModal.classList.add("is-open");
     shareFileModal.setAttribute("aria-hidden", "false");
+    focusDialog(shareFileModal);
   }
 
   function closeShareFileModal() {
     if (!shareFileModal) return;
     shareFileModal.classList.remove("is-open");
     shareFileModal.setAttribute("aria-hidden", "true");
+    restoreDialogFocus();
     shareFileItems = [];
   }
 
