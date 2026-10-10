@@ -261,28 +261,6 @@
           </div>
         </div>
 
-        <!-- Filters -->
-        <div class="settings-group">
-          <div class="settings-group-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filters
-          </div>
-          <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Show only recorded Para</span>
-              <input type="checkbox" id="show-only-recorded-para" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-          </div>
-          <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Show only recorded Ruku</span>
-              <input type="checkbox" id="show-only-recorded-ruku" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-          </div>
-        </div>
-
         <!-- Ayat -->
         <div class="settings-group">
           <div class="settings-group-header">
@@ -290,15 +268,20 @@
             Ayat
           </div>
           <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Tap a word for its meaning</span>
-              <input type="checkbox" id="pref-word-meanings" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-            <p class="settings-hint">
-              Splits the word into its pieces with an Urdu meaning and its grammar for each.
-              The para's word data loads once, then works offline.
-            </p>
+            <label>Word meanings <span class="settings-role-badge">Experimental</span></label>
+            <span class="settings-hint" id="word-meanings-tap-label">When you tap a word</span>
+            <div class="settings-role-group" id="word-meanings-group" role="group" aria-labelledby="word-meanings-tap-label">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-word-meanings="off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="simple">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-word-meanings="grammar">+ Grammar</button>
+            </div>
+            <span class="settings-hint" id="ayah-words-label">Always, under each ayah</span>
+            <div class="settings-role-group" id="ayah-words-group" role="group" aria-labelledby="ayah-words-label">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-ayah-words="off">Off</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="simple">Meaning</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-ayah-words="grammar">+ Grammar</button>
+            </div>
+            <p class="settings-hint">Meaning: the Urdu. + Grammar: its parts and grammar too.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
@@ -306,20 +289,7 @@
               <input type="checkbox" id="pref-word-sound" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">
-              Says the tapped word as quran.com recites it, pausing the lesson for a moment.
-              The speaker in the word box plays it again. Needs internet the first time.
-            </p>
-          </div>
-          <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Meaning under every word <span class="settings-role-badge">Experimental</span></span>
-              <input type="checkbox" id="pref-word-gloss" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-            <p class="settings-hint">
-              Prints the Urdu meaning under each Arabic word. Ayat take about twice the space.
-            </p>
+            <p class="settings-hint">Says the word as quran.com recites it. Needs internet the first time.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
@@ -327,21 +297,7 @@
               <input type="checkbox" id="pref-ayah-gloss-switch" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">
-              Puts this button beside each ayah's play button. Tap it to show or hide that ayah's
-              word meanings, so you can test yourself. Each ayah starts as the setting above says.
-            </p>
-          </div>
-          <div class="settings-row">
-            <label class="settings-toggle-label">
-              <span class="settings-toggle-text">Word cards under each ayah <span class="settings-role-badge">Experimental</span></span>
-              <input type="checkbox" id="pref-word-table" />
-              <span class="settings-toggle-switch"></span>
-            </label>
-            <p class="settings-hint">
-              A card for every word: its meaning, what each of its parts means, and their grammar.
-              With the meaning switch on, the switch hides or shows each ayah's cards.
-            </p>
+            <p class="settings-hint">A button by each ayah to hide or show its meanings, to test yourself.</p>
           </div>
           <div class="settings-row">
             <label class="settings-toggle-label">
@@ -349,9 +305,7 @@
               <input type="checkbox" id="pref-translation" />
               <span class="settings-toggle-switch"></span>
             </label>
-            <p class="settings-hint">
-              Shows Tafheem-ul-Quran's Urdu translation under each ayah. Loads once per para, then works offline.
-            </p>
+            <p class="settings-hint">The whole ayah's meaning, under it.</p>
           </div>
         </div>
 
