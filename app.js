@@ -42,25 +42,25 @@
 
   applyFontScale(getFontScale());
 
-  /* Mushaf script: v4's Uthmani text (verses.js), or the Indo-Pak one (verses-indopak.js,
-     fetched only once picked) in its Nastaleeq font ("indopak") or in the Uthmani-style
-     Naskh faces ("indopak-naskh"). html[data-mushaf] says which is on screen; it switches
-     only when that text is in hand, so the ayat never show one script in another's style. */
+  /* Mushaf script: the Indo-Pak text (verses-indopak.js, fetched here rather than up front
+     so it never holds up first paint) in its Nastaleeq font ("indopak", the default) or in
+     the Uthmani-style Naskh faces ("indopak-naskh"), or v4's Uthmani text (verses.js).
+     html[data-mushaf] says which is on screen; it switches only when that text is in hand,
+     so the ayat never show one script in another's style. */
   var MUSHAF_SCRIPTS = ["uthmani", "indopak", "indopak-naskh"];
 
   function getMushafScript() {
     try {
       var s = localStorage.getItem("mushaf_script");
-      return MUSHAF_SCRIPTS.indexOf(s) > 0 ? s : "uthmani";
+      return MUSHAF_SCRIPTS.indexOf(s) >= 0 ? s : "indopak";
     } catch (e) {
-      return "uthmani";
+      return "indopak";
     }
   }
 
   function setMushafScript(script) {
     try {
-      if (MUSHAF_SCRIPTS.indexOf(script) > 0) localStorage.setItem("mushaf_script", script);
-      else localStorage.removeItem("mushaf_script");
+      if (MUSHAF_SCRIPTS.indexOf(script) >= 0) localStorage.setItem("mushaf_script", script);
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
