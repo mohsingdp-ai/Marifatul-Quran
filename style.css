@@ -25,6 +25,22 @@
   font-display: swap;
 }
 
+/* The Urdu interface: a clear Naskh-style sans for buttons and labels (Rubik has no Arabic
+   letters, so Urdu text falls through to it). The mushaf keeps its own faces. */
+@font-face {
+  font-family: "Noto Sans Arabic UI";
+  src: url("asset/fonts/noto-sans-arabic-400.woff2") format("woff2");
+  font-weight: 400 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans Arabic UI";
+  src: url("asset/fonts/noto-sans-arabic-600.woff2") format("woff2");
+  font-weight: 600 700;
+  font-display: swap;
+}
+
 /* ================================================================== */
 /* Design tokens                                                       */
 /* ================================================================== */
@@ -113,7 +129,7 @@
   --md-duration-medium: 300ms;
 
   /* --- Type --- */
-  --md-font: "Rubik", system-ui, sans-serif;
+  --md-font: "Rubik", "Noto Sans Arabic UI", system-ui, sans-serif;
   --md-font-arabic: "Traditional Arabic", "Scheherazade New", "Amiri", "Noto Naskh Arabic", serif;
   /* The ayat themselves. Indo-Pak text (Settings > Mushaf script) swaps this below. */
   --mushaf-font: var(--md-font-arabic);
@@ -202,6 +218,11 @@ html[data-theme="dark"] {
 /* ================================================================== */
 /* Base                                                                */
 /* ================================================================== */
+/* An Urdu reader's page waits for its words (i18n.js shows it), so English never flashes. */
+html.i18n-pending body {
+  visibility: hidden;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -356,7 +377,7 @@ button {
 .header-install-badge {
   position: absolute;
   top: 8px;
-  right: 7px;
+  inset-inline-end: 7px;
   width: 9px;
   height: 9px;
   border-radius: 50%;
@@ -839,7 +860,7 @@ body.has-docked-player {
 .toolbar-menu-dropdown {
   display: none;
   position: absolute;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + 6px);
   min-width: 200px;
   padding: 0.5rem 0;
@@ -882,7 +903,7 @@ body.has-docked-player {
   font-weight: 500;
   letter-spacing: 0.01em;
   cursor: pointer;
-  text-align: left;
+  text-align: start;
   transition: background var(--md-duration-short) var(--md-easing-standard);
   touch-action: manipulation;
 }
@@ -1388,7 +1409,7 @@ body.has-docked-player {
 .share-bulk-links-count {
   font-size: 0.8125rem;
   color: var(--md-on-surface-variant);
-  margin-left: auto;
+  margin-inline-start: auto;
   font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -1422,7 +1443,8 @@ body.has-docked-player {
   width: 100%;
   min-height: 52px;
   height: auto;
-  padding: 0.8rem 2.75rem 0.8rem 1rem;
+  padding-block: 0.8rem;
+  padding-inline: 1rem 2.75rem;
   margin: 0;
   border: none;
   border-radius: var(--md-shape-md);
@@ -1431,7 +1453,7 @@ body.has-docked-player {
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.4;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   box-sizing: border-box;
   transition: border-color var(--md-duration-short), box-shadow var(--md-duration-short), background var(--md-duration-short), transform 0.1s;
@@ -1455,7 +1477,7 @@ body.has-docked-player {
   content: "";
   position: absolute;
   top: 50%;
-  right: 14px;
+  inset-inline-end: 14px;
   margin-top: -10px;
   width: 20px;
   height: 20px;
@@ -1590,11 +1612,11 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .verses-plain .verses-label,
 .verses-plain .verses-sep {
-  margin-right: 0.3em;
+  margin-inline-end: 0.3em;
 }
 
 .verses-plain .verses-sep {
-  margin-left: 0.3em;
+  margin-inline-start: 0.3em;
 }
 
 /* The ruku is a tag after the surah, and never breaks inside its own hyphen. */
@@ -1604,7 +1626,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--md-on-surface-variant);
-  margin-left: 0.35rem;
+  margin-inline-start: 0.35rem;
 }
 
 .ruku-table tr.playing .col-ruku-tag {
@@ -1652,7 +1674,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 
 .verses-toggle-chevron {
   flex: none;
-  margin-left: -0.1rem;
+  margin-inline-start: -0.1rem;
   opacity: 0.8;
   transition: transform var(--md-duration-short) var(--md-easing-standard);
 }
@@ -2191,7 +2213,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
    is something to save. */
 .timing-save-bar {
   position: fixed;
-  right: 1rem;
+  inset-inline-end: 1rem;
   bottom: calc(5.5rem + env(safe-area-inset-bottom));
   z-index: 95;
   display: flex;
@@ -2333,7 +2355,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 }
 
 .ruku-check {
-  margin-left: 0.4rem;
+  margin-inline-start: 0.4rem;
   font-weight: 600;
 }
 
@@ -2542,7 +2564,7 @@ html[data-hifz="off"] .col-hifz {
 
 .hifz-meter-name:not(:empty) + .hifz-meter-total::before {
   content: "\00b7";
-  margin-right: 0.5rem;
+  margin-inline-end: 0.5rem;
 }
 
 .hifz-meter-bar {
@@ -2919,7 +2941,7 @@ html[data-hifz="off"] .col-hifz {
     vertical-align: middle;
   }
   .action-cell > * + * {
-    margin-left: 6px;
+    margin-inline-start: 6px;
   }
   /* Needs to outrank the later `.validate-label { display: flex }`, which would otherwise
      drop the pill onto its own line now that the cell is no longer a flex container. */
@@ -2980,7 +3002,7 @@ html[data-hifz="off"] .col-hifz {
 }
 
 .audio-cell .audio-retry-btn {
-  margin-left: 0.4rem;
+  margin-inline-start: 0.4rem;
   min-height: 32px;
   padding: 0 0.8rem;
   font: inherit;
@@ -3303,13 +3325,13 @@ html[data-hifz="off"] .col-hifz {
   content: "";
   position: absolute;
   top: 50%;
-  left: 6px;
+  inset-inline-start: 6px;
   width: 16px;
   height: 16px;
   margin-top: -8px;
   border-radius: 50%;
   background: var(--md-outline);
-  transition: transform var(--md-duration-short) var(--md-easing-emphasized), width var(--md-duration-short) var(--md-easing-standard), height var(--md-duration-short) var(--md-easing-standard), margin var(--md-duration-short) var(--md-easing-standard), left var(--md-duration-short) var(--md-easing-standard), background var(--md-duration-short) var(--md-easing-standard);
+  transition: transform var(--md-duration-short) var(--md-easing-emphasized), width var(--md-duration-short) var(--md-easing-standard), height var(--md-duration-short) var(--md-easing-standard), margin var(--md-duration-short) var(--md-easing-standard), inset-inline-start var(--md-duration-short) var(--md-easing-standard), background var(--md-duration-short) var(--md-easing-standard);
 }
 
 /* Check glyph, laid over the handle's "on" position. */
@@ -3317,7 +3339,7 @@ html[data-hifz="off"] .col-hifz {
   content: "";
   position: absolute;
   top: 50%;
-  left: 28px;
+  inset-inline-start: 28px;
   width: 16px;
   height: 16px;
   margin-top: -8px;
@@ -3342,7 +3364,7 @@ html[data-hifz="off"] .col-hifz {
   width: 24px;
   height: 24px;
   margin-top: -12px;
-  left: 2px;
+  inset-inline-start: 2px;
   transform: translateX(22px);
   background: var(--md-on-primary);
 }
@@ -3564,7 +3586,7 @@ html[data-hifz="off"] .col-hifz {
 }
 
 .mq-guide-step-label {
-  margin-right: auto;
+  margin-inline-end: auto;
   color: var(--md-on-surface-variant);
   font-size: 0.8125rem;
   line-height: 1.25rem;
@@ -3722,25 +3744,25 @@ html[data-hifz="off"] .col-hifz {
 }
 
 .ruku-table tr:has(.hifz-plays:not([hidden])) .col-ruku::after {
-  content: "Heard" / "";
+  content: var(--str-heard, "Heard") / "";
   background: var(--md-surface-container-high);
   color: var(--md-on-surface-variant);
 }
 
 .ruku-table tr:has(.hifz-mark[aria-pressed="true"]) .col-ruku::after {
-  content: "Memorized" / "";
+  content: var(--str-memorized, "Memorized") / "";
   background: var(--md-success-container);
   color: var(--md-on-success-container);
 }
 
 .ruku-table tbody tr.playing[data-global-index] .col-ruku::after {
-  content: "Playing" / "";
+  content: var(--str-playing, "Playing") / "";
   background: var(--calm-playing);
   color: var(--calm-on-playing);
 }
 
 .ruku-table tbody tr.playing.audio-paused[data-global-index] .col-ruku::after {
-  content: "Paused" / "";
+  content: var(--str-paused, "Paused") / "";
   background: var(--md-surface-container);
   color: var(--md-on-surface-variant);
 }
@@ -3795,12 +3817,10 @@ html[data-hifz="off"] .col-hifz {
   height: 20px;
 }
 
+/* The word is the button's own aria-label, which playback keeps in step and in the app's
+   language. */
 .ruku-table .audio-play-btn::after {
-  content: "Play" / "";
-}
-
-.ruku-table .audio-play-btn[aria-label="Pause"]::after {
-  content: "Pause" / "";
+  content: attr(aria-label) / "";
 }
 
 .ruku-table .audio-play-btn:hover {
@@ -3820,7 +3840,7 @@ html[data-hifz="off"] .col-hifz {
 .ruku-table .col-verses {
   grid-area: verses;
   justify-self: start;
-  margin-left: 0.4rem;
+  margin-inline-start: 0.4rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--md-on-surface-variant);
@@ -3984,6 +4004,43 @@ html[data-hifz="off"] .col-hifz {
   .ruku-table tbody tr[data-global-index] {
     padding: 1rem 0.75rem 0.5rem 1.25rem;
   }
+}
+
+/* ================================================================== */
+/* Urdu: right to left                                                 */
+/* ================================================================== */
+/* Grid and flex rows mirror by themselves; these are the pieces that need telling. */
+[dir="rtl"] .toolbar-menu-dropdown {
+  transform-origin: top left;
+}
+
+[dir="rtl"] .toolbar-bottom .toolbar-menu-dropdown {
+  transform-origin: bottom left;
+}
+
+[dir="rtl"] .settings-toggle-label input:checked + .settings-toggle-switch::after {
+  transform: translateX(-22px);
+}
+
+/* Media controls keep their direction: back on the left, forward on the right, time left
+   to right along the scrubber. */
+.audio-controls,
+.audio-progress-wrap,
+.toolbar-progress-bar {
+  direction: ltr;
+}
+
+/* Ayah ranges and keys read left to right inside Urdu text ("1–7", not "7–1"). */
+.verses-part,
+.share-bulk-links-tile-verses {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* The Urdu card names the surah in Arabic only. */
+[lang="ur"] .ruku-table .col-surah .card-surah,
+[lang="ur"] .ruku-table .col-surah .card-sep {
+  display: none;
 }
 
 /* ================================================================== */

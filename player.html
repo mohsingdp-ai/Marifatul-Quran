@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script>try{var t=localStorage.getItem("ui_theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<script>try{var t=localStorage.getItem("ui_theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+// Urdu readers: right to left from the first paint, held back until i18n.js fills the words in
+// (it shows the page; the timer is only a safety net).
+try{if(localStorage.getItem("ui_lang")==="ur"){var d=document.documentElement;d.setAttribute("lang","ur");d.setAttribute("dir","rtl");d.classList.add("i18n-pending");setTimeout(function(){d.classList.remove("i18n-pending");},3000);}}catch(e){}</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quran Audio Player</title>
+<title data-i18n="player.pageTitle">Quran Audio Player</title>
 <link rel="icon" href="icon-192.png">
 <style>
   @font-face { font-family: "Rubik"; font-weight: 400; font-style: normal; font-display: swap; src: url("asset/fonts/rubik-400.woff2") format("woff2"); }
   @font-face { font-family: "Rubik"; font-weight: 500; font-style: normal; font-display: swap; src: url("asset/fonts/rubik-500.woff2") format("woff2"); }
   @font-face { font-family: "Rubik"; font-weight: 600; font-style: normal; font-display: swap; src: url("asset/fonts/rubik-600.woff2") format("woff2"); }
+  /* Urdu UI text: Rubik has no Arabic letters, so they fall through to this. */
+  @font-face { font-family: "Noto Sans Arabic UI"; font-weight: 400; font-style: normal; font-display: swap; src: url("asset/fonts/noto-sans-arabic-400.woff2") format("woff2"); }
+  @font-face { font-family: "Noto Sans Arabic UI"; font-weight: 600 700; font-style: normal; font-display: swap; src: url("asset/fonts/noto-sans-arabic-600.woff2") format("woff2"); }
+
+  html.i18n-pending body { visibility: hidden; }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -39,6 +47,7 @@
   }
 
   body { min-height: 100vh; background: var(--bg); color: var(--ink); display: flex; align-items: flex-start; justify-content: center; font-family: "Rubik", system-ui, sans-serif; font-size: 16px; line-height: 1.4; padding: 24px; -webkit-text-size-adjust: 100%; }
+  html[lang="ur"] body { font-family: "Rubik", "Noto Sans Arabic UI", system-ui, sans-serif; }
   .wrap { width: 100%; max-width: 520px; min-width: 0; }
 
   button, input { font: inherit; color: inherit; }
@@ -60,7 +69,7 @@
   .no-track { color: var(--muted); font-size: 14px; }
 
   /* Waveform (also the seek bar) */
-  #waveformWrap { position: relative; margin-bottom: 6px; user-select: none; }
+  #waveformWrap { direction: ltr; position: relative; margin-bottom: 6px; user-select: none; }
   #waveCanvas { display: block; width: 100%; height: 64px; border-radius: 12px; background: var(--surface-2); color: var(--accent); cursor: pointer; }
 
   /* Split markers on waveform */
@@ -78,10 +87,10 @@
   /* Playhead */
   #playhead { position: absolute; top: 0; width: 2px; height: 100%; background: var(--ink); border-radius: 1px; pointer-events: none; transform: translateX(-1px); }
 
-  .times { display: flex; justify-content: space-between; margin-top: 6px; }
+  .times { direction: ltr; display: flex; justify-content: space-between; margin-top: 6px; }
   .times span { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-  .controls { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 4px; flex-wrap: wrap; }
+  .controls { direction: ltr; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 18px 0 4px; flex-wrap: wrap; }
   .btn-icon { background: none; border: none; cursor: default; color: var(--outline); opacity: 0.45; min-width: 44px; min-height: 44px; padding: 0; border-radius: 999px; transition: color 0.2s, background 0.2s; display: flex; align-items: center; justify-content: center; }
   .btn-icon.enabled { color: var(--ink); opacity: 1; cursor: pointer; }
   .btn-icon.enabled:hover { background: var(--soft); color: var(--accent); }
@@ -141,7 +150,7 @@
     min-height: 44px; padding: 0 10px; flex: 1; transition: border-color 0.2s; min-width: 0;
   }
   .seg-name-input:focus { border-color: var(--accent); }
-  .seg-dur { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+  .seg-dur { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 38px; text-align: end; }
 
   .btn-dl {
     display: inline-flex; align-items: center; gap: 6px;
@@ -170,7 +179,7 @@
   .pl-item.active .pl-icon { background: var(--accent); color: var(--on-accent); }
   .pl-name { flex: 1; min-width: 0; font-size: 15px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pl-item.active .pl-name { color: var(--accent); font-weight: 500; }
-  .pl-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 32px; text-align: right; }
+  .pl-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 32px; text-align: end; }
 
   .eq { display: flex; gap: 2px; align-items: flex-end; height: 10px; }
   .eq-bar { width: 2px; background: currentColor; border-radius: 1px; }
@@ -200,8 +209,8 @@
     <div class="brand">
       <img src="icon-192.png" alt="" width="32" height="32">
       <div>
-        <div class="brand-name">Marifatul Quran</div>
-        <div class="subtitle">Quran audio player</div>
+        <div class="brand-name" data-i18n="player.brand">Marifatul Quran</div>
+        <div class="subtitle" data-i18n="player.subtitle">Quran audio player</div>
       </div>
     </div>
     <div class="bismillah" lang="ar">﷽</div>
@@ -211,7 +220,7 @@
     <div class="now-playing">
       <div class="dot" id="dot"></div>
       <div class="track-name" id="trackName" style="display:none"></div>
-      <div class="no-track" id="noTrack">No track loaded</div>
+      <div class="no-track" id="noTrack" data-i18n="player.noTrack">No track loaded</div>
     </div>
 
     <!-- Waveform -->
@@ -230,14 +239,14 @@
       <button type="button" class="btn-icon player-seek-btn" id="btnSeekBack" aria-label="Seek back 5 seconds" title="-5 seconds">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2v6h6"/><path d="M2.5 8A10 10 0 1 1 4.4 17.5"/><text x="12" y="16" text-anchor="middle" font-size="8" font-weight="700" fill="currentColor" stroke="none" font-family="system-ui,sans-serif">-5</text></svg>
       </button>
-      <button type="button" class="btn-icon" id="btnPrev" title="Previous" aria-label="Previous">
+      <button type="button" class="btn-icon" id="btnPrev" title="Previous" aria-label="Previous" data-i18n-title="player.prev" data-i18n-aria="player.prev">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
       </button>
-      <button type="button" class="btn-play" id="btnPlay" aria-label="Play or pause">
+      <button type="button" class="btn-play" id="btnPlay" aria-label="Play or pause" data-i18n-aria="player.playPause">
         <svg id="iconPlay" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="margin-left:3px"><path d="M8 5v14l11-7z"/></svg>
         <svg id="iconPause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
       </button>
-      <button type="button" class="btn-icon" id="btnNext" title="Next" aria-label="Next">
+      <button type="button" class="btn-icon" id="btnNext" title="Next" aria-label="Next" data-i18n-title="player.next" data-i18n-aria="player.next">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14L11.03 12 8 14.14V9.86zM16 6h2v12h-2z"/></svg>
       </button>
       <button type="button" class="btn-icon player-seek-btn" id="btnSeekFwd" aria-label="Seek forward 5 seconds" title="+5 seconds">
@@ -254,6 +263,7 @@
 
 <audio id="audio"></audio>
 
+<script src="i18n.js"></script>
 <script src="data.js"></script>
 <script>
 const audio = document.getElementById('audio');
@@ -284,6 +294,13 @@ const btnDlAll = document.getElementById('btnDlAll');
 const queryLoadHint = document.getElementById('queryLoadHint');
 const btnSeekBack = document.getElementById('btnSeekBack');
 const btnSeekFwd = document.getElementById('btnSeekFwd');
+const i18n = I18N.t;
+
+// The seek labels carry a number, so they are filled here rather than by data-i18n.
+btnSeekBack.setAttribute('aria-label', i18n('player.seekBack', { n: 5 }));
+btnSeekBack.title = i18n('player.seekBackShort', { n: 5 });
+btnSeekFwd.setAttribute('aria-label', i18n('player.seekFwd', { n: 5 }));
+btnSeekFwd.title = i18n('player.seekFwdShort', { n: 5 });
 
 const ctx = waveCanvas.getContext('2d');
 
@@ -862,7 +879,7 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     if (!audio.duration) return;
     addSplitAt(audio.currentTime);
-    showNudge('✂ split');
+    showNudge(i18n('player.split'));
   }
 });
 
@@ -919,14 +936,14 @@ async function initFromParaRukuQuery() {
 
   if (isNaN(para) || para < 1 || para > 30 || !ruku) return;
   if (!row.audioUrl || !String(row.audioUrl).trim()) {
-    noTrackEl.textContent = 'No audio path is set for this ruku in data.';
+    noTrackEl.textContent = i18n('player.noAudioPath');
     noTrackEl.style.display = 'block';
     trackNameEl.style.display = 'none';
     return;
   }
 
   queryLoadHint.style.display = 'block';
-  queryLoadHint.textContent = 'Loading recording…';
+  queryLoadHint.textContent = i18n('player.loading');
 
   try {
     const found = await fetchFirstAudioBlob(row.audioUrl);
@@ -934,7 +951,11 @@ async function initFromParaRukuQuery() {
     const blob = found.blob;
     const baseName = found.src.split('/').pop() || 'recording.opus';
     const file = new File([blob], baseName, { type: blob.type || 'audio/ogg' });
-    const label = `Para ${para} · Ruku ${String(ruku).replace(/R/g, '')} — ${row.surah} (${row.verses})`;
+    // Urdu shows the surah's Arabic name; English keeps the transliteration.
+    const ur = I18N.lang() === 'ur';
+    const surah = ur ? (row.surahArabic || row.surah) : row.surah;
+    const rukuNum = String(ruku).replace(/R/g, '');
+    const label = i18n('player.trackLabel', { para, ruku: rukuNum, surah, verses: row.verses });
 
     files = [];
     currentIndex = -1;
@@ -942,7 +963,7 @@ async function initFromParaRukuQuery() {
 
     const dzSpan = dropzone && dropzone.querySelector('span');
     if (dzSpan) dzSpan.textContent = 'Loaded from link — drop more files to replace playlist';
-    document.title = `MQ · ${row.surah} (${ruku})`;
+    document.title = i18n('player.docTitle', { surah, ruku: ur ? rukuNum : ruku });
 
     loadTrack(0, { autoplay: true });
     queryLoadHint.style.display = 'none';
@@ -950,7 +971,7 @@ async function initFromParaRukuQuery() {
     console.error(err);
     queryLoadHint.textContent = '';
     queryLoadHint.style.display = 'none';
-    noTrackEl.textContent = 'Could not load audio (offline or missing file). Open the main app and save offline, or try again online.';
+    noTrackEl.textContent = i18n('player.loadError');
     noTrackEl.style.display = 'block';
     trackNameEl.style.display = 'none';
   }

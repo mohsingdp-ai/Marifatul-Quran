@@ -1,6 +1,13 @@
 (function () {
   "use strict";
 
+  /** The app's words in the chosen language (i18n.js). Not `t`: that name is taken locally. */
+  var i18n = window.I18N.t;
+
+  function isUrdu() {
+    return window.I18N.lang() === "ur";
+  }
+
   function getUiTheme() {
     var t = localStorage.getItem("ui_theme");
     return t === "light" ? "light" : "dark";
@@ -179,8 +186,18 @@
     return SURAH_NAMES_AR[row.surahNumber] || row.surahArabic;
   }
 
+  /** The surah's name as a label: English in English, the Arabic in Urdu. */
+  function surahLabel(row) {
+    return isUrdu() ? surahArabic(row) : row.surah;
+  }
+
   function paraName(n) {
     return PARA_NAMES[Number(n) - 1] || ["", ""];
+  }
+
+  /** The para's name as a label: the transliteration in English, the Arabic in Urdu. */
+  function paraLabelName(n) {
+    return paraName(n)[isUrdu() ? 0 : 1];
   }
 
   /** The para chips and the progress card's para name follow the select. */
@@ -210,9 +227,9 @@
         b.type = "button";
         b.className = "para-chip";
         b.dataset.para = v;
-        b.setAttribute("aria-label", "Para " + v + ", " + paraName(v)[1]);
+        b.setAttribute("aria-label", i18n("para.chipAria", { n: v, name: paraLabelName(v) }));
         b.innerHTML = "<span class=\"para-chip-num\">" + v + "</span>" +
-          "<span class=\"para-chip-name\">" + escapeHtml(paraName(v)[1]) + "</span>";
+          "<span class=\"para-chip-name\">" + escapeHtml(paraLabelName(v)) + "</span>";
         paraChips.appendChild(b);
       });
     }
@@ -241,10 +258,13 @@
   });
 
   // The native list shows the names too.
-  Array.prototype.forEach.call(paraSelect.options, function (opt) {
-    var nm = paraName(opt.value)[0];
-    if (nm) opt.textContent = "Para " + opt.value + " \u00b7 " + nm;
-  });
+  function labelParaOptions() {
+    Array.prototype.forEach.call(allParaOptions || paraSelect.options, function (opt) {
+      var nm = paraName(opt.value)[0];
+      if (nm) opt.textContent = i18n("para.option", { n: opt.value, name: nm });
+    });
+  }
+  labelParaOptions();
   const actionHeader = document.querySelector("#ruku-table thead th:last-child");
   /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
@@ -641,11 +661,11 @@
     var label = Hifz.playsLabel(n);
     mark.innerHTML = on ? MEMORIZED_ON_SVG : MEMORIZED_OFF_SVG;
     mark.setAttribute("aria-pressed", on ? "true" : "false");
-    mark.setAttribute("aria-label", on ? "Memorized. Tap to unmark." : "Not memorized. Tap to mark as memorized.");
-    mark.title = on ? "Memorized" : "Mark as memorized";
+    mark.setAttribute("aria-label", i18n(on ? "hifz.markOnAria" : "hifz.markOffAria"));
+    mark.title = i18n(on ? "hifz.markOnTitle" : "hifz.markOffTitle");
     playsEl.hidden = !n;
     playsEl.querySelector(".hifz-plays-count").textContent = label;
-    var listened = "Listened " + label + (n === 1 ? " time" : " times") + " in full";
+    var listened = i18n(n === 1 ? "hifz.listenedOnce" : "hifz.listenedTimes", { n: label });
     playsEl.setAttribute("aria-label", listened);
     playsEl.title = listened;
   }
@@ -697,9 +717,9 @@
     var overall = Hifz.computeOverall(map, hifzAllKeys());
 
     document.getElementById("hifz-meter-para").textContent =
-      p.memorized + " of " + p.total + " rukus memorized";
+      i18n("hifz.memorizedOf", { n: p.memorized, total: p.total });
     document.getElementById("hifz-meter-total").textContent =
-      overall.memorized + " / " + overall.total + " overall";
+      i18n("hifz.overall", { n: overall.memorized, total: overall.total });
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
     var fill = document.getElementById("hifz-meter-fill");
@@ -718,7 +738,7 @@
       span.textContent = text;
       counts.appendChild(span);
     }
-    addCount("listened", p.listened, p.listened + " of " + p.total + " listened in full");
+    addCount("listened", p.listened, i18n("hifz.listenedOf", { n: p.listened, total: p.total }));
   }
 
   function exportHifz() {
@@ -732,7 +752,7 @@
     a.click();
     document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    setHifzIoStatus("Exported " + Object.keys(getHifzMap()).length + " rukus.");
+    setHifzIoStatus(i18n("hifz.exported", { n: Object.keys(getHifzMap()).length }));
   }
 
   function importHifzFromFile(file) {
@@ -740,21 +760,21 @@
     reader.onload = function () {
       var parsed;
       try { parsed = JSON.parse(reader.result); }
-      catch (e) { setHifzIoStatus("Import failed: that file isn't valid JSON."); return; }
+      catch (e) { setHifzIoStatus(i18n("hifz.importBadJson")); return; }
       var res = Hifz.parseAndMerge(getHifzMap(), parsed, hifzValidKeySet());
       saveHifzMap(res.merged);
       renderTable({ skipViewRestore: true });
-      setHifzIoStatus("Imported " + res.imported + ", skipped " + res.skipped + " unknown.");
+      setHifzIoStatus(i18n("hifz.imported", { n: res.imported, skipped: res.skipped }));
     };
-    reader.onerror = function () { setHifzIoStatus("Import failed: couldn't read the file."); };
+    reader.onerror = function () { setHifzIoStatus(i18n("hifz.importUnreadable")); };
     reader.readAsText(file);
   }
 
   function resetHifz() {
-    if (!window.confirm("Reset all memorization progress? This cannot be undone.")) return;
+    if (!window.confirm(i18n("hifz.resetConfirm"))) return;
     localStorage.removeItem(HIFZ_STORAGE_KEY);
     renderTable({ skipViewRestore: true });
-    setHifzIoStatus("Progress reset.");
+    setHifzIoStatus(i18n("hifz.resetDone"));
   }
 
   function setHifzIoStatus(msg) {
@@ -818,8 +838,8 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "audio-retry-btn";
-    btn.textContent = "Retry";
-    btn.title = "Clear the saved copy and load this recording again";
+    btn.textContent = i18n("card.retry");
+    btn.title = i18n("card.retryTitle");
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       btn.disabled = true;
@@ -836,7 +856,7 @@
   function showNoRecording(audioCell) {
     var span = document.createElement("span");
     span.className = "no-recording";
-    span.textContent = "No recording";
+    span.textContent = i18n("card.noRecording");
     audioCell.appendChild(span);
   }
 
@@ -931,7 +951,7 @@
   function ayahNumHtml(a) {
     if (!indoPakShown()) return "<span class=\"ayat-num\">" + toArabicDigits(a.n) + "</span>";
     var parts = indoPakParts(a.text);
-    return "<span class=\"ayat-num\" role=\"img\" aria-label=\"Ayah " + a.n + "\">" +
+    return "<span class=\"ayat-num\" role=\"img\" aria-label=\"" + i18n("ayat.numAria", { n: a.n }) + "\">" +
       (parts.endText ? "<span class=\"ayat-num-mark\">" + escapeHtml(parts.endText) + "</span>" : "") +
       (parts.ornament || ayahOrnament(a.n)) + "</span>";
   }
@@ -1287,15 +1307,15 @@
     return "<div class=\"ayat-timing\" data-ayah=\"" + ayahNumber + "\"" +
         (nextAyahNumber == null ? "" : " data-next=\"" + nextAyahNumber + "\"") + ">" +
       "<label class=\"tm-field" + (isEdited ? " is-edited" : "") + "\">" +
-        "<span class=\"tm-label\">start</span>" +
+        "<span class=\"tm-label\">" + i18n("timing.start") + "</span>" +
         "<input type=\"text\" class=\"tm-input\" data-field=\"s\" " +
           "inputmode=\"decimal\" spellcheck=\"false\" value=\"" + formatTimeInput(start) + "\" />" +
         "<button type=\"button\" class=\"tm-now\" " +
-          "title=\"Use the current playback position\">\u23F1</button>" +
+          "title=\"" + i18n("timing.nowTitle") + "\">\u23F1</button>" +
       "</label>" +
-      "<button type=\"button\" class=\"tm-hear\" title=\"Play this ayah\">hear</button>" +
-      "<button type=\"button\" class=\"tm-reset\" title=\"Back to the generated time\"" +
-        (isEdited ? "" : " hidden") + ">reset</button>" +
+      "<button type=\"button\" class=\"tm-hear\" title=\"" + i18n("timing.hearTitle") + "\">" + i18n("timing.hear") + "</button>" +
+      "<button type=\"button\" class=\"tm-reset\" title=\"" + i18n("timing.resetTitle") + "\"" +
+        (isEdited ? "" : " hidden") + ">" + i18n("timing.reset") + "</button>" +
       (flag ? timingFlagHtml(flag) : "") +
       "</div>";
   }
@@ -1319,13 +1339,13 @@
     var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
     var html = "<div class=\"ayat-panel\" id=\"" + ayatPanelId(item.globalIndex) + "\">" +
       "<div class=\"ayat-head\">" +
-        "<span class=\"ayat-head-surah\">" + escapeHtml(row.surah) + " \u00b7 " +
-          row.surahNumber + ":" + escapeHtml(versesText(row.verses)) + "</span>" +
-        "<span class=\"ayat-head-count\">" + count + (count === 1 ? " ayah" : " ayat") + "</span>" +
-        (toCheck ? "<span class=\"ayat-head-check\">" + toCheck + " to check</span>" : "") +
+        "<span class=\"ayat-head-surah\">" + escapeHtml(i18n("ayat.headSurah", { surah: surahLabel(row),
+          ref: row.surahNumber + ":" + versesText(row.verses) })) + "</span>" +
+        "<span class=\"ayat-head-count\">" + i18n(count === 1 ? "ayat.countOne" : "ayat.countMany", { n: count }) + "</span>" +
+        (toCheck ? "<span class=\"ayat-head-check\">" + i18n("timing.toCheck", { n: toCheck }) + "</span>" : "") +
         (isAdmin()
-          ? "<button type=\"button\" class=\"ayat-prompt\" title=\"Copy an AI grammar prompt for this ruku\">" +
-            COPY_SVG + "<span>AI prompt</span></button>"
+          ? "<button type=\"button\" class=\"ayat-prompt\" title=\"" + i18n("ayat.promptRukuTitle") + "\">" +
+            COPY_SVG + "<span>" + i18n("ayat.prompt") + "</span></button>"
           : "") +
       "</div>";
 
@@ -1348,13 +1368,13 @@
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<div class=\"ayah-tools\">" +
-        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"Play from this ayah\" aria-label=\"Play from ayah " + a.n + "\">" + PLAY_SVG +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.playFromTitle") + "\" aria-label=\"" + i18n("ayat.playFromAria", { n: a.n }) + "\">" + PLAY_SVG +
           "<span class=\"ayah-key\" dir=\"ltr\">" + entry.surahNumber + ":" + a.n + "</span></button>" +
         (glossSwitch
-          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"Show or hide the meaning under each word\" aria-label=\"Word meanings for ayah " + a.n + "\">" + GLOSS_SVG + "</button>"
+          ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"" + i18n("ayat.glossToggleTitle") + "\" aria-label=\"" + i18n("ayat.glossToggleAria", { n: a.n }) + "\">" + GLOSS_SVG + "</button>"
           : "") +
         (admin
-          ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"Copy an AI grammar prompt for this ayah\" aria-label=\"Copy AI prompt for ayah " + a.n + "\">" + COPY_SVG + "</button>"
+          ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.promptAyahTitle") + "\" aria-label=\"" + i18n("ayat.promptAyahAria", { n: a.n }) + "\">" + COPY_SVG + "</button>"
           : "") +
         "</div>" +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
@@ -1550,10 +1570,10 @@
   /** Why the onset finder wants this start heard, and a button to say it has been. */
   function timingFlagHtml(flag) {
     var detail = typeof flag.from === "number" && typeof flag.to === "number"
-      ? "was " + formatTimeInput(flag.from) + ", now " + formatTimeInput(flag.to)
-      : typeof flag.to === "number" ? "suggested " + formatTimeInput(flag.to) : "";
+      ? i18n("timing.wasNow", { from: formatTimeInput(flag.from), to: formatTimeInput(flag.to) })
+      : typeof flag.to === "number" ? i18n("timing.suggested", { time: formatTimeInput(flag.to) }) : "";
     return "<span class=\"tm-flag\" title=\"" + escapeHtml(detail) + "\">\u26A0 " + escapeHtml(flag.why) + "</span>" +
-      "<button type=\"button\" class=\"tm-ok\" title=\"Heard it; the start is right\">ok</button>";
+      "<button type=\"button\" class=\"tm-ok\" title=\"" + i18n("timing.okTitle") + "\">" + i18n("timing.ok") + "</button>";
   }
 
   /**
@@ -1731,21 +1751,21 @@
     // Starts the onset finder wants heard, so a ruku with work in it can be found from the list.
     var toCheck = timingEditorEnabled() ? flagCount(ayatKeyFor(row)) : 0;
     var checkTag = toCheck
-      ? " <span class=\"ruku-check\" title=\"" + toCheck + " ayah start" + (toCheck === 1 ? "" : "s") + " to hear\">\u26A0 " + toCheck + "</span>"
+      ? " <span class=\"ruku-check\" title=\"" + i18n(toCheck === 1 ? "timing.toHearOne" : "timing.toHearMany", { n: toCheck }) + "\">\u26A0 " + toCheck + "</span>"
       : "";
     var rukuLine =
-      "<span class=\"ruku-title-wide\">" + escapeHtml(row.surah) + " <span class=\"col-ruku-tag\">" + rukuTag + "</span>" + checkTag + "</span>" +
-      "<span class=\"ruku-title-narrow\">Ruku " + rukuTag.replace(/R/g, "") + checkTag + "</span>";
+      "<span class=\"ruku-title-wide\">" + escapeHtml(surahLabel(row)) + " <span class=\"col-ruku-tag\">" + (isUrdu() ? i18n("card.ruku", { n: rukuTag.replace(/R/g, "") }) : rukuTag) + "</span>" + checkTag + "</span>" +
+      "<span class=\"ruku-title-narrow\">" + i18n("card.ruku", { n: rukuTag.replace(/R/g, "") }) + checkTag + "</span>";
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
       "<span class=\"surah-ar\" lang=\"ar\">" + escapeHtml(surahArabic(row)) + "</span>";
     var audioSrc = getAudioSrc(row, globalIndex);
     var hasAyat = !!getRukuAyat(row);
-    var ayahLabel = "<span class=\"verses-label\">Ayah</span>";
+    var ayahLabel = "<span class=\"verses-label\">" + i18n("card.ayah") + "</span>";
     var versesCell = hasAyat
       ? "<button type=\"button\" class=\"verses-toggle\" aria-expanded=\"" + (isAyatOpen(row) ? "true" : "false") +
-        "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"Show the ayat of this ruku\">" +
+        "\" aria-controls=\"" + ayatPanelId(globalIndex) + "\" title=\"" + i18n("card.showAyatTitle") + "\">" +
         AYAT_BOOK_SVG + ayahLabel + versesHtml(row.verses, AYAT_CHEVRON_SVG) + "</button>"
       : "<span class=\"verses-plain\">" + ayahLabel + versesHtml(row.verses) + "</span>";
 
@@ -1943,7 +1963,7 @@
 
     if (filtered.length === 0) {
       var emptyTr = document.createElement("tr");
-      emptyTr.innerHTML = "<td colspan=\"7\" class=\"table-empty\">No recordings in this Para</td>";
+      emptyTr.innerHTML = "<td colspan=\"7\" class=\"table-empty\">" + i18n("card.emptyPara") + "</td>";
       fragment.appendChild(emptyTr);
     }
 
@@ -1982,7 +2002,7 @@
     var playBtn = document.createElement("button");
     playBtn.type = "button";
     playBtn.className = "audio-play-btn";
-    playBtn.setAttribute("aria-label", "Play");
+    playBtn.setAttribute("aria-label", i18n("card.play"));
     playBtn.innerHTML = PLAY_SVG;
 
     var timeCurrent = document.createElement("span");
@@ -1997,7 +2017,7 @@
     progress.min = 0;
     progress.max = 100;
     progress.value = 0;
-    progress.setAttribute("aria-label", "Seek");
+    progress.setAttribute("aria-label", i18n("card.seek"));
     progress.style.pointerEvents = "none";
 
     var progressOverlay = document.createElement("div");
@@ -2020,7 +2040,7 @@
     speedBtn.type = "button";
     speedBtn.className = "audio-speed-btn";
     speedBtn.textContent = speeds[currentSpeedIndex] + "x";
-    speedBtn.setAttribute("aria-label", "Playback speed");
+    speedBtn.setAttribute("aria-label", i18n("card.speed"));
 
     speedBtn.addEventListener("click", function () {
       currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
@@ -2035,7 +2055,7 @@
     seekBackBtn.type = "button";
     seekBackBtn.className = "audio-seek-btn audio-seek-back-btn";
     seekBackBtn.innerHTML = SEEK_BACK_SVG;
-    seekBackBtn.setAttribute("aria-label", "Seek back 5 seconds");
+    seekBackBtn.setAttribute("aria-label", i18n("card.back5"));
 
     seekBackBtn.addEventListener("click", function () {
       prepareMqTrack(globalIndex, row, src).then(function () {
@@ -2048,7 +2068,7 @@
     seekFwdBtn.type = "button";
     seekFwdBtn.className = "audio-seek-btn audio-seek-fwd-btn";
     seekFwdBtn.innerHTML = SEEK_FWD_SVG;
-    seekFwdBtn.setAttribute("aria-label", "Seek forward 5 seconds");
+    seekFwdBtn.setAttribute("aria-label", i18n("card.fwd5"));
 
     seekFwdBtn.addEventListener("click", function () {
       prepareMqTrack(globalIndex, row, src).then(function () {
@@ -2244,7 +2264,7 @@
           if (snap.wasPlaying) {
             a.play().catch(function () { /* autoplay policy */ });
             playBtn.innerHTML = PAUSE_SVG;
-            playBtn.setAttribute("aria-label", "Pause");
+            playBtn.setAttribute("aria-label", i18n("card.pause"));
             tr.classList.remove("audio-paused");
             tr.classList.add("playing");
             currentPlayingAudio = a;
@@ -2253,7 +2273,7 @@
             setMediaPlaybackState("playing");
           } else {
             playBtn.innerHTML = PLAY_SVG;
-            playBtn.setAttribute("aria-label", "Play");
+            playBtn.setAttribute("aria-label", i18n("card.play"));
             tr.classList.add("playing", "audio-paused");
             currentPlayingAudio = a;
             revealAyatForTrack(globalIndex);
@@ -2314,10 +2334,20 @@
     return u.href.replace(/#$/, "");
   }
 
+  /** "P1: R1 — Al-Fatihah (1-7)"; in Urdu the Arabic surah name and the bare ruku number. */
+  function shareRukuTitle(paraNum, row) {
+    return i18n("share.rukuTitle", { para: paraNum, ruku: rukuLabel(row), surah: surahLabel(row), verses: row.verses });
+  }
+
+  /** The ruku as a label: "R1" in English, "1" in Urdu (where "رکوع" says the rest). */
+  function rukuLabel(row) {
+    var r = String(rukuDisplay(row));
+    return isUrdu() ? r.replace(/R/g, "") : r;
+  }
+
   /** One ruku block: title line + stable ?para=&ruku= player URL. */
   function formatBulkRukuLinkBlock(paraNum, row) {
-    var title =
-      "P" + paraNum + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
+    var title = shareRukuTitle(paraNum, row);
     return title + "\n" + buildPlayerDeepLink(paraNum, row);
   }
 
@@ -2329,8 +2359,7 @@
       var row = item.row;
       var src = getAudioSrc(row, item.globalIndex);
       if (!src) return;
-      var title =
-        "P" + row.para + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
+      var title = shareRukuTitle(row.para, row);
       var caption = title + "\n" + buildPlayerDeepLink(row.para, row);
       list.push({ row: row, src: src, caption: caption });
     });
@@ -2476,15 +2505,15 @@
     btn.classList.remove("is-saving");
     btn.classList.add("is-saved");
     btn.innerHTML = DOWNLOAD_SVG;
-    btn.title = "Saved offline (tap to refresh)";
-    btn.setAttribute("aria-label", "Saved offline (tap to refresh)");
+    btn.title = i18n("download.savedTitle");
+    btn.setAttribute("aria-label", i18n("download.savedTitle"));
   }
 
   function markUnsaved(btn) {
     btn.classList.remove("is-saving", "is-saved");
     btn.innerHTML = DOWNLOAD_SVG;
-    btn.title = "Save for offline";
-    btn.setAttribute("aria-label", "Save offline");
+    btn.title = i18n("download.saveTitle");
+    btn.setAttribute("aria-label", i18n("download.saveAria"));
   }
 
   function buildOfflineBtn(src) {
@@ -2492,8 +2521,8 @@
     btn.type = "button";
     btn.className = "audio-offline-btn";
     btn.innerHTML = DOWNLOAD_SVG;
-    btn.setAttribute("aria-label", "Save offline");
-    btn.title = "Save for offline";
+    btn.setAttribute("aria-label", i18n("download.saveAria"));
+    btn.title = i18n("download.saveTitle");
 
     isAudioCached(src).then(function (cached) {
       if (cached) markSaved(btn);
@@ -2505,17 +2534,17 @@
 
       if (!navigator.onLine) {
         if (btn.classList.contains("is-saved")) return;
-        alert("No internet connection. Cannot save for offline.");
+        alert(i18n("download.noInternet"));
         return;
       }
 
       if (btn.classList.contains("is-saved")) {
-        if (!confirm("Already saved offline. Re-download fresh copy?")) return;
+        if (!confirm(i18n("download.redownloadConfirm"))) return;
       }
 
       btn.classList.add("is-saving");
       btn.innerHTML = DOWNLOAD_SVG;
-      btn.title = "Saving…";
+      btn.title = i18n("download.saving");
 
       var urls = [src].concat(getAudioUrlAlternates(src));
       var saved = false;
@@ -2524,7 +2553,7 @@
         if (i >= urls.length) {
           if (!saved) {
             markUnsaved(btn);
-            alert("Could not save audio for offline use.");
+            alert(i18n("download.failed"));
           }
           return;
         }
@@ -2568,7 +2597,7 @@
       })
       .then(function (blob) {
         if (!blob || !blob.size) {
-          alert("Could not load the recording to share. Check your connection or save it offline first.");
+          alert(i18n("share.loadFailed"));
           return;
         }
 
@@ -2588,56 +2617,32 @@
             })
             .then(function () {
               if (captionCopied) {
-                alert(
-                  "Audio shared. If WhatsApp sends only the file, paste the copied caption in the chat."
-                );
+                alert(i18n("share.sharedPasteCaption"));
               }
             })
             .catch(function (err) {
               if (err && err.name === "AbortError") return;
               tryDownloadFileFallback(blob);
-              alert(
-                captionCopied
-                  ? "Could not open share. The recording was downloaded. Attach it in WhatsApp and paste the copied caption."
-                  : "Could not open share. The recording was downloaded—attach it in WhatsApp."
-              );
+              alert(i18n(captionCopied ? "share.noSheetDownloadedCaption" : "share.noSheetDownloaded"));
             });
         }
 
         tryDownloadFileFallback(blob);
-        alert(
-          captionCopied
-            ? "The recording was downloaded. Send it in WhatsApp as an attachment, then paste the copied caption."
-            : "The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files)."
-        );
+        alert(i18n(captionCopied ? "share.downloadedCaption" : "share.downloaded"));
       })
       .catch(function () {
-        alert(
-          captionCopied
-            ? "Could not share this file. Try Save offline, then share from your device and paste the copied caption."
-            : "Could not share this file. Try Save offline, then share from your device."
-        );
+        alert(i18n(captionCopied ? "share.fileFailedCaption" : "share.fileFailed"));
       });
   }
 
   /** Combined caption for sharing every ruku in a Para in one share sheet. */
   function buildParaBatchShareCaption(paraNum, items) {
     var lines = [
-      "Marifatul Quran — Para " + paraNum + " (" + items.length + " recordings)",
+      i18n("share.batchHeader", { para: paraNum, n: items.length }),
       ""
     ];
     items.forEach(function (it) {
-      lines.push(
-        "P" +
-          it.row.para +
-          ": " +
-          rukuDisplay(it.row) +
-          " — " +
-          it.row.surah +
-          " (" +
-          it.row.verses +
-          ")"
-      );
+      lines.push(shareRukuTitle(it.row.para, it.row));
     });
     return lines.join("\n");
   }
@@ -2655,11 +2660,7 @@
       items.map(function (it) {
         return fetchAudioBlobForShare(it.src).then(function (blob) {
           if (!blob || !blob.size) {
-            throw new Error(
-              "Could not load " +
-                rukuDisplay(it.row) +
-                ". Save offline first or check your connection."
-            );
+            throw new Error(i18n("share.loadRukuFailed", { ruku: rukuLabel(it.row) }));
           }
           var mime =
             blob.type && blob.type.indexOf("audio/") === 0 ? blob.type : audioMimeForShare(it.src);
@@ -2674,9 +2675,7 @@
           navigator.canShare({ files: files });
 
         if (!canMulti) {
-          alert(
-            'This browser or app cannot share multiple files in one step. Use "Share this ruku" and "Next ruku" for each recording.'
-          );
+          alert(i18n("share.noMulti"));
           return;
         }
 
@@ -2688,22 +2687,16 @@
           })
           .then(function () {
             if (captionCopied) {
-              alert(
-                "Shared " +
-                  files.length +
-                  " files. If the app only received attachments, paste the copied caption into the chat."
-              );
+              alert(i18n("share.sharedFiles", { n: files.length }));
             }
           })
           .catch(function (err) {
             if (err && err.name === "AbortError") return;
-            alert(
-              'Could not share all files at once. Try "Share this ruku" one at a time, or pick another app from the share sheet.'
-            );
+            alert(i18n("share.allFailed"));
           });
       })
       .catch(function (e) {
-        alert(e && e.message ? e.message : "Could not load all recordings for sharing.");
+        alert(e && e.message ? e.message : i18n("share.loadAllFailed"));
       });
   }
 
@@ -2712,15 +2705,15 @@
     btn.type = "button";
     btn.className = "audio-share-wa-btn";
     btn.innerHTML = WHATSAPP_SVG;
-    btn.setAttribute("aria-label", "Share audio file on WhatsApp");
-    btn.title = "Share audio file on WhatsApp";
+    btn.setAttribute("aria-label", i18n("share.waFile"));
+    btn.title = i18n("share.waFile");
 
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
       if (btn.disabled) return;
 
       btn.disabled = true;
-      var caption = "P" + row.para + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")";
+      var caption = shareRukuTitle(row.para, row);
       shareAudioFileWithCaption(src, row, caption).finally(function () {
         btn.disabled = false;
       });
@@ -2814,8 +2807,8 @@
         badge.textContent = "";
         badge.className = "toolbar-now-playing-badge";
       }
-      titleEl.textContent = "No track selected";
-      metaEl.textContent = "Play a recording from the list below.";
+      titleEl.textContent = i18n("dock.idleTitle");
+      metaEl.textContent = i18n("dock.idleMeta");
       var toolbarFill = document.getElementById("toolbar-progress-fill");
       if (toolbarFill) toolbarFill.style.width = "0%";
       gotoBtn.disabled = true;
@@ -2825,8 +2818,8 @@
       return;
     }
 
-    titleEl.textContent = "Ruku " + String(rukuDisplay(row)).replace(/R/g, "") + " · " + row.surah;
-    metaEl.textContent = "Para " + row.para + " · Ayah " + versesText(row.verses);
+    titleEl.textContent = i18n("dock.title", { ruku: String(rukuDisplay(row)).replace(/R/g, ""), surah: surahLabel(row) });
+    metaEl.textContent = i18n("dock.meta", { para: row.para, verses: versesText(row.verses) });
     gotoBtn.disabled = false;
 
     if (badge) {
@@ -3022,7 +3015,7 @@
         els.tr.classList.add("playing");
         els.tr.classList.remove("audio-paused");
         els.playBtn.innerHTML = PAUSE_SVG;
-        els.playBtn.setAttribute("aria-label", "Pause");
+        els.playBtn.setAttribute("aria-label", i18n("card.pause"));
       }
       var r = data[gi];
       if (r) {
@@ -3040,7 +3033,7 @@
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els) {
         els.playBtn.innerHTML = PLAY_SVG;
-        els.playBtn.setAttribute("aria-label", "Play");
+        els.playBtn.setAttribute("aria-label", i18n("card.play"));
         els.tr.classList.add("audio-paused");
         if (!els.tr.classList.contains("playing")) els.tr.classList.add("playing");
       }
@@ -3068,7 +3061,7 @@
       var els = gi != null ? getRowControlsByGlobalIndex(gi) : null;
       if (els) {
         els.playBtn.innerHTML = PLAY_SVG;
-        els.playBtn.setAttribute("aria-label", "Play");
+        els.playBtn.setAttribute("aria-label", i18n("card.play"));
         els.tr.classList.remove("playing", "audio-paused");
         els.progress.value = 0;
         els.progress.style.setProperty("--progress", "0%");
@@ -3188,7 +3181,7 @@
           cell.innerHTML = "";
           var msg = document.createElement("span");
           msg.className = "path-not-found";
-          msg.textContent = "Audio didn't load. Check your internet, then tap Retry.";
+          msg.textContent = i18n("card.loadFailed");
           cell.appendChild(msg);
           cell.appendChild(buildAudioRetryBtn(gi));
         }
@@ -3268,7 +3261,7 @@
     }
     tbody.querySelectorAll(".audio-play-btn").forEach(function (btn) {
       btn.innerHTML = PLAY_SVG;
-      btn.setAttribute("aria-label", "Play");
+      btn.setAttribute("aria-label", i18n("card.play"));
       // Clear any spinner orphaned by a superseded load on another row's button
       // (is-loading sets pointer-events:none, so a stuck spinner makes the row unclickable).
       btn.classList.remove("is-loading");
@@ -3548,7 +3541,7 @@
         renderTable();
       }).catch(function () {
         ok.disabled = false;
-        syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+        syncSaveTimingsUI(i18n("timing.devServerDown"));
       });
       return true;
     }
@@ -3877,7 +3870,7 @@
     var ayahs = n ? entry.ayahs.filter(function (a) { return a.n === n; }) : entry.ayahs;
     buildLlmPrompt(row, ayahs).then(copyShareCaption).then(function (ok) {
       if (!ok) {
-        alert("Could not copy. Try again.");
+        alert(i18n("ayat.copyFailed"));
         return;
       }
       btn.classList.add("is-copied");
@@ -4148,7 +4141,7 @@
     playWordSoundFrom(sound.url, function () {
       sound.failed = true;
       var note = popWordSound === sound && wordPopoverEl && wordPopoverEl.querySelector(".wpop-sound-note");
-      if (note) note.textContent = "Sound needs internet";
+      if (note) note.textContent = i18n("word.soundNeedsInternet");
     });
   }
 
@@ -4175,13 +4168,13 @@
     function head() {
       return "<div class=\"wpop-head\">" +
         "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>" +
-        "<span class=\"wpop-sound-note\" role=\"status\">" + (sound.failed ? "Sound needs internet" : "") + "</span>" +
-        "<button type=\"button\" class=\"wpop-sound\" aria-label=\"Play word sound\" title=\"Play word sound\">" +
+        "<span class=\"wpop-sound-note\" role=\"status\">" + (sound.failed ? i18n("word.soundNeedsInternet") : "") + "</span>" +
+        "<button type=\"button\" class=\"wpop-sound\" aria-label=\"" + i18n("word.playSound") + "\" title=\"" + i18n("word.playSound") + "\">" +
           SPEAKER_SVG + "</button>" +
         "</div>";
     }
 
-    pop.innerHTML = head() + "<div class=\"wpop-loading\">Loading\u2026</div>";
+    pop.innerHTML = head() + "<div class=\"wpop-loading\">" + i18n("word.loading") + "</div>";
     pop.hidden = false;
     positionWordPopover(pop, wordEl);
 
@@ -4199,7 +4192,7 @@
       var parts = wordPartsHtml(segs, hit && hit.translation && hit.translation.text);
 
       if (!hit && !parts) {
-        pop.innerHTML = head() + "<div class=\"wpop-loading\">Meaning unavailable</div>";
+        pop.innerHTML = head() + "<div class=\"wpop-loading\">" + i18n("word.unavailable") + "</div>";
         positionWordPopover(pop, wordEl);
         return;
       }
@@ -4227,13 +4220,13 @@
     btn.disabled = !has;
     if (!has) {
       icon.innerHTML = PLAY_SVG;
-      btn.setAttribute("aria-label", "Play or pause");
+      btn.setAttribute("aria-label", i18n("dock.playPause"));
       return;
     }
     var a = mqPlayback.el;
     var paused = !a || a.paused;
     icon.innerHTML = paused ? PLAY_SVG : PAUSE_SVG;
-    btn.setAttribute("aria-label", paused ? "Play" : "Pause");
+    btn.setAttribute("aria-label", i18n(paused ? "card.play" : "card.pause"));
   }
 
   function setMediaPlaybackState(state) {
@@ -4248,8 +4241,8 @@
   function setNowPlayingMetadata(row, audio) {
     if (!("mediaSession" in navigator) || typeof MediaMetadata === "undefined") return;
 
-    var title = "Para " + row.para + " - " + rukuDisplay(row);
-    var artist = row.surah + " | " + row.verses;
+    var title = i18n("notify.title", { para: row.para, ruku: rukuLabel(row) });
+    var artist = i18n("notify.artist", { surah: surahLabel(row), verses: row.verses });
 
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -4365,13 +4358,16 @@
       return;
     }
     var row = data[gi];
-    var title = "Para " + row.para + " · Ruku " + rukuDisplay(row);
-    var line = (a.paused ? "Paused" : "Playing") + " · " + row.surah + " — " + row.verses;
+    var title = i18n("notify.swTitle", { para: row.para, ruku: rukuLabel(row) });
+    var line = i18n(a.paused ? "notify.pausedLine" : "notify.playingLine", { surah: surahLabel(row), verses: row.verses });
     postMediaNotificationToSw({
       type: "MQ_MEDIA_NOTIF_SHOW",
       title: title,
       body: line,
-      playing: !a.paused
+      playing: !a.paused,
+      // The worker has no word list of its own; it labels its button with these.
+      playLabel: i18n("card.play"),
+      pauseLabel: i18n("card.pause")
     });
   }
 
@@ -4620,15 +4616,15 @@
   function syncMediaNotifHint() {
     if (!mediaNotifHint) return;
     if (typeof Notification === "undefined") {
-      mediaNotifHint.textContent = "Notifications are not supported in this browser.";
+      mediaNotifHint.textContent = i18n("settings.notifUnsupported");
       return;
     }
     if (Notification.permission === "denied") {
-      mediaNotifHint.textContent = "Permission denied. Enable notifications for this site in your browser settings.";
+      mediaNotifHint.textContent = i18n("settings.notifDenied");
     } else if (Notification.permission === "default") {
-      mediaNotifHint.textContent = "Turn the option on and allow the prompt for best results on Android Chrome.";
+      mediaNotifHint.textContent = i18n("settings.notifDefault");
     } else {
-      mediaNotifHint.textContent = "Optional. Keeps a system notification while a track is open (playing or paused). Works best on Android Chrome; iOS is limited.";
+      mediaNotifHint.textContent = i18n("settings.notifGranted");
     }
   }
 
@@ -4693,7 +4689,65 @@
     renderTable();
   }
 
+  /** App language: English or Urdu, applied at once with no reload. */
+  var uiLangGroup = document.getElementById("ui-lang-group");
+
+  function syncUiLangUI() {
+    if (!uiLangGroup) return;
+    uiLangGroup.querySelectorAll("[data-ui-lang]").forEach(function (b) {
+      setActive(b, b.dataset.uiLang === window.I18N.lang());
+    });
+  }
+
+  if (uiLangGroup) uiLangGroup.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-ui-lang]");
+    if (b) window.I18N.setLang(b.dataset.uiLang);
+  });
+
+  /** Words the stylesheet draws (the cards' status chips) come from the same table. */
+  function syncCssStrings() {
+    var root = document.documentElement.style;
+    [["--str-heard", "card.statusHeard"], ["--str-memorized", "card.statusMemorized"],
+      ["--str-playing", "card.statusPlaying"], ["--str-paused", "card.statusPaused"]].forEach(function (p) {
+      root.setProperty(p[0], JSON.stringify(i18n(p[1])));
+    });
+  }
+  syncCssStrings();
+
+  // The markup is refilled by i18n.js; everything app.js wrote is written again.
+  document.addEventListener("mq:langchange", function () {
+    syncCssStrings();
+    syncUiLangUI();
+    labelParaOptions();
+    paraChipsKey = ""; // rebuild the chips with the new names
+    hideWordPopover();
+    renderTable({ scrollBasePara: tableRenderedPara });
+    renderHifzMeter();
+    var gi = mqPlayback.activeGlobalIndex;
+    if (gi != null && data[gi] && mqPlayback.el) {
+      syncToolbarNowPlaying(data[gi], mqPlayback.el.paused ? "paused" : "playing");
+      setNowPlayingMetadata(data[gi], mqPlayback.el);
+      updatePersistentMediaNotification();
+    }
+    syncToolbarTransport();
+    syncSaveTimingsUI();
+    syncMediaNotifHint();
+    if (roleBadge) roleBadge.textContent = i18n(isAdmin() ? "settings.roleAdmin" : "settings.roleUser");
+    if (settingsModal.classList.contains("is-open")) syncSettingsUI();
+    if (shareBulkModal && shareBulkModal.classList.contains("is-open")) {
+      populateShareBulkLinksModal(parseInt(paraSelect.value, 10));
+    }
+    if (shareFileModal && shareFileModal.classList.contains("is-open")) {
+      shareFileItems = getParaRukuFileShareItems(shareFileParaNum);
+      if (shareFileTitleEl) shareFileTitleEl.textContent = i18n("share.fileTitlePara", { para: shareFileParaNum });
+      updateShareFileModal();
+    }
+    if (paraMenu && !paraMenu.hidden) openParaMenu();
+    if (guideRerender) guideRerender();
+  });
+
   function syncSettingsUI() {
+    syncUiLangUI();
     syncWordMeaningsUI();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
     syncAyahWordsUI();
@@ -4703,7 +4757,7 @@
     var admin = isAdmin();
     setActive(roleUserBtn, !admin);
     setActive(roleAdminBtn, admin);
-    roleBadge.textContent = admin ? "Admin" : "User";
+    roleBadge.textContent = i18n(admin ? "settings.roleAdmin" : "settings.roleUser");
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
     adminSection.style.display = admin ? "" : "none";
     if (admin && ghTokenInput) {
@@ -4875,7 +4929,7 @@
     timingSaveBar.hidden = !timingEditorEnabled() || (count.starts === 0 && !message);
     if (timingSaveBarCount) {
       timingSaveBarCount.textContent = message ||
-        (count.starts + " start" + (count.starts === 1 ? "" : "s") + " unsaved");
+        i18n(count.starts === 1 ? "timing.unsavedOne" : "timing.unsavedMany", { n: count.starts });
     }
     if (timingSaveBarBtn) timingSaveBarBtn.disabled = count.starts === 0;
   }
@@ -4888,7 +4942,7 @@
    */
   function saveTimingsToFile() {
     var edits = getTimingEdits();
-    syncSaveTimingsUI("Saving\u2026");
+    syncSaveTimingsUI(i18n("timing.saving"));
     fetch("__save-timings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -4897,21 +4951,21 @@
       return res.json().then(function (body) { return { ok: res.ok, body: body }; });
     }).then(function (r) {
       if (!r.ok) {
-        syncSaveTimingsUI("Could not save: " + (r.body && r.body.error ? r.body.error : "server error"));
+        syncSaveTimingsUI(i18n("timing.couldNotSave", { error: r.body && r.body.error ? r.body.error : i18n("timing.serverError") }));
         return;
       }
       var b = r.body;
       var parts = [];
-      if (b.moved) parts.push(b.moved + " moved");
-      if (b.placed) parts.push(b.placed + " placed");
-      var note = "Saved " + (parts.length ? parts.join(", ") : "no changes") +
-        " in " + b.rukus.length + " ruku" + (b.rukus.length === 1 ? "" : "s");
-      if (b.missing && b.missing.length) note += " (skipped " + b.missing.join(", ") + ")";
-      syncSaveTimingsUI(note + " \u2014 reloading\u2026");
+      if (b.moved) parts.push(i18n("timing.moved", { n: b.moved }));
+      if (b.placed) parts.push(i18n("timing.placed", { n: b.placed }));
+      var note = i18n(b.rukus.length === 1 ? "timing.savedOne" : "timing.savedMany", {
+        what: parts.length ? parts.join(", ") : i18n("timing.noChanges"), n: b.rukus.length });
+      if (b.missing && b.missing.length) note = i18n("timing.skipped", { note: note, list: b.missing.join(", ") });
+      syncSaveTimingsUI(i18n("timing.reloading", { note: note }));
       saveTimingEdits({});
       setTimeout(function () { location.reload(); }, 900);
     }).catch(function () {
-      syncSaveTimingsUI("Could not reach the dev server. Is scripts/serve.js running?");
+      syncSaveTimingsUI(i18n("timing.devServerDown"));
     });
   }
 
@@ -4942,7 +4996,7 @@
       if (Notification.permission === "denied") {
         this.checked = false;
         syncMediaNotifHint();
-        alert("Notifications are blocked for this site. Enable them in your browser settings.");
+        alert(i18n("settings.notifBlocked"));
         return;
       }
       Notification.requestPermission().then(function (perm) {
@@ -5014,7 +5068,7 @@
       var selected = n === current;
       item.setAttribute("aria-selected", selected ? "true" : "false");
       item.innerHTML =
-        "<span class=\"para-menu-num\">Para " + escapeHtml(n) + "</span>" +
+        "<span class=\"para-menu-num\">" + escapeHtml(i18n("para.menuNum", { n: n })) + "</span>" +
         "<span class=\"para-menu-name\" lang=\"ar\">" + escapeHtml(paraName(n)[0]) + "</span>";
       paraMenu.appendChild(item);
     });
@@ -5128,10 +5182,10 @@
   })();
 
   document.getElementById("clear-cache-btn").addEventListener("click", function () {
-    if (!confirm("Clear all cached data? Your current track position will be preserved. Offline audio will need to be re-downloaded.")) return;
+    if (!confirm(i18n("settings.clearCacheConfirm"))) return;
     var btn = this;
     btn.disabled = true;
-    btn.textContent = "Clearing…";
+    btn.textContent = i18n("settings.clearing");
 
     // Preserve current track and essential settings
     var preserve = {};
@@ -5185,10 +5239,10 @@
 
   roleAdminBtn.addEventListener("click", function () {
     if (!isAdmin()) {
-      var pw = prompt("Enter admin password:");
+      var pw = prompt(i18n("settings.adminPassword"));
       if (pw === null) return;
       if (pw !== ADMIN_PASSWORD) {
-        alert("Incorrect password.");
+        alert(i18n("settings.wrongPassword"));
         return;
       }
     }
@@ -5232,7 +5286,7 @@
 
   function uploadToGitHub(filePath, base64Content, commitMessage) {
     var token = getGitHubToken();
-    if (!token) return Promise.reject(new Error("No GitHub token set. Click ⚙ GitHub Token to configure."));
+    if (!token) return Promise.reject(new Error(i18n("admin.noToken")));
 
     return getExistingFileSha(filePath).then(function (sha) {
       var body = {
@@ -5251,7 +5305,7 @@
         body: JSON.stringify(body)
       });
     }).then(function (res) {
-      if (!res.ok) return res.json().then(function (d) { throw new Error((d.message || "Upload failed") + " (HTTP " + res.status + ")"); });
+      if (!res.ok) return res.json().then(function (d) { throw new Error(i18n("admin.uploadHttp", { msg: d.message || i18n("admin.uploadFailedShort"), status: res.status })); });
       return res.json();
     });
   }
@@ -5266,7 +5320,7 @@
     bar.setAttribute("role", "status");
     bar.innerHTML =
       "<span class=\"upload-status-banner-text\"></span>" +
-      "<button type=\"button\" class=\"upload-status-banner-dismiss btn btn-sm btn-secondary\" aria-label=\"Dismiss notification\">Dismiss</button>";
+      "<button type=\"button\" class=\"upload-status-banner-dismiss btn btn-sm btn-secondary\" aria-label=\"" + i18n("admin.dismissAria") + "\">" + i18n("admin.dismiss") + "</button>";
     bar.style.display = "none";
     document.body.appendChild(bar);
     bar.querySelector(".upload-status-banner-dismiss").addEventListener("click", function () {
@@ -5301,12 +5355,12 @@
     var btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn btn-sm btn-primary";
-    btn.textContent = "⬆ Upload";
+    btn.textContent = i18n("admin.upload");
     btn.addEventListener("click", function () { fileInput.click(); });
 
     if (pendingUploadByIndex[globalIndex]) {
       btn.disabled = true;
-      btn.textContent = "Uploading…";
+      btn.textContent = i18n("admin.uploading");
     }
 
     fileInput.addEventListener("change", function () {
@@ -5318,7 +5372,7 @@
       if (ext !== ".ogg" && ext !== ".opus" && ext !== ".wav") ext = ".ogg";
       var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
       var filePath = "audio/" + row.para + "/" + targetName;
-      var summary = "Para " + row.para + " · Ruku " + rukuDisplay(row) + " (" + row.surah + ")";
+      var summary = i18n("admin.uploadSummary", { para: row.para, ruku: rukuLabel(row), surah: surahLabel(row) });
 
       // Immediate playback via blob
       if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
@@ -5328,20 +5382,20 @@
 
       pendingUploadByIndex[globalIndex] = true;
       btn.disabled = true;
-      btn.textContent = "Uploading…";
-      showUploadStatus("Recording upload in progress — " + summary, "progress");
+      btn.textContent = i18n("admin.uploading");
+      showUploadStatus(i18n("admin.uploadProgress", { summary: summary }), "progress");
 
       fileToBase64(file).then(function (b64) {
         return uploadToGitHub(filePath, b64, "Add " + targetName);
       }).then(function () {
         delete pendingUploadByIndex[globalIndex];
-        showUploadStatus("Recording uploaded successfully — " + summary, "success");
+        showUploadStatus(i18n("admin.uploadDone", { summary: summary }), "success");
         renderTable();
       }).catch(function (err) {
         delete pendingUploadByIndex[globalIndex];
         btn.disabled = false;
-        btn.textContent = "⬆ Upload";
-        showUploadStatus("Upload failed — " + summary + ": " + err.message, "error");
+        btn.textContent = i18n("admin.upload");
+        showUploadStatus(i18n("admin.uploadError", { summary: summary, error: err.message }), "error");
       });
     });
 
@@ -5352,7 +5406,7 @@
   function buildValidateControl(actionCell, row) {
     var label = document.createElement("label");
     label.className = "validate-label" + (isRukuValidated(row) ? " validated" : "");
-    label.title = "Mark recording as validated";
+    label.title = i18n("admin.validateTitle");
 
     var cb = document.createElement("input");
     cb.type = "checkbox";
@@ -5360,12 +5414,12 @@
     cb.checked = isRukuValidated(row);
 
     var span = document.createElement("span");
-    span.textContent = cb.checked ? "✓ Validated" : "✓ Validate";
+    span.textContent = i18n(cb.checked ? "admin.validated" : "admin.validate");
 
     cb.addEventListener("change", function () {
       setRukuValidated(row, this.checked);
       label.classList.toggle("validated", this.checked);
-      span.textContent = this.checked ? "✓ Validated" : "✓ Validate";
+      span.textContent = i18n(this.checked ? "admin.validated" : "admin.validate");
     });
 
     label.appendChild(cb);
@@ -5503,13 +5557,13 @@
   function updateShareBulkLinksUi() {
     var n = shareBulkListEl ? shareBulkListEl.querySelectorAll(".share-bulk-links-tile.is-selected").length : 0;
     var total = shareBulkListEl ? shareBulkListEl.querySelectorAll(".share-bulk-links-tile").length : 0;
-    if (shareBulkCountEl) shareBulkCountEl.textContent = n + " of " + total + " selected";
+    if (shareBulkCountEl) shareBulkCountEl.textContent = i18n("share.selectedOf", { n: n, total: total });
     if (shareBulkCopyBtn) shareBulkCopyBtn.disabled = !n;
     if (shareBulkShareBtn) shareBulkShareBtn.disabled = !n;
   }
 
   function populateShareBulkLinksModal(paraNum) {
-    if (shareBulkTitleEl) shareBulkTitleEl.textContent = "Share ruku links · Para " + paraNum;
+    if (shareBulkTitleEl) shareBulkTitleEl.textContent = i18n("share.linksTitlePara", { para: paraNum });
     if (!shareBulkListEl) return;
     shareBulkListEl.textContent = "";
     var items = indexedData[paraNum] || [];
@@ -5520,18 +5574,15 @@
       btn.className = "share-bulk-links-tile is-selected";
       btn.setAttribute("aria-pressed", "true");
       btn.setAttribute("data-global-index", String(item.globalIndex));
-      btn.setAttribute(
-        "title",
-        "P" + paraNum + ": " + rukuDisplay(row) + " — " + row.surah + " (" + row.verses + ")"
-      );
+      btn.setAttribute("title", shareRukuTitle(paraNum, row));
 
       var keyEl = document.createElement("span");
       keyEl.className = "share-bulk-links-tile-key";
-      keyEl.textContent = rukuDisplay(row);
+      keyEl.textContent = isUrdu() ? i18n("card.ruku", { n: rukuLabel(row) }) : rukuDisplay(row);
 
       var surahEl = document.createElement("span");
       surahEl.className = "share-bulk-links-tile-surah";
-      surahEl.textContent = row.surah;
+      surahEl.textContent = surahLabel(row);
 
       var versesEl = document.createElement("span");
       versesEl.className = "share-bulk-links-tile-verses";
@@ -5549,7 +5600,7 @@
     if (!shareBulkModal) return;
     var items = indexedData[paraNum] || [];
     if (!items.length) {
-      alert("No ruku rows for Para " + paraNum + ".");
+      alert(i18n("share.noRukus", { para: paraNum }));
       return;
     }
     populateShareBulkLinksModal(paraNum);
@@ -5612,11 +5663,11 @@
     shareBulkCopyBtn.addEventListener("click", function () {
       var t = getShareBulkLinksCombinedText();
       if (!t) {
-        alert("Select at least one ruku.");
+        alert(i18n("share.selectOne"));
         return;
       }
       copyShareCaption(t).then(function (ok) {
-        alert(ok ? "Copied to clipboard." : "Could not copy. Try Share again.");
+        alert(i18n(ok ? "share.copied" : "share.copyFailed"));
       });
     });
   }
@@ -5625,7 +5676,7 @@
     shareBulkShareBtn.addEventListener("click", function () {
       var t = getShareBulkLinksCombinedText();
       if (!t) {
-        alert("Select at least one ruku.");
+        alert(i18n("share.selectOne"));
         return;
       }
       if (typeof navigator.share === "function") {
@@ -5635,16 +5686,12 @@
           .catch(function (err) {
             if (err && err.name === "AbortError") return;
             copyShareCaption(t).then(function (ok) {
-              alert(
-                ok
-                  ? "Share sheet failed — text was copied instead."
-                  : "Could not share or copy."
-              );
+              alert(i18n(ok ? "share.sheetFailedCopied" : "share.shareCopyFailed"));
             });
           });
       } else {
         copyShareCaption(t).then(function (ok) {
-          alert(ok ? "Copied (Share not supported on this browser)." : "Could not copy.");
+          alert(i18n(ok ? "share.copiedNoShare" : "share.copyFailedShort"));
         });
       }
     });
@@ -5670,11 +5717,11 @@
     if (!total) return;
     var cur = shareFileItems[shareFileIndex];
     var n = shareFileIndex + 1;
-    shareFileProgressEl.textContent = "P" + shareFileParaNum + " · ruku " + n + " of " + total;
+    shareFileProgressEl.textContent = i18n("share.fileProgress", { para: shareFileParaNum, n: n, total: total });
     shareFilePreviewEl.textContent = cur.caption;
     var last = shareFileIndex >= total - 1;
     shareFileNextBtn.disabled = last;
-    shareFileNextBtn.textContent = last ? "Last ruku" : "Next ruku";
+    shareFileNextBtn.textContent = i18n(last ? "share.lastRuku" : "share.nextRukuBtn");
     if (shareFileAllBtn) {
       shareFileAllBtn.style.display = total > 1 ? "" : "none";
     }
@@ -5684,13 +5731,13 @@
     if (!shareFileModal) return;
     shareFileItems = getParaRukuFileShareItems(paraNum);
     if (!shareFileItems.length) {
-      alert("No recordings to share for Para " + paraNum + ". Save offline or check audio paths.");
+      alert(i18n("share.noRecordings", { para: paraNum }));
       return;
     }
     shareFileParaNum = paraNum;
     shareFileIndex = 0;
     if (shareFileTitleEl) {
-      shareFileTitleEl.textContent = "Share Para " + paraNum + " as files";
+      shareFileTitleEl.textContent = i18n("share.fileTitlePara", { para: paraNum });
     }
     updateShareFileModal();
     shareFileModal.classList.add("is-open");
@@ -5763,21 +5810,21 @@
   // Download current Para button
   var downloadParaBtn = document.getElementById("download-para-btn");
   downloadParaBtn.addEventListener("click", function () {
-    if (!navigator.onLine) { alert("No internet connection."); return; }
+    if (!navigator.onLine) { alert(i18n("download.offline")); return; }
     var para = parseInt(paraSelect.value, 10);
     var urls = getAudioUrlsForPara(para);
-    if (!urls.length) { alert("No recordings in Para " + para + "."); return; }
+    if (!urls.length) { alert(i18n("download.noneInPara", { para: para })); return; }
 
     downloadParaBtn.disabled = true;
-    downloadParaBtn.textContent = "Downloading 0/" + urls.length + "…";
+    downloadParaBtn.textContent = i18n("download.progress", { done: 0, total: urls.length });
 
     downloadBatch(urls, function (done, total) {
-      downloadParaBtn.textContent = "Downloading " + done + "/" + total + "…";
+      downloadParaBtn.textContent = i18n("download.progress", { done: done, total: total });
     }).then(function () {
-      downloadParaBtn.textContent = "Saved · Para " + para;
+      downloadParaBtn.textContent = i18n("download.savedPara", { para: para });
       downloadParaBtn.disabled = false;
       renderTable();
-      setTimeout(function () { downloadParaBtn.textContent = "Download para"; }, 3000);
+      setTimeout(function () { downloadParaBtn.textContent = i18n("download.paraIdle"); }, 3000);
     });
   });
 
@@ -5786,11 +5833,11 @@
   var downloadAllStatus = document.getElementById("download-all-status");
 
   downloadAllBtn.addEventListener("click", function () {
-    if (!navigator.onLine) { alert("No internet connection."); return; }
+    if (!navigator.onLine) { alert(i18n("download.offline")); return; }
 
     downloadAllBtn.disabled = true;
-    downloadAllBtn.textContent = "⏳ Checking...";
-    downloadAllStatus.textContent = "Preparing...";
+    downloadAllBtn.textContent = i18n("download.checking");
+    downloadAllStatus.textContent = i18n("download.preparing");
 
     var allPromises = [];
     for (var p = 1; p <= 30; p++) {
@@ -5806,25 +5853,25 @@
       });
 
       var totalToDownload = allUrls.length;
-      if (!totalToDownload) { alert("No recordings found."); return; }
-      if (!confirm("Download " + totalToDownload + " audio files for offline use? (" + cachedCount + " already cached)")) {
+      if (!totalToDownload) { alert(i18n("download.noneFound")); return; }
+      if (!confirm(i18n("download.allConfirm", { n: totalToDownload, cached: cachedCount }))) {
         downloadAllBtn.disabled = false;
-        downloadAllBtn.textContent = "📥 Download All Paras";
+        downloadAllBtn.textContent = i18n("download.allIdle");
         downloadAllStatus.textContent = "";
         return;
       }
 
-      downloadAllBtn.textContent = "⏳ Downloading…";
+      downloadAllBtn.textContent = i18n("download.downloading");
       downloadAllStatus.textContent = "0/" + totalToDownload;
 
       downloadBatch(allUrls, function (done, total) {
         downloadAllStatus.textContent = done + "/" + total;
       }).then(function () {
-        downloadAllBtn.textContent = "✓ All saved";
+        downloadAllBtn.textContent = i18n("download.allSaved");
         downloadAllStatus.textContent = "";
         downloadAllBtn.disabled = false;
         renderTable();
-        setTimeout(function () { downloadAllBtn.textContent = "📥 Download All Paras"; }, 3000);
+        setTimeout(function () { downloadAllBtn.textContent = i18n("download.allIdle"); }, 3000);
       });
     });
   });
@@ -5866,32 +5913,15 @@
   // queried live on each render so the guide stays correct if the table
   // re-renders. A null target centers the caption with no spotlight/arrow.
   var GUIDE_STEPS = [
-    {
-      title: "Choose a Para (Juz)",
-      body: "Tap a Para here; swipe sideways for all 30. Its rukus appear in the list below.",
-      selector: "#para-chips .para-chip[aria-pressed=\"true\"]",
-    },
-    {
-      title: "Play a recording",
-      body: "Tap the play button on any ruku to listen. Use −5 / +5 to skip, or drag the bar to seek.",
-      selector: "#ruku-tbody .audio-play-btn",
-    },
-    {
-      title: "Download for offline",
-      body: "Tap the download icon to save a ruku on your device. Once it's saved you can play it anytime, even without internet.",
-      selector: "#ruku-tbody .audio-offline-btn",
-    },
-    {
-      title: "Share on WhatsApp",
-      body: "Tap the WhatsApp icon to send a ruku to family or friends. Use the menu's “Share rukus” to send several at once.",
-      selector: "#ruku-tbody .audio-share-wa-btn",
-    },
-    {
-      title: "Track memorization (Hifz)",
-      body: "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The ring above the list shows your progress for this Para.",
-      selector: "#ruku-tbody .hifz-mark",
-    },
+    { key: "guide.para", selector: "#para-chips .para-chip[aria-pressed=\"true\"]" },
+    { key: "guide.play", selector: "#ruku-tbody .audio-play-btn" },
+    { key: "guide.offline", selector: "#ruku-tbody .audio-offline-btn" },
+    { key: "guide.whatsapp", selector: "#ruku-tbody .audio-share-wa-btn" },
+    { key: "guide.hifz", selector: "#ruku-tbody .hifz-mark" },
   ];
+
+  /** The open guide's redraw, so a language switch can rewrite its words; null when closed. */
+  var guideRerender = null;
 
   function guideTargetRect(step) {
     if (!step.selector) return null;
@@ -5936,7 +5966,7 @@
     var root = document.createElement("div");
     root.className = "mq-guide-overlay";
     root.setAttribute("role", "dialog");
-    root.setAttribute("aria-label", "Guided walkthrough");
+    root.setAttribute("aria-label", i18n("guide.aria"));
 
     var spotlight = document.createElement("div");
     spotlight.className = "mq-guide-spotlight";
@@ -5952,7 +5982,7 @@
       '<p class="mq-guide-body"></p>' +
       '<div class="mq-guide-actions">' +
       '  <span class="mq-guide-step-label"></span>' +
-      '  <button type="button" class="mq-guide-skip">Skip</button>' +
+      '  <button type="button" class="mq-guide-skip"></button>' +
       '  <button type="button" class="mq-guide-next"></button>' +
       '</div>';
 
@@ -5976,10 +6006,12 @@
       var target = guideTargetRect(step);
       var vh = window.innerHeight;
 
-      labelEl.textContent = (index + 1) + " of " + GUIDE_STEPS.length;
-      titleEl.textContent = step.title;
-      bodyEl.textContent = step.body;
-      nextBtn.textContent = (index === GUIDE_STEPS.length - 1) ? "Got it" : "Next";
+      root.setAttribute("aria-label", i18n("guide.aria"));
+      labelEl.textContent = i18n("guide.stepOf", { i: index + 1, n: GUIDE_STEPS.length });
+      titleEl.textContent = i18n(step.key + "Title");
+      bodyEl.textContent = i18n(step.key + "Body");
+      skipBtn.textContent = i18n("guide.skip");
+      nextBtn.textContent = i18n((index === GUIDE_STEPS.length - 1) ? "guide.done" : "guide.next");
 
       // Spotlight around the target (8px padding, like the native ring pad).
       if (target) {
@@ -6038,6 +6070,7 @@
     }
 
     function finish() {
+      guideRerender = null;
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", renderStep);
       window.removeEventListener("scroll", renderStep, true);
@@ -6060,6 +6093,7 @@
     // Reposition on any scroll (table is inside a scroll container) — capture phase.
     window.addEventListener("scroll", renderStep, true);
 
+    guideRerender = renderStep;
     renderStep();
   }
 

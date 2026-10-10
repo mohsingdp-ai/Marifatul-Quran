@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v31";
+const CACHE = "mq-v32";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -29,8 +29,8 @@ self.addEventListener("message", function (event) {
       ongoing: true,
       data: { scope: self.registration.scope },
       actions: playing
-        ? [{ action: "pause", title: "Pause" }]
-        : [{ action: "play", title: "Play" }]
+        ? [{ action: "pause", title: d.pauseLabel || "Pause" }]
+        : [{ action: "play", title: d.playLabel || "Play" }]
     };
 
     var p = self.registration.showNotification(title, opts);
@@ -132,6 +132,7 @@ const STATIC = [
   "./style.css",
   "./app.js",
   "./material.js",
+  "./i18n.js",
   "./hifz.js",
   "./morphology-labels.js",
   "./data.js",
@@ -142,6 +143,8 @@ const STATIC = [
   "./asset/fonts/rubik-400.woff2",
   "./asset/fonts/rubik-500.woff2",
   "./asset/fonts/rubik-600.woff2",
+  "./asset/fonts/noto-sans-arabic-400.woff2",
+  "./asset/fonts/noto-sans-arabic-600.woff2",
   "./timings.js",
   "./manifest.json",
   "./icon-192.png",
