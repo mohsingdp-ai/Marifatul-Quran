@@ -183,13 +183,21 @@
       </div>
     </div>
 
+    <!-- The para's memorization at a glance: a ring, the count, and the para's name with the
+         overall count under it. renderHifzMeter() fills it. -->
     <div class="hifz-meter" id="hifz-meter" aria-live="polite">
+      <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" data-i18n-aria="hifz.progressAria" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg class="hifz-ring" viewBox="0 0 52 52" aria-hidden="true">
+          <circle class="hifz-ring-track" cx="26" cy="26" r="22"/>
+          <circle class="hifz-ring-fill" id="hifz-meter-fill" cx="26" cy="26" r="22" pathLength="100"/>
+        </svg>
+      </div>
       <div class="hifz-meter-head">
         <span class="hifz-meter-para" id="hifz-meter-para">Para 1</span>
-        <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
-      </div>
-      <div class="hifz-meter-bar" role="progressbar" aria-label="Para memorization progress" data-i18n-aria="hifz.progressAria" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-        <div class="hifz-meter-fill" id="hifz-meter-fill"></div>
+        <span class="hifz-meter-sub">
+          <span class="hifz-meter-name" id="hifz-meter-name" lang="ar"></span>
+          <span class="hifz-meter-total" id="hifz-meter-total">0 / 573 memorized</span>
+        </span>
       </div>
       <div class="hifz-meter-counts" id="hifz-meter-counts"></div>
     </div>
