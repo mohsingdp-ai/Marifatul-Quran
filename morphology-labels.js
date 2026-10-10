@@ -285,6 +285,18 @@
   };
 
   /*
+   * Tags the corpus puts on more than one part of speech: مَنْ / كَيْفَ asking a question
+   * are اسمِ استفہام and مَن / أَيْنَ starting a condition are اسمِ شرط, where هَلْ and إِنْ
+   * are حروف; the لْ of فَلْيَصُمْهُ is لامِ امر, not فعل امر. Keyed "<tag>|<part of speech>".
+   * The question أَ prefix is filed under N too; segmentLabel in app.js skips it.
+   */
+  var GRAMMAR_BY_POS = {
+    "INTG|N": "اسمِ استفہام",
+    "COND|N": "اسمِ شرط",
+    "IMPV|P": "لامِ امر"
+  };
+
+  /*
    * Number, gender and person, spelled out so واحد and جمع are visible at a glance rather
    * than hidden behind a tag like "2MP". Verbs and pronouns carry all three ("2MP" →
    * جمع مذکر حاضر); nouns carry only the first two ("MP" → جمع مذکر).
@@ -350,6 +362,7 @@
     particle: PARTICLE,
     pronoun: PRONOUN,
     grammar: GRAMMAR,
+    grammarByPos: GRAMMAR_BY_POS,
     noMeaning: NO_MEANING,
     describePgn: describePgn,
     posFallback: POS_FALLBACK,
