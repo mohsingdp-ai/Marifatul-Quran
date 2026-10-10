@@ -252,6 +252,7 @@ async function main() {
 
       // 3. every tappable word of the app's own text, in either script, must find its entry
       if (!indoPak[key]) fail(key, "no Indo-Pak text in verses-indopak.js");
+      if (!segs) fail(key, "no word parts in asset/morphology/para-" + row.para + ".json");
       const ip = indoPak[key] || "";
       const naskh = indoPakNaskhText(ip);
       // Every private glyph in the words must have a plain form (the closing marks keep theirs).
@@ -297,6 +298,10 @@ async function main() {
   if (mismatchAyat.length > 10) fail("...", (mismatchAyat.length - 10) + " more differences");
   for (const k of unmatchedByAyah.slice(0, 10)) fail(k, "a tapped word has no local match");
   if (unmatchedByAyah.length > 10) fail("...", (unmatchedByAyah.length - 10) + " more unmatched ayat");
+  Object.keys(noParts).forEach(function (k) {
+    for (const t of noParts[k].slice(0, 10)) fail(t + k, "a tapped word has no word parts");
+    if (noParts[k].length > 10) fail("...", (noParts[k].length - 10) + " more taps without word parts" + k);
+  });
 
   // --live: read a sample back from quran.com itself
   let liveChecked = 0;

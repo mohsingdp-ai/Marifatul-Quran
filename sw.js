@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v26";
+const CACHE = "mq-v27";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -258,8 +258,12 @@ self.addEventListener("fetch", function (e) {
   // All other requests: network first, fall back to cache (works offline, always fresh online)
   e.respondWith(
     fetch(e.request).then(function (res) {
+      // An error page is never kept, and a good cached copy beats it.
+      if (!res.ok) return caches.match(e.request).then(function (c) { return c || res; });
       var clone = res.clone();
-      caches.open(CACHE).then(function (c) { c.put(e.request, clone); });
+      caches.open(CACHE).then(function (c) {
+        return c.put(e.request, clone);
+      }).catch(function () { /* quota / unsupported */ });
       return res;
     }).catch(function () {
       return caches.match(e.request);
