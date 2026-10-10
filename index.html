@@ -424,7 +424,8 @@
           <div class="settings-row">
             <div class="settings-download-row">
               <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn">Download All Paras</button>
-              <span class="download-all-status" id="download-all-status"></span>
+              <span class="download-all-status" id="download-all-status" aria-hidden="true"></span>
+              <span class="sr-only" id="download-all-live" role="status"></span>
             </div>
           </div>
         </div>
@@ -510,6 +511,7 @@
   <script src="verses.js"></script>
   <script src="timings.js"></script>
   <script src="hifz.js"></script>
+  <script src="download.js"></script>
   <script src="morphology-labels.js"></script>
   <script src="indopak-plain.js"></script>
   <script src="app.js"></script>

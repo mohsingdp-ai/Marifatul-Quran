@@ -134,6 +134,7 @@ const STATIC = [
   "./material.js",
   "./i18n.js",
   "./hifz.js",
+  "./download.js",
   "./morphology-labels.js",
   "./data.js",
   "./verses.js",
@@ -260,7 +261,8 @@ self.addEventListener("fetch", function (e) {
     e.respondWith(
       caches.open(AUDIO_CACHE).then(function (cache) {
         return cache.match(e.request).then(function (cached) {
-          if (cached) return audioCacheResponse(cached, e.request);
+          // "Re-download fresh copy" asks with cache:"reload"; the app overwrites the saved copy.
+          if (cached && e.request.cache !== "reload") return audioCacheResponse(cached, e.request);
           return fetch(e.request).then(function (res) {
             // Only whole, successful bodies are worth keeping. A 206 slice or an error
             // page stored here would fail to decode on every later play of this track,
@@ -272,7 +274,8 @@ self.addEventListener("fetch", function (e) {
           });
         });
       }).catch(function () {
-        return caches.match(e.request);
+        // A failed "Re-download fresh copy" must fail, not hand back the old copy as if new.
+        return e.request.cache === "reload" ? Response.error() : caches.match(e.request);
       })
     );
     return;
