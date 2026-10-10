@@ -937,7 +937,7 @@ async function initFromParaRukuQuery() {
     const blob = found.blob;
     const baseName = found.src.split('/').pop() || 'recording.opus';
     const file = new File([blob], baseName, { type: blob.type || 'audio/ogg' });
-    // Urdu shows the surah's Arabic name and the bare ruku number; English stays as before.
+    // Urdu: the surah's Arabic name and the bare ruku number. English: the English name and "R1".
     const ur = I18N.lang() === 'ur';
     const surah = ur ? (row.surahArabic || row.surah) : row.surah;
     const rukuNum = ur ? String(ruku).replace(/R/g, '') : ruku;
@@ -948,7 +948,7 @@ async function initFromParaRukuQuery() {
     files.push({ file, name: label });
 
     const dzSpan = dropzone && dropzone.querySelector('span');
-    if (dzSpan) dzSpan.textContent = 'Loaded from link — drop more files to replace playlist';
+    if (dzSpan) dzSpan.textContent = i18n('player.loadedFromLink');
     document.title = i18n('player.docTitle', { surah, ruku: rukuNum });
 
     loadTrack(0, { autoplay: true });

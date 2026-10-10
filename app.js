@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  /** The app's words in the chosen language (i18n.js). Not `t`: that name is taken locally. */
+  /** i18n.js's t(); see there for why it is not called `t` here. */
   var i18n = window.I18N.t;
 
   function isUrdu() {
@@ -193,11 +193,6 @@
 
   function paraName(n) {
     return PARA_NAMES[Number(n) - 1] || ["", ""];
-  }
-
-  /** The para's name as a label: the transliteration in English, the Arabic in Urdu. */
-  function paraLabelName(n) {
-    return paraName(n)[isUrdu() ? 0 : 1];
   }
 
   /** The stepper's face: "Para N" over the para's name. */
@@ -2286,7 +2281,7 @@
     return u.href.replace(/#$/, "");
   }
 
-  /** "P1: R1 — Al-Fatihah (1-7)"; in Urdu the Arabic surah name and the bare ruku number. */
+  /** "P1: R1 — Al-Fatihah (1–7)"; in Urdu the Arabic surah name and the bare ruku number. */
   function shareRukuTitle(paraNum, row) {
     return i18n("share.rukuTitle", { para: paraNum, ruku: rukuLabel(row), surah: surahLabel(row), verses: row.verses });
   }
@@ -2648,7 +2643,8 @@
           });
       })
       .catch(function (e) {
-        alert(e && e.message ? e.message : i18n("share.loadAllFailed"));
+        console.error("Share all recordings:", e);
+        alert(i18n("share.loadAllFailed"));
       });
   }
 
@@ -2770,8 +2766,7 @@
       return;
     }
 
-    var dockRuku = isUrdu() ? String(rukuDisplay(row)).replace(/R/g, "") : rukuDisplay(row);
-    titleEl.textContent = i18n("dock.title", { para: row.para, ruku: dockRuku });
+    titleEl.textContent = i18n("dock.title", { para: row.para, ruku: rukuLabel(row) });
     metaEl.textContent = parseInt(paraSelect.value, 10) !== row.para
       ? i18n("dock.metaOtherPara", { surah: surahLabel(row), verses: versesText(row.verses), para: row.para })
       : i18n("dock.meta", { surah: surahLabel(row), verses: versesText(row.verses) });
@@ -4607,35 +4602,49 @@
     if (b) window.I18N.setLang(b.dataset.uiLang);
   });
 
-  // The markup is refilled by i18n.js; everything app.js wrote is written again.
+  /*
+   * i18n.js refills the markup; this redraws what app.js put on screen in the old language.
+   * The word box closes rather than redraws. Each step runs on its own, so one that throws
+   * cannot leave the steps after it in the old language.
+   */
   document.addEventListener("mq:langchange", function () {
-    syncUiLangUI();
-    labelParaOptions();
-    syncParaFace();
-    hideWordPopover();
-    renderTable({ scrollBasePara: tableRenderedPara });
-    renderHifzMeter();
-    var gi = mqPlayback.activeGlobalIndex;
-    if (gi != null && data[gi] && mqPlayback.el) {
-      syncToolbarNowPlaying(data[gi], mqPlayback.el.paused ? "paused" : "playing");
-      setNowPlayingMetadata(data[gi], mqPlayback.el);
-      updatePersistentMediaNotification();
-    }
-    syncToolbarTransport();
-    syncSaveTimingsUI();
-    syncMediaNotifHint();
-    if (roleBadge) roleBadge.textContent = i18n(isAdmin() ? "settings.roleAdmin" : "settings.roleUser");
-    if (settingsModal.classList.contains("is-open")) syncSettingsUI();
-    if (shareBulkModal && shareBulkModal.classList.contains("is-open")) {
-      populateShareBulkLinksModal(parseInt(paraSelect.value, 10));
-    }
-    if (shareFileModal && shareFileModal.classList.contains("is-open")) {
-      shareFileItems = getParaRukuFileShareItems(shareFileParaNum);
-      if (shareFileTitleEl) shareFileTitleEl.textContent = i18n("share.fileTitlePara", { para: shareFileParaNum });
-      updateShareFileModal();
-    }
-    if (paraMenu && !paraMenu.hidden) openParaMenu();
-    if (guideRerender) guideRerender();
+    [
+      syncUiLangUI,
+      labelParaOptions,
+      syncParaFace,
+      hideWordPopover,
+      function () { renderTable({ scrollBasePara: tableRenderedPara }); },
+      renderHifzMeter,
+      function () {
+        var gi = mqPlayback.activeGlobalIndex;
+        if (gi == null || !data[gi] || !mqPlayback.el) return;
+        syncToolbarNowPlaying(data[gi], mqPlayback.el.paused ? "paused" : "playing");
+        setNowPlayingMetadata(data[gi], mqPlayback.el);
+        updatePersistentMediaNotification();
+      },
+      syncToolbarTransport,
+      syncSaveTimingsUI,
+      syncMediaNotifHint,
+      function () { if (roleBadge) roleBadge.textContent = i18n(isAdmin() ? "settings.roleAdmin" : "settings.roleUser"); },
+      function () { setDownloadParaText(downloadParaText[0], downloadParaText[1]); },
+      function () { setDownloadAllText(downloadAllText); },
+      function () { if (settingsModal.classList.contains("is-open")) syncSettingsUI(); },
+      function () {
+        if (shareBulkModal && shareBulkModal.classList.contains("is-open")) {
+          populateShareBulkLinksModal(parseInt(paraSelect.value, 10));
+        }
+      },
+      function () {
+        if (!shareFileModal || !shareFileModal.classList.contains("is-open")) return;
+        shareFileItems = getParaRukuFileShareItems(shareFileParaNum);
+        if (shareFileTitleEl) shareFileTitleEl.textContent = i18n("share.fileTitlePara", { para: shareFileParaNum });
+        updateShareFileModal();
+      },
+      function () { if (paraMenu && !paraMenu.hidden) openParaMenu(); },
+      function () { if (guideRerender) guideRerender(); }
+    ].forEach(function (step) {
+      try { step(); } catch (e) { console.error("Language switch: a redraw step failed", e); }
+    });
   });
 
   function syncSettingsUI() {
@@ -5695,8 +5704,20 @@
     });
   }
 
-  // Download current Para button
+  /**
+   * The two download buttons show progress in their labels. Each remembers which words it is
+   * showing, so a language switch redraws them as they are, mid-download included. The para
+   * button's words live in its <span>, beside the icon.
+   */
   var downloadParaBtn = document.getElementById("download-para-btn");
+  var downloadParaLabel = downloadParaBtn.querySelector("span");
+  var downloadParaText = ["menu.downloadPara"];
+
+  function setDownloadParaText(key, vars) {
+    downloadParaText = [key, vars];
+    downloadParaLabel.textContent = i18n(key, vars);
+  }
+
   downloadParaBtn.addEventListener("click", function () {
     if (!navigator.onLine) { alert(i18n("download.offline")); return; }
     var para = parseInt(paraSelect.value, 10);
@@ -5704,27 +5725,34 @@
     if (!urls.length) { alert(i18n("download.noneInPara", { para: para })); return; }
 
     downloadParaBtn.disabled = true;
-    downloadParaBtn.textContent = i18n("download.progress", { done: 0, total: urls.length });
+    setDownloadParaText("download.progress", { progress: "0/" + urls.length });
 
     downloadBatch(urls, function (done, total) {
-      downloadParaBtn.textContent = i18n("download.progress", { done: done, total: total });
+      setDownloadParaText("download.progress", { progress: done + "/" + total });
     }).then(function () {
-      downloadParaBtn.textContent = i18n("download.savedPara", { para: para });
+      setDownloadParaText("download.savedPara", { para: para });
       downloadParaBtn.disabled = false;
       renderTable();
-      setTimeout(function () { downloadParaBtn.textContent = i18n("download.paraIdle"); }, 3000);
+      setTimeout(function () { setDownloadParaText("menu.downloadPara"); }, 3000);
     });
   });
 
   // Download All Paras button (in settings)
   var downloadAllBtn = document.getElementById("download-all-btn");
   var downloadAllStatus = document.getElementById("download-all-status");
+  var downloadAllText = "settings.downloadAll";
+
+  function setDownloadAllText(key) {
+    downloadAllText = key;
+    downloadAllBtn.textContent = i18n(key);
+  }
+  setDownloadAllText(downloadAllText);
 
   downloadAllBtn.addEventListener("click", function () {
     if (!navigator.onLine) { alert(i18n("download.offline")); return; }
 
     downloadAllBtn.disabled = true;
-    downloadAllBtn.textContent = i18n("download.checking");
+    setDownloadAllText("download.checking");
     downloadAllStatus.textContent = i18n("download.preparing");
 
     var allPromises = [];
@@ -5744,22 +5772,22 @@
       if (!totalToDownload) { alert(i18n("download.noneFound")); return; }
       if (!confirm(i18n("download.allConfirm", { n: totalToDownload, cached: cachedCount }))) {
         downloadAllBtn.disabled = false;
-        downloadAllBtn.textContent = i18n("download.allIdle");
+        setDownloadAllText("download.allIdle");
         downloadAllStatus.textContent = "";
         return;
       }
 
-      downloadAllBtn.textContent = i18n("download.downloading");
+      setDownloadAllText("download.downloading");
       downloadAllStatus.textContent = "0/" + totalToDownload;
 
       downloadBatch(allUrls, function (done, total) {
         downloadAllStatus.textContent = done + "/" + total;
       }).then(function () {
-        downloadAllBtn.textContent = i18n("download.allSaved");
+        setDownloadAllText("download.allSaved");
         downloadAllStatus.textContent = "";
         downloadAllBtn.disabled = false;
         renderTable();
-        setTimeout(function () { downloadAllBtn.textContent = i18n("download.allIdle"); }, 3000);
+        setTimeout(function () { setDownloadAllText("download.allIdle"); }, 3000);
       });
     });
   });

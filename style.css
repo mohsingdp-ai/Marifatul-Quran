@@ -198,17 +198,19 @@ html[lang="ur"] {
 }
 
 /* Letter-spacing pulls joined Urdu letters apart, and the small uppercase labels it serves
-   mean nothing in Urdu; Urdu glyphs also need more height than the Latin line boxes give. */
+   mean nothing in Urdu. */
 html[lang="ur"] body * {
   letter-spacing: normal !important;
 }
 
+/* Urdu letters need a taller line than this small label's 1rem. */
 html[lang="ur"] .para-picker-num {
   line-height: 1.5;
 }
 
 /* The para and surah names in the interface (not the mushaf) get the bundled face in Urdu:
-   left to the system, an Urdu page draws them in a tall Nastaliq that overruns its label. */
+   left to the system (seen in Chrome on Linux; likewise wherever the system's Urdu font is a
+   Nastaliq, as on Android), an Urdu page draws them in a tall Nastaliq that overruns its label. */
 html[lang="ur"] .para-picker-name,
 html[lang="ur"] .para-menu-name,
 html[lang="ur"] .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
@@ -4292,12 +4294,14 @@ tr.playing.audio-paused .audio-play-btn {
 
 /* Ayah ranges read left to right inside Urdu text ("1–7", not "7–1"). */
 .verses-part,
-.share-bulk-links-tile-verses {
+.share-bulk-links-tile-verses,
+.hifz-plays-count {
   unicode-bidi: isolate;
 }
 
 [dir="rtl"] .verses-part,
-[dir="rtl"] .share-bulk-links-tile-verses {
+[dir="rtl"] .share-bulk-links-tile-verses,
+[dir="rtl"] .hifz-plays-count {
   direction: ltr;
 }
 

@@ -82,9 +82,8 @@
       "download.failed": "Could not save audio for offline use.",
       "download.offline": "No internet connection.",
       "download.noneInPara": "No recordings in Para {para}.",
-      "download.progress": "Downloading {done}/{total}…",
+      "download.progress": "Downloading {progress}…",
       "download.savedPara": "Saved · Para {para}",
-      "download.paraIdle": "Download para",
       "download.checking": "⏳ Checking...",
       "download.preparing": "Preparing...",
       "download.noneFound": "No recordings found.",
@@ -183,6 +182,7 @@
       "player.loadError": "Could not load audio (offline or missing file). Open the main app and save offline, or try again online.",
       "player.trackLabel": "Para {para} · {ruku} — {surah} ({verses})",
       "player.docTitle": "MQ · {surah} ({ruku})",
+      "player.loadedFromLink": "Loaded from link — drop more files to replace playlist",
 
       "settings.language": "Language",
       "settings.languageHint": "Buttons, titles and messages. The Quran text and its translation stay as they are.",
@@ -391,9 +391,8 @@
       "download.failed": "آڈیو آف لائن کے لیے محفوظ نہیں ہو سکی۔",
       "download.offline": "انٹرنیٹ نہیں ہے۔",
       "download.noneInPara": "پارہ {para} میں کوئی ریکارڈنگ نہیں۔",
-      "download.progress": "ڈاؤن لوڈ ہو رہا ہے {done}/{total}…",
+      "download.progress": "ڈاؤن لوڈ ہو رہا ہے {progress}…",
       "download.savedPara": "محفوظ · پارہ {para}",
-      "download.paraIdle": "پارہ ڈاؤن لوڈ کریں",
       "download.checking": "⏳ جانچ ہو رہی ہے...",
       "download.preparing": "تیاری ہو رہی ہے...",
       "download.noneFound": "کوئی ریکارڈنگ نہیں ملی۔",
@@ -410,7 +409,7 @@
       "guide.paraTitle": "پارہ منتخب کریں",
       "guide.paraBody": "یہاں ٹیپ کر کے 1 سے 30 تک کوئی پارہ چنیں۔ اس کے رکوع نیچے فہرست میں آ جائیں گے۔",
       "guide.playTitle": "ریکارڈنگ سنیں",
-      "guide.playBody": "کسی بھی رکوع کا پلے بٹن دبا کر سنیں۔ آگے پیچھے جانے کے لیے −5 / +5 استعمال کریں، یا پٹی کو کھینچیں۔",
+      "guide.playBody": "کسی بھی رکوع کا پلے بٹن دبا کر سنیں۔ آگے پیچھے جانے کے لیے ⁦−5 / +5⁩ استعمال کریں، یا پٹی کو کھینچیں۔",
       "guide.offlineTitle": "آف لائن کے لیے ڈاؤن لوڈ کریں",
       "guide.offlineBody": "ڈاؤن لوڈ کا نشان دبا کر رکوع اپنے فون میں محفوظ کریں۔ محفوظ ہونے کے بعد آپ اسے کبھی بھی سن سکتے ہیں، انٹرنیٹ کے بغیر بھی۔",
       "guide.whatsappTitle": "واٹس ایپ پر شیئر کریں",
@@ -492,6 +491,7 @@
       "player.loadError": "ریکارڈنگ لوڈ نہیں ہو سکی (آف لائن ہیں یا فائل نہیں ملی)۔ اصل ایپ کھول کر آف لائن محفوظ کریں، یا انٹرنیٹ کے ساتھ دوبارہ کوشش کریں۔",
       "player.trackLabel": "پارہ {para} · رکوع {ruku} — {surah} (آیات {verses})",
       "player.docTitle": "MQ · {surah} (رکوع {ruku})",
+      "player.loadedFromLink": "لنک سے لوڈ ہو گئی — فہرست بدلنے کے لیے اور فائلیں یہاں چھوڑیں",
 
       "settings.language": "زبان",
       "settings.languageHint": "بٹن، عنوان اور پیغامات۔ قرآن کا متن اور اس کا ترجمہ ویسے ہی رہیں گے۔",
@@ -663,7 +663,7 @@
    * digits and their punctuation ("1–7", "2:3", "0:42 / 2:33", "1.5x") is wrapped in a
    * left-to-right isolate when the page is Urdu.
    */
-  var NUMERIC = /^[0-9][0-9\s\u2013\-:/.,x\u00d7%]*$/;
+  var NUMERIC = /^[0-9][0-9\s\u2013\-:/.,x\u00d7%+]*$/;
 
   function isolate(v) {
     return lang === "ur" && NUMERIC.test(v) ? "\u2066" + v + "\u2069" : v;
@@ -738,9 +738,12 @@
   // In a page: fill the markup now (this script sits after it) and show the page, which the
   // inline head script hid for Urdu readers so English never flashes first.
   if (root.document) {
-    applyDocumentLang();
-    apply();
-    root.document.documentElement.classList.remove("i18n-pending");
+    try {
+      applyDocumentLang();
+      apply();
+    } finally {
+      root.document.documentElement.classList.remove("i18n-pending");
+    }
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = api;

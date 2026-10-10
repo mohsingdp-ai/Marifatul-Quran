@@ -234,8 +234,9 @@
           <div class="settings-row">
             <div class="settings-role-group" id="ui-lang-group" role="group" aria-labelledby="ui-lang-label">
               <button type="button" class="btn btn-sm settings-role-btn" data-ui-lang="en" lang="en">English</button>
-              <!-- No lang="ur" here: an Urdu-tagged word on the page sends Chrome to an Urdu
-                   (Nastaliq) fallback font for the page's other Arabic, such as the para name. -->
+              <!-- No lang="ur" here. In Chrome (seen on Linux, measured with DevTools) an Urdu-tagged
+                   word on the page made the para name and other Arabic text fall back to a Nastaliq
+                   font, in English mode too. Cost: a screen reader reads this word in the page's voice. -->
               <button type="button" class="btn btn-sm settings-role-btn" data-ui-lang="ur">اردو</button>
             </div>
             <p class="settings-hint" data-i18n="settings.languageHint">Buttons, titles and messages. The Quran text and its translation stay as they are.</p>
@@ -414,7 +415,7 @@
           </div>
           <div class="settings-row">
             <div class="settings-download-row">
-              <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn" data-i18n="settings.downloadAll">Download All Paras</button>
+              <button type="button" class="btn btn-sm btn-offline-para" id="download-all-btn">Download All Paras</button>
               <span class="download-all-status" id="download-all-status"></span>
             </div>
           </div>
