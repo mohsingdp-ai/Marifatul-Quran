@@ -274,7 +274,8 @@ self.addEventListener("fetch", function (e) {
           });
         });
       }).catch(function () {
-        return caches.match(e.request);
+        // A failed "Re-download fresh copy" must fail, not hand back the old copy as if new.
+        return e.request.cache === "reload" ? Response.error() : caches.match(e.request);
       })
     );
     return;

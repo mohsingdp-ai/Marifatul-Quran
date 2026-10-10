@@ -92,6 +92,7 @@
       "download.allSaved": "✓ All saved",
       "download.someFailed": "Saved {progress}. {failed} could not download — check your connection and tap download again.",
       "download.storageFull": "Storage is full. Free some space, then tap download again.",
+      "download.storageFullBatch": "Saved {progress}. Storage is full. Free some space, then tap download again.",
 
       "guide.aria": "Guided walkthrough",
       "guide.stepOf": "Step {i} of {n}",
@@ -402,6 +403,7 @@
       "download.allSaved": "✓ سب محفوظ",
       "download.someFailed": "{progress} محفوظ ہوئیں۔ {failed} ڈاؤن لوڈ نہیں ہو سکیں — انٹرنیٹ دیکھیں اور دوبارہ ڈاؤن لوڈ دبائیں۔",
       "download.storageFull": "فون میں جگہ نہیں رہی۔ کچھ جگہ خالی کریں، پھر دوبارہ ڈاؤن لوڈ دبائیں۔",
+      "download.storageFullBatch": "{progress} محفوظ ہوئیں۔ فون میں جگہ نہیں رہی۔ کچھ جگہ خالی کریں، پھر دوبارہ ڈاؤن لوڈ دبائیں۔",
 
       "guide.aria": "ایپ کا تعارف",
       "guide.stepOf": "{n} میں سے {i}",

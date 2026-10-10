@@ -2361,14 +2361,9 @@
 
   /** cacheAudioFile, falling back to the other extensions. A full disk fails at once. */
   function saveAudioForOffline(src, fresh) {
-    var urls = [src].concat(getAudioUrlAlternates(src));
-    function tryAt(i, firstErr) {
-      return cacheAudioFile(urls[i], fresh).catch(function (err) {
-        if (MqDownload.isQuotaError(err) || i + 1 >= urls.length) throw MqDownload.isQuotaError(err) ? err : (firstErr || err);
-        return tryAt(i + 1, firstErr || err);
-      });
-    }
-    return tryAt(0);
+    return MqDownload.saveWithFallback([src].concat(getAudioUrlAlternates(src)), function (url) {
+      return cacheAudioFile(url, fresh);
+    });
   }
 
   /** Load raw audio bytes for sharing (offline cache first, then network). */
@@ -5216,7 +5211,8 @@
     bar.className = "upload-status-banner";
     bar.setAttribute("role", "status");
     bar.innerHTML =
-      "<span class=\"upload-status-banner-text\"></span>" +
+      "<span class=\"upload-status-banner-text\" aria-hidden=\"true\"></span>" +
+      "<span class=\"upload-status-banner-live sr-only\"></span>" +
       "<button type=\"button\" class=\"upload-status-banner-dismiss btn btn-sm btn-secondary\" aria-label=\"" + i18n("admin.dismissAria") + "\">" + i18n("admin.dismiss") + "</button>";
     bar.style.display = "none";
     document.body.appendChild(bar);
@@ -5231,10 +5227,12 @@
   /**
    * Shows upload/recording status until the user clicks Dismiss (no auto-hide).
    * @param {"progress"|"success"|"error"} kind
+   * @param {boolean} [quiet] shown but not read out (a screen reader hears only some counts)
    */
-  function showUploadStatus(message, kind) {
+  function showUploadStatus(message, kind, quiet) {
     var el = ensureUploadStatusBanner();
     el.querySelector(".upload-status-banner-text").textContent = message;
+    if (!quiet) el.querySelector(".upload-status-banner-live").textContent = message;
     el.classList.remove("upload-status-banner--progress", "upload-status-banner--success", "upload-status-banner--error");
     if (kind === "success") el.classList.add("upload-status-banner--success");
     else if (kind === "error") el.classList.add("upload-status-banner--error");
@@ -5369,19 +5367,14 @@
     var urls = [];
     items.forEach(function (item) {
       var src = getAudioSrc(item.row, item.globalIndex);
-      if (src) urls.push(src);
+      // An admin's upload from this session lives only in memory (blob:); it can't be saved.
+      if (src && src.indexOf("blob:") !== 0) urls.push(src);
     });
     return urls;
   }
 
   function downloadBatch(urls, onProgress) {
     return MqDownload.downloadBatch(urls, function (url) { return saveAudioForOffline(url); }, onProgress);
-  }
-
-  /** [key, vars] for a batch that missed some files, so a failure never reads as "Saved". */
-  function downloadFailMessage(r, total) {
-    if (r.storageFull) return ["download.storageFull"];
-    return ["download.someFailed", { progress: (total - r.failed) + "/" + total, failed: r.failed }];
   }
 
   var shareBulkLinksBtn = document.getElementById("share-bulk-links-btn");
@@ -5666,6 +5659,7 @@
   var downloadParaBtn = document.getElementById("download-para-btn");
   var downloadParaLabel = downloadParaBtn.querySelector("span");
   var downloadParaText = ["menu.downloadPara"];
+  var downloadParaResetTimer = null;
 
   function setDownloadParaText(key, vars) {
     downloadParaText = [key, vars];
@@ -5677,12 +5671,13 @@
     var para = parseInt(paraSelect.value, 10);
     var urls = getAudioUrlsForPara(para);
     if (!urls.length) { alert(i18n("download.noneInPara", { para: para })); return; }
+    clearTimeout(downloadParaResetTimer);
 
     // The menu closes on tap, so progress and the outcome also go to the status bar, which is
-    // on screen and read out (role="status").
+    // on screen and read out (role="status"), every 10th file only.
     function progress(done, total) {
       setDownloadParaText("download.progress", { progress: done + "/" + total });
-      showUploadStatus(downloadParaLabel.textContent, "progress");
+      showUploadStatus(downloadParaLabel.textContent, "progress", !MqDownload.shouldAnnounce(done, total));
     }
 
     downloadParaBtn.disabled = true;
@@ -5690,15 +5685,20 @@
 
     downloadBatch(urls, progress).then(function (r) {
       downloadParaBtn.disabled = false;
-      renderTable();
       if (r.failed) {
         setDownloadParaText("menu.downloadPara");
-        showUploadStatus(i18n.apply(null, downloadFailMessage(r, urls.length)), "error");
-        return;
+        showUploadStatus(i18n.apply(null, MqDownload.failMessage(r, urls.length)), "error");
+      } else {
+        setDownloadParaText("download.savedPara", { para: para });
+        showUploadStatus(downloadParaLabel.textContent, "success");
+        downloadParaResetTimer = setTimeout(function () { setDownloadParaText("menu.downloadPara"); }, 3000);
       }
-      setDownloadParaText("download.savedPara", { para: para });
-      showUploadStatus(downloadParaLabel.textContent, "success");
-      setTimeout(function () { setDownloadParaText("menu.downloadPara"); }, 3000);
+      renderTable();
+    }).catch(function (err) {
+      console.warn("download para", err);
+      downloadParaBtn.disabled = false;
+      setDownloadParaText("menu.downloadPara");
+      showUploadStatus(i18n("download.failed"), "error");
     });
   });
 
@@ -5706,7 +5706,9 @@
   var downloadAllBtn = document.getElementById("download-all-btn");
   var downloadAllStatus = document.getElementById("download-all-status");
   var downloadAllText = "settings.downloadAll";
+  var downloadAllLive = document.getElementById("download-all-live");
   var downloadAllStatusText = null; // [key, vars] while the status is words, not a count
+  var downloadAllResetTimer = null;
 
   function setDownloadAllText(key) {
     downloadAllText = key;
@@ -5714,19 +5716,26 @@
   }
   setDownloadAllText(downloadAllText);
 
+  /** The count shows every file; a screen reader hears it only when `announce`. */
+  function setDownloadAllCount(text, announce) {
+    downloadAllStatus.textContent = text;
+    if (announce) downloadAllLive.textContent = text;
+  }
+
   function setDownloadAllStatus(key, vars) {
     downloadAllStatusText = key ? [key, vars] : null;
-    downloadAllStatus.textContent = key ? i18n(key, vars) : "";
+    setDownloadAllCount(key ? i18n(key, vars) : "", true);
   }
 
   function finishDownloadAll(key) {
     downloadAllBtn.disabled = false;
     setDownloadAllText(key);
-    if (key !== "settings.downloadAll") setTimeout(function () { setDownloadAllText("settings.downloadAll"); }, 3000);
+    if (key !== "settings.downloadAll") downloadAllResetTimer = setTimeout(function () { setDownloadAllText("settings.downloadAll"); }, 3000);
   }
 
   downloadAllBtn.addEventListener("click", function () {
     if (!navigator.onLine) { alert(i18n("download.offline")); return; }
+    clearTimeout(downloadAllResetTimer);
 
     downloadAllBtn.disabled = true;
     setDownloadAllText("download.checking");
@@ -5737,7 +5746,7 @@
 
     // Only what is not saved yet is offered and fetched.
     Promise.all(allUrls.map(isAudioCached)).then(function (saved) {
-      var toGet = allUrls.filter(function (u, i) { return !saved[i]; });
+      var toGet = MqDownload.unsavedOnly(allUrls, saved);
       setDownloadAllStatus(null);
       if (!allUrls.length) { finishDownloadAll("settings.downloadAll"); alert(i18n("download.noneFound")); return; }
       if (!toGet.length) { finishDownloadAll("download.allSaved"); return; }
@@ -5747,15 +5756,19 @@
       }
 
       setDownloadAllText("download.downloading");
-      downloadAllStatus.textContent = "0/" + toGet.length;
+      setDownloadAllCount("0/" + toGet.length, true);
 
-      downloadBatch(toGet, function (done, total) {
-        downloadAllStatus.textContent = done + "/" + total;
+      return downloadBatch(toGet, function (done, total) {
+        setDownloadAllCount(done + "/" + total, MqDownload.shouldAnnounce(done, total));
       }).then(function (r) {
-        setDownloadAllStatus.apply(null, r.failed ? downloadFailMessage(r, toGet.length) : [null]);
+        setDownloadAllStatus.apply(null, r.failed ? MqDownload.failMessage(r, toGet.length) : [null]);
         finishDownloadAll(r.failed ? "settings.downloadAll" : "download.allSaved");
         renderTable();
       });
+    }).catch(function (err) {
+      console.warn("download all", err);
+      setDownloadAllStatus("download.failed");
+      finishDownloadAll("settings.downloadAll");
     });
   });
 
