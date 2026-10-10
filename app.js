@@ -773,19 +773,6 @@
   var allParaOptions = null; // cached for iOS option.hidden fix
 
   /**
-   * Resolves true when a saved offline copy of this URL is in the audio cache. Async — it
-   * answers with a Promise, so it must be awaited, never dropped into a plain condition
-   * where every call reads as truthy.
-   */
-  function audioFileExists(audioPath) {
-    if (!audioPath) return false;
-    var abs = resolveUrl(audioPath);
-    return caches.open(AUDIO_CACHE).then(function (cache) {
-      return cache.match(abs).then(function (cached) { return !!cached; });
-    }).catch(function () { return false; });
-  }
-
-  /**
    * A failed load is usually transient (dropped request) or a stale offline copy, not a
    * genuinely missing file — so leave the user a way back instead of a dead-end label.
    */
@@ -2355,17 +2342,33 @@
     }).catch(function () { return false; });
   }
 
-  function cacheAudioFile(url) {
+  /**
+   * Saves one recording for offline. A saved copy is kept unless `fresh`, which fetches past
+   * both caches (the service worker reads cache:"reload") and overwrites it only on success.
+   */
+  function cacheAudioFile(url, fresh) {
     var abs = resolveUrl(url);
     return caches.open(AUDIO_CACHE).then(function (cache) {
-      return cache.match(abs).then(function (existing) {
+      return (fresh ? Promise.resolve(null) : cache.match(abs)).then(function (existing) {
         if (existing) return; // already cached, skip download
-        return fetch(abs).then(function (resp) {
+        return fetch(abs, fresh ? { cache: "reload" } : undefined).then(function (resp) {
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           return cache.put(abs, resp);
         });
       });
     });
+  }
+
+  /** cacheAudioFile, falling back to the other extensions. A full disk fails at once. */
+  function saveAudioForOffline(src, fresh) {
+    var urls = [src].concat(getAudioUrlAlternates(src));
+    function tryAt(i, firstErr) {
+      return cacheAudioFile(urls[i], fresh).catch(function (err) {
+        if (MqDownload.isQuotaError(err) || i + 1 >= urls.length) throw MqDownload.isQuotaError(err) ? err : (firstErr || err);
+        return tryAt(i + 1, firstErr || err);
+      });
+    }
+    return tryAt(0);
   }
 
   /** Load raw audio bytes for sharing (offline cache first, then network). */
@@ -2490,32 +2493,19 @@
         return;
       }
 
-      if (btn.classList.contains("is-saved")) {
-        if (!confirm(i18n("download.redownloadConfirm"))) return;
-      }
+      var wasSaved = btn.classList.contains("is-saved");
+      if (wasSaved && !confirm(i18n("download.redownloadConfirm"))) return;
 
       btn.classList.add("is-saving");
-      btn.innerHTML = DOWNLOAD_SVG;
       btn.title = i18n("download.saving");
 
-      var urls = [src].concat(getAudioUrlAlternates(src));
-      var saved = false;
-
-      (function tryNext(i) {
-        if (i >= urls.length) {
-          if (!saved) {
-            markUnsaved(btn);
-            alert(i18n("download.failed"));
-          }
-          return;
-        }
-        cacheAudioFile(urls[i]).then(function () {
-          saved = true;
-          markSaved(btn);
-        }).catch(function () {
-          tryNext(i + 1);
-        });
-      })(0);
+      saveAudioForOffline(src, wasSaved).then(function () {
+        markSaved(btn);
+      }, function (err) {
+        // A failed refresh never touched the saved copy.
+        if (wasSaved) markSaved(btn); else markUnsaved(btn);
+        alert(i18n(MqDownload.isQuotaError(err) ? "download.storageFull" : "download.failed"));
+      });
     });
 
     return btn;
@@ -4633,6 +4623,7 @@
       function () { if (roleBadge) roleBadge.textContent = i18n(isAdmin() ? "settings.roleAdmin" : "settings.roleUser"); },
       function () { setDownloadParaText(downloadParaText[0], downloadParaText[1]); },
       function () { setDownloadAllText(downloadAllText); },
+      function () { if (downloadAllStatusText) setDownloadAllStatus(downloadAllStatusText[0], downloadAllStatusText[1]); },
       function () { if (settingsModal.classList.contains("is-open")) syncSettingsUI(); },
       function () {
         if (shareBulkModal && shareBulkModal.classList.contains("is-open")) {
@@ -5383,56 +5374,14 @@
     return urls;
   }
 
-  function getAudioUrlsForParaAsync(para) {
-    var items = indexedData[para] || [];
-    var promises = items.map(function (item) {
-      var src = getAudioSrc(item.row, item.globalIndex);
-      if (!src) return Promise.resolve(false);
-      return audioFileExists(src);
-    });
-    return Promise.all(promises).then(function (results) {
-      var urls = [];
-      items.forEach(function (item, i) {
-        var src = getAudioSrc(item.row, item.globalIndex);
-        if (src && results[i]) urls.push(src);
-      });
-      return urls;
-    });
+  function downloadBatch(urls, onProgress) {
+    return MqDownload.downloadBatch(urls, function (url) { return saveAudioForOffline(url); }, onProgress);
   }
 
-  function downloadBatch(urls, onProgress) {
-    var done = 0;
-    var total = urls.length;
-    if (!total) return Promise.resolve();
-
-    var CONCURRENCY = 10;
-    var index = 0;
-
-    function downloadOne(url) {
-      return cacheAudioFile(url).catch(function () {
-        var alts = getAudioUrlAlternates(url);
-        function tryAlt(i) {
-          if (i >= alts.length) return Promise.resolve();
-          return cacheAudioFile(alts[i]).catch(function () { return tryAlt(i + 1); });
-        }
-        return tryAlt(0);
-      }).then(function () {
-        done++;
-        if (onProgress) onProgress(done, total);
-      });
-    }
-
-    function worker() {
-      if (index >= urls.length) return Promise.resolve();
-      var url = urls[index++];
-      return downloadOne(url).then(worker);
-    }
-
-    var workers = [];
-    for (var i = 0; i < Math.min(CONCURRENCY, urls.length); i++) {
-      workers.push(worker());
-    }
-    return Promise.all(workers);
+  /** [key, vars] for a batch that missed some files, so a failure never reads as "Saved". */
+  function downloadFailMessage(r, total) {
+    if (r.storageFull) return ["download.storageFull"];
+    return ["download.someFailed", { progress: (total - r.failed) + "/" + total, failed: r.failed }];
   }
 
   var shareBulkLinksBtn = document.getElementById("share-bulk-links-btn");
@@ -5729,15 +5678,26 @@
     var urls = getAudioUrlsForPara(para);
     if (!urls.length) { alert(i18n("download.noneInPara", { para: para })); return; }
 
-    downloadParaBtn.disabled = true;
-    setDownloadParaText("download.progress", { progress: "0/" + urls.length });
-
-    downloadBatch(urls, function (done, total) {
+    // The menu closes on tap, so progress and the outcome also go to the status bar, which is
+    // on screen and read out (role="status").
+    function progress(done, total) {
       setDownloadParaText("download.progress", { progress: done + "/" + total });
-    }).then(function () {
-      setDownloadParaText("download.savedPara", { para: para });
+      showUploadStatus(downloadParaLabel.textContent, "progress");
+    }
+
+    downloadParaBtn.disabled = true;
+    progress(0, urls.length);
+
+    downloadBatch(urls, progress).then(function (r) {
       downloadParaBtn.disabled = false;
       renderTable();
+      if (r.failed) {
+        setDownloadParaText("menu.downloadPara");
+        showUploadStatus(i18n.apply(null, downloadFailMessage(r, urls.length)), "error");
+        return;
+      }
+      setDownloadParaText("download.savedPara", { para: para });
+      showUploadStatus(downloadParaLabel.textContent, "success");
       setTimeout(function () { setDownloadParaText("menu.downloadPara"); }, 3000);
     });
   });
@@ -5746,6 +5706,7 @@
   var downloadAllBtn = document.getElementById("download-all-btn");
   var downloadAllStatus = document.getElementById("download-all-status");
   var downloadAllText = "settings.downloadAll";
+  var downloadAllStatusText = null; // [key, vars] while the status is words, not a count
 
   function setDownloadAllText(key) {
     downloadAllText = key;
@@ -5753,46 +5714,47 @@
   }
   setDownloadAllText(downloadAllText);
 
+  function setDownloadAllStatus(key, vars) {
+    downloadAllStatusText = key ? [key, vars] : null;
+    downloadAllStatus.textContent = key ? i18n(key, vars) : "";
+  }
+
+  function finishDownloadAll(key) {
+    downloadAllBtn.disabled = false;
+    setDownloadAllText(key);
+    if (key !== "settings.downloadAll") setTimeout(function () { setDownloadAllText("settings.downloadAll"); }, 3000);
+  }
+
   downloadAllBtn.addEventListener("click", function () {
     if (!navigator.onLine) { alert(i18n("download.offline")); return; }
 
     downloadAllBtn.disabled = true;
     setDownloadAllText("download.checking");
-    downloadAllStatus.textContent = i18n("download.preparing");
+    setDownloadAllStatus("download.preparing");
 
-    var allPromises = [];
-    for (var p = 1; p <= 30; p++) {
-      allPromises.push(getAudioUrlsForParaAsync(p));
-    }
+    var allUrls = [];
+    for (var p = 1; p <= 30; p++) allUrls = allUrls.concat(getAudioUrlsForPara(p));
 
-    Promise.all(allPromises).then(function (results) {
-      var allUrls = [];
-      var cachedCount = 0;
-      results.forEach(function (urls) {
-        cachedCount += urls.length;
-        allUrls = allUrls.concat(urls);
-      });
-
-      var totalToDownload = allUrls.length;
-      if (!totalToDownload) { alert(i18n("download.noneFound")); return; }
-      if (!confirm(i18n("download.allConfirm", { n: totalToDownload, cached: cachedCount }))) {
-        downloadAllBtn.disabled = false;
-        setDownloadAllText("download.allIdle");
-        downloadAllStatus.textContent = "";
+    // Only what is not saved yet is offered and fetched.
+    Promise.all(allUrls.map(isAudioCached)).then(function (saved) {
+      var toGet = allUrls.filter(function (u, i) { return !saved[i]; });
+      setDownloadAllStatus(null);
+      if (!allUrls.length) { finishDownloadAll("settings.downloadAll"); alert(i18n("download.noneFound")); return; }
+      if (!toGet.length) { finishDownloadAll("download.allSaved"); return; }
+      if (!confirm(i18n("download.allConfirm", { n: toGet.length, cached: allUrls.length - toGet.length }))) {
+        finishDownloadAll("settings.downloadAll");
         return;
       }
 
       setDownloadAllText("download.downloading");
-      downloadAllStatus.textContent = "0/" + totalToDownload;
+      downloadAllStatus.textContent = "0/" + toGet.length;
 
-      downloadBatch(allUrls, function (done, total) {
+      downloadBatch(toGet, function (done, total) {
         downloadAllStatus.textContent = done + "/" + total;
-      }).then(function () {
-        setDownloadAllText("download.allSaved");
-        downloadAllStatus.textContent = "";
-        downloadAllBtn.disabled = false;
+      }).then(function (r) {
+        setDownloadAllStatus.apply(null, r.failed ? downloadFailMessage(r, toGet.length) : [null]);
+        finishDownloadAll(r.failed ? "settings.downloadAll" : "download.allSaved");
         renderTable();
-        setTimeout(function () { setDownloadAllText("download.allIdle"); }, 3000);
       });
     });
   });

@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v30";
+const CACHE = "mq-v31";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -134,6 +134,7 @@ const STATIC = [
   "./material.js",
   "./i18n.js",
   "./hifz.js",
+  "./download.js",
   "./morphology-labels.js",
   "./data.js",
   "./verses.js",
@@ -260,7 +261,8 @@ self.addEventListener("fetch", function (e) {
     e.respondWith(
       caches.open(AUDIO_CACHE).then(function (cache) {
         return cache.match(e.request).then(function (cached) {
-          if (cached) return audioCacheResponse(cached, e.request);
+          // "Re-download fresh copy" asks with cache:"reload"; the app overwrites the saved copy.
+          if (cached && e.request.cache !== "reload") return audioCacheResponse(cached, e.request);
           return fetch(e.request).then(function (res) {
             // Only whole, successful bodies are worth keeping. A 206 slice or an error
             // page stored here would fail to decode on every later play of this track,
