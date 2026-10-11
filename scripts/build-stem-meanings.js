@@ -19,6 +19,7 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const { fixCorpus } = require("./build-morphology.js");
 
 const ROOT = path.join(__dirname, "..");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
@@ -83,7 +84,7 @@ async function surahWords(n) {
  * matching on letters alone hands the calf the wrong meaning.
  */
 function readCorpusWords() {
-  const text = fs.readFileSync(path.join(ROOT, ".cache", "quran-morphology.txt"), "utf8");
+  const text = fixCorpus(fs.readFileSync(path.join(ROOT, ".cache", "quran-morphology.txt"), "utf8"));
   const ayat = {};
   text.split("\n").forEach(function (line) {
     if (!line) return;

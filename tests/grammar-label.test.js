@@ -37,7 +37,7 @@ test("the joined بَعْدَ مَا keeps بَعْدَ's case", () => {
   for (const ref of ["2:181:3", "8:6:4", "13:37:8"]) assert.strictEqual(labelOf(ref, "T"), "ظرفِ زمان (منصوب)", ref);
 });
 
-test("across the Quran only the 302 / 219 / 78 noun and lām pieces change", () => {
+test("across the Quran only the 302 / 219 / 79 noun and lām pieces change", () => {
   const changed = {};
   for (const words of Object.values(morph)) {
     for (const segs of words) {
@@ -49,11 +49,12 @@ test("across the Quran only the 302 / 219 / 78 noun and lām pieces change", () 
       });
     }
   }
-  assert.deepStrictEqual(changed, { "اسمِ استفہام": 302, "اسمِ شرط": 219, "لامِ امر": 78 });
+  // 79 with 22:29 لْيَقْضُوا۟, which morphology-fixes.tsv retags from purpose to command.
+  assert.deepStrictEqual(changed, { "اسمِ استفہام": 302, "اسمِ شرط": 219, "لامِ امر": 79 });
 });
 
 test("every piece with no letters is the ی of \"my\" / \"me\" the card shows as (ی)", () => {
   const empty = Object.values(morph).flat(2).filter((seg) => !seg[0]);
-  assert.strictEqual(empty.length, 207);
+  assert.strictEqual(empty.length, 213);  // 207 in the corpus + 6 وَنُذُرِ in surah 54 (morphology-fixes.tsv)
   assert.ok(empty.every((seg) => seg[3] === "PRON" && seg[4] === "1S"));
 });

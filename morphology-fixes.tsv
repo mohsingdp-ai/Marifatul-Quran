@@ -1,0 +1,335 @@
+location	arabic	pos	features	note
+2:97:9:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+2:204:14:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+2:260:16:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|NOM	قَلْب is masculine
+2:283:28:1	قَلْبُ	N	ROOT:قلب|LEM:قَلْب|MS|NOM	قَلْب is masculine
+3:159:11:2	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+8:24:17:2	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+16:106:10:2	قَلْبُ	N	ROOT:قلب|LEM:قَلْب|MS|NOM	قَلْب is masculine
+18:28:23:1	قَلْبَ	N	ROOT:قلب|LEM:قَلْب|MS|ACC	قَلْب is masculine
+26:89:5:2	قَلْبٍ	N	ROOT:قلب|LEM:قَلْب|MS|INDEF|GEN	قَلْب is masculine
+26:194:2:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+28:10:14:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+33:32:15:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+37:84:4:2	قَلْبٍ	N	ROOT:قلب|LEM:قَلْب|MS|INDEF|GEN	قَلْب is masculine
+40:35:21:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+42:24:12:1	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+45:23:13:2	قَلْبِ	N	ROOT:قلب|LEM:قَلْب|MS|GEN	قَلْب is masculine
+50:33:6:2	قَلْبٍ	N	ROOT:قلب|LEM:قَلْب|MS|INDEF|GEN	قَلْب is masculine
+50:37:8:1	قَلْبٌ	N	ROOT:قلب|LEM:قَلْب|MS|INDEF|NOM	قَلْب is masculine
+64:11:12:1	قَلْبَ	N	ROOT:قلب|LEM:قَلْب|MS|ACC	قَلْب is masculine
+2:272:28:1	تُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|2MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+2:279:17:1	تُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|2MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+2:281:15:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+3:25:15:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+3:161:21:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+4:49:13:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+4:77:47:1	تُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|2MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+4:124:15:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+6:160:16:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+8:60:33:1	تُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|2MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+10:47:12:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+10:54:21:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+16:111:15:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+17:71:14:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+21:47:7:1	تُظْلَمُ	V	IMPF|VF:1|ROOT:ظلم|LEM:ظَلَمَ|3FS|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+23:62:12:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+36:54:3:1	تُظْلَمُ	V	IMPF|VF:1|ROOT:ظلم|LEM:ظَلَمَ|3FS|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+39:69:15:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+45:22:13:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+46:19:9:1	يُظْلَمُ	V	IMPF|VF:1|PASS|ROOT:ظلم|LEM:ظَلَمَ|3MP|MOOD:IND	لَا نافیہ; the ending is kept, so مرفوع
+5:31:7:2	يُرِيَ	V	IMPF|VF:4|ROOT:رأي|LEM:أَرَيْ|3MS|MOOD:SUBJ	active Form IV: يُرِيَ, not يُرَى
+7:27:14:2	يُرِيَ	V	IMPF|VF:4|ROOT:رأي|LEM:أَرَيْ|3MS|MOOD:SUBJ	active Form IV: يُرِيَ, not يُرَى
+7:190:2:1	ءَاتَىٰ	V	PERF|VF:4|ROOT:أتي|LEM:آتَى|3MS	past: he gave
+7:190:8:1	ءَاتَىٰ	V	PERF|VF:4|ROOT:أتي|LEM:آتَى|3MS	past: he gave
+9:75:6:1	ءَاتَىٰ	V	PERF|VF:4|ROOT:أتي|LEM:آتَى|3MS	past: he gave
+65:7:20:1	ءَاتَىٰ	V	PERF|VF:4|ROOT:أتي|LEM:آتَى|3MS	past: he gave
+9:74:20:1	أَغْنَىٰ	V	PERF|VF:4|ROOT:غني|LEM:أَغْنَى|3MS	أَغْنَىٰهُمُ ٱللَّهُ: past, doer اللہ
+79:32:2:1	أَرْسَىٰ	V	PERF|VF:4|ROOT:رسو|LEM:أَرْسَى|3MS	أَرْسَىٰهَا: past, doer اللہ
+4:105:10:1	أَرَىٰ	V	PERF|VF:4|ROOT:رأي|LEM:رَأَى|3MS	بِمَآ أَرَىٰكَ ٱللَّهُ: past Form IV
+59:7:29:1	نَهَىٰ	V	PERF|VF:1|ROOT:نهي|LEM:نَهَى|3MS	وَمَا نَهَىٰكُمْ عَنْهُ: past
+53:48:4:2	أَقْنَىٰ	V	PERF|VF:4|ROOT:قني|LEM:أَقْنَى|3MS	a past verb beside أَغْنَىٰ
+7:189:13:1	تَغَشَّىٰ	V	PERF|VF:5|ROOT:غشو|LEM:تَغَشَّى|3MS	فَلَمَّا تَغَشَّىٰهَا: past Form V
+8:43:8:1	أَرَىٰ	V	PERF|VF:4|ROOT:رأي|LEM:رَأَى|3MS	أَرَىٰ + كَ + هُمْ
+8:43:8:2	كَ	N	PRON|SUFF|2MS	the object كَ
+8:43:8:3	هُمْ	N	PRON|SUFF|3MP	the second object هُمْ
+69:25:10:1	كِتَٰبِ	N	ROOT:كتب|LEM:كِتاب|M|NOM	كِتَٰبِ + يَهْ, as in 69:19
+69:25:10:2	يَهْ	N	PRON|SUFF|1S	يَهْ = my (with the pause ه)
+54:16:4:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+54:18:6:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+54:21:4:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+54:30:4:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+54:37:9:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+54:39:3:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
+9:67:2:3	مُنَٰفِقَٰتُ	N	ACT_PCPL|VF:3|ROOT:نفق|LEM:مُنافِقَة|FP|NOM	damma: subject
+9:71:2:3	مُؤْمِنَٰتُ	N	ACT_PCPL|VF:4|ROOT:أمن|LEM:مُؤْمِنَة|FP|NOM	damma: subject
+57:13:4:3	مُنَٰفِقَٰتُ	N	ACT_PCPL|VF:3|ROOT:نفق|LEM:مُنافِقَة|FP|NOM	damma: subject
+10:67:13:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+13:3:22:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+13:4:25:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+14:5:18:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+15:75:4:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+16:12:13:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+16:79:16:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+23:30:4:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+27:86:13:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+29:24:18:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+30:21:18:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+30:22:12:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+30:23:12:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+30:24:19:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+30:37:13:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+31:31:16:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+32:26:16:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+34:19:16:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+39:42:24:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+39:52:13:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+42:33:12:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+45:3:5:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+45:13:14:2	ءَايَٰتٍ	N	ROOT:أيي|LEM:آيَة|FP|INDEF|ACC	delayed اسم of إِنَّ
+6:163:8:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+10:72:16:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+10:90:27:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+16:89:24:3	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+16:102:13:3	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+22:78:20:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|ACC	participle of أَسْلَمَ, not a name
+27:91:17:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+33:35:2:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|ACC	participle of أَسْلَمَ, not a name
+39:12:5:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+41:33:13:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+46:15:45:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+51:36:7:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|GEN	participle of أَسْلَمَ, not a name
+68:35:2:2	مُسْلِمِينَ	N	ACT_PCPL|VF:4|ROOT:سلم|LEM:مُسْلِم|MP|ACC	participle of أَسْلَمَ, not a name
+11:24:2:2	فَرِيقَيْنِ	N	ROOT:فرق|LEM:فَرِيق|MD|GEN	مَثَلُ ٱلْفَرِيقَيْنِ
+11:50:3:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+11:61:3:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+11:84:3:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+12:63:12:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+12:65:19:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+12:69:7:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+12:76:17:1	أَخَا	N	ROOT:أخو|LEM:أَخ|MS|ACC	visible ending: منصوب
+12:80:11:1	أَبَا	N	ROOT:أبو|LEM:أَب|MS|ACC	visible ending: منصوب
+12:99:7:1	أَبَوَيْ	N	ROOT:أبو|LEM:أَبَوان|MD|ACC	visible ending: منصوب
+12:100:2:1	أَبَوَيْ	N	ROOT:أبو|LEM:أَبَوان|MD|ACC	visible ending: منصوب
+13:14:18:1	فَا	N	ROOT:فوه|LEM:فا|MS|ACC	visible ending: منصوب
+15:88:3:1	عَيْنَيْ	N	ROOT:عين|LEM:عَيْن|FD|ACC	visible ending: منصوب
+16:7:7:1	بَٰلِغِي	N	ACT_PCPL|VF:1|ROOT:بلغ|LEM:بالِغ|MP|ACC	visible ending: منصوب
+14:35:10:2	بَنِىَّ	N	ROOT:بني|LEM:بُنَىّ|MP|ACC	joined to the object of ٱجْنُبْنِى
+12:38:3:1	ءَابَآءِ	N	ROOT:أبو|LEM:آباء|MP|GEN	visible ending: مجرور
+12:111:16:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	visible ending: مجرور
+13:11:5:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	visible ending: مجرور
+13:14:14:1	كَفَّيْ	N	ROOT:كفف|LEM:كَفَّي|MD|GEN	visible ending: مجرور
+12:43:14:2	أُخَرَ	N	ROOT:أخر|LEM:آخَر|FP|GEN	joined to سُنۢبُلَٰتٍ
+12:46:15:2	أُخَرَ	N	ROOT:أخر|LEM:آخَر|FP|GEN	joined to سُنۢبُلَٰتٍ
+18:46:6:3	بَٰقِيَٰتُ	N	ACT_PCPL|VF:1|ROOT:بقي|LEM:باقِيَة|FP|NOM	subject of خَيْرٌ
+19:76:6:3	بَٰقِيَٰتُ	N	ACT_PCPL|VF:1|ROOT:بقي|LEM:باقِيَة|FP|NOM	subject of خَيْرٌ
+18:46:7:2	صَّٰلِحَٰتُ	N	ACT_PCPL|VF:1|ROOT:صلح|LEM:صالِحَة|FP|NOM	subject of خَيْرٌ
+19:76:7:2	صَّٰلِحَٰتُ	N	ACT_PCPL|VF:1|ROOT:صلح|LEM:صالِحَة|FP|NOM	subject of خَيْرٌ
+18:18:12:1	ذِرَاعَيْ	N	ROOT:ذرع|LEM:ذِراع|MD|ACC	object of بَٰسِطٌ
+18:33:2:2	جَنَّتَيْنِ	N	ROOT:جنن|LEM:جَنَّة|FD|GEN	after كِلْتَا
+18:93:5:2	سَّدَّيْنِ	N	ROOT:سدد|LEM:سَدّ|MD|GEN	after بَيْنَ
+16:71:11:2	رَآدِّى	N	ROOT:ردد|LEM:رادِّي|MP|GEN	plural: ٱلَّذِينَ فُضِّلُوا
+21:78:1:2	دَاوُۥدَ	N	PN|LEM:داوُد|ACC	object of an implied اذْكُرْ
+21:78:2:2	سُلَيْمَٰنَ	N	PN|LEM:سُلَيْمان|ACC	object of an implied اذْكُرْ
+21:83:1:2	أَيُّوبَ	N	PN|LEM:أَيُّوب|ACC	object of an implied اذْكُرْ
+21:85:2:2	إِدْرِيسَ	N	PN|LEM:إِدْرِيس|ACC	object of an implied اذْكُرْ
+21:89:1:2	زَكَرِيَّآ	N	PN|LEM:زَكَرِيّا|ACC	object of an implied اذْكُرْ
+24:33:30:1	فَتَيَٰتِ	N	ROOT:فتي|LEM:فَتاة|FP|ACC	object of لَا تُكْرِهُوا
+26:19:2:1	فَعْلَتَ	N	VN|VF:1|ROOT:فعل|LEM:فَعْلَت|ACC	object of فَعَلْتَ
+27:15:4:2	سُلَيْمَٰنَ	N	PN|LEM:سُلَيْمان|ACC	joined to an object
+25:38:2:2	ثَمُودَا۟	N	PN|LEM:ثَمُود|ACC	joined to an object
+29:39:1:2	قَٰرُونَ	N	PN|LEM:قارُون|ACC	joined to an object
+27:61:13:2	بَحْرَيْنِ	N	ROOT:بحر|LEM:بَحْر|MD|GEN	after بَيْنَ / أَيَّمَا
+28:28:6:2	أَجَلَيْنِ	N	ROOT:أجل|LEM:أَجَل|MD|GEN	after بَيْنَ / أَيَّمَا
+34:9:6:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+36:9:4:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+41:14:6:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+41:25:8:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+48:10:10:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+34:12:16:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+34:31:11:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+46:21:13:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+46:30:13:1	يَدَيْ	N	ROOT:يدي|LEM:يَد|FD|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+36:45:7:1	أَيْدِي	N	ROOT:يدي|LEM:يَد|FP|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+43:38:9:2	مَشْرِقَيْنِ	N	ROOT:شرق|LEM:مَشْرِق|MD|GEN	after بَيْنَ / فَوْقَ / بُعْدَ: مجرور
+42:17:6:3	مِيزَانَ	N	ROOT:وزن|LEM:مِيزان|M|ACC	joined to ٱلْكِتَٰبَ
+38:45:4:2	إِسْحَٰقَ	N	PN|LEM:إِسْحاق|ACC	بدل of عِبَٰدَنَآ
+38:45:5:2	يَعْقُوبَ	N	PN|LEM:يَعْقُوب|ACC	بدل of عِبَٰدَنَآ
+34:45:11:1	رُسُلِ	N	ROOT:رسل|LEM:رَسُول|MP|ACC	object
+39:14:6:1	دِينِ	N	ROOT:دين|LEM:دِين|M|ACC	object
+39:17:12:1	عِبَادِ	N	ROOT:عبد|LEM:عَبْد|MP|ACC	object
+40:44:6:1	أَمْرِ	N	ROOT:أمر|LEM:أَمْر|M|ACC	object
+39:16:15:2	عِبَادِ	N	ROOT:عبد|LEM:عَبْد|MP|ACC	called with يَا: منصوب
+37:102:6:2	بُنَىَّ	N	ROOT:بني|LEM:بُنَىّ|M|ACC	called with يَا: منصوب
+37:102:17:2	أَبَتِ	N	ROOT:أبو|LEM:أَب|MS|ACC	called with يَا: منصوب
+43:88:2:2	رَبِّ	N	ROOT:ربب|LEM:رَبّ|M|ACC	called with يَا: منصوب
+36:60:4:2	بَنِىٓ	N	ROOT:بني|LEM:بُنَىّ|MP|ACC	called with يَا: منصوب
+38:43:8:2	ذِكْرَىٰ	N	ROOT:ذكر|LEM:ذِكْرَى|F|ACC	منصوب
+40:54:2:2	ذِكْرَىٰ	N	ROOT:ذكر|LEM:ذِكْرَى|F|ACC	منصوب
+39:42:17:2	أُخْرَىٰٓ	N	ROOT:أخر|LEM:آخَر|FS|ACC	منصوب
+43:80:7:2	نَجْوَىٰ	N	ROOT:نجو|LEM:نَجْوَى|M|ACC	منصوب
+37:105:3:2	رُّءْيَآ	N	ROOT:رأي|LEM:رُءْيا|F|ACC	منصوب
+48:27:5:2	رُّءْيَا	N	ROOT:رأي|LEM:رُءْيا|F|ACC	منصوب
+41:17:5:2	عَمَىٰ	N	ROOT:عمي|LEM:عَمًى|M|ACC	object of ٱسْتَحَبُّوا
+41:39:17:2	مَوْتَىٰٓ	N	ROOT:موت|LEM:مَيِّت|P|GEN|ADJ	مضاف الیہ
+48:26:19:2	تَّقْوَىٰ	N	ROOT:وقي|LEM:تَقْوَى|M|GEN	مضاف الیہ
+45:21:13:1	مَّحْيَا	N	ROOT:حيي|LEM:مَحْيا|M|NOM	مَحْيَاهُمْ: مرفوع
+9:50:8:1	يَقُولُ	V	IMPF|VF:1|ROOT:قول|LEM:قالَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+9:50:14:2	يَتَوَلَّ	V	IMPF|VF:5|ROOT:ولي|LEM:تَوَلَّى|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+9:74:26:1	يَتُوبُ	V	IMPF|VF:1|ROOT:توب|LEM:تابَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+9:74:31:1	يَتَوَلَّ	V	IMPF|VF:5|ROOT:ولي|LEM:تَوَلَّى|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+9:96:6:1	تَرْضَ	V	IMPF|VF:1|ROOT:رضو|LEM:رَضِيَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+11:14:2:1	يَسْتَجِيبُ	V	IMPF|VF:10|ROOT:جوب|LEM:اسْتَجابَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+11:38:13:1	تَسْخَرُ	V	IMPF|VF:1|ROOT:سخر|LEM:سَخِرَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+14:8:4:1	تَكْفُرُ	V	IMPF|VF:1|ROOT:كفر|LEM:كَفَرَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+14:34:7:1	تَعُدُّ	V	IMPF|VF:1|ROOT:عدد|LEM:عَدَّ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+14:31:5:1	يُقِيمُ	V	IMPF|VF:4|ROOT:قوم|LEM:أَقامَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+15:3:2:1	يَأْكُلُ	V	IMPF|VF:1|ROOT:أكل|LEM:أَكَلَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+16:18:2:1	تَعُدُّ	V	IMPF|VF:1|ROOT:عدد|LEM:عَدَّ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+17:25:7:1	تَكُونُ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+17:53:3:1	يَقُولُ	V	IMPF|VF:1|ROOT:قول|LEM:قالَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+17:110:9:1	تَدْعُ	V	IMPF|VF:1|ROOT:دعو|LEM:دَعا|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+18:20:3:1	يَظْهَرُ	V	IMPF|VF:1|ROOT:ظهر|LEM:ظَهَرَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+18:20:5:1	يَرْجُمُ	V	IMPF|VF:1|ROOT:رجم|LEM:رَجَمْ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+18:20:7:1	يُعِيدُ	V	IMPF|VF:4|ROOT:عود|LEM:أُعِيدُ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+18:29:19:1	يَسْتَغِيثُ	V	IMPF|VF:10|ROOT:غوث|LEM:اسْتَغاثَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+18:29:20:1	يُغَاثُ	V	IMPF|VF:4|ROOT:غوث|LEM:يُغاثُ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+22:27:5:1	يَأْتُ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+22:42:2:1	يُكَذِّبُ	V	IMPF|VF:2|ROOT:كذب|LEM:كَذَّبَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+24:32:9:1	يَكُونُ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+24:49:5:1	يَأْتُ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+24:54:7:1	تَوَلَّ	V	IMPF|VF:5|ROOT:ولي|LEM:تَوَلَّى|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+24:54:16:1	تُطِيعُ	V	IMPF|VF:4|ROOT:طوع|LEM:أَطاعَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+24:54:17:1	تَهْتَدُ	V	IMPF|VF:8|ROOT:هدي|LEM:اهْتَدَى|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+26:37:1:1	يَأْتُ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+33:20:8:1	يَوَدُّ	V	IMPF|VF:1|ROOT:ودد|LEM:وَدَّ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+33:54:2:1	تُبْدُ	V	IMPF|VF:4|ROOT:بدو|LEM:يُبْدِيَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+39:7:2:1	تَكْفُرُ	V	IMPF|VF:1|ROOT:كفر|LEM:كَفَرَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+39:7:12:1	تَشْكُرُ	V	IMPF|VF:1|ROOT:شكر|LEM:شَكَرَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+35:4:2:1	يُكَذِّبُ	V	IMPF|VF:2|ROOT:كذب|LEM:كَذَّبَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+35:25:2:1	يُكَذِّبُ	V	IMPF|VF:2|ROOT:كذب|LEM:كَذَّبَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+35:14:2:1	تَدْعُ	V	IMPF|VF:1|ROOT:دعو|LEM:دَعا|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+40:12:11:1	تُؤْمِنُ	V	IMPF|VF:4|ROOT:أمن|LEM:آمَنَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+43:83:2:1	يَخُوضُ	V	IMPF|VF:1|ROOT:خوض|LEM:خاضُ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+43:83:3:2	يَلْعَبُ	V	IMPF|VF:1|ROOT:لعب|LEM:يَلْعَبْ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+45:14:4:1	يَغْفِرُ	V	IMPF|VF:1|ROOT:غفر|LEM:غَفَرَ|3MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+47:36:7:1	تُؤْمِنُ	V	IMPF|VF:4|ROOT:أمن|LEM:آمَنَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+47:36:8:2	تَتَّقُ	V	IMPF|VF:8|ROOT:وقي|LEM:اتَّقَى|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+47:37:4:1	تَبْخَلُ	V	IMPF|VF:1|ROOT:بخل|LEM:بَخِلَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+47:38:22:1	تَتَوَلَّ	V	IMPF|VF:5|ROOT:ولي|LEM:تَوَلَّى|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+48:16:15:1	تُطِيعُ	V	IMPF|VF:4|ROOT:طوع|LEM:أَطاعَ|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+48:16:21:1	تَتَوَلَّ	V	IMPF|VF:5|ROOT:ولي|LEM:تَوَلَّى|2MP|MOOD:JUS	after إِنْ, in its answer or answering a command: مجزوم
+35:16:4:2	يَأْتِ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|3MS|MOOD:JUS	joined to the answer of إِنْ; its ی is dropped
+2:85:16:1	يَأْتُ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|3MP|MOOD:JUS	after شرطیہ إِنْ, نون dropped
+2:85:18:1	تُفَٰدُ	V	IMPF|VF:3|ROOT:فدي|LEM:تُفادُ|2MP|MOOD:JUS	after شرطیہ إِنْ, نون dropped
+26:3:5:1	يَكُونُ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|3MP|MOOD:SUBJ	أَلَّا = أَنْ + لَا: منصوب
+9:94:17:3	يَرَى	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|3MS|MOOD:IND	no نصب particle: مرفوع
+9:105:3:3	يَرَى	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|3MS|MOOD:IND	no نصب particle: مرفوع
+9:127:10:1	يَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|3MS|MOOD:IND	no نصب particle: مرفوع
+11:27:8:1	نَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1P|MOOD:IND	no نصب particle: مرفوع
+11:27:13:1	نَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1P|MOOD:IND	no نصب particle: مرفوع
+12:36:25:1	نَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1P|MOOD:IND	no نصب particle: مرفوع
+11:84:19:1	أَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1S|MOOD:IND	no نصب particle: مرفوع
+11:88:20:1	أَنْهَىٰ	V	IMPF|VF:1|ROOT:نهي|LEM:نَهَى|1S|MOOD:IND	no نصب particle: مرفوع
+11:91:9:2	نَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1P|MOOD:IND	no نصب particle: مرفوع
+12:36:8:1	أَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1S|MOOD:IND	no نصب particle: مرفوع
+12:36:14:1	أَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|1S|MOOD:IND	no نصب particle: مرفوع
+16:70:4:1	يَتَوَفَّىٰ	V	IMPF|VF:5|ROOT:وفي|LEM:تَوَفَّى|3MS|MOOD:IND	no نصب particle: مرفوع
+16:90:9:2	يَنْهَىٰ	V	IMPF|VF:1|ROOT:نهي|LEM:نَهَى|3MS|MOOD:IND	no نصب particle: مرفوع
+17:13:12:1	يَلْقَىٰ	V	IMPF|VF:1|ROOT:لقي|LEM:لَقُ|3MS|MOOD:IND	no نصب particle: مرفوع
+17:18:16:1	يَصْلَىٰ	V	IMPF|VF:1|ROOT:صلي|LEM:يَصْلَى|3MS|MOOD:IND	no نصب particle: مرفوع
+23:37:7:2	نَحْيَا	V	IMPF|VF:1|ROOT:حيي|LEM:حَىَّ|1P|MOOD:IND	no نصب particle: مرفوع
+26:218:2:1	يَرَىٰ	V	IMPF|VF:1|ROOT:رأي|LEM:رَأَى|3MS|MOOD:IND	no نصب particle: مرفوع
+28:80:14:1	يُلَقَّىٰ	V	IMPF|VF:2|PASS|ROOT:لقي|LEM:لَقَّى|3MS|MOOD:IND	no نصب particle: مرفوع
+32:11:2:1	يَتَوَفَّىٰ	V	IMPF|VF:5|ROOT:وفي|LEM:تَوَفَّى|3MS|MOOD:IND	no نصب particle: مرفوع
+41:35:2:1	يُلَقَّىٰ	V	IMPF|VF:2|PASS|ROOT:لقي|LEM:لَقَّى|3MS|MOOD:IND	no نصب particle: مرفوع
+41:35:7:1	يُلَقَّىٰ	V	IMPF|VF:2|PASS|ROOT:لقي|LEM:لَقَّى|3MS|MOOD:IND	no نصب particle: مرفوع
+45:24:8:2	نَحْيَا	V	IMPF|VF:1|ROOT:حيي|LEM:حَىَّ|1P|MOOD:IND	no نصب particle: مرفوع
+45:34:3:1	نَنسَىٰ	V	IMPF|VF:1|ROOT:نسي|LEM:نَسِيَ|1P|MOOD:IND	no نصب particle: مرفوع
+9:32:7:2	يَأْبَى	V	IMPF|VF:1|ROOT:أبي|LEM:أَبَى|3MS|MOOD:IND	new clause with its own subject ٱللَّهُ
+3:159:5:1	لِن	V	PERF|VF:1|ROOT:لين|LEM:لِن|2MS	لِنْتَ: intransitive, active
+6:80:4:2	تُحَٰٓجُّ	V	IMPF|VF:3|ROOT:حجج|LEM:حاجَّ|2MP|MOOD:IND	object نِّى: active
+16:27:10:1	تُشَٰٓقُّ	V	IMPF|VF:3|ROOT:شقق|LEM:شاقُّ|2MP|MOOD:IND	you used to oppose
+16:88:7:1	زِدْ	V	PERF|VF:1|ROOT:زيد|LEM:زادَ|1P	زِدْنَٰهُمْ = We increased
+17:97:26:1	زِدْ	V	PERF|VF:1|ROOT:زيد|LEM:زادَ|1P	زِدْنَٰهُمْ = We increased
+18:13:10:2	زِدْ	V	PERF|VF:1|ROOT:زيد|LEM:زادَ|1P	زِدْنَٰهُمْ = We increased
+17:35:4:1	كِلْ	V	PERF|VF:1|ROOT:كيل|LEM:كالُ|2MP	when you measure
+26:21:4:1	خِفْ	V	PERF|VF:1|ROOT:خوف|LEM:خافَ|1S	active hollow verb
+23:35:4:1	مِ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|2MP	active hollow verb
+23:82:3:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	active hollow verb
+39:73:18:1	طِبْ	V	PERF|VF:1|ROOT:طيب|LEM:طابَ|2MP	طَابَ is intransitive
+53:12:1:3	تُمَٰرُ	V	IMPF|VF:3|ROOT:مري|LEM:تَمارَ|2MP|MOOD:IND	Form III active with object هُ
+65:6:8:1	تُضَآرُّ	V	IMPF|VF:3|ROOT:ضرر|LEM:يُضارَّ|2MP|MOOD:JUS	active Form III, object هُنَّ
+29:18:2:1	تُكَذِّبُ	V	IMPF|VF:2|ROOT:كذب|LEM:كَذَّبَ|2MP|MOOD:JUS	إِن + تُكَذِّبُوا: active, مجزوم
+2:167:11:1	تَبَرَّءُ	V	PERF|VF:5|ROOT:برأ|LEM:تَبَرَّأَ|3MP	كَمَا تَبَرَّءُوا مِنَّا: past, they
+2:167:11:2	وا۟	N	PRON|SUFF|3MP	they
+7:38:21:1	ٱدَّارَكُ	V	PERF|VF:6|ROOT:درك|LEM:ادّارَكَ|3MP	حَتَّىٰٓ إِذَا + past
+7:38:21:2	وا۟	N	PRON|SUFF|3MP	they
+48:25:34:1	تَزَيَّلُ	V	PERF|VF:5|ROOT:زيل|LEM:تَزَيَّلُ|3MP	after لَوْ: past
+48:25:34:2	وا۟	N	PRON|SUFF|3MP	they
+59:9:2:1	تَبَوَّ	V	PERF|VF:5|ROOT:بوأ|LEM:يَتَبَوَّأُ|3MP	ٱلَّذِينَ تَبَوَّءُو: past
+59:9:2:2	ءُو	N	PRON|SUFF|3MP	they
+11:55:3:2	كِيدُ	V	IMPV|VF:1|ROOT:كيد|LEM:كِيدُ|2MP	a command: ثُمَّ لَا تُنظِرُونِ
+11:55:3:3	و	N	PRON|SUFF|2MP	you
+2:186:11:1	دَعَا	V	PERF|VF:1|ROOT:دعو|LEM:دَعا|3MS	doer ٱلدَّاعِ
+2:237:16:1	يَعْفُو	V	IMPF|VF:1|ROOT:عفو|LEM:عَفا|3FP	يَعْفُو + نَ: نونِ نسوہ, the women
+2:237:16:2	نَ	N	PRON|SUFF|3FP	نونِ نسوہ: the women
+12:33:7:2	ونَ	N	PRON|SUFF|3FP	the women call
+12:33:7:1	يَدْعُ	V	IMPF|VF:1|ROOT:دعو|LEM:دَعا|3FP|MOOD:IND	the women call
+3:122:6:1	تَفْشَلَ	V	IMPF|VF:1|ROOT:فشل|LEM:فَشِلْ|3FD|MOOD:SUBJ	doer طَآئِفَتَانِ
+3:122:6:2	ا	N	PRON|SUFF|3FD	they two
+4:171:4:1	تَغْلُو	V	IMPF|VF:1|ROOT:غلو|LEM:تَغْلُو|2MP|MOOD:JUS	plural address
+5:77:5:1	تَغْلُو	V	IMPF|VF:1|ROOT:غلو|LEM:تَغْلُو|2MP|MOOD:JUS	plural address
+4:171:4:2	ا۟	N	PRON|SUFF|2MP	plural address
+5:77:5:2	ا۟	N	PRON|SUFF|2MP	plural address
+28:23:15:1	تَذُودَ	V	IMPF|VF:1|ROOT:ذود|LEM:تَذُودَ|3FD|MOOD:IND	the two women
+28:23:15:2	انِ	N	PRON|SUFF|3FD	the two women
+35:41:7:1	تَزُولَ	V	IMPF|VF:1|ROOT:زول|LEM:زالَ|3FD|MOOD:SUBJ	subject ٱلسَّمَٰوَٰتِ وَٱلْأَرْضَ
+35:41:7:2	ا	N	PRON|SUFF|3FD	they two
+46:17:6:2	تَعِدَ	V	IMPF|VF:1|ROOT:وعد|LEM:وَعَدَ|2D|MOOD:IND	said to his parents: you two
+46:17:6:3	انِ	N	PRON|SUFF|2D	you two
+18:38:1:2	ا۠	N	PRON|SUFF|1S	لَٰكِنَّا = لَٰكِنْ أَنَا
+7:17:2:2	ءَاتِيَنَّ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|1S|MOOD:IND	Iblis speaking
+3:120:2:1	تَمْسَسْ	V	IMPF|VF:1|ROOT:مسس|LEM:مَسَّ|3FS|MOOD:JUS	doer حَسَنَةٌ / سَيِّئَةٌ
+3:120:6:1	تُصِبْ	V	IMPF|VF:4|ROOT:صوب|LEM:أَصابَ|3FS|MOOD:JUS	doer حَسَنَةٌ / سَيِّئَةٌ
+9:50:2:1	تُصِبْ	V	IMPF|VF:4|ROOT:صوب|LEM:أَصابَ|3FS|MOOD:JUS	doer حَسَنَةٌ / مُصِيبَةٌ
+9:50:6:1	تُصِبْ	V	IMPF|VF:4|ROOT:صوب|LEM:أَصابَ|3FS|MOOD:JUS	doer حَسَنَةٌ / مُصِيبَةٌ
+9:55:2:1	تُعْجِبْ	V	IMPF|VF:4|ROOT:عجب|LEM:أَعْجَبَ|3FS|MOOD:JUS	doer أَمْوَٰلُهُمْ
+9:85:2:1	تُعْجِبْ	V	IMPF|VF:4|ROOT:عجب|LEM:أَعْجَبَ|3FS|MOOD:JUS	doer أَمْوَٰلُهُمْ
+10:78:8:2	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|3FS|MOOD:SUBJ	subject ٱلْكِبْرِيَآءُ
+11:87:4:1	تَأْمُرُ	V	IMPF|VF:1|ROOT:أمر|LEM:أَمَرَ|3FS|MOOD:IND	doer صَلَوٰتُكَ
+11:113:6:2	تَمَسَّ	V	IMPF|VF:1|ROOT:مسس|LEM:مَسَّ|3FS|MOOD:SUBJ	doer ٱلنَّارُ
+21:80:5:2	تُحْصِنَ	V	IMPF|VF:4|ROOT:حصن|LEM:أَحْصَنَتْ|3FS|MOOD:SUBJ	feminine doer
+21:103:5:2	تَتَلَقَّىٰ	V	IMPF|VF:5|ROOT:لقي|LEM:تَلَقَّى|3FS|MOOD:IND	feminine doer
+48:25:22:2	تُصِيبَ	V	IMPF|VF:4|ROOT:صوب|LEM:أَصابَ|3FS|MOOD:SUBJ	subject مَعَرَّةٌ
+58:1:6:1	تُجَٰدِلُ	V	IMPF|VF:3|ROOT:جدل|LEM:جادَلُ|3FS|MOOD:IND	3FS doer; the pronoun is the object
+60:3:2:1	تَنفَعَ	V	IMPF|VF:1|ROOT:نفع|LEM:نَفَعَ|3FS|MOOD:SUBJ	3FS doer; the pronoun is the object
+63:4:3:1	تُعْجِبُ	V	IMPF|VF:4|ROOT:عجب|LEM:أَعْجَبَ|3FS|MOOD:IND	3FS doer; the pronoun is the object
+63:9:5:1	تُلْهِ	V	IMPF|VF:4|ROOT:لهو|LEM:أَلْهَى|3FS|MOOD:JUS	3FS doer; the pronoun is the object
+7:23:9:2	تَرْحَمْ	V	IMPF|VF:1|ROOT:رحم|LEM:رَحِمَ|2MS|MOOD:JUS	addressed to رَبَّنَا
+9:49:7:1	تَفْتِ	V	IMPF|VF:1|ROOT:فتن|LEM:فَتَنُ|2MS|MOOD:JUS	said to the Prophet
+9:103:5:1	تُطَهِّرُ	V	IMPF|VF:2|ROOT:طهر|LEM:طَهَّرَ|2MS|MOOD:IND	you (the Prophet) purify them
+9:103:6:2	تُزَكِّي	V	IMPF|VF:2|ROOT:زكو|LEM:زَكَّى|2MS|MOOD:IND	you (the Prophet) purify them
+10:78:3:2	تَلْفِتَ	V	IMPF|VF:1|ROOT:لفت|LEM:تَلْفِتَ|2MS|MOOD:SUBJ	said to Musa
+11:46:12:1	تَسْـَٔلْ	V	IMPF|VF:1|ROOT:سأل|LEM:سَأَلَ|2MS|MOOD:JUS	said to Nuh
+11:49:9:1	تَعْلَمُ	V	IMPF|VF:1|ROOT:علم|LEM:عَلِمَ|2MS|MOOD:IND	مَا كُنتَ تَعْلَمُهَآ
+20:131:2:1	تَمُدَّ	V	IMPF|VF:1|ROOT:مدد|LEM:مَدَّ|2MS|MOOD:JUS	addressed to one man / to Allah
+21:89:7:1	تَذَرْ	V	IMPF|VF:1|ROOT:وذر|LEM:يَذَرَ|2MS|MOOD:JUS	addressed to one man / to Allah
+23:27:27:1	تُخَٰطِبْ	V	IMPF|VF:3|ROOT:خطب|LEM:خاطَبَ|2MS|MOOD:JUS	addressed to you
+26:87:2:1	تُخْزِ	V	IMPF|VF:4|ROOT:خزي|LEM:أَخْزَيْ|2MS|MOOD:JUS	addressed to you
+27:88:3:1	تَحْسَبُ	V	IMPF|VF:1|ROOT:حسب|LEM:حَسِبَ|2MS|MOOD:IND	addressed to you
+28:19:14:1	تَقْتُلَ	V	IMPF|VF:1|ROOT:قتل|LEM:قَتَلَ|2MS|MOOD:SUBJ	addressed to you
+29:8:15:1	تُطِعْ	V	IMPF|VF:4|ROOT:طوع|LEM:أَطاعَ|2MS|MOOD:JUS	addressed to you
+31:15:13:1	تُطِعْ	V	IMPF|VF:4|ROOT:طوع|LEM:أَطاعَ|2MS|MOOD:JUS	addressed to you
+33:37:20:2	تَخْشَى	V	IMPF|VF:1|ROOT:خشي|LEM:خَشِيَ|2MS|MOOD:IND	addressed to you
+36:10:6:1	تُنذِرْ	V	IMPF|VF:4|ROOT:نذر|LEM:أَنذَرَ|2MS|MOOD:JUS	addressed to the Prophet / one man
+37:56:5:2	تُرْدِي	V	IMPF|VF:4|ROOT:ردي|LEM:أَرْدَى|2MS|MOOD:IND	addressed to the Prophet / one man
+42:7:11:2	تُنذِرَ	V	IMPF|VF:4|ROOT:نذر|LEM:أَنذَرَ|2MS|MOOD:SUBJ	addressed to the Prophet / one man
+10:94:20:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	prohibition to you
+10:95:2:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	prohibition to you
+28:86:13:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:IND	addressed to the Prophet
+28:87:14:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:IND	addressed to the Prophet
+11:37:6:1	تُخَٰطِبْ	V	IMPF|VF:3|ROOT:خطب|LEM:خاطَبَ|2MS|MOOD:JUS	لَا + jussive: prohibition
+12:101:18:1	تَوَفَّ	V	IMPV|VF:5|ROOT:وفي|LEM:تَوَفَّى|2MS	a prayer: command
+22:29:2:1	لْ	P	IMPV|PREF|LEM:ل	لامِ امر, like وَلْيُوفُوا
+22:29:2:2	يَقْضُ	V	IMPF|VF:1|ROOT:قضي|LEM:قَضَى|3MP|MOOD:JUS	after لامِ امر: مجزوم

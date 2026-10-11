@@ -22,6 +22,7 @@ const ROOT = path.join(__dirname, "..");
 const SRC_URL = "https://raw.githubusercontent.com/mustafa0x/quran-morphology/master/quran-morphology.txt";
 const CACHE = path.join(ROOT, ".cache", "quran-morphology.txt");
 const OUT_DIR = path.join(ROOT, "asset", "morphology");
+const FIXES = path.join(ROOT, "morphology-fixes.tsv");
 
 function download(url) {
   return new Promise(function (resolve, reject) {
@@ -129,8 +130,62 @@ const FEATURE_FIXES = {
  */
 const DROPPED_SEGMENTS = { "42:51:11:2": true };
 
+/**
+ * The corpus text with the tagging slips the word-card review found put right, from
+ * morphology-fixes.tsv: each row is a segment's corrected corpus line — location
+ * "surah:ayah:word:segment", letters, part of speech, features — plus a note. A location the
+ * corpus lacks adds a segment there (the ی of "my" that 54:16 وَنُذُرِ drops for the rhyme).
+ * A fixed word must keep its letters, so a row that lands on the wrong word stops the build.
+ * scripts/build-stem-meanings.js reads the corpus through this too, so its stem keys match.
+ */
+function fixCorpus(text) {
+  if (!fs.existsSync(FIXES)) return text;
+  const fixes = {};
+  fs.readFileSync(FIXES, "utf8").split(/\r?\n/).slice(1).forEach(function (line) {
+    const c = line.split("\t");
+    if (c.length >= 4) fixes[c[0]] = c.slice(0, 4);
+  });
+  const wordOf = function (loc) { return loc.split(":").slice(0, 3).join(":"); };
+  const touched = {};
+  Object.keys(fixes).forEach(function (loc) { touched[wordOf(loc)] = { before: "", after: "", last: -1 }; });
+
+  const lines = text.split("\n");
+  lines.forEach(function (line, i) {
+    const cols = line.split("\t");
+    const word = touched[wordOf(cols[0])];
+    if (!word || cols.length < 4) return;
+    word.before += cols[1];
+    word.last = i;
+    if (fixes[cols[0]]) {
+      lines[i] = fixes[cols[0]].join("\t");
+      delete fixes[cols[0]];
+    }
+  });
+  // What is left adds segments, after the last one its word already has; from the end of
+  // the file back, so each insert leaves the places still to fill where they were.
+  Object.keys(fixes).forEach(function (loc) {
+    if (touched[wordOf(loc)].last === -1) throw new Error("morphology-fixes.tsv: no word at " + loc);
+  });
+  Object.keys(fixes).sort(function (a, b) {
+    return touched[wordOf(b)].last - touched[wordOf(a)].last || Number(b.split(":")[3]) - Number(a.split(":")[3]);
+  }).forEach(function (loc) {
+    lines.splice(touched[wordOf(loc)].last + 1, 0, fixes[loc].join("\t"));
+  });
+  lines.forEach(function (line) {
+    const cols = line.split("\t");
+    const word = touched[wordOf(cols[0])];
+    if (word && cols.length >= 4) word.after += cols[1];
+  });
+  Object.keys(touched).forEach(function (w) {
+    if (touched[w].before !== touched[w].after) {
+      throw new Error("morphology-fixes.tsv: " + w + " is " + touched[w].before + ", not " + touched[w].after);
+    }
+  });
+  return lines.join("\n");
+}
+
 async function main() {
-  const text = await readCorpus();
+  const text = fixCorpus(await readCorpus());
 
   // "<surah>:<ayah>" -> array of words, each an array of segments in order.
   const ayat = {};
@@ -174,7 +229,11 @@ async function main() {
   console.log("total size:      " + (totalBytes / 1048576).toFixed(2) + " MB uncompressed");
 }
 
-main().catch(function (err) {
-  console.error(err.message);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch(function (err) {
+    console.error(err.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { fixCorpus: fixCorpus };
