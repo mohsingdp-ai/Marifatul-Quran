@@ -41,8 +41,8 @@
     // و — joining, resuming, circumstantial, oath
     "و|CONJ": "اور",
     "و|REM": "اور",
-    // the وَ of حال: "while", not "although" (وَمَاتُوا وَهُمْ كُفَّارٌ = died while disbelievers)
-    "و|CIRC": "اس حال میں کہ / جبکہ",
+    // the وَ of حال: "جبکہ" (while / whereas); "حالانکہ" (although) would invert وَمَاتُوا وَهُمْ كُفَّارٌ
+    "و|CIRC": "جبکہ",
     "و|SUP": "اور",
     "و|COM": "کے ساتھ",
     "و|P": "قسم ہے",
