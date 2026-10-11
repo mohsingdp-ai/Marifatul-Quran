@@ -339,3 +339,8 @@ location	arabic	pos	features	note
 54:30:4:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|NOM	نُذُرِ مرفوع (its kasra stands for the dropped ی): joined to عَذَابِى, the اسم of كَانَ
 54:37:9:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|ACC	نُذُرِ منصوب (its kasra stands for the dropped ی): joined to عَذَابِى, the object of فَذُوقُوا۟
 54:39:3:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|ACC	نُذُرِ منصوب (its kasra stands for the dropped ی): joined to عَذَابِى, the object of فَذُوقُوا۟
+52:44:7:1	يَقُولُ	V	IMPF|VF:1|ROOT:قول|LEM:قالَ|3MP|MOOD:JUS	answer of وَإِن يَرَوْا: مجزوم
+54:2:4:1	يُعْرِضُ	V	IMPF|VF:4|ROOT:عرض|LEM:أَعْرَضَ|3MP|MOOD:JUS	answer of وَإِن يَرَوْا: مجزوم
+54:2:5:2	يَقُولُ	V	IMPF|VF:1|ROOT:قول|LEM:قالَ|3MP|MOOD:JUS	joined to the مجزوم answer يُعْرِضُوا۟
+57:23:7:1	تَفْرَحُ	V	IMPF|VF:1|ROOT:فرح|LEM:فَرِحَ|2MP|MOOD:SUBJ	joined to تَأْسَوْا۟ under لِكَيْلَا: منصوب
+14:31:7:2	يُنفِقُ	V	IMPF|VF:4|ROOT:نفق|LEM:أَنفَقَ|3MP|MOOD:JUS	joined to يُقِيمُوا۟, answer of قُل: مجزوم

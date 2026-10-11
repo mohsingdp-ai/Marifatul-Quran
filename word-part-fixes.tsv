@@ -402,7 +402,7 @@ ref	piece	arabic	meaning	label	note
 12:29:5	2	ٱسْتَغْفِرِ	بخشش مانگ		ٱسْتَغْفِرِى: you (feminine singular)
 12:33:7	1	يَدْعُو	بلاتی ہیں		the women call; يَدْعُو + نَ
 12:33:7	2	نَ	وہ سب (عورتیں)		نونِ نسوہ
-12:37:5	1	تُرْزَقَ	دیے جاتے ہو / کھلائے جاتے ہو		تُرْزَقَانِهِۦٓ: passive, you two
+12:37:5	1	تُرْزَقَ	کھلائے جاتے ہو		تُرْزَقَانِهِۦٓ: passive, you two
 12:40:22	1	تَعْبُدُ	عبادت کرو		أَلَّا تَعْبُدُوٓا۟: prohibition
 12:41:11	2	تَأْكُلُ	کھائیں گے / کھاتے ہیں		doer is ٱلطَّيْرُ, not "you"; matches whole; stem shared with 2nd-person uses
 12:42:2	1	لِ	سے		لِ after قَالَ: the one spoken to
@@ -965,7 +965,7 @@ ref	piece	arabic	meaning	label	note
 52:29:6	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 52:30:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 52:33:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
-52:44:7	1	يَقُولُ	کہتے ہیں		يَقُولُوا۟: plural; answer of a condition
+52:44:7	1	يَقُولُ	کہیں گے		يَقُولُوا۟: answer of وَإِن يَرَوْا, future in Urdu
 54:2:5	2	يَقُولُ	کہتے ہیں		وَإِن يَرَوْا۟ … وَيَقُولُوا۟: answer of the condition
 54:26:3	1	مَّنِ	کون	اسمِ استفہام	question (MASAQ INTERROG; answered/rhetorical); book p.94 مَنْ = کون; retag REL→
 54:42:3	1	كُلِّ	سب		كُلّ + pronoun: all of it / them
@@ -1039,3 +1039,6 @@ ref	piece	arabic	meaning	label	note
 88:22:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 91:13:2	1	لَ	کو		لِ after قَالَ: the one spoken to
 95:8:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
+20:63:5	1	يُرِيدَ	چاہتے ہیں		يُرِيدَانِ: plain present, they both want
+26:218:2	1	يَرَىٰ	دیکھتا ہے		ٱلَّذِى يَرَىٰكَ: who sees you
+26:203:1	1	فَ	پھر	حرفِ عطف	joins فَيَقُولُوا۟ to فَيَأْتِيَهُم (26:202), so it is منصوب
