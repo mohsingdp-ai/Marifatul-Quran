@@ -257,6 +257,16 @@
     syncParaStepButtons();
   });
 
+  // A mouse wheel or an up/down trackpad swipe over the chips moves them sideways at once;
+  // at either end the page scrolls as usual. Sideways swipes are left to the browser.
+  if (paraChips) paraChips.addEventListener("wheel", function (e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    var px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+    var before = paraChips.scrollLeft;
+    paraChips.scrollLeft += getComputedStyle(paraChips).direction === "rtl" ? -px : px;
+    if (paraChips.scrollLeft !== before) e.preventDefault();
+  }, { passive: false });
+
   // The native list shows the names too.
   function labelParaOptions() {
     Array.prototype.forEach.call(allParaOptions || paraSelect.options, function (opt) {

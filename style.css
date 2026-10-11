@@ -440,7 +440,6 @@ button {
   padding: 0.25rem 1rem 0.5rem;
   overflow-x: auto;
   scrollbar-width: none;
-  scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -464,8 +463,6 @@ button {
   line-height: 1.25rem;
   white-space: nowrap;
   cursor: pointer;
-  scroll-snap-align: start;
-  scroll-margin-inline: 1rem;
   touch-action: manipulation;
   transition: background var(--md-duration-short) var(--md-easing-standard), color var(--md-duration-short) var(--md-easing-standard);
 }
