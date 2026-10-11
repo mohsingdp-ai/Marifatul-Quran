@@ -924,11 +924,12 @@
    * per para, which is not what someone who just wants to listen is after — so the ayat
    * stay plain text until this is switched on in settings.
    */
+  // Admin only for now: a user reads every word-meaning setting as off.
   var WORD_MEANINGS_PREF_KEY = "mq_pref_word_meanings";
 
   function wordMeaningsEnabled() {
     try {
-      return localStorage.getItem(WORD_MEANINGS_PREF_KEY) === "true";
+      return isAdmin() && localStorage.getItem(WORD_MEANINGS_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -970,7 +971,7 @@
 
   function wordGlossEnabled() {
     try {
-      return localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
+      return isAdmin() && localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
     } catch (e) {
       return false;
     }
@@ -990,7 +991,7 @@
 
   function ayahGlossSwitchEnabled() {
     try {
-      return localStorage.getItem(AYAH_GLOSS_SWITCH_PREF_KEY) === "true";
+      return isAdmin() && localStorage.getItem(AYAH_GLOSS_SWITCH_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -1010,7 +1011,7 @@
 
   function wordTableEnabled() {
     try {
-      return localStorage.getItem(WORD_TABLE_PREF_KEY) === "true";
+      return isAdmin() && localStorage.getItem(WORD_TABLE_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -4462,6 +4463,8 @@
   var roleAdminBtn = document.getElementById("role-admin-btn");
   var roleBadge = document.getElementById("role-badge");
   var adminSection = document.getElementById("admin-section");
+  var wordMeaningsRow = document.getElementById("word-meanings-row");
+  var glossSwitchRow = document.getElementById("gloss-switch-row");
   var ghTokenInput = document.getElementById("gh-token-input");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var wordMeaningsGroup = document.getElementById("word-meanings-group");
@@ -4658,6 +4661,8 @@
     roleBadge.textContent = i18n(admin ? "settings.roleAdmin" : "settings.roleUser");
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
     adminSection.style.display = admin ? "" : "none";
+    wordMeaningsRow.hidden = !admin;
+    glossSwitchRow.hidden = !admin;
     if (admin && ghTokenInput) {
       ghTokenInput.value = getGitHubToken();
     }
