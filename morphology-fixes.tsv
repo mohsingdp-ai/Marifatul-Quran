@@ -344,3 +344,11 @@ location	arabic	pos	features	note
 54:2:5:2	يَقُولُ	V	IMPF|VF:1|ROOT:قول|LEM:قالَ|3MP|MOOD:JUS	joined to the مجزوم answer يُعْرِضُوا۟
 57:23:7:1	تَفْرَحُ	V	IMPF|VF:1|ROOT:فرح|LEM:فَرِحَ|2MP|MOOD:SUBJ	joined to تَأْسَوْا۟ under لِكَيْلَا: منصوب
 14:31:7:2	يُنفِقُ	V	IMPF|VF:4|ROOT:نفق|LEM:أَنفَقَ|3MP|MOOD:JUS	joined to يُقِيمُوا۟, answer of قُل: مجزوم
+10:53:6:1	وَ	P	P|PREF|LEM:و	oath وَ: إِى وَرَبِّىٓ, as 91:1
+10:53:6:2	رَبِّ	N	ROOT:ربب|LEM:رَبّ|M|GEN	after the oath وَ: مجرور
+34:3:9:1	وَ	P	P|PREF|LEM:و	oath وَ: بَلَىٰ وَرَبِّى لَتَأْتِيَنَّكُمْ
+34:3:9:2	رَبِّ	N	ROOT:ربب|LEM:رَبّ|M|GEN	after the oath وَ: مجرور
+46:34:12:1	وَ	P	P|PREF|LEM:و	oath وَ: بَلَىٰ وَرَبِّنَا
+51:1:1:1	وَ	P	P|PREF|LEM:و	oath وَ that opens the surah, as 91:1
+51:7:1:1	وَ	P	P|PREF|LEM:و	oath وَ, a new oath
+52:1:1:1	وَ	P	P|PREF|LEM:و	oath وَ that opens the surah, as 91:1
