@@ -76,3 +76,14 @@ test("every row of word-part-fixes.tsv matches the morphology at its place", () 
     assert.ok(c[3] || c[4], "empty fix at " + key);
   });
 });
+
+test("إِيَّٰىَ, written with a small alif, is still the fronted object", () => {
+  const morph = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "asset", "morphology", "para-1.json"), "utf8"));
+  const labels = require("../morphology-labels.js").MQ_MORPH_UR;
+  const src = fs.readFileSync(path.join(__dirname, "..", "app.js"), "utf8");
+  const grab = (name) => src.match(new RegExp("function " + name + "\\([\\s\\S]*?\\n  }\\n"))[0];
+  const segmentMeaning = new Function("window", "stemMeanings",
+    ["segmentMeaning", "pronounSense", "isSubjectEnding", "hasSubjectEnding", "withoutSubject"].map(grab).join("") +
+    "return segmentMeaning;")({ MQ_MORPH_UR: labels }, {});
+  assert.strictEqual(segmentMeaning(morph["2:40"][11], 1), "صرف مجھے");  // وَ+إِيَّٰىَ فَٱرْهَبُونِ
+});

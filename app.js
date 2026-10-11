@@ -3933,8 +3933,10 @@
     if (role === "PRON") {
       var forms = labels.pronoun[seg[4] || ""];
       if (!forms) return "";
-      // إِيَّاكَ and kin are always the object, put first for emphasis: "صرف تجھے".
-      if (labels.particleKey(seg[0]).indexOf("إيا") === 0) return "صرف " + forms.o;
+      // إِيَّاكَ and kin are always the object, put first for emphasis: "صرف تجھے". إِيَّٰىَ
+      // writes its alif small, so only the إي is matched. One joined to another object
+      // instead (17:31 وَإِيَّاكُمْ) has no "صرف"; word-part-fixes.tsv covers those ayat.
+      if (labels.particleKey(seg[0]).indexOf("إي") === 0) return "صرف " + forms.o;
       return forms[pronounSense(segs, index)];
     }
     var key = labels.particleKey(seg[0]) + "|" + role;
