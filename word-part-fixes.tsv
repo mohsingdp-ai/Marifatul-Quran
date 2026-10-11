@@ -88,6 +88,7 @@ ref	piece	arabic	meaning	label	note
 4:90:21	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 4:90:23	2	لَ	—		second answer of لَوْ joined with فَ: no ضرور
 4:113:6	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+4:131:15	2	إِيَّاكُمْ	تمہیں		joined to the object ٱلَّذِينَ, not fronted: no صرف (owner decision)
 4:132:9	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 4:137:16	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
 4:137:19	1	لِ	کہ	لامِ جحود	joined to لَمْ يَكُنِ ... لِيَغْفِرَ
@@ -495,6 +496,7 @@ ref	piece	arabic	meaning	label	note
 29:40:24	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
 29:52:3	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 29:53:6	1	لَّ	ضرور		لَ answering لَوْ / لَوْلَا
+29:60:9	2	إِيَّاكُمْ	تمہیں		joined to the object of يَرْزُقُهَا, not fronted: no صرف (owner decision)
 29:61:3	1	مَّنْ	کس نے	اسمِ استفہام	question right (answered اللہ; MASAQ INTERROG; retag) but past transitive verb n
 29:63:3	1	مَّن	کس نے	اسمِ استفہام	question right (answered اللہ; MASAQ INTERROG; retag) but past transitive verb n
 30:9:28	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
