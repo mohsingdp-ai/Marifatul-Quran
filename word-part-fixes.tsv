@@ -92,6 +92,7 @@ ref	piece	arabic	meaning	label	note
 3:154:32	1	كُلَّ	سب		كُلّ + pronoun: all of it / them
 3:154:41	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 3:154:56	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+3:154:62	1	مَضَاجِعِ	قتل گاہوں		إِلَىٰ مَضَاجِعِهِمْ: where they would fall dead (HAY قتل گاہ)
 3:159:12	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 3:164:19	2	إِن	بیشک	حرفِ تحقیق	إِنْ مخففہ: لَ on the predicate
 3:167:5	1	لَ	کو		لِ after قَالَ: the one spoken to
@@ -177,6 +178,11 @@ ref	piece	arabic	meaning	label	note
 5:41:32	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 5:43:15	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 5:44:21	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
+5:45:6	1	بِ	کے بدلے		بِ of exchange: a life for a life
+5:45:8	1	بِ	کے بدلے		بِ of exchange
+5:45:10	1	بِ	کے بدلے		بِ of exchange
+5:45:12	1	بِ	کے بدلے		بِ of exchange
+5:45:14	1	بِ	کے بدلے		بِ of exchange
 5:48:33	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 5:52:8	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 5:54:25	1	وَ	اور	حرفِ عطف	وَ: عطف or حال; HAY reads اور
@@ -314,7 +320,7 @@ ref	piece	arabic	meaning	label	note
 9:81:3	1	بِ	پر		فَرِحَ ... بِمَقْعَدِهِمْ
 9:81:9	1	يُجَٰهِدُ	جہاد کریں		أَن يُجَٰهِدُوا۟: subjunctive
 9:83:20	1	بِ	پر		رَضِيتُم بِٱلْقُعُودِ
-9:103:5	1	تُطَهِّرُ	تو پاک کرے		you purify them
+9:103:5	1	تُطَهِّرُ	پاک کرے		HAY: تُطَهِّرُ is 3FS, صفت of صَدَقَةً (2MS would be jussive)
 9:103:6	2	تُزَكِّي	تو پاک کرے		you purify them
 9:111:24	2	مَنْ	کون	اسمِ استفہام	وَمَنْ أَوْفَىٰ ... مِنَ ٱللَّهِ = rhetorical question; whole اور کون; MASAQ CON
 9:114:10	1	إِيَّاهُ	اُس سے		second object of وَعَدَ, not fronted: no صرف
@@ -394,6 +400,8 @@ ref	piece	arabic	meaning	label	note
 12:18:18	1	تَصِفُ	بیان کرتے ہو		تَصِفُونَ: you (plural)
 12:25:12	1	مَا	کیا	اسمِ استفہام	question: 12:25:12 MASAQ INTERROG; matches whole (نفی reading also exists); data
 12:29:5	2	ٱسْتَغْفِرِ	بخشش مانگ		ٱسْتَغْفِرِى: you (feminine singular)
+12:33:7	1	يَدْعُو	بلاتی ہیں		the women call; يَدْعُو + نَ
+12:33:7	2	نَ	وہ سب (عورتیں)		نونِ نسوہ
 12:37:5	1	تُرْزَقَ	دیے جاتے ہو / کھلائے جاتے ہو		تُرْزَقَانِهِۦٓ: passive, you two
 12:40:22	1	تَعْبُدُ	عبادت کرو		أَلَّا تَعْبُدُوٓا۟: prohibition
 12:41:11	2	تَأْكُلُ	کھائیں گے / کھاتے ہیں		doer is ٱلطَّيْرُ, not "you"; matches whole; stem shared with 2nd-person uses
@@ -424,6 +432,7 @@ ref	piece	arabic	meaning	label	note
 14:11:2	1	لَ	کو		لِ after قَالَ: the one spoken to
 14:17:12	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 14:20:5	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
+14:20:5	2	عَزِيزٍ	مشکل / دشوار		عَزِيز here = hard; stem shared with زبردست
 14:21:25	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 14:21:28	1	أَ	خواہ		hamza of تسویہ after سَوَآءٌ
 14:22:30	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
@@ -431,7 +440,7 @@ ref	piece	arabic	meaning	label	note
 14:31:2	1	لِّ	سے		لِ after قَالَ: the one spoken to
 14:31:7	2	يُنفِقُ	خرچ کریں		يُقِيمُوا۟ … وَيُنفِقُوا۟: answer of قُل
 14:36:11	2	مَنْ	جو کوئی	اسمِ شرط	past + فَإِنَّكَ = condition (book p.168 أسماء الشرط; SKILL step 5); MASAQ CONDI
-14:46:10	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
+14:46:10	1	لِ	کہ		وَإِن = اور اگرچہ (HAY): لِ of purpose, not لامِ جحود
 15:7:3	1	تَأْتِي	تو لاتا / لاتے		2MS addressed to the Prophet, تأتي بِ = bring; "آتی ہے" (3FS) wrong here; stem s
 15:15:1	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 15:20:8	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
@@ -451,6 +460,7 @@ ref	piece	arabic	meaning	label	note
 16:32:5	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 16:40:8	1	لَ	کو		لِ after قَالَ: the one spoken to
 16:46:7	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
+16:58:4	1	بِ	کی		بُشِّرَ بِ: given news of
 16:58:4	3	أُنثَىٰ	لڑکی / مؤنث		newborn daughter; dictionary REVIEWER
 16:71:11	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 16:76:14	1	مَوْلَىٰ	آقا / کارساز		dictionary REVIEWER: book مولی = کارساز, مددگار reserved for نصیر
@@ -512,9 +522,11 @@ ref	piece	arabic	meaning	label	note
 18:18:13	1	بِ	پر		on the threshold
 18:18:17	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 18:18:20	2	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+18:20:7	1	يُعِيدُ	لوٹائیں		يُعِيدُوكُمْ فِى مِلَّتِهِمْ: bring you back
 18:22:1	2	يَقُولُ	کہتے ہیں		سَيَقُولُونَ: plural
 18:22:5	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 18:22:11	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
+18:22:18	1	بِ	کو		أَعْلَمُ بِ: knows
 18:22:18	2	عِدَّتِ	گنتی / تعداد		their number; "عدت" = widow's period (65:1 shares stem); 74:31 عِدَّتَ already گ
 18:22:19	1	مَّا	نہیں	حرفِ نفی	negation: 18:22:19 ما … إِلَّا قَلِيلٌ; MASAQ NEG (SKILL step 5 ما … إِلَّا)
 18:28:7	1	بِ	میں		in the morning
@@ -522,6 +534,7 @@ ref	piece	arabic	meaning	label	note
 18:29:8	2	مَن	جو کوئی	اسمِ شرط	past + فَلْيَكْفُرْ = condition (book p.168 أسماء الشرط; SKILL step 5); MASAQ CO
 18:34:5	1	لِ	کو		لِ after قَالَ: the one spoken to
 18:37:2	1	لَ	کو		لِ after قَالَ: the one spoken to
+18:38:1	1	لَّٰكِنَّ	لیکن		لَٰكِنْ أَنَا: the light لٰكِن
 18:39:3	1	دَخَلْ	داخل ہوا		دَخَلْتَ: you (singular)
 18:49:8	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 18:50:3	1	لِ	سے		لِ after قَالَ: the one spoken to
@@ -782,7 +795,7 @@ ref	piece	arabic	meaning	label	note
 36:65:7	2	تَشْهَدُ	گواہی دیں گے / دیتی ہے		subject أَرْجُلُهُم (broken pl = 3FS); 'دیتے ہو' is 2nd person; stem shared with
 36:66:3	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 36:67:3	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
-36:68:1	2	مَن	جو کوئی	اسمِ شرط	condition (MASAQ COND); مَن is subject, resumptive pronoun (لَهُ/ـهُ) carries th
+36:68:1	2	مَن	جس کو	اسمِ شرط	condition (MASAQ COND); object form: ہم عمر دیتے ہیں جس کو (HAY)
 36:78:7	1	مَن	کون	اسمِ استفہام	question (MASAQ INTERROG; answered/rhetorical); book p.94 مَنْ = کون; retag REL→
 36:80:8	2	إِذَآ	اچانک	حرفِ فجائیہ	إِذَا before a noun clause
 36:81:6	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
@@ -887,11 +900,12 @@ ref	piece	arabic	meaning	label	note
 43:68:8	1	تَحْزَنُ	غمگین ہو گے		وَلَآ أَنتُمْ تَحْزَنُونَ: future statement
 43:80:2	1	يَحْسَبُ	سمجھتے ہیں		يَحْسَبُونَ: plural, indicative
 43:87:3	1	مَّنْ	کس نے	اسمِ استفہام	question right (answered اللہ; MASAQ INTERROG; retag) but past transitive verb n
-43:88:1	1	وَ	قسم		oath
+43:88:1	1	وَ	قسم	حرفِ جار، قسم	oath
 44:19:3	1	تَعْلُ	سرکشی کرو		أَلَّا تَعْلُوا۟: prohibition
 44:34:3	2	يَقُولُ	کہتے ہیں		لَيَقُولُونَ: plural, indicative
 44:35:8	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 45:14:2	1	لِّ	کو		لِ after قَالَ: the one spoken to
+45:14:4	1	يَغْفِرُ	درگزر کریں / معاف کریں		jussive answering قُل: they should forgive
 45:15:5	2	مَنْ	جو کوئی	اسمِ شرط	condition (jussive/past verb + answer; MASAQ COND); SKILL step 5 + app COND whol
 45:23:18	2	مَن	کون	اسمِ استفہام	question (MASAQ INTERROG; answered/rhetorical); book p.94 مَنْ = کون; retag REL→
 45:32:14	1	مَا	کیا	اسمِ استفہام	question / indirect question (ayah; MASAQ INTERROG or NEG slip); book p.94 مَا =
@@ -1008,17 +1022,19 @@ ref	piece	arabic	meaning	label	note
 71:24:1	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 72:16:5	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 73:10:4	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
+75:2:3	1	بِ	کی		بِ after أُقْسِمُ: the thing sworn by
 75:15:1	1	وَ	اور	حرفِ عطف	وَلَوْ = even if: وَ joins, لَوْ carries اگرچہ
 75:15:1	2	لَوْ	اگرچہ		لَوْ وصلیہ after وَ: even if
 75:40:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 77:48:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 79:10:1	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
+79:32:2	2	هَا	انہیں		هَا = ٱلْجِبَالَ, a plural of things
 81:22:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 81:24:5	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 81:25:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 82:6:3	1	مَا	کس چیز نے	اسمِ استفہام	question right (MASAQ INTERROG) but ما is subject of a past transitive verb (مَن
 82:16:4	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
-86:5:3	1	مِ	کس چیز	اسمِ استفہام	مِمَّ خُلِقَ = from what was he made; ما lost its alif after a preposition = que
+86:5:3	2	مَّ	کس چیز	اسمِ استفہام	مِمَّ خُلِقَ = from what was he made; ما lost its alif after a preposition = question
 86:14:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 88:22:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 91:13:2	1	لَ	کو		لِ after قَالَ: the one spoken to
