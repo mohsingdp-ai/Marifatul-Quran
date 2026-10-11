@@ -3909,10 +3909,12 @@
    * A verb stem's meaning without the subject its ending already shows: يُنفِقُ+ونَ reads
    * "خرچ کرتے ہیں" + "وہ سب", not "وہ خرچ کرتے ہیں" + "وہ سب". Each "/" alternative is
    * trimmed on its own, and one that would be left empty, or with a lone "نے", is kept.
-   * "تم سے سوال کیا جائے گا" keeps its تم: there it is not the subject.
+   * "تم سے سوال کیا جائے گا" keeps its تم: there it is not the subject. So does "تم دونوں کو دیا
+   * جاتا ہے": stripping only the تم would leave "دونوں کو". A bare "دونوں نے چکھا" goes, since the
+   * function only runs when the ending names the doer (ا "وہ دونوں").
    */
   function withoutSubject(text) {
-    var subject = /^(?:اُنہوں نے|انہوں نے|اُس نے|اس نے|تم نے|ہم نے|میں نے|تُو نے|تو نے|آپ نے|وہ سب|وہ دونوں|تم سب|تم دونوں|وہ|تم|ہم|میں|تُو|تو)\s+(?!(?:سے|کو|کا|کی|کے|پر|میں|نے)(?:\s|$))/;
+    var subject = /^(?:اُنہوں نے|انہوں نے|اُس نے|اس نے|تم نے|ہم نے|میں نے|تُو نے|تو نے|آپ نے|دونوں نے|وہ سب|وہ دونوں|تم سب|تم دونوں|وہ|تم|ہم|میں|تُو|تو|دونوں)\s+(?!(?:سے|کو|کا|کی|کے|پر|میں|نے|سب|دونوں)(?:\s|$))/;
     return text.split(" / ").map(function (alt) {
       var rest = alt.replace(subject, "").trim();
       return rest && rest !== "نے" ? rest : alt;

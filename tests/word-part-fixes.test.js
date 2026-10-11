@@ -30,6 +30,11 @@ test("a verb stem leaves its subject to the ending", () => {
   assert.strictEqual(meaning("2:118:21", 1), "بیان کیا");     // بَيَّ+نَّا: "ہم نے" goes too
 });
 
+test("a dual ending takes a bare دونوں, but never leaves one behind", () => {
+  assert.strictEqual(meaning("7:22:4", 1), "چکھا");                       // ذَاقَ+ا: not "دونوں نے چکھا"
+  assert.strictEqual(meaning("12:37:5", 1), "تم دونوں کو دیا جاتا ہے");   // تُرْزَقَ+انِ: not "دونوں کو …"
+});
+
 test("a bare 3MS verb keeps its subject", () => {
   assert.match(meaning("2:8:4", 1), /^وہ /);                   // يَقُولُ
 });
