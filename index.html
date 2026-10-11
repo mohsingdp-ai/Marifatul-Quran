@@ -302,7 +302,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <span data-i18n="settings.ayat">Ayat</span>
           </div>
-          <div class="settings-row">
+          <div class="settings-row" id="word-meanings-row" hidden>
             <label><span data-i18n="settings.wordMeanings">Word meanings</span> <span class="settings-role-badge" data-i18n="settings.experimental">Experimental</span></label>
             <span class="settings-hint" id="word-meanings-tap-label" data-i18n="settings.wordTap">When you tap a word</span>
             <div class="settings-role-group" id="word-meanings-group" role="group" aria-labelledby="word-meanings-tap-label">
@@ -326,7 +326,7 @@
             </label>
             <p class="settings-hint" data-i18n="settings.wordSoundHint">Says the word as quran.com recites it. Needs internet the first time.</p>
           </div>
-          <div class="settings-row">
+          <div class="settings-row" id="gloss-switch-row" hidden>
             <label class="settings-toggle-label">
               <span class="settings-toggle-text"><svg class="settings-toggle-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg><span data-i18n="settings.glossSwitch">Meaning switch on each ayah</span></span>
               <input type="checkbox" id="pref-ayah-gloss-switch" />
