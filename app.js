@@ -22,7 +22,7 @@
     document.documentElement.setAttribute("data-theme", t);
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", t === "dark" ? "#062a2a" : "#0a3d3d");
+      meta.setAttribute("content", t === "dark" ? "#111715" : "#eef3f1");
     }
   }
 
@@ -195,20 +195,77 @@
     return PARA_NAMES[Number(n) - 1] || ["", ""];
   }
 
-  /** The stepper's face: "Para N" over the para's name. */
+  /** The para's name as a label: the transliteration in English, the Arabic in Urdu. */
+  function paraLabelName(n) {
+    return paraName(n)[isUrdu() ? 0 : 1];
+  }
+
+  /** The para chips and the progress card's para name follow the select. */
   function syncParaFace() {
-    var num = document.getElementById("para-picker-num");
-    var name = document.getElementById("para-picker-name");
-    if (!num || !name) return;
     var n = paraSelect.value;
-    num.textContent = i18n("para.pickerNum", { n: n });
-    name.textContent = paraName(n)[0];
     var meterName = document.getElementById("hifz-meter-name");
     if (meterName) meterName.textContent = paraName(n)[0];
-    // The transliteration helps an English reader; in Urdu the Arabic name says it all.
-    if (isUrdu()) name.removeAttribute("title");
-    else name.title = paraName(n)[1];
+    syncParaChips();
   }
+
+  /**
+   * One chip per para the select offers (the recorded-only filter trims both alike). Rebuilt
+   * only when that list changes; otherwise just the pressed chip moves, and it is scrolled
+   * into view so the current para is never off to the side.
+   */
+  var paraChips = document.getElementById("para-chips");
+  var paraChipsKey = "";
+
+  function syncParaChips() {
+    if (!paraChips) return;
+    var values = Array.prototype.map.call(paraSelect.options, function (o) { return o.value; });
+    if (values.join(",") !== paraChipsKey) {
+      paraChipsKey = values.join(",");
+      paraChips.textContent = "";
+      values.forEach(function (v) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "para-chip";
+        b.dataset.para = v;
+        b.setAttribute("aria-label", i18n("para.chipAria", { n: v, name: paraLabelName(v) }));
+        b.innerHTML = "<span class=\"para-chip-num\">" + v + "</span>" +
+          "<span class=\"para-chip-name\">" + escapeHtml(paraLabelName(v)) + "</span>";
+        paraChips.appendChild(b);
+      });
+    }
+    var current = null;
+    Array.prototype.forEach.call(paraChips.children, function (b) {
+      var on = b.dataset.para === paraSelect.value;
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      if (on) current = b;
+    });
+    if (current) {
+      var box = paraChips.getBoundingClientRect();
+      var r = current.getBoundingClientRect();
+      if (r.left < box.left || r.right > box.right) {
+        paraChips.scrollLeft += r.left - box.left - (box.width - r.width) / 2;
+      }
+    }
+  }
+
+  if (paraChips) paraChips.addEventListener("click", function (e) {
+    var b = e.target.closest(".para-chip");
+    if (!b || b.dataset.para === paraSelect.value) return;
+    var basePara = tableRenderedPara;
+    paraSelect.value = b.dataset.para;
+    renderTable({ scrollBasePara: basePara });
+    syncParaStepButtons();
+  });
+
+  // A mouse wheel or an up/down trackpad swipe over the chips moves them sideways at once;
+  // at either end the page scrolls as usual. Sideways swipes are left to the browser.
+  if (paraChips) paraChips.addEventListener("wheel", function (e) {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    var px = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY;
+    var before = paraChips.scrollLeft;
+    paraChips.scrollLeft += getComputedStyle(paraChips).direction === "rtl" ? -px : px;
+    if (paraChips.scrollLeft !== before) e.preventDefault();
+  }, { passive: false });
 
   // The native list shows the names too.
   function labelParaOptions() {
@@ -675,11 +732,9 @@
       i18n("hifz.overall", { n: overall.memorized, total: overall.total });
 
     var pct = p.total ? Math.round((p.memorized / p.total) * 100) : 0;
-    // The ring's arc: pct of the circle's 100 path units. Nothing is drawn at 0, where a round
-    // cap would otherwise leave a dot; the track shows the empty ring.
     var fill = document.getElementById("hifz-meter-fill");
-    fill.style.strokeDasharray = pct + " 100";
-    fill.style.opacity = pct ? "1" : "0";
+    fill.style.width = pct + "%";
+    meter.style.setProperty("--pct", String(pct));
     var bar = meter.querySelector(".hifz-meter-bar");
     if (bar) bar.setAttribute("aria-valuenow", String(pct));
 
@@ -1309,13 +1364,16 @@
     var admin = isAdmin();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
-        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.playFromTitle") + "\" aria-label=\"" + i18n("ayat.playFromAria", { n: a.n }) + "\">" + PLAY_SVG + "</button>" +
+        "<div class=\"ayah-tools\">" +
+        "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.playFromTitle") + "\" aria-label=\"" + i18n("ayat.playFromAria", { n: a.n }) + "\">" + PLAY_SVG +
+          "<span class=\"ayah-key\" dir=\"ltr\">" + entry.surahNumber + ":" + a.n + "</span></button>" +
         (glossSwitch
           ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"" + i18n("ayat.glossToggleTitle") + "\" aria-label=\"" + i18n("ayat.glossToggleAria", { n: a.n }) + "\">" + GLOSS_SVG + "</button>"
           : "") +
         (admin
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.promptAyahTitle") + "\" aria-label=\"" + i18n("ayat.promptAyahAria", { n: a.n }) + "\">" + COPY_SVG + "</button>"
           : "") +
+        "</div>" +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
         ayahNumHtml(a) +
         (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
@@ -1694,7 +1752,7 @@
       : "";
     var rukuLine =
       "<span class=\"ruku-title-wide\">" + escapeHtml(surahLabel(row)) + " <span class=\"col-ruku-tag\">" + (isUrdu() ? i18n("card.ruku", { n: rukuTag.replace(/R/g, "") }) : rukuTag) + "</span>" + checkTag + "</span>" +
-      "<span class=\"ruku-title-narrow\">" + i18n("card.titleNarrow", { para: row.para, ruku: isUrdu() ? rukuTag.replace(/R/g, "") : rukuTag }) + checkTag + "</span>";
+      "<span class=\"ruku-title-narrow\">" + i18n("card.ruku", { n: rukuTag.replace(/R/g, "") }) + checkTag + "</span>";
     // Number and name as two spans, so the phone can put the name first: "النبأ · 78".
     var surahArabicCell =
       "<span class=\"surah-num\">" + escapeHtml(String(row.surahNumber)) + "</span>" +
@@ -2756,10 +2814,8 @@
       return;
     }
 
-    titleEl.textContent = i18n("dock.title", { para: row.para, ruku: rukuLabel(row) });
-    metaEl.textContent = parseInt(paraSelect.value, 10) !== row.para
-      ? i18n("dock.metaOtherPara", { surah: surahLabel(row), verses: versesText(row.verses), para: row.para })
-      : i18n("dock.meta", { surah: surahLabel(row), verses: versesText(row.verses) });
+    titleEl.textContent = i18n("dock.title", { ruku: String(rukuDisplay(row)).replace(/R/g, ""), surah: surahLabel(row) });
+    metaEl.textContent = i18n("dock.meta", { para: row.para, verses: versesText(row.verses) });
     gotoBtn.disabled = false;
 
     if (badge) {
@@ -3114,6 +3170,8 @@
       if (gi == null) return;
       var tr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
       if (tr) {
+        // Nothing is playing any more; the card must not keep saying so.
+        tr.classList.remove("playing", "audio-paused");
         var cell = tr.querySelector(".audio-cell");
         if (cell) {
           cell.innerHTML = "";
@@ -4482,13 +4540,19 @@
   var fontSizeValue = document.getElementById("font-size-value");
   var mushafScriptGroup = document.getElementById("mushaf-script-group");
 
+  /** Marks one segment of a Settings button group as chosen, for the eye and for screen readers. */
+  function setActive(btn, on) {
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+
   /** Lights the script on screen, which is the saved choice unless that one is still loading
       or failed to load. */
   function syncMushafScriptUI() {
     if (!mushafScriptGroup) return;
     var script = document.documentElement.getAttribute("data-mushaf");
     mushafScriptGroup.querySelectorAll("[data-mushaf-script]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.mushafScript === script);
+      setActive(btn, btn.dataset.mushafScript === script);
       btn.classList.remove("loading");
       btn.removeAttribute("aria-busy");
     });
@@ -4563,13 +4627,59 @@
     }
   }
 
+  /*
+   * The three dialogs (Settings and the two share sheets) behave as dialogs: opening one moves
+   * focus inside, Tab stays inside, Escape closes it, and closing hands focus back to the
+   * control that opened it -- the menu button, when that control was a menu item.
+   */
+  var dialogOpener = null;
+
+  function focusDialog(modal) {
+    hideWordPopover();
+    var opener = document.activeElement;
+    var menuWrap = opener && opener.closest ? opener.closest(".toolbar-menu-wrap") : null;
+    dialogOpener = menuWrap ? menuWrap.querySelector(".btn-toolbar-menu") : opener;
+    var box = modal.querySelector(".modal-content");
+    if (box) box.focus();
+  }
+
+  function restoreDialogFocus() {
+    var el = dialogOpener;
+    dialogOpener = null;
+    if (el && el.focus && document.contains(el)) el.focus();
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var open = document.querySelector(".modal.is-open");
+    if (!open) return;
+    if (e.key === "Escape") {
+      var close = open.querySelector(".modal-close-btn");
+      if (close) close.click();
+      return;
+    }
+    if (e.key !== "Tab") return;
+    var stops = Array.prototype.filter.call(
+      open.querySelectorAll("button, [href], input, select, textarea, [tabindex]:not([tabindex=\"-1\"])"),
+      function (el) { return !el.disabled && el.getClientRects().length > 0; });
+    if (!stops.length) return;
+    var first = stops[0];
+    var last = stops[stops.length - 1];
+    var at = document.activeElement;
+    if (!open.contains(at) || (e.shiftKey && at === first) || (!e.shiftKey && at === last)) {
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+    }
+  });
+
   function openSettings() {
     syncSettingsUI();
     settingsModal.classList.add("is-open");
+    focusDialog(settingsModal);
   }
 
   function closeSettings() {
     settingsModal.classList.remove("is-open");
+    restoreDialogFocus();
     // Save token if admin
     if (isAdmin() && ghTokenInput) {
       var val = ghTokenInput.value.trim();
@@ -4595,6 +4705,16 @@
     if (b) window.I18N.setLang(b.dataset.uiLang);
   });
 
+  /** Words the stylesheet draws (the cards' status chips) come from the same table. */
+  function syncCssStrings() {
+    var root = document.documentElement.style;
+    [["--str-heard", "card.statusHeard"], ["--str-memorized", "card.statusMemorized"],
+      ["--str-playing", "card.statusPlaying"], ["--str-paused", "card.statusPaused"]].forEach(function (p) {
+      root.setProperty(p[0], JSON.stringify(i18n(p[1])));
+    });
+  }
+  syncCssStrings();
+
   /*
    * i18n.js refills the markup; this redraws what app.js put on screen in the old language.
    * The word box closes rather than redraws. Each step runs on its own, so one that throws
@@ -4603,8 +4723,9 @@
   document.addEventListener("mq:langchange", function () {
     [
       syncUiLangUI,
+      syncCssStrings,
       labelParaOptions,
-      syncParaFace,
+      function () { paraChipsKey = ""; syncParaFace(); }, // rebuild the chips with the new names
       hideWordPopover,
       function () { renderTable({ scrollBasePara: tableRenderedPara }); },
       renderHifzMeter,
@@ -4650,8 +4771,8 @@
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
-    roleUserBtn.classList.toggle("active", !admin);
-    roleAdminBtn.classList.toggle("active", admin);
+    setActive(roleUserBtn, !admin);
+    setActive(roleAdminBtn, admin);
     roleBadge.textContent = i18n(admin ? "settings.roleAdmin" : "settings.roleUser");
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
     adminSection.style.display = admin ? "" : "none";
@@ -4660,7 +4781,7 @@
     }
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.mode === mode);
+      setActive(btn, btn.dataset.mode === mode);
     });
     speedSelect.value = String(getDefaultSpeed());
     syncVolumeUI();
@@ -4669,7 +4790,7 @@
     var th = getUiTheme();
     if (themeModeGroup) {
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (btn) {
-        btn.classList.toggle("active", btn.dataset.uiTheme === th);
+        setActive(btn, btn.dataset.uiTheme === th);
       });
     }
     if (prefMediaNotif) {
@@ -4743,7 +4864,7 @@
     if (!wordMeaningsGroup) return;
     var level = !wordMeaningsEnabled() ? "off" : wordMeaningsSimple() ? "simple" : "grammar";
     wordMeaningsGroup.querySelectorAll("[data-word-meanings]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.wordMeanings === level);
+      setActive(btn, btn.dataset.wordMeanings === level);
     });
   }
 
@@ -4782,7 +4903,7 @@
     if (!ayahWordsGroup) return;
     var level = wordTableEnabled() ? "grammar" : wordGlossEnabled() ? "simple" : "off";
     ayahWordsGroup.querySelectorAll("[data-ayah-words]").forEach(function (btn) {
-      btn.classList.toggle("active", btn.dataset.ayahWords === level);
+      setActive(btn, btn.dataset.ayahWords === level);
     });
   }
 
@@ -4912,7 +5033,7 @@
     if (!btn) return;
     setPlaybackMode(btn.dataset.mode);
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (b) {
-      b.classList.toggle("active", b === btn);
+      setActive(b, b === btn);
     });
   });
 
@@ -4928,7 +5049,7 @@
       setUiTheme(next);
       applyUiTheme(next);
       themeModeGroup.querySelectorAll("[data-ui-theme]").forEach(function (b) {
-        b.classList.toggle("active", b === btn);
+        setActive(b, b === btn);
       });
     });
   }
@@ -5457,12 +5578,14 @@
     populateShareBulkLinksModal(paraNum);
     shareBulkModal.classList.add("is-open");
     shareBulkModal.setAttribute("aria-hidden", "false");
+    focusDialog(shareBulkModal);
   }
 
   function closeShareBulkLinksModal() {
     if (!shareBulkModal) return;
     shareBulkModal.classList.remove("is-open");
     shareBulkModal.setAttribute("aria-hidden", "true");
+    restoreDialogFocus();
     if (shareBulkListEl) shareBulkListEl.textContent = "";
   }
 
@@ -5591,12 +5714,14 @@
     updateShareFileModal();
     shareFileModal.classList.add("is-open");
     shareFileModal.setAttribute("aria-hidden", "false");
+    focusDialog(shareFileModal);
   }
 
   function closeShareFileModal() {
     if (!shareFileModal) return;
     shareFileModal.classList.remove("is-open");
     shareFileModal.setAttribute("aria-hidden", "true");
+    restoreDialogFocus();
     shareFileItems = [];
   }
 
@@ -5812,7 +5937,7 @@
   // queried live on each render so the guide stays correct if the table
   // re-renders. A null target centers the caption with no spotlight/arrow.
   var GUIDE_STEPS = [
-    { key: "guide.para", selector: "#para-picker-btn" },
+    { key: "guide.para", selector: "#para-chips .para-chip[aria-pressed=\"true\"]" },
     { key: "guide.play", selector: "#ruku-tbody .audio-play-btn" },
     { key: "guide.offline", selector: "#ruku-tbody .audio-offline-btn" },
     { key: "guide.whatsapp", selector: "#ruku-tbody .audio-share-wa-btn" },
@@ -5877,10 +6002,10 @@
     var caption = document.createElement("div");
     caption.className = "mq-guide-caption";
     caption.innerHTML =
-      '<div class="mq-guide-step-label"></div>' +
       '<div class="mq-guide-title"></div>' +
       '<p class="mq-guide-body"></p>' +
       '<div class="mq-guide-actions">' +
+      '  <span class="mq-guide-step-label"></span>' +
       '  <button type="button" class="mq-guide-skip"></button>' +
       '  <button type="button" class="mq-guide-next"></button>' +
       '</div>';

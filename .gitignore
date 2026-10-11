@@ -7,3 +7,6 @@
 
 # Byproduct of importing scripts/match-audio.py from scripts/align-ayat.py
 __pycache__/
+
+# Impeccable session state (decision rounds); the surface brief and DESIGN.md sidecar are tracked
+.impeccable/questions/

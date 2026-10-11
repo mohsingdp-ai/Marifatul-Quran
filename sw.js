@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v31";
+const CACHE = "mq-v32";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -141,6 +141,9 @@ const STATIC = [
   "./verses-indopak.js",
   "./indopak-plain.js",
   "./asset/fonts/indopak-nastaleeq.woff2",
+  "./asset/fonts/rubik-400.woff2",
+  "./asset/fonts/rubik-500.woff2",
+  "./asset/fonts/rubik-600.woff2",
   "./asset/fonts/noto-sans-arabic-400.woff2",
   "./asset/fonts/noto-sans-arabic-600.woff2",
   "./timings.js",
