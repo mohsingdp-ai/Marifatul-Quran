@@ -274,8 +274,8 @@ location	arabic	pos	features	note
 2:186:11:1	دَعَا	V	PERF|VF:1|ROOT:دعو|LEM:دَعا|3MS	doer ٱلدَّاعِ
 2:237:16:1	يَعْفُو	V	IMPF|VF:1|ROOT:عفو|LEM:عَفا|3FP	يَعْفُو + نَ: نونِ نسوہ, the women
 2:237:16:2	نَ	N	PRON|SUFF|3FP	نونِ نسوہ: the women
-12:33:7:2	ونَ	N	PRON|SUFF|3FP	the women call
-12:33:7:1	يَدْعُ	V	IMPF|VF:1|ROOT:دعو|LEM:دَعا|3FP|MOOD:IND	the women call
+12:33:7:2	نَ	N	PRON|SUFF|3FP	نونِ نسوہ: the women
+12:33:7:1	يَدْعُو	V	IMPF|VF:1|ROOT:دعو|LEM:دَعا|3FP	يَدْعُو + نَ: نونِ نسوہ, the women (like 2:237)
 3:122:6:1	تَفْشَلَ	V	IMPF|VF:1|ROOT:فشل|LEM:فَشِلْ|3FD|MOOD:SUBJ	doer طَآئِفَتَانِ
 3:122:6:2	ا	N	PRON|SUFF|3FD	they two
 4:171:4:1	تَغْلُو	V	IMPF|VF:1|ROOT:غلو|LEM:تَغْلُو|2MP|MOOD:JUS	plural address
@@ -288,7 +288,7 @@ location	arabic	pos	features	note
 35:41:7:2	ا	N	PRON|SUFF|3FD	they two
 46:17:6:2	تَعِدَ	V	IMPF|VF:1|ROOT:وعد|LEM:وَعَدَ|2D|MOOD:IND	said to his parents: you two
 46:17:6:3	انِ	N	PRON|SUFF|2D	you two
-18:38:1:2	ا۠	N	PRON|SUFF|1S	لَٰكِنَّا = لَٰكِنْ أَنَا
+18:38:1:2	ا۠	N	PRON|1S	لَٰكِنَّا = لَٰكِنْ أَنَا: أَنَا, the subject
 7:17:2:2	ءَاتِيَنَّ	V	IMPF|VF:1|ROOT:أتي|LEM:أَتَى|1S|MOOD:IND	Iblis speaking
 3:120:2:1	تَمْسَسْ	V	IMPF|VF:1|ROOT:مسس|LEM:مَسَّ|3FS|MOOD:JUS	doer حَسَنَةٌ / سَيِّئَةٌ
 3:120:6:1	تُصِبْ	V	IMPF|VF:4|ROOT:صوب|LEM:أَصابَ|3FS|MOOD:JUS	doer حَسَنَةٌ / سَيِّئَةٌ
@@ -308,7 +308,6 @@ location	arabic	pos	features	note
 63:9:5:1	تُلْهِ	V	IMPF|VF:4|ROOT:لهو|LEM:أَلْهَى|3FS|MOOD:JUS	3FS doer; the pronoun is the object
 7:23:9:2	تَرْحَمْ	V	IMPF|VF:1|ROOT:رحم|LEM:رَحِمَ|2MS|MOOD:JUS	addressed to رَبَّنَا
 9:49:7:1	تَفْتِ	V	IMPF|VF:1|ROOT:فتن|LEM:فَتَنُ|2MS|MOOD:JUS	said to the Prophet
-9:103:5:1	تُطَهِّرُ	V	IMPF|VF:2|ROOT:طهر|LEM:طَهَّرَ|2MS|MOOD:IND	you (the Prophet) purify them
 9:103:6:2	تُزَكِّي	V	IMPF|VF:2|ROOT:زكو|LEM:زَكَّى|2MS|MOOD:IND	you (the Prophet) purify them
 10:78:3:2	تَلْفِتَ	V	IMPF|VF:1|ROOT:لفت|LEM:تَلْفِتَ|2MS|MOOD:SUBJ	said to Musa
 11:46:12:1	تَسْـَٔلْ	V	IMPF|VF:1|ROOT:سأل|LEM:سَأَلَ|2MS|MOOD:JUS	said to Nuh
@@ -327,9 +326,16 @@ location	arabic	pos	features	note
 42:7:11:2	تُنذِرَ	V	IMPF|VF:4|ROOT:نذر|LEM:أَنذَرَ|2MS|MOOD:SUBJ	addressed to the Prophet / one man
 10:94:20:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	prohibition to you
 10:95:2:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	prohibition to you
-28:86:13:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:IND	addressed to the Prophet
-28:87:14:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:IND	addressed to the Prophet
+28:86:13:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	addressed to the Prophet; لَا ناہیہ + نّ: مجزوم
+28:87:14:1	تَكُونَ	V	IMPF|VF:1|ROOT:كون|LEM:كانَ|FAM:كَان|2MS|MOOD:JUS	addressed to the Prophet; لَا ناہیہ + نّ: مجزوم
 11:37:6:1	تُخَٰطِبْ	V	IMPF|VF:3|ROOT:خطب|LEM:خاطَبَ|2MS|MOOD:JUS	لَا + jussive: prohibition
 12:101:18:1	تَوَفَّ	V	IMPV|VF:5|ROOT:وفي|LEM:تَوَفَّى|2MS	a prayer: command
 22:29:2:1	لْ	P	IMPV|PREF|LEM:ل	لامِ امر, like وَلْيُوفُوا
 22:29:2:2	يَقْضُ	V	IMPF|VF:1|ROOT:قضي|LEM:قَضَى|3MP|MOOD:JUS	after لامِ امر: مجزوم
+18:38:1:1	لَّٰكِنَّ	P	AMD|PREF|LEM:لٰكِن	لَٰكِنَّا = لَٰكِنْ أَنَا: the light لٰكِن, not the ناصب لٰكِنَّ
+54:16:4:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|NOM	نُذُرِ مرفوع (its kasra stands for the dropped ی): joined to عَذَابِى, the اسم of كَانَ
+54:18:6:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|NOM	نُذُرِ مرفوع (its kasra stands for the dropped ی): joined to عَذَابِى, the اسم of كَانَ
+54:21:4:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|NOM	نُذُرِ مرفوع (its kasra stands for the dropped ی): joined to عَذَابِى, the اسم of كَانَ
+54:30:4:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|NOM	نُذُرِ مرفوع (its kasra stands for the dropped ی): joined to عَذَابِى, the اسم of كَانَ
+54:37:9:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|ACC	نُذُرِ منصوب (its kasra stands for the dropped ی): joined to عَذَابِى, the object of فَذُوقُوا۟
+54:39:3:2	نُذُرِ	N	ROOT:نذر|LEM:نَذِير|ACC	نُذُرِ منصوب (its kasra stands for the dropped ی): joined to عَذَابِى, the object of فَذُوقُوا۟
