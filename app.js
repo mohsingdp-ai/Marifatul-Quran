@@ -3818,10 +3818,12 @@
 
   /**
    * Which sense of an attached pronoun applies. Off a noun it is the owner; off a
-   * preposition, what the preposition points at. Off a verb it is the doer only when it is
-   * the verb's own subject ending — the first one, agreeing with the verb's person and
-   * number, on a form that spells its subject out (كَفَرُ+وا۟). Otherwise it is what the verb
-   * acts on: the هُمْ of جَآءَ+هُمْ, the نَا of ٱهْدِ+نَا.
+   * preposition, what the preposition points at (اُس in فِي+هَا "اس میں"); off إِنَّ and its
+   * sisters, their subject (إِنَّ+ا "بیشک ہم"). A pronoun that is the stem itself (هُوَ,
+   * وَ+هُمْ) is a subject, unless a preposition is glued before it (بِ+هِۦ, لَ+هُمْ). Off a
+   * verb it is the doer only when it is the verb's own subject ending — the first one,
+   * agreeing with the verb's person and number, on a form that spells its subject out
+   * (كَفَرُ+وا۟). Otherwise it is what the verb acts on: the هُمْ of جَآءَ+هُمْ, the نَا of ٱهْدِ+نَا.
    */
   function pronounSense(segs, index) {
     var stem = null;
@@ -3829,6 +3831,8 @@
     for (var i = 0; i < segs.length; i++) {
       if (segs[i][1] === 0) { stem = segs[i]; stemAt = i; break; }
     }
+    if (stemAt === index) return index > 0 && segs[index - 1][3] === "P" ? "b" : "s";
+    if (stem && stem[2] === "P") return stem[3] === "ACC" ? "s" : "b";
     if (!stem || stem[2] !== "V") return stem && stem[2] === "N" ? "p" : "o";
     for (var j = stemAt + 1; j < index; j++) {
       if (segs[j][3] === "PRON") return "o";
@@ -3861,7 +3865,10 @@
     if (labels.noMeaning[role]) return "";
     if (role === "PRON") {
       var forms = labels.pronoun[seg[4] || ""];
-      return forms ? forms[pronounSense(segs, index)] : "";
+      if (!forms) return "";
+      // إِيَّاكَ and kin are always the object, put first for emphasis: "صرف تجھے".
+      if (labels.particleKey(seg[0]).indexOf("إيا") === 0) return "صرف " + forms.o;
+      return forms[pronounSense(segs, index)];
     }
     var key = labels.particleKey(seg[0]) + "|" + role;
     // A stem is looked up by its exact letters, since that is how the harvest was keyed. A
