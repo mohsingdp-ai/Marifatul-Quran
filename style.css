@@ -61,6 +61,8 @@
   --md-raised: var(--md-surface-container-lowest);
   --md-panel: var(--md-surface-container-lowest);
   --md-menu: var(--md-surface-container-lowest);
+  /* A card on a tinted wash (the reciting ayah): one tone above the wash. */
+  --md-card-on-tint: var(--md-surface-container-lowest);
   --md-dialog: var(--md-surface-container-low);
   --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d5a59'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
@@ -162,6 +164,7 @@ html[data-theme="dark"] {
   --md-raised: var(--md-surface-container-high);
   --md-panel: var(--md-surface-container-low);
   --md-menu: var(--md-surface-container-high);
+  --md-card-on-tint: var(--md-surface-container-highest);
   --md-dialog: #123030;
   --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3c2c1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
@@ -2132,8 +2135,14 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   min-width: 0;
   padding: 0.65rem 0.9rem 0.75rem;
   border-radius: var(--md-shape-md);
-  background: var(--md-surface-container-lowest);
+  /* One tone above what it sits on, so it reads as a raised card, not a hole. */
+  background: var(--md-card);
   border: 1px solid var(--md-outline-variant);
+  transition: background 0.25s ease;
+}
+
+.ayat-item.is-reciting .wt-card {
+  background: var(--md-card-on-tint);
 }
 
 .wt-card .wpop-translit {
@@ -2177,7 +2186,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   max-width: min(380px, calc(100vw - 16px));
   padding: 0.65rem 0.9rem 0.75rem;
   border-radius: var(--md-shape-md);
-  background: var(--md-surface-container-lowest);
+  background: var(--md-menu);
   box-shadow: var(--md-elevation-3);
   border: 1px solid var(--md-outline-variant);
 }
@@ -2328,7 +2337,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   display: block;
   font-size: 0.66rem;
   line-height: 1.75;
-  color: var(--md-outline);
+  color: var(--md-on-surface-variant);
 }
 
 /* The root, kept visually apart from the grammatical name it sits beside. */
