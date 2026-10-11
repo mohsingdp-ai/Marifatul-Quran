@@ -3852,6 +3852,28 @@
     return !vg || !pg || vg === pg;
   }
 
+  /** Whether a later piece of the word is the verb's own subject ending (the وا۟ of كَفَرُوا۟). */
+  function hasSubjectEnding(segs, index) {
+    for (var j = index + 1; j < segs.length; j++) {
+      if (segs[j][3] === "PRON" && pronounSense(segs, j) === "s") return true;
+    }
+    return false;
+  }
+
+  /**
+   * A verb stem's meaning without the subject its ending already shows: يُنفِقُ+ونَ reads
+   * "خرچ کرتے ہیں" + "وہ سب", not "وہ خرچ کرتے ہیں" + "وہ سب". Each "/" alternative is
+   * trimmed on its own, and one that would be left empty, or with a lone "نے", is kept.
+   * "تم سے سوال کیا جائے گا" keeps its تم: there it is not the subject.
+   */
+  function withoutSubject(text) {
+    var subject = /^(?:اُنہوں نے|انہوں نے|اُس نے|اس نے|تم نے|ہم نے|میں نے|تُو نے|تو نے|آپ نے|وہ سب|وہ دونوں|تم سب|تم دونوں|وہ|تم|ہم|میں|تُو|تو)\s+(?!(?:سے|کو|کا|کی|کے|پر|میں|نے)(?:\s|$))/;
+    return text.split(" / ").map(function (alt) {
+      var rest = alt.replace(subject, "").trim();
+      return rest && rest !== "نے" ? rest : alt;
+    }).join(" / ");
+  }
+
   /**
    * One segment's Urdu meaning, or "" when it honestly has none: ال and the كَ of ذٰلِكَ
    * are grammar rather than words, and a verb or noun stem carries the verse's own
@@ -3876,7 +3898,8 @@
     var stem = stemMeanings ? stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "" : "";
     if (seg[1] !== 0) return labels.affix[key] || stem;
     if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || stem;
-    return stem;
+    // A bare 3MS verb keeps its "وہ": no other piece carries the subject there.
+    return seg[2] === "V" && hasSubjectEnding(segs, index) ? withoutSubject(stem) : stem;
   }
 
   /** The short grammatical name under a segment, with its root when it has one. */
