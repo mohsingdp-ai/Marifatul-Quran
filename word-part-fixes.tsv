@@ -2,6 +2,7 @@ ref	piece	arabic	meaning	label	note
 2:6:6	1	ءَ	خواہ		hamza of تسویہ after سَوَآءٌ
 2:8:11	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 2:11:3	1	لَ	کو		لِ after قَالَ: the one spoken to
+2:13:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:20:17	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 2:23:13	2	ٱدْعُ	بلاؤ / پکارو		ayah: call your witnesses; stem shared by 32 ayat incl. 2:68 ٱدْعُ لَنَا رَبَّكَ
 2:26:23	2	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
@@ -11,7 +12,9 @@ ref	piece	arabic	meaning	label	note
 2:44:4	2	تَنسَ	بھول جاتے ہو		وَتَنسَوْنَ: indicative statement
 2:54:4	1	لِ	سے		لِ after قَالَ: the one spoken to
 2:56:2	1	بَعَثْ	اٹھایا / زندہ کیا		ayah: مِّنۢ بَعْدِ مَوْتِكُمْ; stem shared with 5:12, 16:36 (= sent), so per-aya
+2:59:8	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:64:11	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+2:65:9	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:67:4	1	لِ	سے		لِ after قَالَ: the one spoken to
 2:74:35	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 2:79:7	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
@@ -22,6 +25,7 @@ ref	piece	arabic	meaning	label	note
 2:102:29	1	يَقُولَ	کہتے		حَتَّىٰ يَقُولَآ: dual, until they said
 2:102:45	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 2:104:5	1	تَقُولُ	کہو		لَا / أَن + تَقُولُوا۟: prohibition or subjunctive
+2:117:9	1	لَ	کو		لِ after قَالَ: the one spoken to
 2:124:9	2	كَ	تجھے		participle with verbal force
 2:131:3	1	لَ	کو		لِ after قَالَ: the one spoken to
 2:133:10	1	لِ	سے		لِ after قَالَ: the one spoken to
@@ -31,10 +35,12 @@ ref	piece	arabic	meaning	label	note
 2:154:2	1	تَقُولُ	کہو		لَا / أَن + تَقُولُوا۟: prohibition or subjunctive
 2:167:21	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 2:169:6	1	تَقُولُ	کہو		لَا / أَن + تَقُولُوا۟: prohibition or subjunctive
+2:170:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:173:11	2	غَيْرِ	غیر / سوا		لِغَيْرِ ٱللَّهِ = for other than Allah; "بغیر" = without; stem shared by 61 aya
 2:175:8	2	مَآ	کتنا	مائے تعجب	فَمَآ أَصْبَرَهُمْ: how patient!
 2:189:11	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 2:198:21	2	إِن	بیشک	حرفِ تحقیق	إِنْ مخففہ: لَ on the predicate
+2:206:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:217:33	1	يَرُدُّ	لوٹا دیں		حَتَّىٰ يَرُدُّوكُمْ: subjunctive
 2:220:22	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 2:221:11	1	وَ	اور	حرفِ عطف	وَلَوْ = even if: وَ joins, لَوْ carries اگرچہ
@@ -46,6 +52,9 @@ ref	piece	arabic	meaning	label	note
 2:237:16	2	نَ	وہ سب (عورتیں)		نونِ نسوہ
 2:243:13	1	لَ	کو / سے		فَقَالَ لَهُمُ ٱللَّهُ
 2:245:15	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
+2:246:13	1	لِ	سے		لِ after قَالَ: the one spoken to
+2:247:2	1	لَ	سے		لِ after قَالَ: the one spoken to
+2:248:2	1	لَ	سے		لِ after قَالَ: the one spoken to
 2:249:8	2	كُم	تمہیں		will test you
 2:251:20	1	لَّ	ضرور		لَ answering لَوْ / لَوْلَا
 2:259:22	1	بَعَثَ	اٹھایا / زندہ کیا		ayah: dead 100 years then raised; stem shared with 2:213, 5:31 (= sent); 36:52 n
@@ -68,6 +77,7 @@ ref	piece	arabic	meaning	label	note
 3:78:7	2	تَحْسَبُ	سمجھو		لِتَحْسَبُوهُ: subjunctive
 3:78:14	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 3:78:24	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
+3:79:12	1	لِ	سے		لِ after قَالَ: the one spoken to
 3:83:13	1	وَ	اور	حرفِ عطف	وَ: عطف or حال; HAY reads اور
 3:91:14	1	وَ	اور	حرفِ عطف	وَلَوْ = even if: وَ joins, لَوْ carries اگرچہ
 3:91:14	2	لَوِ	اگرچہ		لَوْ وصلیہ after وَ: even if
@@ -106,6 +116,8 @@ ref	piece	arabic	meaning	label	note
 4:46:25	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 4:46:27	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 4:49:12	1	وَ	اور	حرفِ عطف	وَ: عطف or حال; HAY reads اور
+4:50:8	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
+4:50:8	2	هِۦٓ	وہ		doer of كَفَىٰ: the fabrication itself
 4:51:12	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 4:55:10	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 4:61:3	1	لَ	کو		لِ after قَالَ: the one spoken to
@@ -129,10 +141,12 @@ ref	piece	arabic	meaning	label	note
 4:90:23	2	لَ	—		second answer of لَوْ joined with فَ: no ضرور
 4:91:18	2	يُلْقُ	ڈالیں		فَإِن لَّمْ يَعْتَزِلُوكُمْ وَيُلْقُوٓا۟: jussive in the condition
 4:94:11	1	تَقُولُ	کہو		لَا / أَن + تَقُولُوا۟: prohibition or subjunctive
+4:94:12	1	لِ	سے		لِ after قَالَ: the one spoken to
 4:97:26	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 4:102:22	1	يُصَلُّ	نماز پڑھی		لَمْ يُصَلُّوا۟: have not prayed
 4:103:8	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 4:113:6	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+4:123:2	1	بِ	کے مطابق		لَّيْسَ بِأَمَانِيِّكُمْ: not according to your wishes (HAY)
 4:127:18	1	تُؤْتُ	دیتے ہو		لَا تُؤْتُونَهُنَّ: indicative
 4:131:15	2	إِيَّاكُمْ	تمہیں		joined to the object ٱلَّذِينَ, not fronted: no صرف (owner decision)
 4:132:9	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
@@ -143,6 +157,8 @@ ref	piece	arabic	meaning	label	note
 4:150:12	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 4:151:5	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 4:152:6	1	يُفَرِّقُ	فرق کیا		لَمْ يُفَرِّقُوا۟: did not
+4:154:6	1	لَ	سے		لِ after قَالَ: the one spoken to
+4:154:11	1	لَ	سے		لِ after قَالَ: the one spoken to
 4:166:9	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 4:166:12	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 4:168:8	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
@@ -176,9 +192,11 @@ ref	piece	arabic	meaning	label	note
 5:100:6	1	وَ	اور	حرفِ عطف	وَلَوْ = even if: وَ joins, لَوْ carries اگرچہ
 5:100:6	2	لَوْ	اگرچہ		لَوْ وصلیہ after وَ: even if
 5:103:19	1	وَ	اور	حرفِ عطف	وَ: عطف or حال; HAY reads اور
+5:104:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 5:105:4	2	كُمْ	تم		عَلَيْكُمْ: after a preposition form
 5:116:9	1	لِ	سے		لِ after قَالَ: the one spoken to
 5:116:26	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
+5:117:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 6:7:9	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 6:8:9	1	لَّ	ضرور		لَ answering لَوْ / لَوْلَا
 6:9:4	1	لَّ	ضرور		لَ answering لَوْ / لَوْلَا
@@ -325,7 +343,7 @@ ref	piece	arabic	meaning	label	note
 10:54:9	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 10:71:7	1	لِ	سے		لِ after قَالَ: the one spoken to
 10:74:12	1	لِ	کہ	لامِ جحود	لِ after a denied كَانَ: "was not one to"
-10:77:4	1	لِ	کو		لِ after قَالَ: the one spoken to
+10:77:4	1	لِ	کے بارے میں		أَتَقُولُونَ لِلْحَقِّ: about the truth, not to it
 10:78:16	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 10:80:5	1	لَ	سے		لِ after قَالَ: the one spoken to
 10:83:1	2	مَآ	نہیں	حرفِ نفی	مَآ ... إِلَّا denial; MASAQ NEG_PART
@@ -347,7 +365,7 @@ ref	piece	arabic	meaning	label	note
 11:29:13	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 11:30:2	1	مَن	کون	اسمِ استفہام	question: 11:30:2 who will help me; data tags REL
 11:31:3	1	لَ	کو		لِ after قَالَ: the one spoken to
-11:31:16	1	لِ	کو		لِ after قَالَ: the one spoken to
+11:31:16	1	لِ	کے بارے میں		Nuh speaks about them (لَن يُؤْتِيَهُمُ), not to them
 11:33:10	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 11:35:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 11:53:8	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
@@ -379,6 +397,7 @@ ref	piece	arabic	meaning	label	note
 12:37:5	1	تُرْزَقَ	دیے جاتے ہو / کھلائے جاتے ہو		تُرْزَقَانِهِۦٓ: passive, you two
 12:40:22	1	تَعْبُدُ	عبادت کرو		أَلَّا تَعْبُدُوٓا۟: prohibition
 12:41:11	2	تَأْكُلُ	کھائیں گے / کھاتے ہیں		doer is ٱلطَّيْرُ, not "you"; matches whole; stem shared with 2nd-person uses
+12:42:2	1	لِ	سے		لِ after قَالَ: the one spoken to
 12:44:8	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 12:50:13	1	مَا	کیا	اسمِ استفہام	question: 12:50:13 مَا بَالُ; data tags REL
 12:51:2	1	مَا	کیا	اسمِ استفہام	question: 12:51:2 مَا خَطْبُكُنَّ; data tags REL
@@ -467,9 +486,11 @@ ref	piece	arabic	meaning	label	note
 17:51:18	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 17:53:2	1	لِّ	کو		لِ after قَالَ: the one spoken to
 17:53:3	1	يَقُولُ	کہیں		قُل لِّعِبَادِى يَقُولُوا۟: answer of a command
+17:60:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 17:61:3	1	لِ	سے		لِ after قَالَ: the one spoken to
 17:65:8	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 17:72:1	2	مَن	جو کوئی	اسمِ شرط	past + فَهُوَ = condition (book p.168 أسماء الشرط; SKILL step 5); MASAQ CONDITIO
+17:74:4	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 17:75:2	1	لَّ	ضرور		لَ answering لَوْ / لَوْلَا
 17:78:3	1	لِ	کے وقت		لامِ توقیت
 17:95:9	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
@@ -551,6 +572,7 @@ ref	piece	arabic	meaning	label	note
 21:29:1	2	مَن	جو کوئی	اسمِ شرط	jussive يَقُلْ + فَذَٰلِكَ = condition (book p.168 أسماء الشرط; SKILL step 5); M
 21:38:1	2	يَقُولُ	کہتے ہیں		وَيَقُولُونَ: plural, indicative
 21:42:2	1	مَن	کون	اسمِ استفہام	question: 21:42:2 who guards you; data tags REL
+21:47:19	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
 21:52:3	1	لِ	سے		لِ after قَالَ: the one spoken to
 21:52:5	1	مَا	کیا	اسمِ استفہام	question: 21:52:5 مَا هَٰذِهِ (book p.94 pattern); data tags REL
 21:59:2	1	مَن	کون	اسمِ استفہام	question: 21:59:2 مَن فَعَلَ هَٰذَا; data tags REL
@@ -595,6 +617,7 @@ ref	piece	arabic	meaning	label	note
 24:14:9	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 24:19:18	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 24:26:12	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
+24:28:13	1	لَ	سے		لِ after قَالَ: the one spoken to
 24:30:2	1	لِّ	سے / کو		لِ after قَالَ: the one spoken to
 24:31:2	1	لِّ	سے / کو		لِ after قَالَ: the one spoken to
 24:33:40	2	مَن	جو کوئی	اسمِ شرط	condition (verb + فَ/jussive answer; MASAQ COND); whole already جو کوئی; SKILL s
@@ -612,14 +635,19 @@ ref	piece	arabic	meaning	label	note
 25:42:15	1	مَنْ	کون	اسمِ استفہام	question (MASAQ INTERROG; answered/rhetorical); book p.94 مَنْ = کون; retag REL→
 25:45:10	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 25:51:3	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+25:58:10	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
+25:58:10	2	هِۦ	وہ		doer of كَفَىٰ: Allah
+25:60:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 25:60:7	2	مَا	کیا	اسمِ استفہام	وَمَا ٱلرَّحْمَٰنُ = and what is…; MASAQ NEG is a slip
 25:65:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 25:68:18	2	مَن	جو کوئی	اسمِ شرط	condition (verb + فَ/jussive answer; MASAQ COND); whole already جو کوئی; SKILL s
 25:71:1	2	مَن	جو کوئی	اسمِ شرط	condition (verb + فَ/jussive answer; MASAQ COND); whole already جو کوئی; SKILL s
 25:74:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 26:23:3	2	مَا	کیا	اسمِ استفہام	question / indirect question (ayah; MASAQ INTERROG or NEG slip); book p.94 مَا =
+26:25:2	1	لِ	سے		لِ after قَالَ: the one spoken to
 26:33:3	2	إِذَا	اچانک	حرفِ فجائیہ	إِذَا before a noun clause
 26:34:2	1	لِ	سے		لِ after قَالَ: the one spoken to
+26:39:2	1	لِ	سے		لِ after قَالَ: the one spoken to
 26:41:5	1	لِ	سے		after قَالُوا
 26:43:2	1	لَ	سے		لِ after قَالَ: the one spoken to
 26:45:4	2	إِذَا	اچانک	حرفِ فجائیہ	إِذَا before a noun clause
@@ -869,6 +897,8 @@ ref	piece	arabic	meaning	label	note
 45:32:14	1	مَا	کیا	اسمِ استفہام	question / indirect question (ayah; MASAQ INTERROG or NEG slip); book p.94 مَا =
 45:32:22	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 46:8:2	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
+46:8:19	1	بِ	—	حرفِ جار زائد	extra بِ on the doer of كَفَىٰ
+46:8:19	2	هِۦ	وہ		doer of كَفَىٰ: Allah
 46:11:16	3	يَقُولُ	کہتے ہیں		سَيَقُولُونَ: plural
 46:17:3	1	لِ	سے		لِ after قَالَ: the one spoken to
 46:21:17	1	تَعْبُدُ	عبادت کرو		أَلَّا تَعْبُدُوٓا۟: prohibition
@@ -881,6 +911,7 @@ ref	piece	arabic	meaning	label	note
 47:14:12	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 47:16:11	1	لِ	سے		لِ after قَالَ: the one spoken to
 47:21:10	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
+47:26:4	1	لِ	سے		لِ after قَالَ: the one spoken to
 47:30:3	1	لَ	ضرور		لَ answering لَوْ / لَوْلَا
 47:30:4	2	لَ	—		second answer of لَوْ joined with فَ: no ضرور
 47:35:3	2	تَدْعُ	بلاؤ / پکارو		فَلَا تَهِنُوا۟ وَتَدْعُوٓا۟: under the prohibition
