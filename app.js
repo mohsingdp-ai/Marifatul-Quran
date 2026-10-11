@@ -3941,8 +3941,11 @@
       var under = detail || root
         ? "<span class=\"wpart-detail\">" + escapeHtml(detail) + root + "</span>"
         : "";
+      // A piece with no letters is the ی of "my" / "me", left unwritten (رَبِّ) or folded into
+      // a doubled یَّ (إِلَىَّ): show it faded.
       rows += "<tr>" +
-        "<td class=\"wpart-ar\" lang=\"ar\">" + escapeHtml(seg[0]) + "</td>" +
+        "<td class=\"wpart-ar\" lang=\"ar\">" +
+          (seg[0] ? escapeHtml(seg[0]) : "<span class=\"wpart-none\">(ی)</span>") + "</td>" +
         "<td class=\"wpart-ur\" lang=\"ur\">" +
           (meaning ? escapeHtml(meaning) : "<span class=\"wpart-none\">\u2014</span>") +
         "</td>" +

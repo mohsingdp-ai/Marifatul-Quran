@@ -51,3 +51,9 @@ test("across the Quran only the 302 / 219 / 78 noun and lām pieces change", () 
   }
   assert.deepStrictEqual(changed, { "اسمِ استفہام": 302, "اسمِ شرط": 219, "لامِ امر": 78 });
 });
+
+test("every piece with no letters is the ی of \"my\" / \"me\" the card shows as (ی)", () => {
+  const empty = Object.values(morph).flat(2).filter((seg) => !seg[0]);
+  assert.strictEqual(empty.length, 207);
+  assert.ok(empty.every((seg) => seg[3] === "PRON" && seg[4] === "1S"));
+});
