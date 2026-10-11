@@ -123,6 +123,12 @@ const FEATURE_FIXES = {
   "13:37:8:1": "|ACC"
 };
 
+/*
+ * Segments the corpus file has that are not there: 42:51 مِن وَرَآئِ حِجَابٍ is "from behind
+ * a veil", but the ئ seat of its hamza was read as the ی of "my".
+ */
+const DROPPED_SEGMENTS = { "42:51:11:2": true };
+
 async function main() {
   const text = await readCorpus();
 
@@ -134,7 +140,7 @@ async function main() {
     const cols = line.split("\t");
     if (cols.length < 4) return;
     const key = cols[0].split(":");
-    if (key.length !== 4) return;
+    if (key.length !== 4 || DROPPED_SEGMENTS[cols[0]]) return;
     const ayahKey = key[0] + ":" + key[1];
     const wordIndex = Number(key[2]) - 1;
     const words = ayat[ayahKey] || (ayat[ayahKey] = []);
