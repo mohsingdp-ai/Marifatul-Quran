@@ -1028,21 +1028,22 @@
   function fillWordTables(container, row, entry) {
     var slots = container.querySelectorAll(".wt");
     if (!slots.length) return;
-    Promise.all([getParaMorphology(row.para), getStemMeanings()]).then(function (res) {
+    Promise.all([getParaMorphology(row.para), getStemMeanings(), getPartFixes()]).then(function (res) {
       var morph = res[0] || {};
       Array.prototype.forEach.call(slots, function (slot) {
         var n = Number(slot.closest(".ayat-item").dataset.ayah);
         var ayah = entry.ayahs.filter(function (a) { return a.n === n; })[0];
         if (!ayah) return;
         getAyahWords(row.para, row.surahNumber, n).then(function (list) {
-          slot.innerHTML = wordTableRowsHtml(ayah.text, list || [], morph[row.surahNumber + ":" + n]);
+          slot.innerHTML = wordTableRowsHtml(ayah.text, list || [], morph[row.surahNumber + ":" + n],
+            row.surahNumber + ":" + n);
         });
       });
     });
   }
 
   /** One card per word, laid out like the card a tapped word opens. */
-  function wordTableRowsHtml(text, list, morphWords) {
+  function wordTableRowsHtml(text, list, morphWords, ayahKey) {
     var html = "";
     var i = 0;
     text.split(/\s+/).forEach(function (tok) {
@@ -1050,13 +1051,14 @@
       var hit = findWordMeaning(list, tok, i);
       var segs = findWordSegments(morphWords, i, tok);
       i++;
+      var ref = ayahKey + ":" + i;
       var translit = hit && hit.transliteration && hit.transliteration.text;
       html += "<div class=\"wt-card\" role=\"listitem\">" +
         "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(tok) + "</div>" +
         (translit ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(translit) + "</div>" : "") +
         "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
           escapeHtml((hit && hit.translation && hit.translation.text) || "\u2014") + "</div>" +
-        wordPartsHtml(segs, hit && hit.translation && hit.translation.text) + "</div>";
+        wordPartsHtml(segs, hit && hit.translation && hit.translation.text, ref) + "</div>";
     });
     return html;
   }
@@ -3664,6 +3666,49 @@
     return stemMeaningsPending;
   }
 
+  /**
+   * Hand fixes for one piece in one ayah, from word-part-fixes.tsv: what no shared table can
+   * say, because it turns on the words around it — the لَ answering لَوْ is "ضرور" where the
+   * same لَ elsewhere is "یقیناً", and the لِ after قَالَ is "سے". Keyed
+   * "surah:ayah:word:piece", counted from 1 as the corpus counts. Loaded once, like the stems.
+   * House style for that لَ (owner, 2026-10-11, after Hafiz Ahmad Yar): a second answer joined
+   * with وَ keeps "ضرور" (وَلَلَبَسْنَا "اور ہم ضرور ..."); only one joined with فَ shows "—"
+   * (فَلَعَرَفْتَهُم).
+   */
+  var partFixes = null;
+  var partFixesPending = null;
+
+  function getPartFixes() {
+    if (partFixes) return Promise.resolve(partFixes);
+    if (partFixesPending) return partFixesPending;
+    partFixesPending = fetch("word-part-fixes.tsv").then(function (res) {
+      return res.ok ? res.text() : "";
+    }).catch(function () { return ""; }).then(function (text) {
+      partFixes = parsePartFixes(text);
+      return partFixes;
+    });
+    return partFixesPending;
+  }
+
+  /** Columns: ref (surah:ayah:word), piece, Arabic piece, meaning, grammar name, note. */
+  function parsePartFixes(text) {
+    var out = {};
+    text.split(/\r?\n/).slice(1).forEach(function (line) {
+      var c = line.split("\t");
+      if (c.length >= 5) out[c[0] + ":" + c[1]] = { ar: c[2], meaning: c[3], label: c[4] };
+    });
+    return out;
+  }
+
+  /**
+   * The fix for one piece, or null. The Arabic must match too: a word our text splits where the
+   * corpus does not can sit at another position, and must not take its neighbour's fix.
+   */
+  function partFix(ref, index, seg) {
+    var fix = ref && partFixes ? partFixes[ref + ":" + (index + 1)] : null;
+    return fix && fix.ar === seg[0] ? fix : null;
+  }
+
   function segmentsJoin(segs) {
     return segs.map(function (s) { return s[0]; }).join("");
   }
@@ -3956,14 +4001,19 @@
    * apart there, but its form still matters — يَكُونَ is واحد where تَكُونُوا۟ is جمع — and
    * showing it the same way everywhere means a reader looks in one place for it.
    */
-  function wordPartsHtml(segs, wordGloss) {
+  function wordPartsHtml(segs, wordGloss, ref) {
     if (!segs || !segs.length) return "";
     var rows = "";
     var sole = soleMeaningPart(segs);
     segs.forEach(function (seg, i) {
+      // A fix for this ayah wins; its "—" means the piece is not translated here (the extra
+      // بِ of مَا هُم بِمُؤْمِنِينَ).
+      var fix = partFix(ref, i, seg);
       // The one part that carries meaning (ٱللَّهَ alone, or دُّنْيَا after ٱلْ) means just
       // what the whole word means.
-      var meaning = segmentMeaning(segs, i) || (i === sole && wordGloss) || "";
+      var meaning = fix && fix.meaning
+        ? fix.meaning.replace(/^—$/, "")
+        : segmentMeaning(segs, i) || (i === sole && wordGloss) || "";
       var detail = segmentDetail(seg);
       var root = seg[5]
         ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(seg[5]) + "</span>"
@@ -3980,7 +4030,7 @@
           (meaning ? escapeHtml(meaning) : "<span class=\"wpart-none\">\u2014</span>") +
         "</td>" +
         "<td class=\"wpart-tag\" lang=\"ur\">" +
-          "<span class=\"wpart-name\">" + escapeHtml(segmentLabel(segs, i)) + "</span>" + under +
+          "<span class=\"wpart-name\">" + escapeHtml((fix && fix.label) || segmentLabel(segs, i)) + "</span>" + under +
         "</td>" +
         "</tr>";
     });
@@ -4157,13 +4207,15 @@
     Promise.all([
       getAyahWords(para, surahNumber, ayahNumber),
       simple ? null : getWordSegments(para, surahNumber, ayahNumber, wordIndex, word),
-      simple ? null : getStemMeanings()
+      simple ? null : getStemMeanings(),
+      simple ? null : getPartFixes()
     ]).then(function (results) {
       if (token !== wordPopToken || pop.hidden) return;
       var words = results[0];
       var segs = results[1];
       var hit = words ? findWordMeaning(words, word, wordIndex) : null;
-      var parts = wordPartsHtml(segs, hit && hit.translation && hit.translation.text);
+      var parts = wordPartsHtml(segs, hit && hit.translation && hit.translation.text,
+        surahNumber + ":" + ayahNumber + ":" + (wordIndex + 1));
 
       if (!hit && !parts) {
         pop.innerHTML = head() + "<div class=\"wpop-loading\">" + i18n("word.unavailable") + "</div>";

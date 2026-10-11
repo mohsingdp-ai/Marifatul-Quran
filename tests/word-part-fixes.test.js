@@ -33,3 +33,46 @@ test("a verb stem leaves its subject to the ending", () => {
 test("a bare 3MS verb keeps its subject", () => {
   assert.match(meaning("2:8:4", 1), /^وہ /);                   // يَقُولُ
 });
+
+// The per-ayah fixes, drawn through the card's own table builder.
+const fixesText = fs.readFileSync(path.join(ROOT, "word-part-fixes.tsv"), "utf8");
+const card = new Function("window", "stemMeanings", "fixesText",
+  "var partFixes;" + ["wordPartsHtml", "partFix", "parsePartFixes", "segmentMeaning", "segmentLabel", "segmentDetail",
+    "soleMeaningPart", "pronounSense", "isSubjectEnding", "hasSubjectEnding", "withoutSubject"].map(grab).join("") +
+  "function escapeHtml(t) { return String(t); }" +
+  "partFixes = parsePartFixes(fixesText);" +
+  "return { wordPartsHtml, partFix, parsePartFixes };")(
+  { MQ_MORPH_UR: require("../morphology-labels.js").MQ_MORPH_UR },
+  JSON.parse(fs.readFileSync(path.join(ROOT, "stem-meanings.json"), "utf8")), fixesText);
+const segsAt = (ref) => { const [s, a, w] = ref.split(":"); return morph[s + ":" + a][w - 1]; };
+const rowsOf = (ref) => card.wordPartsHtml(segsAt(ref), "", ref).split("<tr>").slice(2);
+
+test("a fix replaces a piece's meaning and grammar name in that ayah only", () => {
+  assert.match(rowsOf("2:8:11")[0], /wpart-none">—<.*wpart-name">حرفِ جار زائد</);  // وَمَا هُم بِمُؤْمِنِينَ
+  assert.match(rowsOf("2:30:4")[0], /wpart-ur" lang="ur">سے</);                      // قَالَ رَبُّكَ لِلْمَلَٰٓئِكَةِ
+  assert.match(rowsOf("2:20:17")[0], />ضرور</);                                       // وَلَوْ شَآءَ ٱللَّهُ لَذَهَبَ
+  assert.match(rowsOf("8:43:11")[1], />ضرور</);                                       // وَلَتَنَٰزَعْتُمْ: joined with وَ
+  assert.match(rowsOf("47:30:4")[1], /wpart-none">—</);                               // فَلَعَرَفْتَهُم: joined with فَ
+  assert.match(card.wordPartsHtml(segsAt("1:1:1"), "", "1:1:1"), />کے ساتھ</);       // بِسْمِ keeps its بِ
+});
+
+test("a fix needs its Arabic to match, so it never lands on a neighbouring word", () => {
+  const seg = segsAt("2:20:17")[0];
+  assert.ok(card.partFix("2:20:17", 0, seg));
+  assert.strictEqual(card.partFix("2:20:17", 0, ["بِ"].concat(seg.slice(1))), null);
+});
+
+test("every row of word-part-fixes.tsv matches the morphology at its place", () => {
+  const seen = new Set();
+  fixesText.split("\n").slice(1).filter(Boolean).forEach((line) => {
+    const c = line.split("\t");
+    assert.strictEqual(c.length, 6, line);
+    const key = c[0] + ":" + c[1];
+    assert.ok(!seen.has(key), "twice: " + key);
+    seen.add(key);
+    const segs = segsAt(c[0]);
+    assert.ok(segs && segs[c[1] - 1], "no piece at " + key);
+    assert.strictEqual(segs[c[1] - 1][0], c[2], "wrong word at " + key);
+    assert.ok(c[3] || c[4], "empty fix at " + key);
+  });
+});
