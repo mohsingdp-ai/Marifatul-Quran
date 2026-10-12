@@ -103,4 +103,6 @@ test("a borrowed whole-word gloss leaves its ہے / ہیں to the sentence", () 
   assert.strictEqual(withoutCopula("زیادہ جانتا ہے"), "زیادہ جانتا ہے");             // a verb phrase too
   assert.strictEqual(withoutCopula("لکھا ہوا ہے"), "لکھا ہوا ہے");
   assert.strictEqual(withoutCopula("بوجھل ہورہے ہیں"), "بوجھل ہورہے ہیں");
+  assert.strictEqual(withoutCopula("کھولے جاچکے ہیں"), "کھولے جاچکے ہیں");
+  assert.strictEqual(withoutCopula("داتا ہے/ بہت بخشنے والا ہے"), "داتا/ بہت بخشنے والا");
 });

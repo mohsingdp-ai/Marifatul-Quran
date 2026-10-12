@@ -66,4 +66,5 @@ test("a present verb with the نونِ نسوہ is مبنی, not مرفوع", ()
   assert.strictEqual(verbOf("2:228:2"), "فعل مضارع (مبنی)");    // يَتَرَبَّصْنَ
   assert.strictEqual(verbOf("2:3:8"), "فعل مضارع (مرفوع)");     // يُنفِقُونَ keeps its mood
   assert.strictEqual(verbOf("55:56:5"), "فعل مضارع (مجزوم)");   // لَمْ يَطْمِثْهُنَّ: هُنَّ is the object
+  assert.strictEqual(verbOf("2:237:16"), "فعل مضارع (مبنی)");  // يَعْفُونَ has no mood tag at all
 });

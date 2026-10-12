@@ -3929,10 +3929,10 @@
    */
   function withoutCopula(text) {
     if (/^(وہ جو|جو|جس|جن)\s/.test(text)) return text;
-    var verbal = /(^|\s)(\S*(تا|تے|کرتی|ہوتی|رہتی|جاتی|سکتی|لگتی|ملتی|جلتی|دیتی|لیتی|چلتی|آتی|پاتی|رکھتی|پیتی|رہا|رہی|رہے|گیا|گئی|گئے|گئیں|ہوں|کردہ)|\S+[اےی]\s+(ہوا|ہوئے|ہوئی))$/;
+    var verbal = /(^|\s)(\S*(تا|تے|کرتی|ہوتی|رہتی|جاتی|سکتی|لگتی|ملتی|جلتی|دیتی|لیتی|چلتی|آتی|پاتی|رکھتی|پیتی|رہا|رہی|رہے|گیا|گئی|گئے|گئیں|چکا|چکی|چکے|ہوں|کردہ)|\S+[اےی]\s+(ہوا|ہوئے|ہوئی))$/;
     return text.split(/(\s*[\/۔]\s*)/).map(function (alt, i) {
       var m = !(i % 2) && alt.match(/^(.*\S)\s+(ہے|ہیں)$/);
-      if (!m || (verbal.test(m[1]) && !/(^|\s)(فرشتے|راستے|رشتے)$/.test(m[1]))) return alt;
+      if (!m || (verbal.test(m[1]) && !/(^|\s)(فرشتے|راستے|رشتے|داتا)$/.test(m[1]))) return alt;
       return m[1];
     }).join("");
   }
@@ -3980,7 +3980,9 @@
     // هُنَّ / كُنَّ after it (لَمْ يَطْمِثْهُنَّ) leaves the mood alone.
     var next = segs[index + 1];
     var built = seg[2] === "V" && next && next[1] === 2 && /FP$/.test(next[4] || "") && /^ن/.test(next[0]);
-    var extras = String(seg[6] || "").split(",").filter(Boolean).map(function (f) {
+    var flags = String(seg[6] || "").split(",").filter(Boolean);
+    if (built && role === "IMPF" && !flags.some(function (f) { return /^(IND|SUBJ|JUS)$/.test(f); })) flags.push("BUILT");
+    var extras = flags.map(function (f) {
       return labels.extra[built && /^(IND|SUBJ|JUS)$/.test(f) ? "BUILT" : f] || "";
     }).filter(Boolean);
     if (extras.length) text += " (" + extras.join("\u060C ") + ")";

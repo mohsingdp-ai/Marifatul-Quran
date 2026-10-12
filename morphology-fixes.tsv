@@ -402,3 +402,5 @@ location	arabic	pos	features	note
 37:53:2:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
 50:3:2:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
 56:47:4:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
+16:102:11:2	هُدًى	N	ROOT:هدي|LEM:هُدًى|M|INDEF|ACC	وَهُدًى joined to لِيُثَبِّتَ (reason): منصوب
+27:77:2:2	هُدًى	N	ROOT:هدي|LEM:هُدًى|M|INDEF|NOM	وَإِنَّهُۥ لَهُدًى: خبر of إِنَّ, مرفوع
