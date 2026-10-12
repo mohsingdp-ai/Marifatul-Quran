@@ -92,3 +92,15 @@ test("إِيَّٰىَ, written with a small alif, is still the fronted object",
     "return segmentMeaning;")({ MQ_MORPH_UR: labels }, {});
   assert.strictEqual(segmentMeaning(morph["2:40"][11], 1), "صرف مجھے");  // وَ+إِيَّٰىَ فَٱرْهَبُونِ
 });
+
+test("a borrowed whole-word gloss leaves its ہے / ہیں to the sentence", () => {
+  const withoutCopula = new Function(grab("withoutCopula") + "return withoutCopula;")();
+  assert.strictEqual(withoutCopula("بیماری ہے"), "بیماری");                       // 2:10 مَّرَضٌ
+  assert.strictEqual(withoutCopula("حفاظت کرنے والا ہے/ نگرانی کرنے والا ہے"), "حفاظت کرنے والا/ نگرانی کرنے والا");
+  assert.strictEqual(withoutCopula("رعایت ہے۔ کمی ہے"), "رعایت۔ کمی");
+  assert.strictEqual(withoutCopula("فرشتے ہیں"), "فرشتے");
+  assert.strictEqual(withoutCopula("جو فلاح پانے والے ہیں"), "جو فلاح پانے والے ہیں"); // a clause keeps it
+  assert.strictEqual(withoutCopula("زیادہ جانتا ہے"), "زیادہ جانتا ہے");             // a verb phrase too
+  assert.strictEqual(withoutCopula("لکھا ہوا ہے"), "لکھا ہوا ہے");
+  assert.strictEqual(withoutCopula("بوجھل ہورہے ہیں"), "بوجھل ہورہے ہیں");
+});

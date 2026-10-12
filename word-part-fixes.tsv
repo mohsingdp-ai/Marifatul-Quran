@@ -49,7 +49,7 @@ ref	piece	arabic	meaning	label	note
 2:221:23	2	لَوْ	اگرچہ		لَوْ وصلیہ after وَ: even if
 2:223:14	2	هُ	اُس سے		meeting Him
 2:235:24	1	تَقُولُ	کہو		لَا / أَن + تَقُولُوا۟: prohibition or subjunctive
-2:237:16	2	نَ	وہ سب (عورتیں)		نونِ نسوہ
+2:237:16	2	نَ	وہ سب		نونِ نسوہ
 2:243:13	1	لَ	کو / سے		فَقَالَ لَهُمُ ٱللَّهُ
 2:245:15	1	وَ	اور	حرفِ عطف	وَ of عطف, not حال
 2:246:13	1	لِ	سے		لِ after قَالَ: the one spoken to
@@ -401,7 +401,7 @@ ref	piece	arabic	meaning	label	note
 12:25:12	1	مَا	کیا	اسمِ استفہام	question: 12:25:12 MASAQ INTERROG; matches whole (نفی reading also exists); data
 12:29:5	2	ٱسْتَغْفِرِ	بخشش مانگ		ٱسْتَغْفِرِى: you (feminine singular)
 12:33:7	1	يَدْعُو	بلاتی ہیں		the women call; يَدْعُو + نَ
-12:33:7	2	نَ	وہ سب (عورتیں)		نونِ نسوہ
+12:33:7	2	نَ	وہ سب		نونِ نسوہ
 12:37:5	1	تُرْزَقَ	کھلائے جاتے ہو		تُرْزَقَانِهِۦٓ: passive, you two
 12:40:22	1	تَعْبُدُ	عبادت کرو		أَلَّا تَعْبُدُوٓا۟: prohibition
 12:41:11	2	تَأْكُلُ	کھائیں گے / کھاتے ہیں		doer is ٱلطَّيْرُ, not "you"; matches whole; stem shared with 2nd-person uses
@@ -1093,3 +1093,9 @@ ref	piece	arabic	meaning	label	note
 5:6:38	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
 24:28:3	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
 58:12:18	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
+39:9:1	2	مَّنْ	وہ جو		أَمَّنْ: or the one who (Hafiz Ahmad Yar: یا وہ جو)
+46:9:9	1	مَا	کیا	اسمِ استفہام	وَمَآ أَدْرِى مَا يُفْعَلُ بِى: what will be done (whole: کیا)
+36:35:4	1	وَ	جبکہ	حرفِ حال	وَمَا عَمِلَتْهُ أَيْدِيهِمْ: whereas their hands did not make it (whole: حالانکہ)
+12:40:24	1	إِيَّاهُ	اُسی		إِلَّآ إِيَّاهُ: after إِلَّا it is not fronted, so no صرف
+17:23:6	1	إِيَّاهُ	اُسی		إِلَّآ إِيَّاهُ: after إِلَّا it is not fronted, so no صرف
+17:67:10	1	إِيَّاهُ	اُسی		إِلَّآ إِيَّاهُ: after إِلَّا it is not fronted, so no صرف

@@ -3922,6 +3922,22 @@
   }
 
   /**
+   * A noun piece without the "ہے / ہیں" its borrowed whole-word gloss ends in: مَّرَضٌ reads
+   * "بیماری", not "بیماری ہے" — the copula belongs to the sentence. Each "/" or "۔"
+   * alternative is trimmed on its own. Kept: a "جو … ہے" clause, and a verb phrase
+   * ("جانتا ہے", "لکھا ہوا ہے", "ہو رہے ہیں"), which would read broken without it.
+   */
+  function withoutCopula(text) {
+    if (/^(وہ جو|جو|جس|جن)\s/.test(text)) return text;
+    var verbal = /(^|\s)(\S*(تا|تے|کرتی|ہوتی|رہتی|جاتی|سکتی|لگتی|ملتی|جلتی|دیتی|لیتی|چلتی|آتی|پاتی|رکھتی|پیتی|رہا|رہی|رہے|گیا|گئی|گئے|گئیں|ہوں|کردہ)|\S+[اےی]\s+(ہوا|ہوئے|ہوئی))$/;
+    return text.split(/(\s*[\/۔]\s*)/).map(function (alt, i) {
+      var m = !(i % 2) && alt.match(/^(.*\S)\s+(ہے|ہیں)$/);
+      if (!m || (verbal.test(m[1]) && !/(^|\s)(فرشتے|راستے|رشتے)$/.test(m[1]))) return alt;
+      return m[1];
+    }).join("");
+  }
+
+  /**
    * One segment's Urdu meaning, or "" when it honestly has none: ال and the كَ of ذٰلِكَ
    * are grammar rather than words, and a verb or noun stem carries the verse's own
    * vocabulary, which the whole-word gloss above already gives.
@@ -3960,8 +3976,12 @@
     // The question أَ prefix (أَلَمْ) is filed under N too, but it is a حرف, not an اسم.
     var byPos = seg[1] === 1 && seg[2] === "N" ? "" : labels.grammarByPos[role + "|" + seg[2]];
     var text = byPos || labels.grammar[role] || labels.posFallback[seg[2]] || "";
+    // A present verb ending in the نونِ نسوہ (يَضَعْ+نَ) has no mood: it is مبنی. An object
+    // هُنَّ / كُنَّ after it (لَمْ يَطْمِثْهُنَّ) leaves the mood alone.
+    var next = segs[index + 1];
+    var built = seg[2] === "V" && next && next[1] === 2 && /FP$/.test(next[4] || "") && /^ن/.test(next[0]);
     var extras = String(seg[6] || "").split(",").filter(Boolean).map(function (f) {
-      return labels.extra[f] || "";
+      return labels.extra[built && /^(IND|SUBJ|JUS)$/.test(f) ? "BUILT" : f] || "";
     }).filter(Boolean);
     if (extras.length) text += " (" + extras.join("\u060C ") + ")";
     return text;
@@ -4017,7 +4037,8 @@
       // what the whole word means.
       var meaning = fix && fix.meaning
         ? fix.meaning.replace(/^—$/, "")
-        : segmentMeaning(segs, i) || (i === sole && wordGloss) || "";
+        : segmentMeaning(segs, i) ||
+          (i === sole && wordGloss && (seg[2] === "V" ? wordGloss : withoutCopula(wordGloss))) || "";
       var detail = segmentDetail(seg);
       var root = seg[5]
         ? "<span class=\"wpart-root\" lang=\"ar\">" + escapeHtml(seg[5]) + "</span>"

@@ -58,3 +58,12 @@ test("every piece with no letters is the ی of \"my\" / \"me\" the card shows as
   assert.strictEqual(empty.length, 213);  // 207 in the corpus + 6 وَنُذُرِ in surah 54 (morphology-fixes.tsv)
   assert.ok(empty.every((seg) => seg[3] === "PRON" && seg[4] === "1S"));
 });
+
+test("a present verb with the نونِ نسوہ is مبنی, not مرفوع", () => {
+  const verbOf = (ref) => { const [s, a, w] = ref.split(":"); const segs = morph[s + ":" + a][w - 1];
+    return segmentLabel(segs, segs.findIndex((seg) => seg[2] === "V")); };
+  assert.strictEqual(verbOf("24:60:12"), "فعل مضارع (مبنی)");   // أَن يَضَعْنَ
+  assert.strictEqual(verbOf("2:228:2"), "فعل مضارع (مبنی)");    // يَتَرَبَّصْنَ
+  assert.strictEqual(verbOf("2:3:8"), "فعل مضارع (مرفوع)");     // يُنفِقُونَ keeps its mood
+  assert.strictEqual(verbOf("55:56:5"), "فعل مضارع (مجزوم)");   // لَمْ يَطْمِثْهُنَّ: هُنَّ is the object
+});
