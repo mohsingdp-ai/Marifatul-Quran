@@ -592,7 +592,7 @@ ref	piece	arabic	meaning	label	note
 21:60:6	1	لَ	کو		لِ after قَالَ: the one spoken to
 21:69:5	2	سَلَٰمًا	سلامتی		dictionary REVIEWER; stem shared with greeting uses (25:63)
 21:99:6	1	وَرَدُ	پہنچتے / وارد ہوتے		مَّا وَرَدُوهَا: plural, answer of لَوْ
-21:108:2	2	مَا	—	حرفِ کافہ	إِنَّمَا before a verb
+21:108:2	2	مَا	صرف	حرفِ کافہ	إِنَّمَا before a verb
 21:112:10	1	تَصِفُ	بیان کرتے ہو		تَصِفُونَ: you (plural)
 22:2:18	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 22:10:8	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
@@ -824,7 +824,7 @@ ref	piece	arabic	meaning	label	note
 38:17:4	1	يَقُولُ	کہتے ہیں		يَقُولُونَ: plural, indicative
 38:62:2	1	مَا	کیا	اسمِ استفہام	question / indirect question (ayah; MASAQ INTERROG or NEG slip); book p.94 مَا =
 38:69:6	3	مَلَإِ	جماعت		same phrase as 37:8; word-senses ملأ dispute line
-38:70:5	2	مَآ	—	حرفِ کافہ	أَنَّمَا = only that
+38:70:5	2	مَآ	صرف	حرفِ کافہ	أَنَّمَا = only that
 38:71:4	1	لِ	سے		لِ after قَالَ: the one spoken to
 38:73:3	1	كُلُّ	سب		كُلّ + pronoun: all of it / them
 38:75:3	1	مَا	کس چیز نے	اسمِ استفہام	question right (MASAQ INTERROG) but ما is subject of a past transitive verb (مَن
@@ -1134,3 +1134,9 @@ ref	piece	arabic	meaning	label	note
 26:10:6	1	ٱئْتِ	جا / پہنچ		أَنِ ٱئْتِ ٱلْقَوْمَ: go to the people (Hafiz Ahmad Yar: آپ پہنچیں)
 12:15:13	1	بِ	کے بارے میں		لَتُنَبِّئَنَّهُم بِأَمْرِهِمْ: tell them about
 80:15:1	1	بِ	میں		بِأَيْدِى سَفَرَةٍ: in the hands (whole: ہاتھوں میں)
+10:28:17	1	إِيَّانَا	ہمیں		under نفی: no صرف ("it was not us you worshipped")
+28:63:17	1	إِيَّانَا	ہمیں		under نفی: no صرف
+34:40:8	1	إِيَّاكُمْ	تمہیں		a question: no صرف
+23:36:1	1	هَيْهَاتَ	بہت دور ہے۔ ناممکن ہے		اسمِ فعل: the ہے is its own meaning
+23:36:2	1	هَيْهَاتَ	بہت دور ہے۔ ناممکن ہے		اسمِ فعل: the ہے is its own meaning
+27:60:13	1	ذَاتَ	والے		حَدَآئِقَ ذَاتَ بَهْجَةٍ: having, not side
