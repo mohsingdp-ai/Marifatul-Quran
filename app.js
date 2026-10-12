@@ -1321,10 +1321,10 @@
           : "") +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
         ayahNumHtml(a) +
-        (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         (showTranslation
           ? "<span class=\"ayat-translation\" lang=\"ur\" data-key=\"" + entry.surahNumber + ":" + a.n + "\"></span>"
           : "") +
+        (table ? "<div class=\"wt\" role=\"list\" dir=\"rtl\"></div>" : "") +
         "</div>";
       if (editTimings) {
         var following = entry.ayahs[ayahPos + 1];
