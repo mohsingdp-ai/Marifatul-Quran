@@ -62,7 +62,6 @@
   --md-panel: var(--md-surface-container-lowest);
   --md-menu: var(--md-surface-container-lowest);
   /* A card on a tinted wash (the reciting ayah): one tone above the wash. */
-  --md-card-on-tint: var(--md-surface-container-lowest);
   --md-dialog: var(--md-surface-container-low);
   --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233d5a59'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
@@ -164,7 +163,6 @@ html[data-theme="dark"] {
   --md-raised: var(--md-surface-container-high);
   --md-panel: var(--md-surface-container-low);
   --md-menu: var(--md-surface-container-high);
-  --md-card-on-tint: var(--md-surface-container-highest);
   --md-dialog: #123030;
   --md-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3c2c1'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
 
@@ -1946,9 +1944,6 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   background: color-mix(in srgb, var(--md-tertiary) 14%, transparent);
   box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--md-tertiary) 14%, transparent);
   border-radius: var(--md-shape-xs);
-  border-inline-start: 2px solid var(--md-tertiary);
-  padding-inline-start: 0.45rem;
-  margin-inline-start: -0.65rem;
   transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -2139,10 +2134,6 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   background: var(--md-card);
   border: 1px solid var(--md-outline-variant);
   transition: background 0.25s ease;
-}
-
-.ayat-item.is-reciting .wt-card {
-  background: var(--md-card-on-tint);
 }
 
 .wt-card .wpop-translit {
