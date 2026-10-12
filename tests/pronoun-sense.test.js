@@ -30,6 +30,16 @@ test("off a noun the pronoun is the owner", () => {
   assert.strictEqual(sense("2:5", 5), "p");   // رَّبِّ+هِمْ
 });
 
+test("off a preposition it is what the preposition points at", () => {
+  assert.strictEqual(sense("2:2", 5), "b");   // فِي+هِ
+  assert.strictEqual(sense("2:7", 10), "b");  // وَ+لَ+هُمْ — the pronoun is the stem
+});
+
+test("off إِنَّ, and standing alone, the pronoun is the subject", () => {
+  assert.strictEqual(sense("2:12", 2), "s");  // إِنَّ+هُمْ
+  assert.strictEqual(sense("2:11", 10), "s"); // نَحْنُ
+});
+
 test("the build keeps case and verb pattern for the grammar line", () => {
   assert.strictEqual(morph["1:1"][0][1][6], "GEN");          // سْمِ — مجرور
   assert.strictEqual(morph["2:3"][1][0][6], "VF4,IND");      // يُؤْمِنُ — باب افعال، مرفوع

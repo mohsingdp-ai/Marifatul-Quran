@@ -19,6 +19,7 @@
 const fs = require("fs");
 const path = require("path");
 const https = require("https");
+const { fixCorpus } = require("./build-morphology.js");
 
 const ROOT = path.join(__dirname, "..");
 const CACHE_DIR = path.join(ROOT, ".cache", "urdu-wbw");
@@ -83,7 +84,7 @@ async function surahWords(n) {
  * matching on letters alone hands the calf the wrong meaning.
  */
 function readCorpusWords() {
-  const text = fs.readFileSync(path.join(ROOT, ".cache", "quran-morphology.txt"), "utf8");
+  const text = fixCorpus(fs.readFileSync(path.join(ROOT, ".cache", "quran-morphology.txt"), "utf8"));
   const ayat = {};
   text.split("\n").forEach(function (line) {
     if (!line) return;
@@ -115,6 +116,11 @@ function stemKey(seg) {
 /** How meanings are gathered: one entry per dictionary word, not per spelling. */
 function lemmaKey(seg) {
   return seg.lemma + "|" + seg.pos;
+}
+
+/** A key with every shadda put before the vowel beside it, for comparing spellings. */
+function markOrder(key) {
+  return key.replace(/([ً-ِ])ّ/g, "ّ$1");
 }
 
 function commonest(byGloss) {
@@ -185,13 +191,19 @@ async function main() {
   });
 
   // Hand-checked meanings win: a harvested gloss often comes from another form of the word
-  // (singular for plural, past for command), and only a fix list can say which.
+  // (singular for plural, past for command), and only a fix list can say which. The corpus
+  // writes a shadda before its vowel in one word and after it in the next (أَيَّتُ in 89:27),
+  // so a fix reaches every stem spelled with the same marks in either order.
+  const byMarks = {};
+  Object.keys(wanted).forEach(function (key) {
+    (byMarks[markOrder(key)] = byMarks[markOrder(key)] || []).push(key);
+  });
   let fixed = 0;
   if (fs.existsSync(FIXES)) {
     fs.readFileSync(FIXES, "utf8").split(/\r?\n/).slice(1).forEach(function (line) {
       const c = line.split("\t");
       if (c.length < 2 || !c[1].trim()) return;
-      out[c[0]] = c[1].trim();
+      [c[0]].concat(byMarks[markOrder(c[0])] || []).forEach(function (key) { out[key] = c[1].trim(); });
       fixed++;
     });
   }
