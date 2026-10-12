@@ -39,6 +39,13 @@ test("a bare 3MS verb keeps its subject", () => {
   assert.match(meaning("2:8:4", 1), /^وہ /);                   // يَقُولُ
 });
 
+test("a singular verb gets its own meaning, not the one written for its plural", () => {
+  assert.strictEqual(meaning("2:105:21", 1), "وہ چاہتا ہے");   // مَن يَشَآءُ: Allah wills
+  assert.strictEqual(meaning("25:16:4", 1), "چاہتے ہیں");      // يَشَآءُ+ونَ
+  assert.strictEqual(meaning("2:112:3", 1), "اس نے سر جھکا دیا"); // مَنْ أَسْلَمَ, not "دونوں نے"
+  assert.strictEqual(meaning("99:4:2", 1), "وہ بیان کرے گی");   // تُحَدِّثُ: the earth, not "تم"
+});
+
 // The per-ayah fixes, drawn through the card's own table builder.
 const fixesText = fs.readFileSync(path.join(ROOT, "word-part-fixes.tsv"), "utf8");
 const card = new Function("window", "stemMeanings", "fixesText",
@@ -58,6 +65,7 @@ test("a fix replaces a piece's meaning and grammar name in that ayah only", () =
   assert.match(rowsOf("2:20:17")[0], />ضرور</);                                       // وَلَوْ شَآءَ ٱللَّهُ لَذَهَبَ
   assert.match(rowsOf("8:43:11")[1], />ضرور</);                                       // وَلَتَنَٰزَعْتُمْ: joined with وَ
   assert.match(rowsOf("47:30:4")[1], /wpart-none">—</);                               // فَلَعَرَفْتَهُم: joined with فَ
+  assert.match(rowsOf("10:28:17")[0], /wpart-ur" lang="ur">ہمیں</);                  // مَّا كُنتُمْ إِيَّانَا: no "صرف" under نفی
   assert.match(card.wordPartsHtml(segsAt("1:1:1"), "", "1:1:1"), />کے ساتھ</);       // بِسْمِ keeps its بِ
 });
 

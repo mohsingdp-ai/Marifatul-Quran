@@ -3961,7 +3961,10 @@
     var key = labels.particleKey(seg[0]) + "|" + role;
     // A stem is looked up by its exact letters, since that is how the harvest was keyed. A
     // piece the label tables lack (مَا of إِمَّا, the ـًا "surely" ending) falls back to it too.
-    var stem = stemMeanings ? stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "" : "";
+    // A verb stem can also be filed with its person (يَشَآءُ|V|IMPF|3MS "وہ چاہتا ہے"), so a
+    // singular is not handed the meaning written for its plural (يَشَآءُ+ونَ "چاہتے ہیں").
+    var stem = stemMeanings ? stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role + "|" + (seg[4] || "")] ||
+      stemMeanings[seg[0] + "|" + (seg[2] || "") + "|" + role] || "" : "";
     if (seg[1] !== 0) return labels.affix[key] || stem;
     if (seg[2] === "P" || role === "DEM" || role === "REL") return labels.particle[key] || stem;
     // A bare 3MS verb keeps its "وہ": no other piece carries the subject there.
@@ -3978,9 +3981,13 @@
     var byPos = seg[1] === 1 && seg[2] === "N" ? "" : labels.grammarByPos[role + "|" + seg[2]];
     var text = byPos || labels.grammar[role] || labels.posFallback[seg[2]] || "";
     // A present verb ending in the نونِ نسوہ (يَضَعْ+نَ) has no mood: it is مبنی. An object
-    // هُنَّ / كُنَّ after it (لَمْ يَطْمِثْهُنَّ) leaves the mood alone.
+    // هُنَّ / كُنَّ after it (لَمْ يَطْمِثْهُنَّ) leaves the mood alone. So does the نونِ تاکید
+    // when it sits right on a singular or first-person verb (لَيُسْجَنَنَّ, لَا تَحْسَبَنَّ); a plural
+    // or dual ending between them (لَتُبْلَوُنَّ, تَمُوتُنَّ) keeps the mood.
     var next = segs[index + 1];
-    var built = seg[2] === "V" && next && next[1] === 2 && /FP$/.test(next[4] || "") && /^ن/.test(next[0]);
+    var built = seg[2] === "V" && next && next[1] === 2 &&
+      (/FP$/.test(next[4] || "") && /^ن/.test(next[0]) ||
+        next[3] === "EMPH" && /^(1S|1P|2MS|3MS|3FS)$/.test(seg[4] || ""));
     var flags = String(seg[6] || "").split(",").filter(Boolean);
     if (built && role === "IMPF" && !flags.some(function (f) { return /^(IND|SUBJ|JUS)$/.test(f); })) flags.push("BUILT");
     var extras = flags.map(function (f) {
