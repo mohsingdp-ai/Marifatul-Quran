@@ -53,7 +53,7 @@ location	arabic	pos	features	note
 8:43:8:1	أَرَىٰ	V	PERF|VF:4|ROOT:رأي|LEM:رَأَى|3MS	أَرَىٰ + كَ + هُمْ
 8:43:8:2	كَ	N	PRON|SUFF|2MS	the object كَ
 8:43:8:3	هُمْ	N	PRON|SUFF|3MP	the second object هُمْ
-69:25:10:1	كِتَٰبِ	N	ROOT:كتب|LEM:كِتاب|M|NOM	كِتَٰبِ + يَهْ, as in 69:19
+69:25:10:1	كِتَٰبِ	N	ROOT:كتب|LEM:كِتاب|M|ACC	كِتَٰبِ + يَهْ, as in 69:19 (منصوب: second object of أُوتَ)
 69:25:10:2	يَهْ	N	PRON|SUFF|1S	يَهْ = my (with the pause ه)
 54:16:4:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
 54:18:6:3		N	PRON|SUFF|1S	نُذُرِ = my warnings, ی dropped for the rhyme
@@ -396,3 +396,9 @@ location	arabic	pos	features	note
 33:30:1:2	نِسَآءَ	N	ROOT:نسو|LEM:نِساء|FP|ACC	called with يَا, owner in the next word: منصوب (visible fatha)
 55:33:1:2	مَعْشَرَ	N	ROOT:عشر|LEM:مَعْشَر|ACC	called with يَا, owner in the next word: منصوب (visible fatha)
 55:50:3:2	انِ	N	PRON|SUFF|3D	تَجْرِيَانِ: the two springs flow, so the ending is "they two"
+5:41:39:1	تُؤْتَ	V	IMPF|VF:4|PASS|ROOT:أتي|LEM:آتَى|2MP|MOOD:JUS	after لَمْ: مجزوم
+15:3:3:2	يَتَمَتَّعُ	V	IMPF|VF:5|ROOT:متع|LEM:تَمَتَّعَ|3MP|MOOD:JUS	joined to يَأْكُلُوا۟, the answer of ذَرْهُمْ: مجزوم
+37:16:2:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
+37:53:2:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
+50:3:2:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"
+56:47:4:1	مِتْ	V	PERF|VF:1|ROOT:موت|LEM:ماتَ|1P	مِتْنَا: active past, "we died"

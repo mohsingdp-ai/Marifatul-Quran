@@ -727,7 +727,7 @@ ref	piece	arabic	meaning	label	note
 30:44:5	2	مَنْ	جس نے	اسمِ شرط	condition right (MASAQ COND, retag REL→COND) but past verb takes نے in Urdu; who
 30:53:3	1	بِ	—	حرفِ جار زائد	extra بِ on the predicate after مَا / لَيْسَ
 31:12:8	2	مَن	جو کوئی	اسمِ شرط	condition (jussive/past verb + answer; MASAQ COND); SKILL step 5 + app COND whol
-31:12:13	2	مَن	جس نے	اسمِ شرط	condition right (MASAQ COND, retag REL→COND) but past verb takes نے in Urdu; who
+31:12:13	2	مَن	جو	اسمِ شرط	condition right (MASAQ COND, retag REL→COND) but past verb takes نے in Urdu; who
 31:13:4	1	لِ	سے		لِ after قَالَ: the one spoken to
 31:21:3	1	لَ	سے		لِ after قَالَ: the one spoken to
 31:22:1	2	مَن	جو کوئی	اسمِ شرط	condition (jussive/past verb + answer; MASAQ COND); SKILL step 5 + app COND whol
@@ -1043,3 +1043,53 @@ ref	piece	arabic	meaning	label	note
 26:218:2	1	يَرَىٰ	دیکھتا ہے		ٱلَّذِى يَرَىٰكَ: who sees you
 26:203:1	1	فَ	پھر	حرفِ عطف	joins فَيَقُولُوا۟ to فَيَأْتِيَهُم (26:202), so it is منصوب
 28:82:23	3	هُۥ	وہ		subject of كَأَنَّ, like the pronoun after إِنَّ
+7:205:7	2	دُونَ	بغیر		وَدُونَ ٱلْجَهْرِ: without raising the voice (Hafiz Ahmad Yar: نمایاں کیے بغیر)
+5:114:16	2	ءَاخِرِ	پچھلوں		لِأَوَّلِنَا وَءَاخِرِنَا: those after us
+4:17:14	1	يَتُوبُ	مہربان ہوتا ہے / توبہ قبول کرتا ہے		Allah turns to them
+5:39:9	1	يَتُوبُ	مہربان ہوتا ہے / توبہ قبول کرتا ہے		Allah turns to him
+9:15:4	2	يَتُوبُ	مہربان ہوتا ہے / توبہ قبول کرتا ہے		Allah turns to whom He wills
+9:27:2	1	يَتُوبُ	مہربان ہوتا ہے / توبہ قبول کرتا ہے		Allah turns to whom He wills
+9:106:8	1	يَتُوبُ	مہربان ہو / توبہ قبول کرے		إِمَّا يَتُوبُ عَلَيْهِمْ: or He turns to them
+25:71:6	1	يَتُوبُ	توبہ کرتا ہے / پلٹ آتا ہے		one man repents
+9:74:26	1	يَتُوبُ	توبہ کریں		فَإِن يَتُوبُوا۟: if they repent
+9:118:26	2	يَتُوبُ	توبہ کریں		لِيَتُوبُوٓا۟: so that they repent
+85:10:8	1	يَتُوبُ	توبہ کی		ثُمَّ لَمْ يَتُوبُوا۟: past after لَمْ
+5:51:13	1	يَتَوَلَّ	دوست بنائے		وَمَن يَتَوَلَّهُم: singular, condition
+5:56:2	1	يَتَوَلَّ	دوست بنائے		وَمَن يَتَوَلَّ ٱللَّهَ: singular, condition
+9:23:15	1	يَتَوَلَّ	دوست بنائے		وَمَن يَتَوَلَّهُم: singular, condition
+60:9:18	1	يَتَوَلَّ	دوستی کرے		وَمَن يَتَوَلَّهُمْ: singular, condition
+48:17:24	1	يَتَوَلَّ	منہ پھیرے		وَمَن يَتَوَلَّ: singular, turns away
+57:24:7	1	يَتَوَلَّ	منہ پھیرے		وَمَن يَتَوَلَّ: singular, turns away
+60:6:14	1	يَتَوَلَّ	منہ پھیرے		وَمَن يَتَوَلَّ: singular, turns away
+9:74:31	1	يَتَوَلَّ	منہ موڑیں		وَإِن يَتَوَلَّوْا۟: if they turn away
+5:43:9	1	يَتَوَلَّ	منہ موڑ جاتے ہیں		ثُمَّ يَتَوَلَّوْنَ: they turn away
+9:50:14	2	يَتَوَلَّ	منہ موڑ جاتے ہیں		وَيَتَوَلَّوا۟: they turn away
+5:80:4	1	يَتَوَلَّ	دوستی کرتے ہیں		يَتَوَلَّوْنَ ٱلَّذِينَ كَفَرُوا۟: they befriend
+16:100:5	1	يَتَوَلَّ	دوستی کرتے ہیں		يَتَوَلَّوْنَهُۥ: they befriend him
+5:17:18	1	أَرَادَ	وہ ارادہ کرے		إِنْ أَرَادَ: no doer piece, so the subject stays
+33:17:9	1	أَرَادَ	وہ ارادہ کرے		إِنْ أَرَادَ: no doer piece, so the subject stays
+33:17:13	1	أَرَادَ	وہ ارادہ کرے		أَوْ أَرَادَ: no doer piece, so the subject stays
+48:11:25	1	أَرَادَ	وہ ارادہ کرے		إِنْ أَرَادَ: no doer piece, so the subject stays
+48:11:29	1	أَرَادَ	وہ ارادہ کرے		أَوْ أَرَادَ: no doer piece, so the subject stays
+17:103:1	2	أَرَادَ	اس نے ارادہ کیا		Firaun; no doer piece
+28:19:3	1	أَرَادَ	اس نے ارادہ کیا		Musa; no doer piece
+36:82:4	1	أَرَادَ	وہ ارادہ کرتا ہے		إِذَآ أَرَادَ شَيْـًٔا: whenever He intends
+3:28:24	1	نَفْسَ	ذات		نَفْسَهُۥ of Allah: His own self (Hafiz Ahmad Yar: اپنی ذات)
+3:30:23	1	نَفْسَ	ذات		نَفْسَهُۥ of Allah: His own self (Hafiz Ahmad Yar: اپنی ذات)
+56:79:2	1	يَمَسُّ	چھوتے		لَّا يَمَسُّهُۥٓ إِلَّا ٱلْمُطَهَّرُونَ: general statement
+4:34:15	3	صَّٰلِحَٰتُ	نیک عورتیں		the ayah is about women
+6:121:16	2	يُجَٰدِلُ	جھگڑیں		لِيُجَٰدِلُوكُمْ: so that they dispute
+23:46:7	1	عَالِينَ	سرکش / متکبر		فَٱسْتَكْبَرُوا۟ وَكَانُوا۟ قَوْمًا عَالِينَ: haughty (Hafiz Ahmad Yar: سرکش)
+10:58:6	3	يَفْرَحُ	خوش ہوں		فَلْيَفْرَحُوا۟: command, after چاہیے کہ
+29:20:11	1	يُنشِئُ	اٹھائے گا		ثُمَّ ٱللَّهُ يُنشِئُ ٱلنَّشْأَةَ ٱلْءَاخِرَةَ: the future raising
+3:135:18	1	يُصِرُّ	اصرار کیا		وَلَمْ يُصِرُّوا۟: past after لَمْ
+8:72:21	1	يُهَاجِرُ	ہجرت کی		وَلَمْ يُهَاجِرُوا۟: past after لَمْ
+4:94:18	1	تَبْتَغُ	تلاش کرتے ہو		تَبْتَغُونَ: a statement, not a command
+49:6:13	2	تُصْبِحُ	ہو جاؤ		فَتُصْبِحُوا۟: the ending is تم
+33:61:2	2	مَا	(تاکید)	حرفِ زائد	أَيْنَمَا: extra ما, as in 4:78
+25:59:16	1	بِ	کے بارے میں		فَسْـَٔلْ بِهِۦ خَبِيرًا: ask about Him
+2:283:6	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
+4:43:36	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
+5:6:38	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
+24:28:3	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
+58:12:18	1	تَجِدُ	پاؤ		لَمْ تَجِدُوا۟: no future after لَمْ
