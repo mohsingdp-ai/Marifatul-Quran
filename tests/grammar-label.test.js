@@ -33,6 +33,13 @@ test("noun and particle forms of one tag get their own names", () => {
   assert.strictEqual(labelOf("2:43:1", "IMPV"), "فعل امر");       // أَقِيمُوا۟
 });
 
+test("a verb with the نونِ تاکید right on it is مبنی; a plural ending between keeps the mood", () => {
+  assert.strictEqual(labelOf("12:32:16", "IMPF"), "فعل مضارع (مجہول، مبنی)");  // لَيُسْجَنَنَّ
+  assert.strictEqual(labelOf("3:169:2", "IMPF"), "فعل مضارع (مبنی)");          // لَا تَحْسَبَنَّ
+  assert.strictEqual(labelOf("3:186:1", "IMPF"), "فعل مضارع (مجہول، مرفوع)");  // لَتُبْلَوُنَّ
+  assert.strictEqual(labelOf("2:132:13", "IMPF"), "فعل مضارع (مجزوم)");        // فَلَا تَمُوتُنَّ
+});
+
 test("the joined بَعْدَ مَا keeps بَعْدَ's case", () => {
   for (const ref of ["2:181:3", "8:6:4", "13:37:8"]) assert.strictEqual(labelOf(ref, "T"), "ظرفِ زمان (منصوب)", ref);
 });
