@@ -2537,6 +2537,21 @@ html[data-mushaf^="indopak"] .ayat-num {
   vertical-align: baseline;
 }
 
+/* The font's own glyphs sit in the Private Use Area, which bidi reads as left-to-right: a
+   word ending in one (الْاُ + نثٰی in 53:21) put that ending on the far side of the ayah
+   ornament, and two in a row swapped places. Force the mushaf text right-to-left; the
+   ornament and the Urdu glosses inside keep their own bidi. */
+html[data-mushaf^="indopak"] .ayah-text,
+html[data-mushaf^="indopak"] .wpop-word {
+  unicode-bidi: bidi-override;
+  direction: rtl;
+}
+
+html[data-mushaf^="indopak"] .ayah-gloss,
+html[data-mushaf^="indopak"] .ayat-num {
+  unicode-bidi: isolate;
+}
+
 html[data-mushaf^="indopak"] .ayat-item.is-reciting .ayat-num {
   background: none;
   color: var(--md-primary);
