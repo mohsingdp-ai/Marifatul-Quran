@@ -92,7 +92,7 @@
   var PARTICLE = {
     // emphasis / subordination / condition
     "إن|ACC": "بیشک",
-    "أن|ACC": "بیشک",
+    "أن|ACC": "کہ بیشک",   // "that" + emphasis (owner, 2026-10-13)
     "أن|SUB": "کہ",
     "إن|COND": "اگر",
     "لو|COND": "اگر",
