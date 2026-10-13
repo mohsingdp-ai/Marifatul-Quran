@@ -17,7 +17,7 @@ const asList = (rows) => rows.map((w) => ({ text_uthmani: w[0], translation: { t
 test("a repeated skeleton takes the word at the tapped position", () => {
   const words = asList(para(21)["29:63"]);
   assert.strictEqual(findWordMeaning(words, "مَّن", 2).translation.text, "کس نے"); // who
-  assert.strictEqual(findWordMeaning(words, "مِنۢ", 10).translation.text, "سے");   // from
+  assert.strictEqual(findWordMeaning(words, "مِنۢ", 10), words[10]);   // from (Wahy leaves it blank)
 });
 
 test("every word in the Quran finds its own meaning", () => {
