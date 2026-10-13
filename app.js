@@ -3669,10 +3669,12 @@
 
   /**
    * Hand fixes for one piece in one ayah, from word-part-fixes.tsv: what no shared table can
-   * say, because it turns on the words around it — such as the لِ after قَالَ, which is "سے".
-   * Keyed "surah:ayah:word:piece", counted from 1 as the corpus counts. Loaded once, like the
-   * stems. Emphatic لَ reads "البتہ" everywhere, as Al-Huda (owner dropped the house rules,
-   * 2026-10-13).
+   * say, because it turns on the words around it — the لَ answering لَوْ is "ضرور" where the
+   * same لَ elsewhere is "یقیناً", and the لِ after قَالَ is "سے". Keyed
+   * "surah:ayah:word:piece", counted from 1 as the corpus counts. Loaded once, like the stems.
+   * House style for that لَ (owner, 2026-10-11, after Hafiz Ahmad Yar): a second answer joined
+   * with وَ keeps "ضرور" (وَلَلَبَسْنَا "اور ہم ضرور ..."); only one joined with فَ shows "—"
+   * (فَلَعَرَفْتَهُم).
    */
   var partFixes = null;
   var partFixesPending = null;

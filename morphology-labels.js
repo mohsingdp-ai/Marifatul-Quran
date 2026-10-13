@@ -41,8 +41,8 @@
     // و — joining, resuming, circumstantial, oath
     "و|CONJ": "اور",
     "و|REM": "اور",
-    // the وَ of حال: "اور", as Al-Huda (owner dropped the house "جبکہ", 2026-10-13)
-    "و|CIRC": "اور",
+    // the وَ of حال: "جبکہ" (while / whereas); "حالانکہ" (although) would invert وَمَاتُوا وَهُمْ كُفَّارٌ
+    "و|CIRC": "جبکہ",
     "و|SUP": "اور",
     "و|COM": "کے ساتھ",
     "و|P": "قسم ہے",
@@ -56,7 +56,7 @@
 
     // ل — for, emphasis, purpose, command
     "ل|P": "کے لیے",
-    "ل|EMPH": "البتہ",
+    "ل|EMPH": "یقیناً",
     "ل|PRP": "تاکہ",
     "ل|IMPV": "چاہیے کہ",
 
@@ -122,7 +122,7 @@
     "إلا|EXP": "مگر",
     "بل|RET": "بلکہ",
     "قد|CERT": "تحقیق",
-    "إنما|ACC": "بیشک",
+    "إنما|ACC": "بیشک صرف",
 
     // prepositions
     "فى|P": "میں",
