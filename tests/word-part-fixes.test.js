@@ -62,9 +62,9 @@ const rowsOf = (ref) => card.wordPartsHtml(segsAt(ref), "", ref).split("<tr>").s
 test("a fix replaces a piece's meaning and grammar name in that ayah only", () => {
   assert.match(rowsOf("2:8:11")[0], /wpart-none">—<.*wpart-name">حرفِ جار زائد</);  // وَمَا هُم بِمُؤْمِنِينَ
   assert.match(rowsOf("2:30:4")[0], /wpart-ur" lang="ur">سے</);                      // قَالَ رَبُّكَ لِلْمَلَٰٓئِكَةِ
-  assert.match(rowsOf("2:20:17")[0], />ضرور</);                                       // وَلَوْ شَآءَ ٱللَّهُ لَذَهَبَ
-  assert.match(rowsOf("8:43:11")[1], />ضرور</);                                       // وَلَتَنَٰزَعْتُمْ: joined with وَ
-  assert.match(rowsOf("47:30:4")[1], /wpart-none">—</);                               // فَلَعَرَفْتَهُم: joined with فَ
+  assert.match(rowsOf("2:20:17")[0], />البتہ</);                                      // وَلَوْ شَآءَ ٱللَّهُ لَذَهَبَ
+  assert.match(rowsOf("8:43:11")[1], />البتہ</);                                      // وَلَتَنَٰزَعْتُمْ: joined with وَ
+  assert.match(rowsOf("47:30:4")[1], />البتہ</);                                      // فَلَعَرَفْتَهُم: joined with فَ
   assert.match(rowsOf("10:28:17")[0], /wpart-ur" lang="ur">ہمیں</);                  // مَّا كُنتُمْ إِيَّانَا: no "صرف" under نفی
   assert.match(card.wordPartsHtml(segsAt("1:1:1"), "", "1:1:1"), />کے ساتھ</);       // بِسْمِ keeps its بِ
 });
