@@ -1027,8 +1027,9 @@
    * Fill each ayah's word cards once the para's word data, grammar and stem meanings are in.
    */
   function fillWordTables(container, row, entry) {
-    var slots = container.querySelectorAll(".wt");
+    var slots = container.querySelectorAll(".wt:not([data-filled])");
     if (!slots.length) return;
+    Array.prototype.forEach.call(slots, function (slot) { slot.dataset.filled = ""; });
     Promise.all([getParaMorphology(row.para), getStemMeanings(), getPartFixes()]).then(function (res) {
       var morph = res[0] || {};
       Array.prototype.forEach.call(slots, function (slot) {
@@ -1339,7 +1340,9 @@
     tr.appendChild(td);
     fillTranslations(td, row);
     fillWordGlosses(td, row);
-    fillWordTables(td, row, entry);
+    // Word cards are the heaviest part of a panel (para 27 holds ~2,500), so a closed panel
+    // gets them only when it opens (syncAyatRows). Building them all made the page stall.
+    if (!tr.hidden) fillWordTables(td, row, entry);
     return tr;
   }
 
@@ -1350,7 +1353,10 @@
       var gi = ayatRows[i].dataset.ayatFor;
       var open = isAyatOpen(data[gi]);
       ayatRows[i].hidden = !open;
-      if (open) sizeGlossCells(ayatRows[i]);
+      if (open) {
+        sizeGlossCells(ayatRows[i]);
+        fillWordTables(ayatRows[i], data[gi], getRukuAyat(data[gi]));
+      }
       var mainTr = tbody.querySelector('tr[data-global-index="' + gi + '"]');
       if (!mainTr) continue;
       mainTr.classList.toggle("has-ayat-open", open);
