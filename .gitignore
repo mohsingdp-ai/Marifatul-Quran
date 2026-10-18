@@ -7,3 +7,6 @@
 
 # Byproduct of importing scripts/match-audio.py from scripts/align-ayat.py
 __pycache__/
+
+# Local task board (Backlog.md)
+backlog/
