@@ -1687,7 +1687,7 @@
   /* Which are pinned is this viewer's choice, kept in localStorage.     */
   /* ----------------------------------------------------------------- */
   var ROW_PINS_KEY = "mq-row-pins";
-  var ROW_PINS_DEFAULT = ["hifz", "wa", "dl"];
+  var ROW_PINS_DEFAULT = []; // a clean card: everything waits in its menu until pinned
   function toolSvg(paths) {
     return '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + "</svg>";
   }
