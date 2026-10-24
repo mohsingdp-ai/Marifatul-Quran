@@ -218,7 +218,6 @@
     });
   }
   labelParaOptions();
-  const actionHeader = document.querySelector("#ruku-table thead th:last-child");
   /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
   /** When opening `?para=&ruku=`, scroll to that ruku after the first table render. */
@@ -251,9 +250,6 @@
 
   // Data from QURAN_DATA (no persistence, no editing)
   var data = JSON.parse(JSON.stringify(QURAN_DATA));
-  var sessionBlobUrls = {};
-  /** `globalIndex` -> true while a GitHub upload is in flight (survives table re-renders). */
-  var pendingUploadByIndex = {};
   /** Playback snapshot kept when that ruku row is not in the table (e.g. after switching Para). */
   var stickyPlaybackResume = null;
   var escapeNode = document.createElement("div");
@@ -283,11 +279,6 @@
   var mediaSessionKeepaliveTimer = null;
   var screenWakeLock = null;
   var noSleepVideo = null;
-
-  // GitHub API config
-  var GITHUB_OWNER = "mohsingdp-ai";
-  var GITHUB_REPO = "Marifatul-Quran";
-  var GITHUB_BRANCH = "v4";
 
   // Hover tooltip: show audio path
 
@@ -332,27 +323,6 @@
   }
   function setDefaultSpeed(val) {
     localStorage.setItem("default_speed", String(val));
-  }
-
-  function getAudioVolume() {
-    var v = parseFloat(localStorage.getItem("audio_volume"));
-    if (isNaN(v) || v < 0) return 1;
-    return Math.min(1, v);
-  }
-
-  function setAudioVolume(val) {
-    var n = typeof val === "number" ? val : parseFloat(val);
-    if (isNaN(n)) n = 1;
-    n = Math.max(0, Math.min(1, n));
-    localStorage.setItem("audio_volume", String(n));
-  }
-
-  function applyVolumeToAllAudioElements() {
-    var vol = getAudioVolume();
-    tbody.querySelectorAll("audio").forEach(function (a) {
-      a.volume = vol;
-    });
-    if (mqPlayback.el) mqPlayback.el.volume = vol;
   }
 
   function getPositionsMap() {
@@ -449,29 +419,6 @@
   function schedulePersistPlayback() {
     if (persistPlaybackTimer) clearTimeout(persistPlaybackTimer);
     persistPlaybackTimer = setTimeout(savePlaybackPersist, 500);
-  }
-
-  function getValidatedRukus() {
-    try { return JSON.parse(localStorage.getItem("validated_rukus") || "{}"); }
-    catch (e) { return {}; }
-  }
-  /**
-  * Keyed "<para>:<rukuInPara>", not by position in QURAN_DATA. A positional key silently
-  * re-points every tick at a different ruku the next time a row is merged or inserted, and
-  * a verification pass you cannot trust is worse than none. Numeric keys left by the old
-  * scheme are ignored rather than converted: after the data reshaped they no longer say
-  * what they used to, so carrying them over would assert checks nobody made.
-  */
-  function validationKey(row) {
-    return String(row.para) + ":" + String(row.rukuInPara);
-  }
-  function isRukuValidated(row) {
-    return !!getValidatedRukus()[validationKey(row)];
-  }
-  function setRukuValidated(row, val) {
-    var v = getValidatedRukus();
-    if (val) v[validationKey(row)] = true; else delete v[validationKey(row)];
-    localStorage.setItem("validated_rukus", JSON.stringify(v));
   }
 
   /* ===================== Hifz (memorization) tracking ===================== */
@@ -737,15 +684,6 @@
     if (el) el.textContent = msg;
   }
 
-  function hasGitHubToken() {
-    return isAdmin() && !!getGitHubToken().trim();
-  }
-
-  function setActionColumnVisibility(show) {
-    if (!actionHeader) return;
-    actionHeader.style.display = show ? "" : "none";
-  }
-
   function clearPlayingClass() {
     tbody.querySelectorAll("tr.playing, tr.audio-paused").forEach(function (tr) {
       tr.classList.remove("playing", "audio-paused");
@@ -767,7 +705,7 @@
   }
 
   function getAudioSrc(row, globalIndex) {
-    return sessionBlobUrls[globalIndex] || normalizeAudioPath(row.audioUrl);
+    return normalizeAudioPath(row.audioUrl);
   }
 
   var allParaOptions = null; // cached for iOS option.hidden fix
@@ -1000,6 +938,26 @@
   function setAyahGlossSwitchEnabled(on) {
     try {
       localStorage.setItem(AYAH_GLOSS_SWITCH_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
+  /*
+   * Copy-prompt buttons on each ruku and ayah: an AI grammar prompt for that text. Admin-only
+   * and opt-in, so the ayat stay uncluttered unless the admin asks for them.
+   */
+  var AI_PROMPT_PREF_KEY = "mq_pref_ai_prompt";
+
+  function aiPromptEnabled() {
+    try {
+      return isAdmin() && localStorage.getItem(AI_PROMPT_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setAiPromptEnabled(on) {
+    try {
+      localStorage.setItem(AI_PROMPT_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -1289,7 +1247,7 @@
           ref: row.surahNumber + ":" + versesText(row.verses) })) + "</span>" +
         "<span class=\"ayat-head-count\">" + i18n(count === 1 ? "ayat.countOne" : "ayat.countMany", { n: count }) + "</span>" +
         (toCheck ? "<span class=\"ayat-head-check\">" + i18n("timing.toCheck", { n: toCheck }) + "</span>" : "") +
-        (isAdmin()
+        (aiPromptEnabled()
           ? "<button type=\"button\" class=\"ayat-prompt\" title=\"" + i18n("ayat.promptRukuTitle") + "\">" +
             COPY_SVG + "<span>" + i18n("ayat.prompt") + "</span></button>"
           : "") +
@@ -1310,14 +1268,14 @@
       : null;
     var editKey = editTimings ? ayatKeyFor(row) : null;
     var showTranslation = translationEnabled();
-    var admin = isAdmin();
+    var aiPrompt = aiPromptEnabled();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.playFromTitle") + "\" aria-label=\"" + i18n("ayat.playFromAria", { n: a.n }) + "\">" + PLAY_SVG + "</button>" +
         (glossSwitch
           ? "<button type=\"button\" class=\"ayah-play ayah-gloss-toggle\" aria-pressed=\"" + (table || gloss) + "\" title=\"" + i18n("ayat.glossToggleTitle") + "\" aria-label=\"" + i18n("ayat.glossToggleAria", { n: a.n }) + "\">" + GLOSS_SVG + "</button>"
           : "") +
-        (admin
+        (aiPrompt
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.promptAyahTitle") + "\" aria-label=\"" + i18n("ayat.promptAyahAria", { n: a.n }) + "\">" + COPY_SVG + "</button>"
           : "") +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
@@ -1406,14 +1364,30 @@
   }
 
   /**
-   * The editor is for correcting the shipped data, so it appears under exactly the two
-   * conditions where that is the job at hand: the app is being run locally, where a dev
-   * server exists to write timings.js, and the reader is in the admin role. There is nothing
-   * to switch on — anyone who can see it came here to use it. A deployed copy, or anyone
-   * reading as a user, never sees the boxes or the save pill.
+   * The editor is for correcting the shipped data, so it can only appear where that is the
+   * job at hand: the app is being run locally, where a dev server exists to write timings.js,
+   * and the reader is in the admin role. Even then it is opt-in from settings, so an admin
+   * just listening sees clean ayat. A deployed copy, or anyone reading as a user, never sees
+   * the boxes or the save pill.
    */
-  function timingEditorEnabled() {
+  var TIMING_EDITOR_PREF_KEY = "mq_pref_timing_editor";
+
+  function timingEditorAvailable() {
     return isLocalRun() && isAdmin();
+  }
+
+  function timingEditorEnabled() {
+    try {
+      return timingEditorAvailable() && localStorage.getItem(TIMING_EDITOR_PREF_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function setTimingEditorEnabled(on) {
+    try {
+      localStorage.setItem(TIMING_EDITOR_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
   // Parsed once and kept, because getRukuTimings is called on every timeupdate and must not
@@ -1835,7 +1809,7 @@
   window.addEventListener("scroll", closeRowMenu, { passive: true });
   window.addEventListener("resize", closeRowMenu);
 
-  function buildRow(item, showActions, canUpload, playbackResume) {
+  function buildRow(item, playbackResume) {
     var row = item.row;
     var globalIndex = item.globalIndex;
     var tr = document.createElement("tr");
@@ -1879,14 +1853,11 @@
       "<td class=\"col-surah\" data-label=\"Surah\">" + surahLine + "</td>" +
       "<td class=\"col-verses\" data-label=\"Verses\">" + versesCell + "</td>" +
       "<td class=\"col-surah-arabic\" data-label=\"Arabic\">" + surahArabicCell + "</td>" +
-      "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>" +
-      (showActions ? "<td class=\"action-cell\" data-label=\"Action\"></td>" : "");
+      "<td class=\"col-audio audio-cell\" data-label=\"Audio\"></td>";
 
     var audioCell = tr.querySelector(".audio-cell");
-    var actionCell = showActions ? tr.querySelector(".action-cell") : null;
 
-    // Any row with a source gets a player; an offline copy is not a precondition for one,
-    // and getAudioSrc already prefers this session's blob when there is one.
+    // Any row with a source gets a player; an offline copy is not a precondition for one.
     if (audioSrc) {
       var resumeThis = playbackResume && String(playbackResume.globalIndex) === String(globalIndex) ? playbackResume : null;
       buildAudioPlayer(tr, audioCell, row, globalIndex, audioSrc, clearPlayingClass, resumeThis);
@@ -1895,16 +1866,11 @@
     }
     buildRowTools(tr, row);
 
-    if (actionCell) {
-      if (canUpload) buildUploadButton(actionCell, row, globalIndex);
-      buildValidateControl(actionCell, row);
-    }
 
     return tr;
   }
 
   function hasRecording(item) {
-    if (sessionBlobUrls[item.globalIndex]) return true;
     var audioSrc = getAudioSrc(item.row, item.globalIndex);
     return !!audioSrc;
   }
@@ -2032,8 +1998,6 @@
     if (!snap) snap = readPlaybackPersist();
     if (snap) stickyPlaybackResume = snap;
     else stickyPlaybackResume = null;
-    var canUpload = hasGitHubToken();
-    var showActions = isAdmin();
     // Update para select first so any para jump happens before getFilteredData reads the value
     updateParaSelect();
 
@@ -2047,13 +2011,12 @@
 
     var fragment = document.createDocumentFragment();
     tbody.textContent = "";
-    setActionColumnVisibility(showActions);
 
     filtered.forEach(function (item, i) {
       var rowResume = stickyPlaybackResume && String(stickyPlaybackResume.globalIndex) === String(item.globalIndex)
         ? stickyPlaybackResume
         : null;
-      var tr = buildRow(item, showActions, canUpload, rowResume);
+      var tr = buildRow(item, rowResume);
       // Ayat rows sit between track rows, so zebra striping is by class rather than :nth-child.
       tr.classList.add(i % 2 === 0 ? "row-odd" : "row-even");
       fragment.appendChild(tr);
@@ -3292,7 +3255,6 @@
     if (!mqPlayback.el) {
       mqPlayback.el = document.createElement("audio");
       mqPlayback.el.preload = "auto";
-      mqPlayback.el.volume = getAudioVolume();
       var host = document.getElementById("mq-audio-host");
       (host || document.body).appendChild(mqPlayback.el);
     }
@@ -4329,7 +4291,6 @@
       lessonPausedForWord = true;
       lesson.pause();
     }
-    a.volume = getAudioVolume();
     a.src = url;
     a.play().catch(function (err) {
       if (a.src !== url || err.name === "AbortError") return; // a newer tap took over
@@ -4717,16 +4678,9 @@
   });
   window.addEventListener("scroll", function () { hideWordPopover(); }, true);
 
-  // GitHub API config (used for file upload)
-
-  function getGitHubToken() {
-    return localStorage.getItem("gh_token") || "";
-  }
-
-  function setGitHubToken(token) {
-    if (token) localStorage.setItem("gh_token", token);
-    else localStorage.removeItem("gh_token");
-  }
+  // Recordings were once uploaded from here with a GitHub token kept in localStorage; the
+  // feature is gone, so a token left behind by it is cleared rather than kept lying around.
+  try { localStorage.removeItem("gh_token"); } catch (e) { /* storage blocked: nothing kept */ }
 
   // Settings modal
   var settingsModal = document.getElementById("settings-modal");
@@ -4736,25 +4690,24 @@
   var roleUserBtn = document.getElementById("role-user-btn");
   var roleAdminBtn = document.getElementById("role-admin-btn");
   var roleBadge = document.getElementById("role-badge");
-  var adminSection = document.getElementById("admin-section");
   var wordMeaningsRow = document.getElementById("word-meanings-row");
   var glossSwitchRow = document.getElementById("gloss-switch-row");
-  var ghTokenInput = document.getElementById("gh-token-input");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var wordMeaningsGroup = document.getElementById("word-meanings-group");
   var prefTranslation = document.getElementById("pref-translation");
   var ayahWordsGroup = document.getElementById("ayah-words-group");
   var prefWordSound = document.getElementById("pref-word-sound");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
+  var aiPromptRow = document.getElementById("ai-prompt-row");
+  var timingEditorRow = document.getElementById("timing-editor-row");
+  var prefTimingEditor = document.getElementById("pref-timing-editor");
+  var prefAiPrompt = document.getElementById("pref-ai-prompt");
   var timingSaveBar = document.getElementById("timing-save-bar");
   var timingSaveBarBtn = document.getElementById("timing-save-btn");
   var timingSaveBarCount = document.getElementById("timing-save-count");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
   var speedSelect = document.getElementById("default-speed-select");
-  var toolbarVolume = document.getElementById("toolbar-volume");
-  var settingsVolumeRange = document.getElementById("settings-volume-range");
-  var settingsVolumeValue = document.getElementById("settings-volume-value");
   var themeModeGroup = document.getElementById("theme-mode-group");
   var fontSmallerBtn = document.getElementById("font-smaller-btn");
   var fontLargerBtn = document.getElementById("font-larger-btn");
@@ -4809,25 +4762,6 @@
     syncFontScaleUI();
   });
 
-  function syncVolumeUI() {
-    var pct = Math.round(getAudioVolume() * 100);
-    if (toolbarVolume) toolbarVolume.value = String(pct);
-    if (settingsVolumeRange) {
-      settingsVolumeRange.value = String(pct);
-      settingsVolumeRange.setAttribute("aria-valuenow", String(pct));
-    }
-    if (settingsVolumeValue) settingsVolumeValue.textContent = pct + "%";
-  }
-
-  function onGlobalVolumeInput(pct) {
-    var n = parseInt(pct, 10);
-    if (isNaN(n)) n = 100;
-    n = Math.max(0, Math.min(100, n));
-    setAudioVolume(n / 100);
-    applyVolumeToAllAudioElements();
-    syncVolumeUI();
-  }
-
   function syncMediaNotifHint() {
     if (!mediaNotifHint) return;
     if (typeof Notification === "undefined") {
@@ -4850,11 +4784,6 @@
 
   function closeSettings() {
     settingsModal.classList.remove("is-open");
-    // Save token if admin
-    if (isAdmin() && ghTokenInput) {
-      var val = ghTokenInput.value.trim();
-      setGitHubToken(val);
-    }
     renderTable();
   }
 
@@ -4928,24 +4857,23 @@
     syncAyahWordsUI();
     if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
+    if (prefAiPrompt) prefAiPrompt.checked = aiPromptEnabled();
+    if (prefTimingEditor) prefTimingEditor.checked = timingEditorEnabled();
     syncSaveTimingsUI();
     var admin = isAdmin();
     roleUserBtn.classList.toggle("active", !admin);
     roleAdminBtn.classList.toggle("active", admin);
     roleBadge.textContent = i18n(admin ? "settings.roleAdmin" : "settings.roleUser");
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
-    adminSection.style.display = admin ? "" : "none";
     wordMeaningsRow.hidden = !admin;
     glossSwitchRow.hidden = !admin;
-    if (admin && ghTokenInput) {
-      ghTokenInput.value = getGitHubToken();
-    }
+    if (aiPromptRow) aiPromptRow.hidden = !admin;
+    if (timingEditorRow) timingEditorRow.hidden = !timingEditorAvailable();
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === mode);
     });
     speedSelect.value = String(getDefaultSpeed());
-    syncVolumeUI();
     syncFontScaleUI();
     syncMushafScriptUI();
     var th = getUiTheme();
@@ -4967,18 +4895,7 @@
     }
   }
 
-  if (toolbarVolume) {
-    toolbarVolume.addEventListener("input", function () {
-      onGlobalVolumeInput(this.value);
-    });
-  }
-  if (settingsVolumeRange) {
-    settingsVolumeRange.addEventListener("input", function () {
-      onGlobalVolumeInput(this.value);
-    });
-  }
 
-  syncVolumeUI();
 
   var gotoPlayingBtn = document.getElementById("goto-playing-btn");
   var toolbarPlayPauseBtn = document.getElementById("toolbar-play-pause-btn");
@@ -5082,6 +4999,21 @@
   if (prefAyahGlossSwitch) {
     prefAyahGlossSwitch.addEventListener("change", function () {
       setAyahGlossSwitchEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefAiPrompt) {
+    prefAiPrompt.addEventListener("change", function () {
+      setAiPromptEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefTimingEditor) {
+    prefTimingEditor.addEventListener("change", function () {
+      setTimingEditorEnabled(this.checked);
+      syncSaveTimingsUI();
       renderTable();
     });
   }
@@ -5428,65 +5360,6 @@
     renderTable();
   });
 
-  function fileToBase64(file) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () {
-        resolve(reader.result.split(",")[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function authHeader() {
-    var token = getGitHubToken();
-    if (!token) return {};
-    // Fine-grained tokens start with github_pat_, classic with ghp_
-    var prefix = token.startsWith("github_pat_") ? "Bearer" : "token";
-    return { Authorization: prefix + " " + token };
-  }
-
-  function apiUrl(filePath) {
-    var encoded = filePath.split("/").map(encodeURIComponent).join("/");
-    return "https://api.github.com/repos/" + GITHUB_OWNER + "/" + GITHUB_REPO + "/contents/" + encoded;
-  }
-
-  function getExistingFileSha(path) {
-    return fetch(apiUrl(path) + "?ref=" + GITHUB_BRANCH, {
-      headers: authHeader()
-    }).then(function (res) {
-      if (res.status === 200) return res.json().then(function (d) { return d.sha; });
-      return null;
-    }).catch(function () { return null; });
-  }
-
-  function uploadToGitHub(filePath, base64Content, commitMessage) {
-    var token = getGitHubToken();
-    if (!token) return Promise.reject(new Error(i18n("admin.noToken")));
-
-    return getExistingFileSha(filePath).then(function (sha) {
-      var body = {
-        message: commitMessage,
-        content: base64Content,
-        branch: GITHUB_BRANCH
-      };
-      if (sha) body.sha = sha;
-
-      var headers = authHeader();
-      headers["Content-Type"] = "application/json";
-
-      return fetch(apiUrl(filePath), {
-        method: "PUT",
-        headers: headers,
-        body: JSON.stringify(body)
-      });
-    }).then(function (res) {
-      if (!res.ok) return res.json().then(function (d) { throw new Error(i18n("admin.uploadHttp", { msg: d.message || i18n("admin.uploadFailedShort"), status: res.status })); });
-      return res.json();
-    });
-  }
-
   var uploadStatusBannerEl = null;
 
   function ensureUploadStatusBanner() {
@@ -5523,88 +5396,6 @@
     else if (kind === "error") el.classList.add("upload-status-banner--error");
     else el.classList.add("upload-status-banner--progress");
     el.style.display = "flex";
-  }
-
-  function buildUploadButton(actionCell, row, globalIndex) {
-    if (!getGitHubToken()) return;
-    var fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "audio/ogg,audio/opus,audio/wav,audio/wave,audio/*";
-    fileInput.style.display = "none";
-
-    var btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btn btn-sm btn-primary";
-    btn.textContent = i18n("admin.upload");
-    btn.addEventListener("click", function () { fileInput.click(); });
-
-    if (pendingUploadByIndex[globalIndex]) {
-      btn.disabled = true;
-      btn.textContent = i18n("admin.uploading");
-    }
-
-    fileInput.addEventListener("change", function () {
-      if (!this.files || !this.files[0]) return;
-      var file = this.files[0];
-      var ext = (file.name && file.name.indexOf(".") >= 0)
-        ? "." + file.name.split(".").pop().toLowerCase()
-        : ".ogg";
-      if (ext !== ".ogg" && ext !== ".opus" && ext !== ".wav") ext = ".ogg";
-      var targetName = row.para + "__" + row.rukuInPara + "__" + row.surah + ext;
-      var filePath = "audio/" + row.para + "/" + targetName;
-      var summary = i18n("admin.uploadSummary", { para: row.para, ruku: rukuLabel(row), surah: surahLabel(row) });
-
-      // Immediate playback via blob
-      if (sessionBlobUrls[globalIndex]) URL.revokeObjectURL(sessionBlobUrls[globalIndex]);
-      var blobUrl = URL.createObjectURL(file);
-      sessionBlobUrls[globalIndex] = blobUrl;
-      row.audioUrl = filePath;
-
-      pendingUploadByIndex[globalIndex] = true;
-      btn.disabled = true;
-      btn.textContent = i18n("admin.uploading");
-      showUploadStatus(i18n("admin.uploadProgress", { summary: summary }), "progress");
-
-      fileToBase64(file).then(function (b64) {
-        return uploadToGitHub(filePath, b64, "Add " + targetName);
-      }).then(function () {
-        delete pendingUploadByIndex[globalIndex];
-        showUploadStatus(i18n("admin.uploadDone", { summary: summary }), "success");
-        renderTable();
-      }).catch(function (err) {
-        delete pendingUploadByIndex[globalIndex];
-        btn.disabled = false;
-        btn.textContent = i18n("admin.upload");
-        showUploadStatus(i18n("admin.uploadError", { summary: summary, error: err.message }), "error");
-      });
-    });
-
-    actionCell.appendChild(fileInput);
-    actionCell.appendChild(btn);
-  }
-
-  function buildValidateControl(actionCell, row) {
-    var label = document.createElement("label");
-    label.className = "validate-label" + (isRukuValidated(row) ? " validated" : "");
-    label.title = i18n("admin.validateTitle");
-
-    var cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.className = "validate-check";
-    cb.checked = isRukuValidated(row);
-
-    var span = document.createElement("span");
-    span.textContent = i18n(cb.checked ? "admin.validated" : "admin.validate");
-
-    cb.addEventListener("change", function () {
-      setRukuValidated(row, this.checked);
-      label.classList.toggle("validated", this.checked);
-      span.textContent = i18n(this.checked ? "admin.validated" : "admin.validate");
-    });
-
-    label.appendChild(cb);
-    label.appendChild(span);
-    actionCell.appendChild(label);
   }
 
   document.addEventListener("keydown", function (e) {
@@ -5652,8 +5443,7 @@
     var urls = [];
     items.forEach(function (item) {
       var src = getAudioSrc(item.row, item.globalIndex);
-      // An admin's upload from this session lives only in memory (blob:); it can't be saved.
-      if (src && src.indexOf("blob:") !== 0) urls.push(src);
+      if (src) urls.push(src);
     });
     return urls;
   }

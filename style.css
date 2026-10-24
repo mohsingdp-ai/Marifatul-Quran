@@ -1349,8 +1349,7 @@ body.has-docked-player {
 
 /* Outlined text fields */
 .row-form input[type="text"],
-.row-form input[type="number"],
-.settings-admin-section input[type="password"] {
+.row-form input[type="number"] {
   width: 100%;
   min-height: 48px;
   padding: 0 1rem;
@@ -1364,14 +1363,12 @@ body.has-docked-player {
 }
 
 .row-form input[type="text"]:hover,
-.row-form input[type="number"]:hover,
-.settings-admin-section input[type="password"]:hover {
+.row-form input[type="number"]:hover {
   border-color: var(--md-on-surface);
 }
 
 .row-form input[type="text"]:focus,
-.row-form input[type="number"]:focus,
-.settings-admin-section input[type="password"]:focus {
+.row-form input[type="number"]:focus {
   outline: none;
   border-color: var(--md-primary);
   box-shadow: inset 0 0 0 1px var(--md-primary);
@@ -3129,65 +3126,6 @@ tr.playing.audio-paused .audio-play-btn {
   opacity: 1;
 }
 
-.action-cell {
-  text-align: center;
-  min-width: 110px;
-}
-
-@media (min-width: 768px) {
-  /* Lay the upload button and validate pill out side by side WITHOUT making the <td> a flex
-     container. display:flex takes the cell out of table layout, so it can no longer shrink
-     to its content and sat at a hard 200px -- which pushed the table past the 1200px page
-     width and put a scrollbar on wide screens. Inline children keep table sizing intact. */
-  .action-cell {
-    white-space: nowrap;
-  }
-  .action-cell > * {
-    vertical-align: middle;
-  }
-  .action-cell > * + * {
-    margin-inline-start: 6px;
-  }
-  /* Needs to outrank the later `.validate-label { display: flex }`, which would otherwise
-     drop the pill onto its own line now that the cell is no longer a flex container. */
-  .action-cell > .validate-label {
-    display: inline-flex;
-    margin-top: 0;
-  }
-}
-
-.validate-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  margin-top: 6px;
-  cursor: pointer;
-  user-select: none;
-}
-.validate-label .validate-check {
-  display: none;
-}
-.validate-label span {
-  display: inline-flex;
-  align-items: center;
-  height: 28px;
-  padding: 0 0.6rem;
-  border-radius: var(--md-shape-sm);
-  border: 1px solid var(--md-outline-variant);
-  background: transparent;
-  color: var(--md-on-surface-variant);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
-}
-.validate-label.validated span {
-  border-color: transparent;
-  background: var(--md-success-container);
-  color: var(--md-on-success-container);
-}
-
 .audio-cell .no-recording {
   display: inline-block;
   padding: 0.25rem 0.5rem;
@@ -3680,88 +3618,6 @@ tr.playing.audio-paused .audio-play-btn {
   box-shadow: inset 0 0 0 1px var(--md-primary);
 }
 
-.toolbar-volume-wrap {
-  display: none;
-}
-
-.toolbar-volume-icon {
-  font-size: 1rem;
-  line-height: 1;
-  opacity: 0.85;
-  user-select: none;
-}
-
-/* --- Sliders (volume) --- */
-.toolbar-volume-range,
-.settings-volume-range {
-  height: 20px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  margin: 0;
-}
-
-.toolbar-volume-range {
-  width: 5.5rem;
-  max-width: 28vw;
-}
-
-.settings-volume-range {
-  flex: 1;
-  min-width: 140px;
-  max-width: 260px;
-}
-
-.toolbar-volume-range::-webkit-slider-runnable-track,
-.settings-volume-range::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-highest);
-}
-
-.toolbar-volume-range::-moz-range-track,
-.settings-volume-range::-moz-range-track {
-  height: 4px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-surface-container-highest);
-}
-
-.settings-volume-range::-moz-range-progress {
-  height: 4px;
-  border-radius: var(--md-shape-full);
-  background: var(--md-primary);
-}
-
-.toolbar-volume-range::-webkit-slider-thumb,
-.settings-volume-range::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  margin-top: -8px;
-  border-radius: 50%;
-  border: none;
-  background: var(--md-primary);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--md-primary) 12%, transparent);
-  transition: box-shadow var(--md-duration-short) var(--md-easing-standard);
-  cursor: pointer;
-}
-
-.toolbar-volume-range::-moz-range-thumb,
-.settings-volume-range::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: none;
-  background: var(--md-primary);
-  cursor: pointer;
-}
-
-.settings-volume-range:hover::-webkit-slider-thumb {
-  box-shadow: 0 0 0 10px color-mix(in srgb, var(--md-primary) 12%, transparent);
-}
-
 .settings-volume-row {
   display: flex;
   align-items: center;
@@ -4119,12 +3975,6 @@ tr.playing.audio-paused .audio-play-btn {
   flex-direction: row-reverse;
 }
 
-/* Admin-only; on a phone it takes a line of its own after the transport. */
-.ruku-table .action-cell {
-  grid-area: auto;
-  grid-column: 1 / -1;
-}
-
 /* Let the cell's children become items of the row's grid, so the play button
    leads the header while the transport drops to its own line. */
 .ruku-table tbody tr[data-global-index] > td.col-audio { display: contents; }
@@ -4229,12 +4079,6 @@ tr.playing.audio-paused .audio-play-btn {
   height: 22px;
 }
 
-/* Admin-only. On its own full-width line it added a third row to every card in the list;
-   it shares the title's line now, above the hifz pill it belongs beside. */
-.ruku-table .action-cell { justify-self: start; align-self: center; }
-.ruku-table .validate-label { margin-top: 0; }
-.ruku-table .validate-label span { font-size: 0.7rem; height: 24px; padding: 0 8px; white-space: nowrap; }
-
 /* Ayat panel spans the card it belongs to. */
 .ruku-table tbody tr.ayat-row { display: block; }
 .ruku-table tbody tr.ayat-row > td.ayat-cell { display: block; padding: 0; }
@@ -4252,11 +4096,11 @@ tr.playing.audio-paused .audio-play-btn {
    count sits at the right beside the icons, so every card's star lands on the same column. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
-    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto;
+    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto;
     grid-template-areas:
-      "play ruku   ruku   act tools"
-      "play arabic verses act tools"
-      "tx   tx     tx     tx  tx";
+      "play ruku   ruku   tools"
+      "play arabic verses tools"
+      "tx   tx     tx     tx";
     column-gap: 0.7rem;
     row-gap: 0.2rem;
     padding: 0.75rem 0.85rem;
@@ -4295,11 +4139,6 @@ tr.playing.audio-paused .audio-play-btn {
     display: block;
   }
 
-  .ruku-table .action-cell {
-    grid-area: act;
-    grid-column: auto;
-    justify-self: end;
-  }
 
   .ruku-table .col-verses {
     margin-inline-start: 0.4rem;
