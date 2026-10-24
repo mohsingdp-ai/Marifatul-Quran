@@ -414,8 +414,16 @@ function mark(right, q) {
 }
 
 // Word by word, and Build the ayah: one word at a time, four choices.
+// The link names the ayah in play ("at"), so a refresh or a shared link opens on it.
+function markPlace() {
+  var q = new URLSearchParams(location.search);
+  q.set("at", round.ayahs[round.a].n);
+  history.replaceState(null, "", "?" + q);
+}
+
 function ask() {
   var ayah = round.ayahs[round.a], q = ayah.words[round.w];
+  if (round.w === 0) markPlace();
   var showAr = kind === "wbw" && mode === "ar2ur"; // the word is shown, its meaning is asked
   main.textContent = "";
   main.append.apply(main, header());
@@ -538,6 +546,7 @@ if (SURAH_KEYS[qs.get("surah")]) { by = "surah"; surahSel.value = Number(qs.get(
 fillAyahs();
 if (qs.get("ayah") && ayahSel.querySelector('option[value="' + Number(qs.get("ayah")) + '"]')) ayahSel.value = Number(qs.get("ayah"));
 if (QUIZZES[qs.get("quiz")]) kind = qs.get("quiz");
+if (qs.get("at")) startFrom = Number(qs.get("at"));
 
 paraSel.onchange = function () { fillRukus(); start(); };
 rukuSel.onchange = function () { fillAyahs(); start(); };
