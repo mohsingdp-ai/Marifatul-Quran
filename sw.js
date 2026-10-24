@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v31";
+const CACHE = "mq-v32";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -129,6 +129,7 @@ function audioCacheResponse(cached, request) {
 const STATIC = [
   "./",
   "./index.html",
+  "./quiz.html",
   "./style.css",
   "./app.js",
   "./material.js",

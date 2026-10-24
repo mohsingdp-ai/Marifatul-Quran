@@ -2577,7 +2577,7 @@ html[data-mushaf^="indopak"] .ayat-item.is-reciting .ayat-num {
 
 /* Hifz tracking disabled: hide the meter and the whole Hifz column. */
 html[data-hifz="off"] .hifz-meter,
-html[data-hifz="off"] .col-hifz {
+html[data-hifz="off"] .col-tools .hifz-controls {
   display: none;
 }
 
@@ -3962,9 +3962,9 @@ tr.playing.audio-paused .audio-play-btn {
      sits to the star's left so the star lines up under the two icons. */
   grid-template-columns: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
-    "play ruku   ruku   wa"
-    "play arabic arabic dl"
-    "play verses verses hifz"
+    "play ruku   ruku   tools"
+    "play arabic arabic tools"
+    "play verses verses tools"
     "tx   tx     tx     tx";
   align-items: center;
   column-gap: 0.6rem;
@@ -4068,7 +4068,9 @@ tr.playing.audio-paused .audio-play-btn {
    apart. */
 .ruku-table .audio-share-wa-btn,
 .ruku-table .audio-offline-btn,
-.ruku-table .hifz-mark {
+.ruku-table .hifz-mark,
+.ruku-table .row-quiz-btn,
+.ruku-table .row-more-btn {
   width: 32px;
   height: 32px;
 }
@@ -4090,17 +4092,27 @@ tr.playing.audio-paused .audio-play-btn {
   color: var(--md-on-secondary-container);
 }
 
-.ruku-table .col-hifz {
-  grid-area: hifz;
+/* Phone: the tools stack three to a column at the card's end, share, download and the star
+   first, as before; more pinned tools start a new column inward, the menu button last. */
+.ruku-table tbody tr[data-global-index] > td.col-tools {
+  grid-area: tools;
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  direction: rtl;
   justify-self: end;
   align-self: center;
+  align-items: center;
+  justify-items: end;
+  column-gap: 0.15rem;
   min-width: 0;
 }
 
-.ruku-table .audio-share-wa-btn,
-.ruku-table .audio-offline-btn {
-  justify-self: end;
-}
+.ruku-table .col-tools > * { direction: ltr; }
+.ruku-table .col-tools > .hifz-controls { order: 1; }
+.ruku-table .col-tools > .row-quiz-btn { order: 2; }
+.ruku-table .col-tools > .row-more-btn { order: 3; }
+.ruku-table .col-tools > .tool-unpinned { display: none; }
 
 /* Count first, check last: the check is the item that lines up under the icons. */
 .ruku-table .hifz-controls {
@@ -4118,8 +4130,6 @@ tr.playing.audio-paused .audio-play-btn {
 .ruku-table tbody tr[data-global-index] > td.col-audio { display: contents; }
 
 .ruku-table .audio-play-btn { grid-area: play; }
-.ruku-table .audio-share-wa-btn { grid-area: wa; }
-.ruku-table .audio-offline-btn { grid-area: dl; }
 
 /* Rows with nothing to play still need their cell's children placed. */
 .ruku-table .no-recording,
@@ -4242,21 +4252,23 @@ tr.playing.audio-paused .audio-play-btn {
    count sits at the right beside the icons, so every card's star lands on the same column. */
 @media (min-width: 641px) {
   .ruku-table tbody tr[data-global-index] {
-    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto auto auto;
+    grid-template-columns: auto minmax(0, auto) minmax(0, 1fr) auto auto;
     grid-template-areas:
-      "play ruku   ruku   act hifz wa dl"
-      "play arabic verses act hifz wa dl"
-      "tx   tx     tx     tx  tx   tx tx";
+      "play ruku   ruku   act tools"
+      "play arabic verses act tools"
+      "tx   tx     tx     tx  tx";
     column-gap: 0.7rem;
     row-gap: 0.2rem;
     padding: 0.75rem 0.85rem;
   }
 
-  /* The check spans both rows like the icons, so check, share and download sit inline. */
-  .ruku-table .col-hifz {
-    justify-self: end;
-    align-self: center;
+  /* Wide: the tools in one line, the check first. */
+  .ruku-table tbody tr[data-global-index] > td.col-tools {
+    display: flex;
+    direction: ltr;
   }
+
+  .ruku-table .col-tools > .hifz-controls { order: 0; }
 
   /* Wide screen: surah-led title, "78 النبأ", and "1–30 · 31–40" behind the book glyph. */
   .ruku-title-wide {
@@ -4373,4 +4385,71 @@ tr.playing.audio-paused .audio-play-btn {
   .md-ripple {
     display: none;
   }
+}
+
+/* Card tools: the quizzes' icons and the menu button, styled like share and download. */
+.row-quiz-btn,
+.row-more-btn,
+.row-pin-btn {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--md-shape-full);
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.row-quiz-btn { color: var(--md-primary); }
+
+.row-quiz-btn:hover,
+.row-more-btn:hover,
+.row-pin-btn:hover {
+  background: color-mix(in srgb, var(--md-primary) 8%, transparent);
+}
+
+.row-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 220px;
+  padding: 0.5rem 0;
+  background: var(--md-menu);
+  border-radius: var(--md-shape-sm);
+  box-shadow: var(--md-elevation-2);
+  animation: md-menu-in var(--md-duration-short) var(--md-easing-emphasized);
+}
+
+.row-menu-line {
+  display: flex;
+  align-items: center;
+  padding-inline-end: 0.4rem;
+}
+
+.row-menu-act svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--md-on-surface-variant);
+}
+
+/* Pinned: a filled, accent pin. */
+.row-pin-btn[aria-pressed="true"] { color: var(--md-primary); }
+.row-pin-btn[aria-pressed="true"] svg { fill: currentColor; }
+
+/* "Quiz" heads the quizzes in the card menu, under a divider. */
+.row-menu-title {
+  margin-top: 0.4rem;
+  padding: 0.75rem 1rem 0.25rem;
+  border-top: 1px solid var(--md-outline-variant);
+  color: var(--md-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }

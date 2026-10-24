@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quran Quiz</title>
+<style>
+@font-face { font-family: "Noto Sans Arabic UI"; src: url("asset/fonts/noto-sans-arabic-600.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+:root {
+  --primary: #0a7a7a; --on-primary: #fff; --surface: #e9f3f2; --card: #fff; --text: #0f2424;
+  --muted: #3d5a59; --outline: #b5d0cf; --ok: #2e7d32; --ok-bg: #c8e6c9; --bad: #b3261e; --bad-bg: #f9dedc;
+  --now: #ffe4a6; --on-now: #2b1d00; --menu: #fff; --sel: #cdeceb; --gold: #8a6a12;
+  --bar: linear-gradient(135deg, #0a3d3d 0%, #0d4f4f 45%, #0f6060 100%);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --primary: #3ddbd9; --on-primary: #002222; --surface: #0b1a1a; --card: #142828; --text: #e6f4f3;
+    --muted: #9dbcbb; --outline: #2c4a49; --ok: #81c784; --ok-bg: #1d3b20; --bad: #f2b8b5; --bad-bg: #4a1715;
+    --now: #5a4510; --on-now: #ffe4a6; --menu: #183333; --sel: #1f4746; --gold: #e6c46a; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--text); font-family: system-ui, sans-serif; }
+header { background: var(--bar); color: #fff; padding: 12px 16px; }
+.top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.top h1 { margin: 0; font-size: 18px; }
+.back { background: rgba(255,255,255,.15); color: #fff; border: 0; border-radius: 10px; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer; flex: none; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.seg button { font: inherit; padding: 8px 10px; border-radius: 10px; border: 0; }
+/* Para and ruku pickers: glass pills on the bar, white chevron, like the app's para picker. */
+.pick { position: relative; min-width: 0; }
+.pick-btn { display: flex; align-items: center; gap: 8px; font: inherit; font-size: 15px; font-weight: 600; color: #fff;
+  min-height: 40px; max-width: 100%; padding: 0 34px 0 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.25); cursor: pointer;
+  background: rgba(255,255,255,.14) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 12px center / 14px; }
+.pick-btn:hover { background-color: rgba(255,255,255,.22); }
+.pick-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.pick-btn .pick-name { color: #ffe4a6; font-weight: 400; }
+/* The list: number on the left, the Arabic name in gold on the right, a tick on the current one. */
+.pick-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 10; width: min(18rem, calc(100vw - 32px));
+  max-height: min(60vh, 26rem); overflow-y: auto; padding: 6px 0; border-radius: 12px; background: var(--menu);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35); scrollbar-width: thin; }
+.pick-item { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%;
+  min-height: 48px; padding: 0 16px 0 34px; border: 0; background: none; color: var(--text); font: inherit; font-size: 15px;
+  font-weight: 500; text-align: start; cursor: pointer; }
+.pick-item:hover, .pick-item:focus-visible { background: color-mix(in srgb, var(--text) 8%, transparent); outline: none; }
+.pick-item[aria-selected="true"] { background: var(--sel); }
+.pick-item[aria-selected="true"]::before { content: "✓"; position: absolute; left: 12px; font-size: 14px; }
+.pick-name { font-family: "Noto Sans Arabic UI", serif; font-size: 18px; line-height: 1.5; color: var(--gold); direction: rtl; white-space: nowrap; }
+.seg { display: flex; background: rgba(255,255,255,.15); border-radius: 12px; padding: 3px; }
+.seg button { background: transparent; color: #fff; }
+.seg button.on { background: #fff; color: #0a3d3d; font-weight: 600; }
+/* Hint switches: each on or off by itself. */
+/* Hint switches: separate glass pills like the pickers, each on or off by itself.
+   On: open eye, bright, filled. Off: crossed eye, faded, outline only. */
+.hints { display: flex; gap: 8px; }
+.hint { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 14px; color: rgba(255,255,255,.6); background: transparent; border: 1px dashed rgba(255,255,255,.3); }
+.hint[aria-pressed="true"] { color: #fff; font-weight: 600; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.45); }
+.hint:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+main { max-width: 560px; margin: 0 auto; padding: 16px; }
+.ar { font-family: "Noto Sans Arabic UI", serif; direction: rtl; }
+.ur { font-family: "Noto Nastaliq Urdu", "Noto Sans Arabic UI", serif; direction: rtl; line-height: 2.2; }
+/* Quiz cards */
+.cards { display: grid; gap: 12px; }
+.card { display: flex; align-items: center; gap: 14px; text-align: right; direction: rtl; width: 100%; padding: 16px; border-radius: 16px;
+  border: 1px solid var(--outline); background: var(--card); color: var(--text); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card .icon { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; flex: none;
+  color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+.card > div:nth-child(2) { flex: 1; }
+.card .go { color: var(--muted); flex: none; }
+.card b { display: block; font-size: 20px; font-weight: 400; }
+.card span { color: var(--muted); font-size: 14px; }
+/* Play */
+.progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.bar { height: 6px; background: var(--outline); border-radius: 3px; overflow: hidden; margin-bottom: 16px; }
+.bar i { display: block; height: 100%; background: var(--primary); transition: width .3s; }
+/* The ayah as it is built, word by word. */
+.ayah { background: var(--card); border-radius: 16px; padding: 14px 10px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  display: flex; flex-wrap: wrap; direction: rtl; gap: 6px 4px; justify-content: center; min-height: 80px; }
+.w { display: flex; flex-direction: column; align-items: center; padding: 4px 6px; border-radius: 10px; min-width: 44px; }
+.w .ar { font-size: 26px; line-height: 1.8; }
+.w .ur { font-size: 13px; line-height: 1.9; color: var(--muted); min-height: 1.9em; text-align: center; max-width: 9em; }
+.w.now { background: var(--now); color: var(--on-now); outline: 2px solid var(--primary); }
+.w.now .ur { color: var(--on-now); }
+.w.hide .ar { visibility: hidden; }
+.w.ok .ur { color: var(--ok); }
+.w.bad .ur { color: var(--bad); }
+.ask { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
+.ask b { display: block; color: var(--text); font-size: 22px; font-weight: 400; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.opts button { font-size: 17px; line-height: 2; padding: 8px; min-height: 64px; border-radius: 14px; border: 2px solid var(--outline);
+  background: var(--card); color: var(--text); cursor: pointer; }
+.opts button.ar { font-size: 26px; line-height: 1.6; }
+.opts button.ok { border-color: var(--ok); background: var(--ok-bg); }
+.opts button.bad { border-color: var(--bad); background: var(--bad-bg); }
+.opts button:disabled { cursor: default; }
+/* Jumbled words: tap them in order. */
+.tray { display: flex; flex-wrap: wrap; direction: rtl; gap: 8px; justify-content: center; }
+.tray button { font-size: 24px; padding: 4px 14px; border-radius: 12px; border: 2px solid var(--outline); background: var(--card); color: var(--text); cursor: pointer; }
+.tray button.bad { border-color: var(--bad); background: var(--bad-bg); animation: shake .3s; }
+@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.trans { background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: 17px; text-align: center; }
+.trans small { display: block; font-family: system-ui, sans-serif; color: var(--muted); font-size: 12px; }
+.next { width: 100%; margin-top: 16px; padding: 14px; font-size: 17px; border: 0; border-radius: 14px; background: var(--primary); color: var(--on-primary); font-weight: 600; }
+.done { text-align: center; }
+.done .score { font-size: 48px; font-weight: 700; color: var(--primary); }
+.missed { background: var(--card); border-radius: 14px; padding: 8px 16px; margin: 16px 0; }
+.missed > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--outline); padding: 4px 0; direction: rtl; }
+.missed > div:last-child { border: 0; }
+.missed .ar { font-size: 24px; }
+[hidden] { display: none !important; }
+@media (prefers-reduced-motion: reduce) { .tray button.bad { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <button class="back" id="back" aria-label="Back"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>
+    <h1 id="title"></h1>
+  </div>
+  <div class="row">
+    <div class="pick"><select id="para" hidden></select><button class="pick-btn" aria-label="Para" aria-haspopup="listbox" aria-expanded="false"></button></div>
+    <div class="pick"><select id="ruku" hidden></select><button class="pick-btn" aria-label="Ruku" aria-haspopup="listbox" aria-expanded="false"></button></div>
+    <div class="seg" id="modes" role="group" aria-label="Mode">
+      <button data-mode="ar2ur" class="on">لفظ ← معنی</button>
+      <button data-mode="ur2ar">معنی ← لفظ</button>
+    </div>
+    <div class="hints" id="hints" role="group" aria-label="Hints">
+      <button class="hint" data-hint="meaning" data-label="لفظ کا معنی" aria-pressed="true"></button>
+      <button class="hint" data-hint="trans" data-label="آیت کا ترجمہ" aria-pressed="true"></button>
+    </div>
+  </div>
+</header>
+<main id="main"></main>
+
+<script src="verses.js"></script>
+<script>
+"use strict";
+var QUIZZES = {
+  wbw: { color: "#0a9a9a", icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>', title: "لفظ بہ لفظ", desc: "آیت کا ہر لفظ اور اس کا مطلب" },
+  build: { color: "#c08a1a", icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', title: "آیت بنائیں", desc: "ترجمہ دیکھیں، یاد سے اگلا لفظ چنیں" },
+  jumble: { color: "#7a5cc4", icon: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>', title: "الفاظ ترتیب دیں", desc: "بکھرے الفاظ کو صحیح ترتیب میں رکھیں" }
+};
+var main = document.getElementById("main");
+var paraSel = document.getElementById("para");
+var rukuSel = document.getElementById("ruku");
+var modes = document.getElementById("modes");
+var hintsEl = document.getElementById("hints");
+// Hints while building an ayah: the words' meanings and the ayah's translation. This viewer's choice.
+var hints = { meaning: true, trans: true };
+try { Object.assign(hints, JSON.parse(localStorage.getItem("mq-quiz-hints"))); } catch (e) { /* defaults */ }
+var mode = "ar2ur";
+var kind = null; // which quiz; null = the cards
+var cache = {};
+var round;
+
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function svg(paths, size) {
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths + '</svg>';
+}
+function bare(s) { return s.replace(/[ً-ٰٟۖ-ۭ﻿]/g, ""); }
+function getJson(url) {
+  if (!cache[url]) cache[url] = fetch(url).then(function (r) { return r.json(); });
+  return cache[url];
+}
+function rukusOf(para) { return Object.keys(QURAN_VERSES).filter(function (k) { return k.split("|")[0] === String(para); }).map(function (k) { return k.split("|")[1]; }); }
+
+// Ayat of the ruku, in order, each with its words { ar, ur } and its full translation.
+function ayahsOf(wm, tr, key) {
+  var v = QURAN_VERSES[key];
+  return v.ayahs.map(function (a) {
+    var id = v.surahNumber + ":" + a.n;
+    return { words: (wm[id] || []).map(function (w) { return { ar: w[0], ur: (w[2] || "").trim() }; }), trans: tr[id] || "" };
+  }).filter(function (a) { return a.words.length; });
+}
+
+// Para and ruku: hidden selects hold the value; a pill shows it and opens a list like the app's para menu.
+var PARA_AR = ["الٓمٓ", "سَيَقُولُ", "تِلْكَ ٱلرُّسُلُ", "لَن تَنَالُوا۟", "وَٱلْمُحْصَنَٰتُ", "لَّا يُحِبُّ ٱللَّهُ", "وَإِذَا سَمِعُوا۟",
+  "وَلَوْ أَنَّنَا", "قَالَ ٱلْمَلَأُ", "وَٱعْلَمُوٓا۟", "يَعْتَذِرُونَ", "وَمَا مِن دَآبَّةٍۢ", "وَمَآ أُبَرِّئُ", "رُّبَمَا", "سُبْحَٰنَ ٱلَّذِىٓ",
+  "قَالَ أَلَمْ", "ٱقْتَرَبَ لِلنَّاسِ", "قَدْ أَفْلَحَ", "وَقَالَ ٱلَّذِينَ", "أَمَّنْ خَلَقَ", "ٱتْلُ مَآ أُوحِىَ", "وَمَن يَقْنُتْ",
+  "وَمَا لِىَ", "فَمَنْ أَظْلَمُ", "إِلَيْهِ يُرَدُّ", "حمٓ", "قَالَ فَمَا خَطْبُكُمْ", "قَدْ سَمِعَ ٱللَّهُ", "تَبَٰرَكَ ٱلَّذِى", "عَمَّ"];
+var pickMenu = el("div", "pick-menu"), pickFor = null;
+pickMenu.setAttribute("role", "listbox");
+
+function syncPicks() {
+  [paraSel, rukuSel].forEach(function (sel) {
+    var o = sel.options[sel.selectedIndex], b = sel.nextElementSibling;
+    b.textContent = "";
+    if (!o) return;
+    b.append(el("span", "", o.textContent));
+    if (sel === rukuSel) b.append(el("span", "pick-name", o.dataset.name));
+  });
+}
+function closePick() {
+  if (!pickFor) return;
+  pickFor.nextElementSibling.setAttribute("aria-expanded", "false");
+  pickMenu.remove();
+  pickFor = null;
+}
+function openPick(sel) {
+  var same = pickFor === sel;
+  closePick();
+  if (same) return;
+  pickMenu.textContent = "";
+  Array.prototype.forEach.call(sel.options, function (o) {
+    var it = el("button", "pick-item");
+    it.type = "button";
+    it.setAttribute("role", "option");
+    it.setAttribute("aria-selected", o.selected ? "true" : "false");
+    it.append(el("span", "", o.textContent), el("span", "pick-name", o.dataset.name));
+    it.onclick = function () {
+      closePick();
+      sel.nextElementSibling.focus();
+      if (sel.value !== o.value) { sel.value = o.value; sel.onchange(); }
+    };
+    pickMenu.append(it);
+  });
+  sel.parentNode.append(pickMenu);
+  // Keep the list on screen: slide it left when the pill sits near the right edge.
+  pickMenu.style.left = "0px";
+  var over = pickMenu.getBoundingClientRect().right - (document.documentElement.clientWidth - 16);
+  if (over > 0) pickMenu.style.left = -over + "px";
+  sel.nextElementSibling.setAttribute("aria-expanded", "true");
+  pickFor = sel;
+  var cur = pickMenu.querySelector('[aria-selected="true"]');
+  if (cur) { pickMenu.scrollTop = cur.offsetTop - (pickMenu.clientHeight - cur.offsetHeight) / 2; cur.focus({ preventScroll: true }); }
+}
+pickMenu.addEventListener("keydown", function (e) {
+  var items = Array.prototype.slice.call(pickMenu.children), at = items.indexOf(document.activeElement);
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    var next = items[Math.min(items.length - 1, Math.max(0, at + (e.key === "ArrowDown" ? 1 : -1)))];
+    if (next) next.focus();
+  } else if (e.key === "Escape") {
+    var btn = pickFor.nextElementSibling;
+    closePick(); btn.focus();
+  }
+});
+document.addEventListener("click", function (e) { if (pickFor && !e.target.closest(".pick")) closePick(); });
+
+function setUrl() {
+  syncPicks();
+  var q = new URLSearchParams({ para: paraSel.value, ruku: rukuSel.value });
+  if (kind) q.set("quiz", kind);
+  history.replaceState(null, "", "?" + q);
+}
+
+function showMenu() {
+  kind = null; setUrl();
+  document.getElementById("title").textContent = "آزمائش · Quiz";
+  modes.hidden = hintsEl.hidden = true;
+  main.textContent = "";
+  var cards = el("div", "cards");
+  Object.keys(QUIZZES).forEach(function (id) {
+    var g = QUIZZES[id], c = el("button", "card"), text = el("div");
+    text.append(el("b", "ur", g.title), el("span", "", g.desc));
+    var icon = el("div", "icon");
+    icon.innerHTML = svg(g.icon, 28);
+    var go = el("div", "go"); go.innerHTML = svg('<polyline points="15 18 9 12 15 6"/>', 20);
+    c.style.setProperty("--c", g.color);
+    c.append(icon, text, go);
+    c.onclick = function () { kind = id; start(); };
+    cards.append(c);
+  });
+  main.append(cards);
+}
+
+function start() {
+  if (!kind) return showMenu();
+  setUrl();
+  document.getElementById("title").textContent = QUIZZES[kind].title;
+  modes.hidden = kind !== "wbw";
+  hintsEl.hidden = kind === "wbw";
+  var para = paraSel.value, key = para + "|" + rukuSel.value;
+  main.textContent = "…";
+  Promise.all([getJson("asset/word-meanings/para-" + para + ".json"), getJson("asset/translations/maududi/para-" + para + ".json")])
+    .then(function (d) {
+      var ayahs = ayahsOf(d[0], d[1], key), pool = [];
+      ayahs.forEach(function (a) { pool = pool.concat(a.words); });
+      round = { ayahs: ayahs, pool: pool, total: pool.length, a: 0, w: 0, done: 0, score: 0, missed: [], marks: [] };
+      kind === "jumble" ? jumble() : ask();
+    });
+}
+
+// Three wrong choices from the ruku: never the same letters or the same meaning as the answer.
+function choices(q) {
+  var seen = {}, out = [q];
+  seen[bare(q.ar)] = seen[q.ur] = 1;
+  shuffle(round.pool.slice()).forEach(function (w) {
+    if (out.length < 4 && w.ur && !seen[bare(w.ar)] && !seen[w.ur]) { seen[bare(w.ar)] = seen[w.ur] = 1; out.push(w); }
+  });
+  return shuffle(out);
+}
+
+// The ayah up to the current word, each with its meaning; words still to come stay hidden. current = -1 shows it whole.
+function ayahCard(ayah, current) {
+  var card = el("div", "ayah");
+  ayah.words.forEach(function (w, i) {
+    if (current >= 0 && i > current) return;
+    var cls = "w", hidden = kind !== "wbw" || mode === "ur2ar"; // the word to find is hidden, its meaning shown
+    if (i === current) cls += " now" + (hidden ? " hide" : "");
+    else if (round.marks[i]) cls += " " + round.marks[i];
+    var box = el("div", cls);
+    box.append(el("span", "ar", w.ar));
+    // The empty box carries the meaning of the word that goes there, so it can be found.
+    var meaning = current < 0 || kind === "wbw" || hints.meaning; // a finished ayah always shows them
+    box.append(el("span", "ur", meaning && !(i === current && !hidden) ? w.ur : ""));
+    card.append(box);
+  });
+  return card;
+}
+
+function header() {
+  var prog = el("div", "progress");
+  prog.append(el("span", "", "آیت " + (round.a + 1) + " / " + round.ayahs.length), el("span", "", "✓ " + round.score + " / " + round.done));
+  var bar = el("div", "bar"), fill = el("i"); fill.style.width = (round.done / round.total * 100) + "%"; bar.append(fill);
+  return [prog, bar];
+}
+
+function mark(right, q) {
+  round.marks[round.w] = right ? "ok" : "bad";
+  round.done++;
+  if (right) round.score++; else round.missed.push(q);
+}
+
+// Word by word, and Build the ayah: one word at a time, four choices.
+function ask() {
+  var ayah = round.ayahs[round.a], q = ayah.words[round.w];
+  var showAr = kind === "wbw" && mode === "ar2ur"; // the word is shown, its meaning is asked
+  main.textContent = "";
+  main.append.apply(main, header());
+  main.append(ayahCard(ayah, round.w));
+
+  var prompt;
+  if (kind === "build") { prompt = el("div", "ask", "آیت کا اگلا لفظ کون سا ہے؟"); if (hints.trans) prompt.append(el("b", "ur", ayah.trans)); }
+  else if (showAr) prompt = el("div", "ask", "نمایاں لفظ کا مطلب کیا ہے؟");
+  else { prompt = el("div", "ask", "اس مطلب کا لفظ کون سا ہے؟"); prompt.append(el("b", "ur", q.ur)); }
+  main.append(prompt);
+
+  var opts = choices(q), box = el("div", "opts");
+  opts.forEach(function (o) {
+    var b = el("button", showAr ? "ur" : "ar", showAr ? o.ur : o.ar);
+    b.onclick = function () {
+      var right = o === q;
+      box.querySelectorAll("button").forEach(function (x) { x.disabled = true; });
+      b.classList.add(right ? "ok" : "bad");
+      box.children[opts.indexOf(q)].classList.add("ok");
+      mark(right, q);
+      setTimeout(function () { ++round.w < ayah.words.length ? ask() : ayahDone(); }, right ? 600 : 1600);
+    };
+    box.append(b);
+  });
+  main.append(box);
+}
+
+// Jumbled words: all the ayah's words shuffled; tap them in order.
+function jumble() {
+  var ayah = round.ayahs[round.a];
+  round.tray = round.tray || shuffle(ayah.words.slice());
+  main.textContent = "";
+  main.append.apply(main, header());
+  main.append(ayahCard(ayah, round.w));
+  var prompt = el("div", "ask", "الفاظ کو صحیح ترتیب میں چنیں"); if (hints.trans) prompt.append(el("b", "ur", ayah.trans));
+  main.append(prompt);
+  var tray = el("div", "tray"), slipped = false;
+  round.tray.forEach(function (w) {
+    var b = el("button", "ar", w.ar);
+    b.onclick = function () {
+      var q = ayah.words[round.w];
+      // Same letters count as right, so a word that comes twice can go in either place.
+      if (bare(w.ar) !== bare(q.ar)) {
+        b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad");
+        slipped = true;
+        return;
+      }
+      mark(!slipped, q);
+      round.tray.splice(round.tray.indexOf(w), 1);
+      ++round.w < ayah.words.length ? jumble() : ayahDone();
+    };
+    tray.append(b);
+  });
+  main.append(tray);
+}
+
+function ayahDone() {
+  var ayah = round.ayahs[round.a];
+  main.textContent = "";
+  main.append.apply(main, header());
+  main.append(ayahCard(ayah, -1));
+  var t = el("div", "trans ur", ayah.trans); t.prepend(el("small", "", "ترجمہ — مولانا مودودی"));
+  main.append(t);
+  var last = round.a + 1 >= round.ayahs.length;
+  var next = el("button", "next", last ? "نتیجہ دیکھیں" : "اگلی آیت ←");
+  next.onclick = function () {
+    if (last) return finish();
+    round.a++; round.w = 0; round.marks = []; round.tray = null;
+    kind === "jumble" ? jumble() : ask();
+  };
+  main.append(next);
+  next.focus();
+}
+
+function finish() {
+  main.textContent = "";
+  var d = el("div", "done");
+  d.append(el("div", "score", round.score + " / " + round.total));
+  d.append(el("p", "", round.missed.length ? "یہ الفاظ دوبارہ دیکھیں:" : "ماشاءاللہ! سب درست"));
+  if (round.missed.length) {
+    var m = el("div", "missed");
+    round.missed.forEach(function (w) { var r = el("div"); r.append(el("span", "ar", w.ar), el("span", "ur", w.ur)); m.append(r); });
+    d.append(m);
+  }
+  var again = el("button", "next", "دوبارہ کوشش کریں"); again.onclick = start;
+  d.append(again);
+  main.append(d);
+}
+
+function fillRukus() {
+  rukuSel.textContent = "";
+  // Each ruku carries its surah's name, so the list says where it is.
+  rukusOf(paraSel.value).forEach(function (r) {
+    var o = el("option", "", r === "R0" ? "Fatiha" : "Ruku " + r.slice(1));
+    o.value = r; o.dataset.name = QURAN_VERSES[paraSel.value + "|" + r].surahArabic;
+    rukuSel.append(o);
+  });
+}
+
+for (var p = 1; p <= 30; p++) if (rukusOf(p).length) { var o = el("option", "", "Para " + p); o.value = p; o.dataset.name = PARA_AR[p - 1]; paraSel.append(o); }
+var qs = new URLSearchParams(location.search);
+if (qs.get("para") && rukusOf(qs.get("para")).length) paraSel.value = qs.get("para");
+fillRukus();
+if (qs.get("ruku") && rukusOf(paraSel.value).indexOf(qs.get("ruku")) >= 0) rukuSel.value = qs.get("ruku");
+if (QUIZZES[qs.get("quiz")]) kind = qs.get("quiz");
+
+paraSel.onchange = function () { fillRukus(); start(); };
+rukuSel.onchange = start;
+[paraSel, rukuSel].forEach(function (sel) {
+  sel.nextElementSibling.onclick = function (e) { e.stopPropagation(); openPick(sel); };
+});
+document.getElementById("back").onclick = function () {
+  if (kind) showMenu();
+  else location.href = "./?para=" + paraSel.value + "&ruku=" + rukuSel.value;
+};
+var EYE = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+var EYE_OFF = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+function paintHint(b) {
+  var on = hints[b.dataset.hint];
+  b.setAttribute("aria-pressed", String(on));
+  b.innerHTML = svg(on ? EYE : EYE_OFF, 16);
+  b.append(el("span", "", b.dataset.label));
+}
+hintsEl.querySelectorAll("button").forEach(function (b) {
+  paintHint(b);
+  b.onclick = function () {
+    hints[b.dataset.hint] = !hints[b.dataset.hint];
+    paintHint(b);
+    try { localStorage.setItem("mq-quiz-hints", JSON.stringify(hints)); } catch (e) { /* this visit only */ }
+    // Redraw the word being asked; a finished ayah already shows everything.
+    if (round && round.w < round.ayahs[round.a].words.length) kind === "jumble" ? jumble() : ask();
+  };
+});
+modes.querySelectorAll("button").forEach(function (b) {
+  b.onclick = function () {
+    modes.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    mode = b.dataset.mode; start();
+  };
+});
+start();
+</script>
+</body>
+</html>
