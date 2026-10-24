@@ -92,11 +92,6 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .opts button.ok { border-color: var(--ok); background: var(--ok-bg); }
 .opts button.bad { border-color: var(--bad); background: var(--bad-bg); }
 .opts button:disabled { cursor: default; }
-/* Jumbled words: tap them in order. */
-.tray { display: flex; flex-wrap: wrap; direction: rtl; gap: 8px; justify-content: center; }
-.tray button { font-size: 24px; padding: 4px 14px; border-radius: 12px; border: 2px solid var(--outline); background: var(--card); color: var(--text); cursor: pointer; }
-.tray button.bad { border-color: var(--bad); background: var(--bad-bg); animation: shake .3s; }
-@keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
 .trans { background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: 17px; text-align: center; }
 .trans small { display: block; font-family: system-ui, sans-serif; color: var(--muted); font-size: 12px; }
 .next { width: 100%; margin-top: 16px; padding: 14px; font-size: 17px; border: 0; border-radius: 14px; background: var(--primary); color: var(--on-primary); font-weight: 600; }
@@ -107,7 +102,6 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .missed > div:last-child { border: 0; }
 .missed .ar { font-size: 24px; }
 [hidden] { display: none !important; }
-@media (prefers-reduced-motion: reduce) { .tray button.bad { animation: none; } }
 </style>
 </head>
 <body>
@@ -136,8 +130,7 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 "use strict";
 var QUIZZES = {
   wbw: { color: "#0a9a9a", icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>', title: "لفظ بہ لفظ", desc: "آیت کا ہر لفظ اور اس کا مطلب" },
-  build: { color: "#c08a1a", icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', title: "آیت بنائیں", desc: "ترجمہ دیکھیں، یاد سے اگلا لفظ چنیں" },
-  jumble: { color: "#7a5cc4", icon: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>', title: "الفاظ ترتیب دیں", desc: "بکھرے الفاظ کو صحیح ترتیب میں رکھیں" }
+  build: { color: "#c08a1a", icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', title: "آیت بنائیں", desc: "ترجمہ دیکھیں، یاد سے اگلا لفظ چنیں" }
 };
 var main = document.getElementById("main");
 var paraSel = document.getElementById("para");
@@ -280,7 +273,7 @@ function start() {
       var ayahs = ayahsOf(d[0], d[1], key), pool = [];
       ayahs.forEach(function (a) { pool = pool.concat(a.words); });
       round = { ayahs: ayahs, pool: pool, total: pool.length, a: 0, w: 0, done: 0, score: 0, missed: [], marks: [] };
-      kind === "jumble" ? jumble() : ask();
+      ask();
     });
 }
 
@@ -355,35 +348,6 @@ function ask() {
   main.append(box);
 }
 
-// Jumbled words: all the ayah's words shuffled; tap them in order.
-function jumble() {
-  var ayah = round.ayahs[round.a];
-  round.tray = round.tray || shuffle(ayah.words.slice());
-  main.textContent = "";
-  main.append.apply(main, header());
-  main.append(ayahCard(ayah, round.w));
-  var prompt = el("div", "ask", "الفاظ کو صحیح ترتیب میں چنیں"); if (hints.trans) prompt.append(el("b", "ur", ayah.trans));
-  main.append(prompt);
-  var tray = el("div", "tray"), slipped = false;
-  round.tray.forEach(function (w) {
-    var b = el("button", "ar", w.ar);
-    b.onclick = function () {
-      var q = ayah.words[round.w];
-      // Same letters count as right, so a word that comes twice can go in either place.
-      if (bare(w.ar) !== bare(q.ar)) {
-        b.classList.remove("bad"); void b.offsetWidth; b.classList.add("bad");
-        slipped = true;
-        return;
-      }
-      mark(!slipped, q);
-      round.tray.splice(round.tray.indexOf(w), 1);
-      ++round.w < ayah.words.length ? jumble() : ayahDone();
-    };
-    tray.append(b);
-  });
-  main.append(tray);
-}
-
 function ayahDone() {
   var ayah = round.ayahs[round.a];
   main.textContent = "";
@@ -395,8 +359,8 @@ function ayahDone() {
   var next = el("button", "next", last ? "نتیجہ دیکھیں" : "اگلی آیت ←");
   next.onclick = function () {
     if (last) return finish();
-    round.a++; round.w = 0; round.marks = []; round.tray = null;
-    kind === "jumble" ? jumble() : ask();
+    round.a++; round.w = 0; round.marks = [];
+    ask();
   };
   main.append(next);
   next.focus();
@@ -458,7 +422,7 @@ hintsEl.querySelectorAll("button").forEach(function (b) {
     paintHint(b);
     try { localStorage.setItem("mq-quiz-hints", JSON.stringify(hints)); } catch (e) { /* this visit only */ }
     // Redraw the word being asked; a finished ayah already shows everything.
-    if (round && round.w < round.ayahs[round.a].words.length) kind === "jumble" ? jumble() : ask();
+    if (round && round.w < round.ayahs[round.a].words.length) ask();
   };
 });
 modes.querySelectorAll("button").forEach(function (b) {
