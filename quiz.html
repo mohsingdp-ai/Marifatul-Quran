@@ -96,6 +96,7 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .w.bad .ur, .w.bad .ar { color: var(--bad); } /* a missed word turns red in the ayah too */
 .ask { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 .ask b { display: block; color: var(--text); font-size: 22px; font-weight: 400; }
+.hint-trans { margin-top: 16px; }
 .opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .opts button { touch-action: manipulation; font-size: 17px; line-height: 2; padding: 8px; min-height: 64px; border-radius: 14px; border: 2px solid var(--outline);
   background: var(--card); color: var(--text); cursor: pointer; }
@@ -426,7 +427,7 @@ function ask() {
   main.append(ayahCard(ayah, round.w));
 
   var prompt;
-  if (kind === "build") { prompt = el("div", "ask", "آیت کا اگلا لفظ کون سا ہے؟"); if (hints.trans) prompt.append(el("b", "ur", ayah.trans)); }
+  if (kind === "build") prompt = el("div", "ask", "آیت کا اگلا لفظ کون سا ہے؟");
   else if (showAr) prompt = el("div", "ask", "نمایاں لفظ کا مطلب کیا ہے؟");
   else { prompt = el("div", "ask", "اس مطلب کا لفظ کون سا ہے؟"); prompt.append(el("b", "ur", q.ur)); }
   main.append(prompt);
@@ -442,6 +443,11 @@ function ask() {
     box.append(b);
   });
   main.append(box);
+  // Build the ayah: its translation, when shown, comes last, under the choices.
+  if (kind === "build" && hints.trans) {
+    var t = el("div", "trans ur hint-trans", ayah.trans); t.prepend(el("small", "", "ترجمہ — مولانا مودودی"));
+    main.append(t);
+  }
 }
 
 function ayahDone() {
