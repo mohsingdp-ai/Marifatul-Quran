@@ -544,7 +544,13 @@ var qs = new URLSearchParams(location.search);
 if (qs.get("para") && rukusOf(qs.get("para")).length) paraSel.value = qs.get("para");
 fillRukus();
 if (qs.get("ruku") === "all" || rukusOf(paraSel.value).indexOf(qs.get("ruku")) >= 0) rukuSel.value = qs.get("ruku");
+// Surah-wise by default; a link that names a ruku (from a ruku card) opens by para on it.
 if (SURAH_KEYS[qs.get("surah")]) { by = "surah"; surahSel.value = Number(qs.get("surah")); }
+else if (!qs.get("ruku")) {
+  // Opened on a para: its first surah, starting where the para starts (Para 3 opens Al-Baqarah at 253).
+  var first = QURAN_VERSES[scopeKeys()[0]];
+  surahSel.value = first.surahNumber; by = "surah"; startFrom = first.ayahs[0].n;
+}
 fillAyahs();
 if (qs.get("ayah") && ayahSel.querySelector('option[value="' + Number(qs.get("ayah")) + '"]')) ayahSel.value = Number(qs.get("ayah"));
 try { if (QUIZZES[localStorage.getItem("mq-quiz-kind")]) kind = localStorage.getItem("mq-quiz-kind"); } catch (e) { /* default */ }
