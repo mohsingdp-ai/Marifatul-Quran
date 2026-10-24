@@ -152,7 +152,10 @@ function svg(paths, size) {
 }
 function bare(s) { return s.replace(/[ً-ٰٟۖ-ۭ﻿]/g, ""); }
 function getJson(url) {
-  if (!cache[url]) cache[url] = fetch(url).then(function (r) { return r.json(); });
+  if (!cache[url]) cache[url] = fetch(url).then(function (r) {
+    if (!r.ok) throw new Error(r.status);
+    return r.json();
+  }).catch(function (e) { delete cache[url]; throw e; }); // a failed load is tried again next time
   return cache[url];
 }
 function rukusOf(para) { return Object.keys(QURAN_VERSES).filter(function (k) { return k.split("|")[0] === String(para); }).map(function (k) { return k.split("|")[1]; }); }
@@ -271,6 +274,11 @@ function start() {
       ayahs.forEach(function (a) { pool = pool.concat(a.words); });
       round = { ayahs: ayahs, pool: pool, total: pool.length, a: 0, w: 0, done: 0, score: 0, missed: [], marks: [] };
       ask();
+    }, function () {
+      main.textContent = "";
+      main.append(el("p", "ask", "اس پارے کا ڈیٹا نہیں مل سکا۔ انٹرنیٹ سے جڑ کر دوبارہ کوشش کریں۔"));
+      var retry = el("button", "next", "دوبارہ کوشش کریں"); retry.onclick = start;
+      main.append(retry);
     });
 }
 

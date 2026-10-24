@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v32";
+const CACHE = "mq-v33";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -150,10 +150,22 @@ const STATIC = [
   "./icon-512.png"
 ];
 
+/** Every para's word meanings and translation, so the quiz works offline on any para (~5.7 MB). */
+const QUIZ_DATA = [];
+for (let p = 1; p <= 30; p++) {
+  QUIZ_DATA.push("./asset/word-meanings/para-" + p + ".json", "./asset/translations/maududi/para-" + p + ".json");
+}
+
 self.addEventListener("install", function (e) {
   e.waitUntil(
     caches.open(CACHE).then(function (cache) {
-      return cache.addAll(STATIC);
+      // The app shell must all arrive; quiz data is saved file by file, so one failed para
+      // neither blocks the install nor costs the others (it is fetched again when opened).
+      return cache.addAll(STATIC).then(function () {
+        return Promise.all(QUIZ_DATA.map(function (url) {
+          return cache.add(url).catch(function () { /* fetched again when opened */ });
+        }));
+      });
     })
   );
   self.skipWaiting();
