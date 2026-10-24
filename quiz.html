@@ -110,6 +110,7 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
   <div class="row">
     <div class="pick"><select id="para" hidden></select><button class="pick-btn" aria-label="Para" aria-haspopup="listbox" aria-expanded="false"></button></div>
     <div class="pick"><select id="ruku" hidden></select><button class="pick-btn" aria-label="Ruku" aria-haspopup="listbox" aria-expanded="false"></button></div>
+    <div class="pick"><select id="ayah" hidden></select><button class="pick-btn" aria-label="Ayah" aria-haspopup="listbox" aria-expanded="false"></button></div>
     <div class="seg" id="modes" role="group" aria-label="Mode">
       <button data-mode="ar2ur" class="on">لفظ ← معنی</button>
       <button data-mode="ur2ar">معنی ← لفظ</button>
@@ -132,6 +133,7 @@ var QUIZZES = {
 var main = document.getElementById("main");
 var paraSel = document.getElementById("para");
 var rukuSel = document.getElementById("ruku");
+var ayahSel = document.getElementById("ayah");
 var modes = document.getElementById("modes");
 var hintsEl = document.getElementById("hints");
 // Hints while building an ayah: the words' meanings and the ayah's translation. This viewer's choice.
@@ -165,7 +167,7 @@ function ayahsOf(wm, tr, key) {
   var v = QURAN_VERSES[key];
   return v.ayahs.map(function (a) {
     var id = v.surahNumber + ":" + a.n;
-    return { words: (wm[id] || []).map(function (w) { return { ar: w[0], ur: (w[2] || "").trim() }; }), trans: tr[id] || "" };
+    return { n: a.n, words: (wm[id] || []).map(function (w) { return { ar: w[0], ur: (w[2] || "").trim() }; }), trans: tr[id] || "" };
   }).filter(function (a) { return a.words.length; });
 }
 
@@ -178,12 +180,13 @@ var pickMenu = el("div", "pick-menu"), pickFor = null;
 pickMenu.setAttribute("role", "listbox");
 
 function syncPicks() {
-  [paraSel, rukuSel].forEach(function (sel) {
+  ayahSel.parentNode.hidden = rukuSel.value === "all"; // one ayah is picked from one ruku
+  [paraSel, rukuSel, ayahSel].forEach(function (sel) {
     var o = sel.options[sel.selectedIndex], b = sel.nextElementSibling;
     b.textContent = "";
     if (!o) return;
     b.append(el("span", "", o.textContent));
-    if (sel === rukuSel) b.append(el("span", "pick-name", o.dataset.name));
+    if (sel === rukuSel && o.dataset.name) b.append(el("span", "pick-name", o.dataset.name));
   });
 }
 function closePick() {
@@ -236,6 +239,7 @@ document.addEventListener("click", function (e) { if (pickFor && !e.target.close
 function setUrl() {
   syncPicks();
   var q = new URLSearchParams({ para: paraSel.value, ruku: rukuSel.value });
+  if (ayahSel.value && rukuSel.value !== "all") q.set("ayah", ayahSel.value);
   if (kind) q.set("quiz", kind);
   history.replaceState(null, "", "?" + q);
 }
@@ -266,13 +270,21 @@ function start() {
   document.getElementById("title").textContent = QUIZZES[kind].title;
   modes.hidden = kind !== "wbw";
   hintsEl.hidden = kind === "wbw";
-  var para = paraSel.value, key = para + "|" + rukuSel.value;
+  // Scope: the whole para, one ruku, or one ayah of it.
+  var para = paraSel.value, whole = rukuSel.value === "all";
+  var keys = (whole ? rukusOf(para) : [rukuSel.value]).map(function (r) { return para + "|" + r; });
+  var only = !whole && ayahSel.value ? Number(ayahSel.value) : null;
   main.textContent = "…";
   Promise.all([getJson("asset/word-meanings/para-" + para + ".json"), getJson("asset/translations/maududi/para-" + para + ".json")])
     .then(function (d) {
-      var ayahs = ayahsOf(d[0], d[1], key), pool = [];
+      var ayahs = [], pool = [];
+      keys.forEach(function (k) { ayahs = ayahs.concat(ayahsOf(d[0], d[1], k)); });
+      // Wrong choices come from the whole ruku (or para), so even one short ayah has four.
       ayahs.forEach(function (a) { pool = pool.concat(a.words); });
-      round = { ayahs: ayahs, pool: pool, total: pool.length, a: 0, w: 0, done: 0, score: 0, missed: [], marks: [] };
+      if (only) ayahs = ayahs.filter(function (a) { return a.n === only; });
+      var total = 0;
+      ayahs.forEach(function (a) { total += a.words.length; });
+      round = { ayahs: ayahs, pool: pool, total: total, a: 0, w: 0, done: 0, score: 0, missed: [], marks: [] };
       ask();
     }, function () {
       main.textContent = "";
@@ -385,11 +397,27 @@ function finish() {
 
 function fillRukus() {
   rukuSel.textContent = "";
+  var all = el("option", "", "Whole para"); all.value = "all"; rukuSel.append(all);
   // Each ruku carries its surah's name, so the list says where it is.
   rukusOf(paraSel.value).forEach(function (r) {
     var o = el("option", "", r === "R0" ? "Fatiha" : "Ruku " + r.slice(1));
     o.value = r; o.dataset.name = QURAN_VERSES[paraSel.value + "|" + r].surahArabic;
     rukuSel.append(o);
+  });
+  rukuSel.value = rukusOf(paraSel.value)[0];
+  fillAyahs();
+}
+
+// The chosen ruku's ayat, each named by its opening words; "All ayat" plays the whole ruku.
+function fillAyahs() {
+  ayahSel.textContent = "";
+  var all = el("option", "", "All ayat"); all.value = ""; ayahSel.append(all);
+  var v = QURAN_VERSES[paraSel.value + "|" + rukuSel.value];
+  if (!v) return;
+  v.ayahs.forEach(function (a) {
+    var o = el("option", "", "Ayah " + a.n);
+    o.value = a.n; o.dataset.name = a.text.replace(/\uFEFF/g, "").split(" ").slice(0, 3).join(" ");
+    ayahSel.append(o);
   });
 }
 
@@ -397,17 +425,20 @@ for (var p = 1; p <= 30; p++) if (rukusOf(p).length) { var o = el("option", "", 
 var qs = new URLSearchParams(location.search);
 if (qs.get("para") && rukusOf(qs.get("para")).length) paraSel.value = qs.get("para");
 fillRukus();
-if (qs.get("ruku") && rukusOf(paraSel.value).indexOf(qs.get("ruku")) >= 0) rukuSel.value = qs.get("ruku");
+if (qs.get("ruku") === "all" || rukusOf(paraSel.value).indexOf(qs.get("ruku")) >= 0) rukuSel.value = qs.get("ruku");
+fillAyahs();
+if (qs.get("ayah") && ayahSel.querySelector('option[value="' + Number(qs.get("ayah")) + '"]')) ayahSel.value = Number(qs.get("ayah"));
 if (QUIZZES[qs.get("quiz")]) kind = qs.get("quiz");
 
 paraSel.onchange = function () { fillRukus(); start(); };
-rukuSel.onchange = start;
-[paraSel, rukuSel].forEach(function (sel) {
+rukuSel.onchange = function () { fillAyahs(); start(); };
+ayahSel.onchange = start;
+[paraSel, rukuSel, ayahSel].forEach(function (sel) {
   sel.nextElementSibling.onclick = function (e) { e.stopPropagation(); openPick(sel); };
 });
 document.getElementById("back").onclick = function () {
   if (kind) showMenu();
-  else location.href = "./?para=" + paraSel.value + "&ruku=" + rukuSel.value;
+  else location.href = "./?para=" + paraSel.value + (rukuSel.value === "all" ? "" : "&ruku=" + rukuSel.value);
 };
 var EYE = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 var EYE_OFF = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
