@@ -506,15 +506,22 @@ function fillAyahs() {
   });
 }
 
-// Switching to surah starts on the surah of the ruku in view; switching back keeps the para.
+// Switching between para and surah keeps the ayah in play: the other view opens on its surah
+// (or its para and ruku) and carries on from that ayah, or stays on it if one ayah was chosen.
 function setBy(next) {
   if (next === by) return;
-  if (next === "surah") {
+  var cur = round && round.ayahs[round.a];
+  var single = !ayahSel.parentNode.hidden && ayahSel.value;
+  if (!cur) {
     var k = scopeKeys()[0];
-    if (k) surahSel.value = QURAN_VERSES[k].surahNumber;
+    cur = k && { surah: QURAN_VERSES[k].surahNumber, key: k, n: QURAN_VERSES[k].ayahs[0].n };
   }
   by = next;
+  if (cur && by === "surah") surahSel.value = cur.surah;
+  else if (cur) { paraSel.value = cur.key.split("|")[0]; fillRukus(); rukuSel.value = cur.key.split("|")[1]; }
   fillAyahs();
+  if (cur && single) ayahSel.value = cur.n;
+  else if (cur) startFrom = cur.n;
   start();
 }
 
