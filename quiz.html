@@ -47,27 +47,29 @@ header { background: var(--bar); color: #fff; padding: 12px 16px; }
 .seg { display: flex; background: rgba(255,255,255,.15); border-radius: 12px; padding: 3px; }
 .seg button { background: transparent; color: #fff; }
 .seg button.on { background: #fff; color: #0a3d3d; font-weight: 600; }
-/* Hint switches: each on or off by itself. */
-/* Hint switches: separate glass pills like the pickers, each on or off by itself.
-   On: open eye, bright, filled. Off: crossed eye, faded, outline only. */
-.hints { display: flex; gap: 8px; }
-.hint { display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; cursor: pointer;
-  font: inherit; font-size: 14px; color: rgba(255,255,255,.6); background: transparent; border: 1px dashed rgba(255,255,255,.3); }
-.hint[aria-pressed="true"] { color: #fff; font-weight: 600; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.45); }
-.hint:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* Quick settings: a sliders button at the end of the picker row opens the hint switches. */
+.quick { margin-left: auto; }
+.quick-btn { width: 40px; padding: 0; justify-content: center; background-image: none; }
+.quick-menu { left: auto; right: 0; width: min(16rem, calc(100vw - 32px)); }
+/* Word by word's direction, as a two-way switch inside the panel. */
+.quick-row { padding: 8px 12px; }
+.quick-menu .seg { background: color-mix(in srgb, var(--text) 8%, transparent); }
+.quick-menu .seg button { flex: 1; color: var(--text); }
+.quick-menu .seg button.on { background: var(--primary); color: var(--on-primary); }
+.hint { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 0 16px; border: 0; background: none;
+  color: var(--muted); font: inherit; font-size: 15px; cursor: pointer; text-align: start; }
+.hint span:first-of-type { flex: 1; }
+.hint[aria-pressed="true"] { color: var(--text); }
+.hint:hover, .hint:focus-visible { background: color-mix(in srgb, var(--text) 8%, transparent); outline: none; }
+/* The switch at the row's end: grey and left when off, teal and right when on. */
+.sw { position: relative; width: 36px; height: 20px; border-radius: 999px; background: var(--outline); flex: none; transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.hint[aria-pressed="true"] .sw { background: var(--primary); }
+.hint[aria-pressed="true"] .sw::after { transform: translateX(16px); }
+@media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
 main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .ar { font-family: "Noto Sans Arabic UI", serif; direction: rtl; }
 .ur { font-family: "Noto Nastaliq Urdu", "Noto Sans Arabic UI", serif; direction: rtl; line-height: 2.2; }
-/* Quiz cards */
-.cards { display: grid; gap: 12px; }
-.card { display: flex; align-items: center; gap: 14px; text-align: right; direction: rtl; width: 100%; padding: 16px; border-radius: 16px;
-  border: 1px solid var(--outline); background: var(--card); color: var(--text); cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-.card .icon { width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; flex: none;
-  color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
-.card > div:nth-child(2) { flex: 1; }
-.card .go { color: var(--muted); flex: none; }
-.card b { display: block; font-size: 20px; font-weight: 400; }
-.card span { color: var(--muted); font-size: 14px; }
 /* Play */
 .progress { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 14px; margin-bottom: 8px; }
 /* Bookmark this ayah: an outline ribbon, gold and filled once saved. */
@@ -126,13 +128,24 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
     <div class="pick"><select id="para" hidden></select><button class="pick-btn" aria-label="Para" aria-haspopup="listbox" aria-expanded="false"></button></div>
     <div class="pick"><select id="ruku" hidden></select><button class="pick-btn" aria-label="Ruku" aria-haspopup="listbox" aria-expanded="false"></button></div>
     <div class="pick"><select id="ayah" hidden></select><button class="pick-btn" aria-label="Ayah" aria-haspopup="listbox" aria-expanded="false"></button></div>
-    <div class="seg" id="modes" role="group" aria-label="Mode">
-      <button data-mode="ar2ur" class="on">لفظ ← معنی</button>
-      <button data-mode="ur2ar">معنی ← لفظ</button>
-    </div>
-    <div class="hints" id="hints" role="group" aria-label="Hints">
-      <button class="hint" data-hint="meaning" data-label="لفظ کا معنی" aria-pressed="true"></button>
-      <button class="hint" data-hint="trans" data-label="آیت کا ترجمہ" aria-pressed="true"></button>
+    <div class="pick quick" id="hints">
+      <button class="pick-btn quick-btn" id="quick-btn" aria-label="Quick settings" title="Quick settings" aria-haspopup="true" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></button>
+      <div class="pick-menu quick-menu" id="quick-menu" role="group" aria-label="Quiz options" hidden>
+        <div class="quick-row">
+          <div class="seg" id="kinds" role="group" aria-label="Quiz">
+            <button data-kind="wbw">لفظ بہ لفظ</button>
+            <button data-kind="build">آیت بنائیں</button>
+          </div>
+        </div>
+        <div class="quick-row" id="modes-row">
+          <div class="seg" id="modes" role="group" aria-label="Direction">
+            <button data-mode="ar2ur" class="on">لفظ ← معنی</button>
+            <button data-mode="ur2ar">معنی ← لفظ</button>
+          </div>
+        </div>
+        <button class="hint" data-hint="meaning" data-label="لفظ کا معنی" aria-pressed="true"></button>
+        <button class="hint" data-hint="trans" data-label="آیت کا ترجمہ" aria-pressed="true"></button>
+      </div>
     </div>
   </div>
 </header>
@@ -142,8 +155,8 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 <script>
 "use strict";
 var QUIZZES = {
-  wbw: { color: "#0a9a9a", icon: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>', title: "لفظ بہ لفظ", desc: "آیت کا ہر لفظ اور اس کا مطلب" },
-  build: { color: "#c08a1a", icon: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>', title: "آیت بنائیں", desc: "ترجمہ دیکھیں، یاد سے اگلا لفظ چنیں" }
+  wbw: { title: "لفظ بہ لفظ" },
+  build: { title: "آیت بنائیں" }
 };
 var main = document.getElementById("main");
 var paraSel = document.getElementById("para");
@@ -192,7 +205,7 @@ var hintsEl = document.getElementById("hints");
 var hints = { meaning: true, trans: true };
 try { Object.assign(hints, JSON.parse(localStorage.getItem("mq-quiz-hints"))); } catch (e) { /* defaults */ }
 var mode = "ar2ur";
-var kind = null; // which quiz; null = the cards
+var kind = "wbw"; // which quiz: word by word, or build the ayah; the last one used is kept
 var cache = {};
 var round;
 
@@ -295,36 +308,19 @@ function setUrl() {
   syncPicks();
   var q = new URLSearchParams(by === "surah" ? { surah: surahSel.value } : { para: paraSel.value, ruku: rukuSel.value });
   if (ayahSel.value && !ayahSel.parentNode.hidden) q.set("ayah", ayahSel.value);
-  if (kind) q.set("quiz", kind);
+  q.set("quiz", kind);
   history.replaceState(null, "", "?" + q);
 }
 
-function showMenu() {
-  kind = null; setUrl();
-  document.getElementById("title").textContent = "آزمائش · Quiz";
-  modes.hidden = hintsEl.hidden = true;
-  main.textContent = "";
-  var cards = el("div", "cards");
-  Object.keys(QUIZZES).forEach(function (id) {
-    var g = QUIZZES[id], c = el("button", "card"), text = el("div");
-    text.append(el("b", "ur", g.title), el("span", "", g.desc));
-    var icon = el("div", "icon");
-    icon.innerHTML = svg(g.icon, 28);
-    var go = el("div", "go"); go.innerHTML = svg('<polyline points="15 18 9 12 15 6"/>', 20);
-    c.style.setProperty("--c", g.color);
-    c.append(icon, text, go);
-    c.onclick = function () { kind = id; start(); };
-    cards.append(c);
-  });
-  main.append(cards);
-}
-
 function start() {
-  if (!kind) return showMenu();
   setUrl();
   document.getElementById("title").textContent = QUIZZES[kind].title;
-  modes.hidden = kind !== "wbw";
-  hintsEl.hidden = kind === "wbw";
+  document.querySelectorAll("#kinds button").forEach(function (x) { x.classList.toggle("on", x.dataset.kind === kind); });
+  try { localStorage.setItem("mq-quiz-kind", kind); } catch (e) { /* this visit only */ }
+  // One options panel; each quiz shows its own: word by word its direction, build the ayah its hints.
+  hintsEl.hidden = false;
+  document.getElementById("modes-row").hidden = kind !== "wbw";
+  hintsEl.querySelectorAll(".hint").forEach(function (b) { b.hidden = kind !== "build"; });
   // Scope: a whole surah or para, one ruku, or one ayah of any of them.
   var keys = scopeKeys(), only = !ayahSel.parentNode.hidden && ayahSel.value ? Number(ayahSel.value) : null;
   var paras = [];
@@ -545,6 +541,7 @@ if (qs.get("ruku") === "all" || rukusOf(paraSel.value).indexOf(qs.get("ruku")) >
 if (SURAH_KEYS[qs.get("surah")]) { by = "surah"; surahSel.value = Number(qs.get("surah")); }
 fillAyahs();
 if (qs.get("ayah") && ayahSel.querySelector('option[value="' + Number(qs.get("ayah")) + '"]')) ayahSel.value = Number(qs.get("ayah"));
+try { if (QUIZZES[localStorage.getItem("mq-quiz-kind")]) kind = localStorage.getItem("mq-quiz-kind"); } catch (e) { /* default */ }
 if (QUIZZES[qs.get("quiz")]) kind = qs.get("quiz");
 if (qs.get("at")) startFrom = Number(qs.get("at"));
 
@@ -561,7 +558,7 @@ bmSel.onchange = function () {
   rukuSel.value = m.key.split("|")[1];
   fillAyahs();
   startFrom = m.n;
-  kind = kind || (QUIZZES[m.quiz] ? m.quiz : "wbw");
+  if (QUIZZES[m.quiz]) kind = m.quiz; // back in the quiz it was saved from
   fillBookmarks();
   start();
 };
@@ -571,8 +568,7 @@ fillBookmarks();
   sel.nextElementSibling.onclick = function (e) { e.stopPropagation(); openPick(sel); };
 });
 document.getElementById("back").onclick = function () {
-  if (kind) showMenu();
-  else if (by === "surah") location.href = "./?para=" + scopeKeys()[0].split("|")[0];
+  if (by === "surah") location.href = "./?para=" + scopeKeys()[0].split("|")[0];
   else location.href = "./?para=" + paraSel.value + (rukuSel.value === "all" ? "" : "&ruku=" + rukuSel.value);
 };
 var EYE = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
@@ -580,10 +576,18 @@ var EYE_OFF = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.4
 function paintHint(b) {
   var on = hints[b.dataset.hint];
   b.setAttribute("aria-pressed", String(on));
-  b.innerHTML = svg(on ? EYE : EYE_OFF, 16);
-  b.append(el("span", "", b.dataset.label));
+  b.innerHTML = svg(on ? EYE : EYE_OFF, 18);
+  b.append(el("span", "", b.dataset.label), el("span", "sw"));
 }
-hintsEl.querySelectorAll("button").forEach(function (b) {
+var quickBtn = document.getElementById("quick-btn"), quickMenu = document.getElementById("quick-menu");
+function setQuick(open) {
+  quickMenu.hidden = !open;
+  quickBtn.setAttribute("aria-expanded", String(open));
+}
+quickBtn.onclick = function (e) { e.stopPropagation(); closePick(); setQuick(quickMenu.hidden); };
+document.addEventListener("click", function (e) { if (!quickMenu.hidden && !e.target.closest(".quick")) setQuick(false); });
+document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !quickMenu.hidden) { setQuick(false); quickBtn.focus(); } });
+hintsEl.querySelectorAll(".hint").forEach(function (b) {
   paintHint(b);
   b.onclick = function () {
     hints[b.dataset.hint] = !hints[b.dataset.hint];
@@ -592,6 +596,9 @@ hintsEl.querySelectorAll("button").forEach(function (b) {
     // Redraw the word being asked; a finished ayah already shows everything.
     if (round && round.w < round.ayahs[round.a].words.length) ask();
   };
+});
+document.querySelectorAll("#kinds button").forEach(function (b) {
+  b.onclick = function () { if (kind !== b.dataset.kind) { kind = b.dataset.kind; start(); } };
 });
 modes.querySelectorAll("button").forEach(function (b) {
   b.onclick = function () {
