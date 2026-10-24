@@ -1,0 +1,4 @@
+{
+  "applied": [],
+  "note": "No automatic content correction is applied by this audit. Exact source disagreements are recorded in findings.jsonl; unresolved Urdu or grammar questions remain outside the production dataset."
+}

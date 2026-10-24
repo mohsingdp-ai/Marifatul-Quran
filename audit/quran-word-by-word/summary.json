@@ -1,0 +1,52 @@
+{
+  "generated_at": "2026-10-24T13:28:04.208Z",
+  "source": "local Quran Foundation API cache from .cache/urdu-wbw; no network claim is made when a cache file is absent",
+  "source_urls": [
+    "https://api.quran.com/",
+    "https://api-docs.quran.com/docs/api/field-reference/",
+    "https://corpus.quran.com/"
+  ],
+  "scope": {
+    "surahs_in_authoritative_cache": 114,
+    "surahs_audited": 114,
+    "verses_audited": 6236,
+    "words_audited": 77429
+  },
+  "dataset_inventory": {
+    "word_meaning_verses": 6236,
+    "word_meaning_words": 77429,
+    "morphology_verses": 6236,
+    "data_rows": 526,
+    "displayed_verses": 6236
+  },
+  "findings": {
+    "surahsAudited": 114,
+    "versesAudited": 6236,
+    "wordsAudited": 77429,
+    "findings": 6398,
+    "findingsByField": {
+      "urdu_meaning": 6398
+    },
+    "findingsByStatus": {
+      "needs_review": 6398
+    },
+    "unverifiedSurahs": 0
+  },
+  "outcome": {
+    "arabic_text_errors": 0,
+    "segmentation_errors": 0,
+    "transliteration_errors": 0,
+    "confirmed_urdu_gloss_corrections": 0,
+    "confirmed_grammar_corrections": 0,
+    "manual_review_items": 6398,
+    "source_compared_word_records": 77429,
+    "independently_linguistically_verified_word_records": 0
+  },
+  "remaining_surahs": [],
+  "corrected_copy": "audit/quran-word-by-word/corrected-word-meanings",
+  "report_files": [
+    "audit/quran-word-by-word/findings.jsonl",
+    "audit/quran-word-by-word/checkpoint.json",
+    "audit/quran-word-by-word/summary.json"
+  ]
+}

@@ -151,7 +151,8 @@ function sourceTriple(w, key, i, segs, fixes) {
   const fix = fixes[key + "|" + (i + 1)];
   const raw = ((w.translation && w.translation.text) || "")
     .replace(/\s+/g, " ")
-    .replace(/^[\s,،]+|[\s,،]+$/g, "");
+    .replace(/^[\s,،]+|[\s,،]+$/g, "")
+    .replace(/(^|\s)اور(?=[؀-ۿ])/g, "$1اور ");
   return [
     w.text_uthmani || "",
     (w.transliteration && w.transliteration.text) || "",
