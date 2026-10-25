@@ -104,6 +104,9 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .trans { background: var(--card); border-radius: 14px; padding: 10px 14px; font-size: 17px; text-align: center; }
 .trans small { display: block; font-family: system-ui, sans-serif; color: var(--muted); font-size: 12px; }
 .next { width: 100%; margin-top: 16px; padding: 14px; font-size: 17px; border: 0; border-radius: 14px; background: var(--primary); color: var(--on-primary); font-weight: 600; }
+/* After an ayah: redo it, or go on. Urdu order, so "next ←" sits on the left. */
+.choice { display: flex; gap: 10px; direction: rtl; }
+.choice .next.redo { background: none; border: 1px solid var(--outline); color: var(--text); }
 .done { text-align: center; }
 .done .score { font-size: 48px; font-weight: 700; color: var(--primary); }
 .missed { background: var(--card); border-radius: 14px; padding: 8px 16px; margin: 16px 0; }
@@ -420,7 +423,8 @@ function markPlace() {
 
 function ask() {
   var ayah = round.ayahs[round.a], q = ayah.words[round.w];
-  if (round.w === 0) markPlace();
+  // Where the ayah began, so "redo" can take its answers back off the score.
+  if (round.w === 0) { markPlace(); round.snap = { done: round.done, score: round.score, missed: round.missed.length }; }
   var showAr = kind === "wbw" && mode === "ar2ur"; // the word is shown, its meaning is asked
   main.textContent = "";
   main.append.apply(main, header());
@@ -458,13 +462,24 @@ function ayahDone() {
   var t = el("div", "trans ur", ayah.trans); t.prepend(el("small", "", "ترجمہ — مولانا مودودی"));
   main.append(t);
   var last = round.a + 1 >= round.ayahs.length;
-  var next = el("button", "next", last ? "نتیجہ دیکھیں" : "اگلی آیت ←");
+  // One ayah chosen: "next" moves the picker on to the ayah after it.
+  var single = !ayahSel.parentNode.hidden && ayahSel.value, after = single && ayahSel.selectedOptions[0].nextElementSibling;
+  var redo = el("button", "next redo", "دوبارہ کریں");
+  redo.onclick = function () {
+    round.done = round.snap.done; round.score = round.snap.score; round.missed.length = round.snap.missed;
+    round.w = 0; round.marks = [];
+    ask();
+  };
+  var next = el("button", "next", last && !after ? "نتیجہ دیکھیں" : "اگلی آیت ←");
   next.onclick = function () {
+    if (after) { ayahSel.value = after.value; return start(); }
     if (last) return finish();
     round.a++; round.w = 0; round.marks = [];
     ask();
   };
-  main.append(next);
+  var row = el("div", "choice");
+  row.append(redo, next);
+  main.append(row);
   next.focus();
 }
 
