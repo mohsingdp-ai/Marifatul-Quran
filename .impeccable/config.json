@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "icon-tile-stack",
+        "value": "*",
+        "files": [
+          "quiz.html"
+        ],
+        "createdAt": "2026-10-24T09:47:37.246Z",
+        "reason": "Claude: quiz cards are a flex row (icon beside the title, verified in phone screenshots), not an icon stacked above a heading"
+      }
+    ]
+  }
+}

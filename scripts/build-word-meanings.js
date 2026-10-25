@@ -159,13 +159,16 @@ async function main() {
         if (fix) {
           w[2] = fix;
           fixed++;
-        } else if (!w[2]) {
-          w[2] = corpusGloss((morph[k] || [])[i]);
-          if (w[2]) filled++;
-          else blanks.push([para, k, i + 1, w[0], w[1]].join(","));
+        } else {
+          if (!w[2]) {
+            w[2] = corpusGloss((morph[k] || [])[i]);
+            if (w[2]) filled++;
+            else blanks.push([para, k, i + 1, w[0], w[1]].join(","));
+          }
+          // "اورنہ" -> "اور نہ". Not on fixes: they are hand-checked and may hold a real
+          // word like اوراق. ponytail: would split such a word in a quran.com gloss.
+          w[2] = w[2].replace(/(^|\s)اور(?=[؀-ۿ])/g, "$1اور ");
         }
-        // "اورنہ" -> "اور نہ". ponytail: would also split a real word like اوراق; none in the data yet.
-        w[2] = w[2].replace(/(^|\s)اور(?=[؀-ۿ])/g, "$1اور ");
       });
     });
   });

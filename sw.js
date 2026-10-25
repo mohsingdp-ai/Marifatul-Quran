@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v33";
+const CACHE = "mq-v34";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {

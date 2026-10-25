@@ -1089,6 +1089,23 @@
    * asset/translations/maududi/para-*.json ships it locally (scripts/build-translations.js);
    * quran.com is only a fallback if that file cannot be loaded.
    */
+  /* The report-a-mistake flag on each ayah: on unless turned off in settings. */
+  var REPORT_FLAG_PREF_KEY = "mq_pref_report_flag";
+
+  function reportFlagEnabled() {
+    try {
+      return localStorage.getItem(REPORT_FLAG_PREF_KEY) !== "false";
+    } catch (e) {
+      return true;
+    }
+  }
+
+  function setReportFlagEnabled(on) {
+    try {
+      localStorage.setItem(REPORT_FLAG_PREF_KEY, on ? "true" : "false");
+    } catch (e) { /* private mode: the setting just will not stick */ }
+  }
+
   var TRANSLATION_PREF_KEY = "mq_pref_translation";
   var paraTranslations = {};
 
@@ -1269,6 +1286,7 @@
     var editKey = editTimings ? ayatKeyFor(row) : null;
     var showTranslation = translationEnabled();
     var aiPrompt = aiPromptEnabled();
+    var reportFlag = reportFlagEnabled();
     entry.ayahs.forEach(function (a, ayahPos) {
       html += "<div class=\"ayat-item" + (gloss ? " has-gloss" : "") + "\" data-ayah=\"" + a.n + "\">" +
         "<button type=\"button\" class=\"ayah-play\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.playFromTitle") + "\" aria-label=\"" + i18n("ayat.playFromAria", { n: a.n }) + "\">" + PLAY_SVG + "</button>" +
@@ -1277,6 +1295,9 @@
           : "") +
         (aiPrompt
           ? "<button type=\"button\" class=\"ayah-play ayat-prompt\" data-ayah=\"" + a.n + "\" title=\"" + i18n("ayat.promptAyahTitle") + "\" aria-label=\"" + i18n("ayat.promptAyahAria", { n: a.n }) + "\">" + COPY_SVG + "</button>"
+          : "") +
+        (reportFlag
+          ? "<button type=\"button\" class=\"ayah-play ayah-report\" data-ayah=\"" + a.n + "\" title=\"" + i18n("report.title") + "\" aria-label=\"" + i18n("report.aria", { n: a.n }) + "\">" + FLAG_SVG + "</button>"
           : "") +
         "<span class=\"ayah-text\">" + ayahTextHtml(a.text, gloss) + "</span>" +
         ayahNumHtml(a) +
@@ -1800,6 +1821,19 @@
     btn.setAttribute("aria-expanded", "true");
     rowMenu = menu;
   }
+
+  var REPORT_FORM = "https://docs.google.com/forms/d/1cjGR7OI9kSGUbu2GFeP6urqqgHWZaL8PuinSB_ZePDY/viewform?usp=pp_url&entry.2035425167=";
+  var FLAG_SVG = toolSvg('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>');
+
+  /** Open the mistake-report form with the ayah already filled in. */
+  function openReportForm(btn) {
+    var row = data[btn.closest("tr.ayat-row").dataset.ayatFor];
+    // In English whatever the app's language: the reports are read by the team, not the reader.
+    var where = "Para " + row.para + ", Ruku " + String(rukuDisplay(row)).replace(/^R/, "") + ", " + row.surah + " " +
+      getRukuAyat(row).surahNumber + ":" + btn.dataset.ayah;
+    window.open(REPORT_FORM + encodeURIComponent(where), "_blank", "noopener");
+  }
+
   document.addEventListener("click", function (e) {
     if (rowMenu && !rowMenu.contains(e.target)) closeRowMenu();
   });
@@ -4631,6 +4665,11 @@
       openWordFromElement(wordEl);
       return;
     }
+    var reportBtn = e.target.closest(".ayah-report");
+    if (reportBtn) {
+      openReportForm(reportBtn);
+      return;
+    }
     var glossBtn = e.target.closest(".ayah-gloss-toggle");
     if (glossBtn) {
       toggleAyahGloss(glossBtn);
@@ -4695,6 +4734,7 @@
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var wordMeaningsGroup = document.getElementById("word-meanings-group");
   var prefTranslation = document.getElementById("pref-translation");
+  var prefReportFlag = document.getElementById("pref-report-flag");
   var ayahWordsGroup = document.getElementById("ayah-words-group");
   var prefWordSound = document.getElementById("pref-word-sound");
   var prefAyahGlossSwitch = document.getElementById("pref-ayah-gloss-switch");
@@ -4854,6 +4894,7 @@
     syncUiLangUI();
     syncWordMeaningsUI();
     if (prefTranslation) prefTranslation.checked = translationEnabled();
+    if (prefReportFlag) prefReportFlag.checked = reportFlagEnabled();
     syncAyahWordsUI();
     if (prefWordSound) prefWordSound.checked = wordSoundOnTap();
     if (prefAyahGlossSwitch) prefAyahGlossSwitch.checked = ayahGlossSwitchEnabled();
@@ -4968,6 +5009,13 @@
   if (prefTranslation) {
     prefTranslation.addEventListener("change", function () {
       setTranslationEnabled(this.checked);
+      renderTable();
+    });
+  }
+
+  if (prefReportFlag) {
+    prefReportFlag.addEventListener("change", function () {
+      setReportFlagEnabled(this.checked);
       renderTable();
     });
   }
