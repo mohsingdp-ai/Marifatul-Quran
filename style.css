@@ -219,6 +219,11 @@ html[lang="ur"] .ruku-table tbody tr[data-global-index] > td.col-surah-arabic {
   font-family: "Noto Sans Arabic UI", var(--md-font-arabic);
 }
 
+/* The app's name is القرآن in either language, in the same bundled face. */
+.header h1.header-title {
+  font-family: "Noto Sans Arabic UI", var(--md-font-arabic);
+}
+
 /* An Urdu reader's page waits for its words (i18n.js shows it), so English never flashes. */
 html.i18n-pending body {
   visibility: hidden;

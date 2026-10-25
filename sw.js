@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v35";
+const CACHE = "mq-v36";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -16,7 +16,7 @@ self.addEventListener("message", function (event) {
   if (!d || typeof d !== "object") return;
 
   if (d.type === "MQ_MEDIA_NOTIF_SHOW") {
-    var title = d.title || "Marifatul Quran";
+    var title = d.title || "Understand The Quran";
     var playing = !!d.playing;
     var opts = {
       body: d.body || "",

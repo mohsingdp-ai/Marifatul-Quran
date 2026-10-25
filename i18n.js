@@ -97,8 +97,7 @@
       "guide.hifzTitle": "Track memorization (Hifz)",
       "guide.hifzBody": "Tap the check on a ruku once you have it by heart; tap again to unmark it. The count beside it is how many times you have heard the recording through. The bar above the list shows your progress for this Para.",
 
-      "header.pageTitle": "Marifatul Quran - Ruku Recordings",
-      "header.title": "Marifatul Quran",
+      "header.pageTitle": "Understand The Quran - Ruku Recordings",
       "header.subtitle": "Ruku Recordings",
 
       "hifz.progressAria": "Para memorization progress",
@@ -269,7 +268,7 @@
       "share.downloaded": "The recording was downloaded. Open WhatsApp and send it as an attachment (Downloads / Files).",
       "share.fileFailedCaption": "Could not share this file. Try Save offline, then share from your device and paste the copied caption.",
       "share.fileFailed": "Could not share this file. Try Save offline, then share from your device.",
-      "share.batchHeader": "Marifatul Quran — Para {para} ({n} recordings)",
+      "share.batchHeader": "Understand The Quran — Para {para} ({n} recordings)",
       "share.loadRukuFailed": "Could not load {ruku}. Save offline first or check your connection.",
       "share.noMulti": "This browser or app cannot share multiple files in one step. Use \"Share this ruku\" and \"Next ruku\" for each recording.",
       "share.sharedFiles": "Shared {n} files. If the app only received attachments, paste the copied caption into the chat.",
@@ -405,8 +404,7 @@
       "guide.hifzTitle": "حفظ کا حساب رکھیں",
       "guide.hifzBody": "رکوع یاد ہو جائے تو اس کا نشان دبائیں؛ ہٹانے کے لیے دوبارہ دبائیں۔ ساتھ والی گنتی بتاتی ہے کہ آپ نے ریکارڈنگ کتنی بار پوری سنی۔ فہرست کے اوپر کی پٹی اس پارے میں آپ کی پیش رفت دکھاتی ہے۔",
 
-      "header.pageTitle": "معرفۃ القرآن - رکوع کی ریکارڈنگز",
-      "header.title": "معرفۃ القرآن",
+      "header.pageTitle": "فہمِ قرآن - رکوع کی ریکارڈنگز",
       "header.subtitle": "رکوع کی ریکارڈنگز",
 
       "hifz.progressAria": "پارے کے حفظ کی پیش رفت",
@@ -577,7 +575,7 @@
       "share.downloaded": "ریکارڈنگ ڈاؤن لوڈ ہو گئی ہے۔ واٹس ایپ کھولیں اور اسے فائل کے طور پر بھیجیں (ڈاؤن لوڈز / فائلز)۔",
       "share.fileFailedCaption": "یہ فائل شیئر نہیں ہو سکی۔ پہلے آف لائن محفوظ کریں، پھر اپنے فون سے شیئر کریں اور کاپی کیا ہوا کیپشن پیسٹ کریں۔",
       "share.fileFailed": "یہ فائل شیئر نہیں ہو سکی۔ پہلے آف لائن محفوظ کریں، پھر اپنے فون سے شیئر کریں۔",
-      "share.batchHeader": "معرفۃ القرآن — پارہ {para} ({n} ریکارڈنگز)",
+      "share.batchHeader": "فہمِ قرآن — پارہ {para} ({n} ریکارڈنگز)",
       "share.loadRukuFailed": "رکوع {ruku} لوڈ نہیں ہو سکا۔ پہلے آف لائن محفوظ کریں یا انٹرنیٹ چیک کریں۔",
       "share.noMulti": "یہ براؤزر یا ایپ ایک ساتھ کئی فائلیں شیئر نہیں کر سکتی۔ ہر ریکارڈنگ کے لیے \"یہ رکوع شیئر کریں\" اور \"اگلا رکوع\" استعمال کریں۔",
       "share.sharedFiles": "{n} فائلیں شیئر ہو گئیں۔ اگر ایپ کو صرف فائلیں ملیں تو کاپی کیا ہوا کیپشن چیٹ میں پیسٹ کریں۔",
