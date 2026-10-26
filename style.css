@@ -2350,6 +2350,257 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
   color: var(--md-outline);
 }
 
+/* صرف: the button on a verb's card, and the sheet it slides up from the bottom. */
+/* A pill beside the speaker, so it is seen as soon as the card opens. */
+.wpop-sarf {
+  flex: none;
+  padding: 0 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--md-primary) 45%, transparent);
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--md-primary) 14%, transparent);
+  color: var(--md-primary);
+  font: 0.85rem/2 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  cursor: pointer;
+}
+
+.wpop-sarf:focus-visible {
+  outline: 2px solid var(--md-primary);
+  outline-offset: 1px;
+}
+
+#sarf-sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  width: 100%;
+  max-width: 560px;
+  max-height: 88vh;
+  margin: 0 auto;
+  padding: 0.5rem 0.9rem 1rem;
+  border: none;
+  border-radius: 20px 20px 0 0;
+  background: var(--md-menu);
+  color: var(--md-on-surface);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+#sarf-sheet::backdrop {
+  background: var(--md-scrim);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #sarf-sheet[open] {
+    animation: sarf-up 0.22s ease-out;
+  }
+}
+
+@keyframes sarf-up {
+  from { transform: translateY(40%); opacity: 0; }
+}
+
+.sarf-grab {
+  width: 36px;
+  height: 4px;
+  margin: 0 auto 0.4rem;
+  border-radius: 2px;
+  background: var(--md-outline-variant);
+}
+
+.sarf-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.sarf-word {
+  font-family: var(--mushaf-font);
+  font-size: 1.5rem;
+  line-height: 1.8;
+}
+
+.sarf-gloss {
+  flex: 1;
+  font: 0.95rem/2 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-primary);
+}
+
+.sarf-close {
+  margin-inline-start: auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.sarf-meta,
+.sarf-draft {
+  font: 0.75rem/2 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-draft {
+  margin: 0.6rem 0 0;
+  font-size: 0.66rem;
+}
+
+.sarf-root {
+  font-family: var(--md-font-arabic);
+  font-size: 0.9rem;
+  color: var(--md-tertiary);
+}
+
+.sarf-seg {
+  display: flex;
+  gap: 2px;
+  margin: 0.45rem 0;
+  padding: 3px;
+  border-radius: 99px;
+  background: var(--md-surface-container);
+}
+
+.sarf-seg button {
+  flex: 1;
+  border: none;
+  border-radius: 99px;
+  background: transparent;
+  color: var(--md-on-surface-variant);
+  font: 0.78rem/2 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  cursor: pointer;
+}
+
+.sarf-seg button.on {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.sarf-six {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+/* One form: the Arabic, its Urdu, and how often the Quran reads it. Green edge: the Quran
+   uses it. Faded: a form built by the pattern that the Quran never reads. */
+.sarf-c {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 0.2rem 0.15rem;
+  border-radius: var(--md-shape-sm);
+  background: var(--md-surface-container);
+  text-align: center;
+}
+
+.sarf-c.q {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-success) 65%, transparent);
+}
+
+.sarf-c.gen .sarf-f {
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-c.sel {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+}
+
+.sarf-c.sel .sarf-f,
+.sarf-c.sel .sarf-u,
+.sarf-c.sel .sarf-n,
+.sarf-c.sel .sarf-k {
+  color: var(--md-on-primary);
+}
+
+.sarf-c.wide {
+  grid-column: span 2;
+}
+
+.sarf-k {
+  font: 0.62rem/1.8 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-f {
+  font-family: var(--md-font-arabic);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.sarf-u {
+  font: 0.58rem/1.9 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-n {
+  font-size: 0.6rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--md-success);
+}
+
+.sarf-c.gen .sarf-n {
+  font-weight: 400;
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-blk {
+  display: grid;
+  grid-template-columns: 2.6rem 1fr 1fr;
+  gap: 3px;
+  margin-top: 0.45rem;
+}
+
+.sarf-h {
+  grid-column: 1 / -1;
+  font: 0.72rem/1.9 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-tertiary);
+  border-bottom: 1px solid var(--md-outline-variant);
+}
+
+.sarf-num,
+.sarf-colh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 0.62rem/1.7 "Noto Nastaliq Urdu", var(--md-font-arabic);
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-num {
+  justify-content: flex-start;
+}
+
+.sarf-ayat {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sarf-ayat li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--md-outline-variant) 45%, transparent);
+}
+
+.sarf-ref {
+  font-size: 0.8rem;
+  color: var(--md-on-surface-variant);
+}
+
+.sarf-empty {
+  text-align: center;
+  color: var(--md-on-surface-variant);
+}
+
 /* Saving corrected timings from the list itself, so the work does not mean a trip into
    settings after every ruku. It sits clear of the docked player and only appears when there
    is something to save. */

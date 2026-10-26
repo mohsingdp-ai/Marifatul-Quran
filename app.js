@@ -4236,6 +4236,7 @@
     wordPopoverEl.hidden = true;
     wordPopoverEl.addEventListener("click", function (e) {
       if (e.target.closest(".wpop-sound")) playPopWordSound();
+      if (e.target.closest(".wpop-sarf")) openSarfSheet();
     });
     document.body.appendChild(wordPopoverEl);
     return wordPopoverEl;
@@ -4377,12 +4378,12 @@
 
     // Show the word exactly as tapped — quran.com's copy can glue a recitation mark (۞)
     // or pause mark into the same token, which the panel never shows.
-    function head() {
+    function head(extra) {
       return "<div class=\"wpop-head\">" +
         "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(word) + "</div>" +
         "<span class=\"wpop-sound-note\" role=\"status\">" + (sound.failed ? i18n("word.soundNeedsInternet") : "") + "</span>" +
         "<button type=\"button\" class=\"wpop-sound\" aria-label=\"" + i18n("word.playSound") + "\" title=\"" + i18n("word.playSound") + "\">" +
-          SPEAKER_SVG + "</button>" +
+          SPEAKER_SVG + "</button>" + (extra || "") +
         "</div>";
     }
 
@@ -4420,8 +4421,195 @@
           "</div>"
         : "";
 
-      pop.innerHTML = head() + translit + meaning + parts;
+      popSarf = sarfFor(segs, word, hit && hit.translation && hit.translation.text);
+      var sarfBtn = popSarf
+        ? "<button type=\"button\" class=\"wpop-sarf\" lang=\"ur\">\u0635\u0631\u0641</button>"
+        : "";
+      pop.innerHTML = head(sarfBtn) + translit + meaning + parts;
       positionWordPopover(pop, wordEl);
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* صرف: a tapped verb listed in sarf.js gets a button on its card that  */
+  /* slides up a sheet with its صرف صغیر, its 14 صیغے (the tapped one     */
+  /* lit) and the ayat that use the tapped form. Counts come from         */
+  /* asset/sarf-counts.json (scripts/build-sarf-counts.js).               */
+  /* ------------------------------------------------------------------ */
+
+  var popSarf = null;
+  var sarfSheetEl = null;
+  var sarfCounts = null;
+  var sarfCountsPending = null;
+
+  function getSarfCounts() {
+    if (sarfCounts) return Promise.resolve(sarfCounts);
+    if (sarfCountsPending) return sarfCountsPending;
+    sarfCountsPending = fetch("asset/sarf-counts.json").then(function (res) {
+      return res.ok ? res.json() : {};
+    }).catch(function () { return {}; }).then(function (map) {
+      sarfCounts = map;
+      return map;
+    });
+    return sarfCountsPending;
+  }
+
+  /** The sheet's state for a tapped word, or null when its verb has no صرف yet. */
+  function sarfFor(segs, word, gloss) {
+    var sarf = window.MQ_SARF;
+    var i = sarf && segs ? segs.findIndex(function (x) { return x[2] === "V" && x[1] === 0; }) : -1;
+    var seg = i >= 0 ? segs[i] : null;
+    // A root and باب can hold two verbs (حَزِنَ, حَزَنَ); the tapped letters say which.
+    var key = seg ? sarf.pickVerb(segs, i) : "";
+    if (!key || !sarf.verbs[key]) return null;
+    return {
+      key: key, verb: sarf.verbs[key], seg: seg, word: word, gloss: gloss || "",
+      passive: segPassive(seg) && !!sarf.verbs[key].pass,
+      tense: seg[3] === "PERF" ? "past" : "pres",
+      tab: "six"
+    };
+  }
+
+  function segPassive(seg) {
+    return String(seg[6] || "").split(",").indexOf("PASS") !== -1;
+  }
+
+  function sarfSlot(tense, pgn, passive) {
+    return (tense === "past" ? "PERF" : "IMPF") + "|" + pgn + "|" + (passive ? "PASS" : "");
+  }
+
+  /** How often the Quran uses the slots that start with prefix ("PERF|" counts every person). */
+  function sarfCount(counts, prefix, active) {
+    var n = 0;
+    Object.keys(counts).forEach(function (k) {
+      if (k.indexOf(prefix) === 0 && !(active && /\|PASS$/.test(k))) n += counts[k].length;
+    });
+    return n;
+  }
+
+  function sarfTimes(n) {
+    return "<span class=\"sarf-n\">" + (n ? "\u00D7" + n : "\u0642\u0631\u0622\u0646 \u0645\u06CC\u06BA \u0646\u06C1\u06CC\u06BA") + "</span>";
+  }
+
+  function sarfSixHtml(st, counts) {
+    var names = ["\u0645\u0627\u0636\u06CC", "\u0645\u0636\u0627\u0631\u0639", "\u0627\u0645\u0631",
+      "\u0645\u0635\u062F\u0631", "\u0627\u0633\u0645 \u0641\u0627\u0639\u0644", "\u0627\u0633\u0645 \u0645\u0641\u0639\u0648\u0644"];
+    var tally = [sarfCount(counts, "PERF|", true), sarfCount(counts, "IMPF|", true), sarfCount(counts, "IMPV|", true),
+      sarfCount(counts, "VN"), sarfCount(counts, "ACT_PCPL"), sarfCount(counts, "PASS_PCPL")];
+    var lit = { PERF: 0, IMPF: 1, IMPV: 2 }[st.seg[3]];
+    var ur = window.MQ_SARF.sixUrdu(st.verb);
+    return "<div class=\"sarf-six\">" + names.map(function (name, i) {
+      var ar = st.verb.six[i];
+      return "<div class=\"sarf-c" + (i === lit && !st.passive ? " sel" : "") + (tally[i] ? " q" : " gen") + "\">" +
+        "<span class=\"sarf-k\">" + name + "</span>" +
+        "<span class=\"sarf-f\" lang=\"ar\">" + escapeHtml(ar || "\u2014") + "</span>" +
+        "<span class=\"sarf-u\">" + escapeHtml(ur[i]) + "</span>" + (ar ? sarfTimes(tally[i]) : "") +
+        "</div>";
+    }).join("") + "</div>";
+  }
+
+  /** B2: غائب · حاضر · متکلم, each واحد / تثنیہ / جمع by مذکر / مؤنث; one tense at a time. */
+  function sarfGridHtml(st, counts) {
+    var rows = window.MQ_SARF.table(st.verb, st.tense, st.passive);
+    var tapped = st.passive === segPassive(st.seg) && st.seg[3] === (st.tense === "past" ? "PERF" : "IMPF")
+      ? window.MQ_SARF.pgnOf(st.seg) : "";
+    function cell(i, wide) {
+      var r = rows[i];
+      var n = (counts[sarfSlot(st.tense, r.pgn, st.passive)] || []).length;
+      return "<div class=\"sarf-c" + (r.pgn === tapped ? " sel" : "") + (n ? " q" : " gen") + (wide ? " wide" : "") + "\">" +
+        "<span class=\"sarf-f\" lang=\"ar\">" + escapeHtml(r.ar) + "</span>" +
+        "<span class=\"sarf-u\">" + escapeHtml(r.ur) + "</span>" + (n ? sarfTimes(n) : "") + "</div>";
+    }
+    var NUM = ["\u0648\u0627\u062D\u062F", "\u062A\u062B\u0646\u06CC\u06C1", "\u062C\u0645\u0639"];
+    function block(title, base) {
+      var html = "<div class=\"sarf-blk\"><div class=\"sarf-h\">" + title + "</div>" +
+        "<span></span><span class=\"sarf-colh\">\u0645\u0630\u06A9\u0631</span><span class=\"sarf-colh\">\u0645\u0624\u0646\u062B</span>";
+      for (var j = 0; j < 3; j++) html += "<span class=\"sarf-num\">" + NUM[j] + "</span>" + cell(base + j) + cell(base + 3 + j);
+      return html + "</div>";
+    }
+    // The مجہول only where the Quran reads this verb that way.
+    var hasPassive = st.passive || Object.keys(counts).some(function (k) { return /\|PASS$/.test(k); });
+    var voice = st.verb.pass && hasPassive
+      ? "<div class=\"sarf-seg\" role=\"group\">" +
+          sarfSegBtn("voice", "act", "\u0645\u0639\u0631\u0648\u0641", !st.passive) +
+          sarfSegBtn("voice", "pass", "\u0645\u062C\u06C1\u0648\u0644", st.passive) + "</div>"
+      : "";
+    return "<div class=\"sarf-seg\" role=\"group\">" +
+        sarfSegBtn("tense", "past", "\u0645\u0627\u0636\u06CC", st.tense === "past") +
+        sarfSegBtn("tense", "pres", "\u0645\u0636\u0627\u0631\u0639", st.tense === "pres") + "</div>" + voice +
+      block("\u063A\u0627\u0626\u0628", 0) + block("\u062D\u0627\u0636\u0631", 6) +
+      "<div class=\"sarf-blk\"><div class=\"sarf-h\">\u0645\u062A\u06A9\u0644\u0645</div>" +
+        "<span class=\"sarf-num\">\u0648\u0627\u062D\u062F</span>" + cell(12, true) +
+        "<span class=\"sarf-num\">\u062C\u0645\u0639</span>" + cell(13, true) + "</div>";
+  }
+
+  /** Every ayah that reads the tapped form: same tense, person and voice. */
+  function sarfAyatHtml(list) {
+    if (!list.length) return "<p class=\"sarf-empty\">\u2014</p>";
+    return "<ol class=\"sarf-ayat\">" + list.map(function (hit) {
+      return "<li><span class=\"sarf-ref\" dir=\"ltr\">" + escapeHtml(hit[0].split(":").slice(0, 2).join(":")) + "</span>" +
+        "<span class=\"sarf-f\" lang=\"ar\">" + escapeHtml(hit[1]) + "</span></li>";
+    }).join("") + "</ol>";
+  }
+
+  function sarfSegBtn(kind, value, label, on) {
+    return "<button type=\"button\" data-" + kind + "=\"" + value + "\" aria-pressed=\"" + on + "\"" +
+      (on ? " class=\"on\"" : "") + ">" + label + "</button>";
+  }
+
+  function renderSarfSheet(st, counts) {
+    var labels = window.MQ_MORPH_UR;
+    var seg = st.seg;
+    var bab = labels ? labels.verbForm[st.key.split("|")[1].replace(/#.*/, "")] : "";
+    var pgn = labels ? labels.describePgn(seg[4] || "") : "";
+    var mine = counts[seg[3] + "|" + window.MQ_SARF.pgnOf(seg) + "|" + (segPassive(seg) ? "PASS" : "")] || [];
+    var tense = { PERF: "\u0641\u0639\u0644 \u0645\u0627\u0636\u06CC", IMPF: "\u0641\u0639\u0644 \u0645\u0636\u0627\u0631\u0639", IMPV: "\u0641\u0639\u0644 \u0627\u0645\u0631" }[seg[3]] || "";
+    var body = st.tab === "six" ? sarfSixHtml(st, counts) : st.tab === "grid" ? sarfGridHtml(st, counts) : sarfAyatHtml(mine);
+    sarfSheetEl.innerHTML =
+      "<div class=\"sarf-grab\" aria-hidden=\"true\"></div>" +
+      "<div class=\"sarf-head\">" +
+        "<span class=\"sarf-word\" lang=\"ar\">" + escapeHtml(st.word) + "</span>" +
+        (st.gloss ? "<span class=\"sarf-gloss\" lang=\"ur\">" + escapeHtml(st.gloss) + "</span>" : "") +
+        "<button type=\"button\" class=\"sarf-close\" aria-label=\"" + i18n("settings.close") + "\">\u2715</button>" +
+      "</div>" +
+      "<div class=\"sarf-meta\" lang=\"ur\">" + escapeHtml(bab) + " \u2022 \u0645\u0627\u062F\u06C1 " +
+        "<span class=\"sarf-root\" lang=\"ar\">" + escapeHtml(seg[5].split("").join(" ")) + "</span> \u00B7 " +
+        escapeHtml(tense + (st.passive ? " \u0645\u062C\u06C1\u0648\u0644" : "") + " \u00B7 " + pgn) + "</div>" +
+      "<div class=\"sarf-seg sarf-tabs\" role=\"group\">" +
+        sarfSegBtn("tab", "six", "\u0635\u0631\u0641 \u0635\u063A\u06CC\u0631", st.tab === "six") +
+        sarfSegBtn("tab", "grid", "14 \u0635\u06CC\u063A\u06D2", st.tab === "grid") +
+        sarfSegBtn("tab", "ayat", "\u0642\u0631\u0622\u0646 \u0645\u06CC\u06BA \u00D7" + mine.length, st.tab === "ayat") +
+      "</div>" +
+      "<div class=\"sarf-body\" lang=\"ur\">" + body + "</div>" +
+      "<p class=\"sarf-draft\" lang=\"ur\">\u0627\u0631\u062F\u0648 \u0642\u0627\u0639\u062F\u06D2 \u0633\u06D2 \u0628\u0646\u06CC \u06C1\u06D2\u060C \u0627\u0628\u06BE\u06CC \u062C\u0627\u0646\u0686\u06CC \u0646\u06C1\u06CC\u06BA \u06AF\u0626\u06CC (\u0645\u0633\u0648\u062F\u06C1)</p>";
+  }
+
+  function openSarfSheet() {
+    var st = popSarf;
+    if (!st) return;
+    if (!sarfSheetEl) {
+      sarfSheetEl = document.createElement("dialog");
+      sarfSheetEl.id = "sarf-sheet";
+      sarfSheetEl.dir = "rtl";
+      sarfSheetEl.addEventListener("click", function (e) {
+        // A tap on the dimmed page around the sheet lands on the dialog itself.
+        if (e.target === sarfSheetEl || e.target.closest(".sarf-close")) return sarfSheetEl.close();
+        var b = e.target.closest("button[data-tab], button[data-tense], button[data-voice]");
+        if (!b || !sarfSheetEl.state) return;
+        var s = sarfSheetEl.state;
+        if (b.dataset.tab) s.tab = b.dataset.tab;
+        if (b.dataset.tense) s.tense = b.dataset.tense;
+        if (b.dataset.voice) s.passive = b.dataset.voice === "pass";
+        renderSarfSheet(s, sarfCounts[s.key] || {});
+      });
+      document.body.appendChild(sarfSheetEl);
+    }
+    hideWordPopover();
+    getSarfCounts().then(function (all) {
+      sarfSheetEl.state = Object.assign({}, st);
+      renderSarfSheet(sarfSheetEl.state, all[st.key] || {});
+      if (!sarfSheetEl.open) sarfSheetEl.showModal();
+      sarfSheetEl.scrollTop = 0;
     });
   }
 
