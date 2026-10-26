@@ -1002,6 +1002,8 @@
     });
   }
 
+  var wordTableSarf = {};
+
   /** One card per word, laid out like the card a tapped word opens. */
   function wordTableRowsHtml(text, list, morphWords, ayahKey) {
     var html = "";
@@ -1013,8 +1015,13 @@
       i++;
       var ref = ayahKey + ":" + i;
       var translit = hit && hit.transliteration && hit.transliteration.text;
+      // The same صرف button the tap card has, its sheet kept by the word's ref until tapped.
+      var sarf = sarfFor(segs, tok, hit && hit.translation && hit.translation.text);
+      if (sarf) wordTableSarf[ref] = sarf;
       html += "<div class=\"wt-card\" role=\"listitem\">" +
-        "<div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(tok) + "</div>" +
+        "<div class=\"wpop-head\"><div class=\"wpop-word\" lang=\"ar\" dir=\"rtl\">" + escapeHtml(tok) + "</div>" +
+          (sarf ? "<button type=\"button\" class=\"wpop-sarf\" lang=\"ur\" data-ref=\"" + ref + "\">\u0635\u0631\u0641</button>" : "") +
+        "</div>" +
         (translit ? "<div class=\"wpop-translit\" dir=\"ltr\">" + escapeHtml(translit) + "</div>" : "") +
         "<div class=\"wpop-meaning\" lang=\"ur\" dir=\"rtl\">" +
           escapeHtml((hit && hit.translation && hit.translation.text) || "\u2014") + "</div>" +
@@ -4846,6 +4853,12 @@
     var promptBtn = e.target.closest(".ayat-prompt");
     if (promptBtn) {
       copyLlmPrompt(promptBtn);
+      return;
+    }
+    var sarfBtn = e.target.closest(".wt-card .wpop-sarf");
+    if (sarfBtn) {
+      popSarf = wordTableSarf[sarfBtn.dataset.ref] || null;
+      openSarfSheet();
       return;
     }
     var wordEl = e.target.closest(".ayah-word");
