@@ -18,9 +18,9 @@ test("each stem type builds its 14 forms", () => {
 test("Urdu follows agreement, نے and helpers", () => {
   const ur = (key, tense, passive, i) => table(verbs[key], tense, passive)[i].ur;
   assert.strictEqual(ur("فلح|VF4", "pres", false, 8), "تم سب فلاح پاتے ہو");
-  assert.strictEqual(ur("فلح|VF4", "past", false, 3), "وہ (عورت) فلاح پا گئی");
+  assert.strictEqual(ur("فلح|VF4", "past", false, 3), "وہ (مؤنث) فلاح پا گئی");
   assert.strictEqual(ur("هجر|VF3", "past", false, 2), "انہوں نے ہجرت کی");
-  assert.strictEqual(ur("أذي|VF4", "past", true, 5), "وہ سب (عورتیں) ستائی گئیں");
+  assert.strictEqual(ur("أذي|VF4", "past", true, 5), "وہ سب (مؤنث) ستائی گئیں");
   assert.strictEqual(ur("خرج|VF4", "pres", true, 0), "وہ نکالا جاتا ہے");
   assert.deepStrictEqual(sixUrdu(verbs["أتي|VF4"]).slice(3), ["دینا", "دینے والا", "دیا ہوا"]);
 });

@@ -7,6 +7,10 @@
  * seeking behaves like it does on GitHub Pages. `python -m http.server` sends no
  * Cache-Control, which lets Chrome hold on to a stale data.js/app.js across edits —
  * that is what makes rows show "Path Not found" long after the files are correct.
+ *
+ * Live reload: every page it serves gets a small script that listens on /__live, and any
+ * edit in the repo reloads the open tabs. Files the app itself writes here (timings.js,
+ * timing-flags.json) are left out, so saving timings does not throw away the editor.
  */
 const http = require("http");
 const fs = require("fs");
@@ -20,6 +24,9 @@ const SAVE_TIMINGS_PATH = "/__save-timings";
 const RESOLVE_FLAG_PATH = "/__resolve-flag";
 const FLAGS = path.join(root, "timing-flags.json");
 const port = Number(process.argv[2]) || 8787;
+const LIVE_PATH = "/__live";
+const LIVE_SCRIPT = '<script>new EventSource("' + LIVE_PATH + '").onmessage = function () { location.reload(); };</script>';
+const LIVE_IGNORE = /^(\.git|\.cache|node_modules|audio)(\/|$)|^(timings\.js|timing-flags\.json)$/;
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -104,7 +111,29 @@ function resolveFlag(req, res) {
   });
 }
 
+/** Open /__live connections; each gets "reload" when a file changes. */
+const liveClients = new Set();
+let liveTimer = null;
+
+fs.watch(root, { recursive: true }, function (event, file) {
+  if (!file || LIVE_IGNORE.test(file.split(path.sep).join("/"))) return;
+  clearTimeout(liveTimer);
+  // An editor saves in bursts (temp file, rename); one reload for the lot.
+  liveTimer = setTimeout(function () {
+    console.log("changed: " + file + " -> reloading " + liveClients.size + " tab(s)");
+    liveClients.forEach(function (res) { res.write("data: reload\n\n"); });
+  }, 150);
+});
+
+function live(req, res) {
+  res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", "Connection": "keep-alive" });
+  res.write(": live\n\n");
+  liveClients.add(res);
+  req.on("close", function () { liveClients.delete(res); });
+}
+
 const server = http.createServer(function (req, res) {
+  if (req.url === LIVE_PATH) return live(req, res);
   if (req.method === "POST" && req.url === SAVE_TIMINGS_PATH) return saveTimings(req, res);
   if (req.method === "POST" && req.url === RESOLVE_FLAG_PATH) return resolveFlag(req, res);
 
@@ -128,6 +157,12 @@ const server = http.createServer(function (req, res) {
     }
 
     const type = MIME[path.extname(filePath).toLowerCase()] || "application/octet-stream";
+    if (type.indexOf("text/html") === 0) {
+      const html = fs.readFileSync(filePath, "utf8");
+      const at = html.lastIndexOf("</body>");
+      return send(res, 200, { "Content-Type": type },
+        at < 0 ? html + LIVE_SCRIPT : html.slice(0, at) + LIVE_SCRIPT + html.slice(at));
+    }
     const range = req.headers.range;
     const m = range ? /^bytes=(\d*)-(\d*)$/.exec(range.trim()) : null;
 
@@ -169,4 +204,5 @@ server.listen(port, "127.0.0.1", function () {
   console.log("  serving " + root);
   console.log("  http://127.0.0.1:" + port + "/index.html");
   console.log("  ayah timing corrections save to timings.js via POST " + SAVE_TIMINGS_PATH);
+  console.log("  live reload: open tabs reload when a file changes");
 });

@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v39";
+const CACHE = "mq-v41";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -248,8 +248,8 @@ self.addEventListener("activate", function (e) {
 self.addEventListener("fetch", function (e) {
   var url = e.request.url;
 
-  // Never intercept GitHub API calls
-  if (url.includes("api.github.com")) return;
+  // Never intercept GitHub API calls, or the dev server's live-reload stream (it never ends).
+  if (url.includes("api.github.com") || url.includes("/__live")) return;
 
   // A tapped word's sound from quran.com, ~45 KB each. There are ~77k of them, so none is
   // precached; each one heard is kept here for offline. The whole file is fetched, not the
