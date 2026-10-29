@@ -317,6 +317,14 @@
   function setPlaybackMode(val) {
     localStorage.setItem("playback_mode", val);
   }
+  /** How many times each ayah plays before the next one: 1 is plain playback. */
+  function getAyahRepeat() {
+    var v = parseInt(localStorage.getItem("ayah_repeat"), 10);
+    return v > 1 ? v : 1;
+  }
+  function setAyahRepeat(val) {
+    localStorage.setItem("ayah_repeat", String(val));
+  }
   function getDefaultSpeed() {
     var v = parseFloat(localStorage.getItem("default_speed"));
     return isNaN(v) ? 1 : v;
@@ -1620,6 +1628,40 @@
     if (prev != null) return prev;
     var trim = timings.trim;
     return trim && typeof trim.start === "number" ? trim.start : null;
+  }
+
+  /**
+   * Repeat each ayah: when the recitation runs on past an ayah's end (the next placed start,
+   * or the trim end for the last one), jump back to its start until it has played
+   * getAyahRepeat() times. Only a small forward step counts as running on; a seek either
+   * way, a track change or the loop restart drops the count, so the listener's own jump wins.
+   */
+  var repeatTick = null;   // { gi, t } of the last timeupdate
+  var repeatAyah = null;   // { gi, n, plays } of the ayah being repeated
+
+  function repeatAyahIfDue(gi, a) {
+    var prev = repeatTick && repeatTick.gi === gi ? repeatTick.t : null;
+    var t = a.currentTime;
+    repeatTick = { gi: gi, t: t };
+    var times = getAyahRepeat();
+    if (times < 2 || prev == null || previewStopAt != null) return;
+    if (t < prev || t - prev > 3) { repeatAyah = null; return; }
+    var timings = getRukuTimings(data[gi]);
+    var from = recitingAyahAt(timings, prev);
+    if (from == null) return;
+    var end = timings.trim && typeof timings.trim.end === "number" ? timings.trim.end : null;
+    for (var i = 0; i < timings.ayahs.length; i++) {
+      if (timings.ayahs[i][1] > prev) { end = timings.ayahs[i][1]; break; }
+    }
+    // Some trim ends sit at or past the file's end, where "ended" fires before any tick
+    // reaches them; a second short of the end is still inside the last ayah.
+    if (end != null && isFinite(a.duration)) end = Math.min(end, a.duration - 1);
+    if (end == null || t < end) return;
+    if (!repeatAyah || repeatAyah.gi !== gi || repeatAyah.n !== from) repeatAyah = { gi: gi, n: from, plays: 1 };
+    if (repeatAyah.plays >= times) { repeatAyah = null; return; }
+    repeatAyah.plays++;
+    a.currentTime = ayahExactStart(timings, from);
+    repeatTick.t = a.currentTime;
   }
 
   /** "<globalIndex>|<ayah>" currently lit, so the DOM is only touched when it changes. */
@@ -3186,6 +3228,7 @@
       schedulePersistPlayback();
       var gi = mqPlayback.activeGlobalIndex;
       if (gi == null) return;
+      repeatAyahIfDue(gi, a);
       syncReciting(gi, a.currentTime);
       var els = getRowControlsByGlobalIndex(gi);
       if (!els || !a.duration || !isFinite(a.duration)) return;
@@ -4948,6 +4991,7 @@
   var timingSaveBarCount = document.getElementById("timing-save-count");
   var mediaNotifHint = document.getElementById("media-notif-hint");
   var playbackModeGroup = document.getElementById("playback-mode-group");
+  var ayahRepeatGroup = document.getElementById("ayah-repeat-group");
   var speedSelect = document.getElementById("default-speed-select");
   var themeModeGroup = document.getElementById("theme-mode-group");
   var fontSmallerBtn = document.getElementById("font-smaller-btn");
@@ -5114,6 +5158,10 @@
     var mode = getPlaybackMode();
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (btn) {
       btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    var repeat = String(getAyahRepeat());
+    ayahRepeatGroup.querySelectorAll("[data-repeat]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.repeat === repeat);
     });
     speedSelect.value = String(getDefaultSpeed());
     syncFontScaleUI();
@@ -5375,6 +5423,16 @@
     if (!btn) return;
     setPlaybackMode(btn.dataset.mode);
     playbackModeGroup.querySelectorAll("[data-mode]").forEach(function (b) {
+      b.classList.toggle("active", b === btn);
+    });
+  });
+
+  ayahRepeatGroup.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-repeat]");
+    if (!btn) return;
+    setAyahRepeat(btn.dataset.repeat);
+    repeatAyah = null;
+    ayahRepeatGroup.querySelectorAll("[data-repeat]").forEach(function (b) {
       b.classList.toggle("active", b === btn);
     });
   });
