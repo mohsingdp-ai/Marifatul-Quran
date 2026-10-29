@@ -3868,6 +3868,12 @@ tr.playing.audio-paused .audio-play-btn {
   color: var(--md-on-surface);
 }
 
+/* The select is transparent, so the native list would fall back to white under light text. */
+.settings-speed-select option {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface);
+}
+
 .settings-speed-select:focus {
   outline: none;
   border-color: var(--md-primary);
