@@ -3,14 +3,16 @@
 <head>
   <script>
     (function () {
-      var t = localStorage.getItem("ui_theme");
+      // Blocked storage (private modes, "block all cookies") throws: read it as empty, the defaults.
+      function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+      var t = get("ui_theme");
       document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
       // Hifz tracking on by default; set before first paint to avoid a flash of the meter/column.
-      var h = localStorage.getItem("hifz_enabled");
+      var h = get("hifz_enabled");
       document.documentElement.setAttribute("data-hifz", h === "false" ? "off" : "on");
       // Urdu readers: right to left from the first paint, and the page held back until i18n.js
       // has put the Urdu words in (it shows the page; the timer is only a safety net).
-      if (localStorage.getItem("ui_lang") === "ur") {
+      if (get("ui_lang") === "ur") {
         var d = document.documentElement;
         d.setAttribute("lang", "ur");
         d.setAttribute("dir", "rtl");
@@ -19,7 +21,7 @@
       }
       // The Indo-Pak mushaf (the default): fetch its text and font early; app.js switches once
       // both are in. Uthmani readers skip them here (the service worker still keeps a copy).
-      if (localStorage.getItem("mushaf_script") !== "uthmani") {
+      if (get("mushaf_script") !== "uthmani") {
         [["asset/fonts/indopak-nastaleeq.woff2", "font"], ["verses-indopak.js", "script"]].forEach(function (f) {
           var l = document.createElement("link");
           l.rel = "preload";

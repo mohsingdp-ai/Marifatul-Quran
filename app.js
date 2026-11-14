@@ -4,17 +4,25 @@
   /** i18n.js's t(); see there for why it is not called `t` here. */
   var i18n = window.I18N.t;
 
+  /** localStorage that never throws: blocked storage reads as empty, and set/remove say if they
+   *  worked. Some private modes and "block all cookies" make every access throw. */
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+    remove: function (k) { try { localStorage.removeItem(k); return true; } catch (e) { return false; } }
+  };
+
   function isUrdu() {
     return window.I18N.lang() === "ur";
   }
 
   function getUiTheme() {
-    var t = localStorage.getItem("ui_theme");
+    var t = store.get("ui_theme");
     return t === "light" ? "light" : "dark";
   }
 
   function setUiTheme(theme) {
-    localStorage.setItem("ui_theme", theme === "light" ? "light" : "dark");
+    store.set("ui_theme", theme === "light" ? "light" : "dark");
   }
 
   function applyUiTheme(theme) {
@@ -32,14 +40,14 @@
   var FONT_SCALE_MIN = 70, FONT_SCALE_MAX = 200, FONT_SCALE_STEP = 5;
 
   function getFontScale() {
-    var n = parseInt(localStorage.getItem("mushaf_scale"), 10);
+    var n = parseInt(store.get("mushaf_scale"), 10);
     return isNaN(n) ? 100 : Math.max(FONT_SCALE_MIN, Math.min(FONT_SCALE_MAX, n));
   }
 
   function setFontScale(pct) {
     pct = Math.max(FONT_SCALE_MIN, Math.min(FONT_SCALE_MAX, pct));
-    if (pct === 100) localStorage.removeItem("mushaf_scale");
-    else localStorage.setItem("mushaf_scale", String(pct));
+    if (pct === 100) store.remove("mushaf_scale");
+    else store.set("mushaf_scale", String(pct));
     applyFontScale(pct);
   }
 
@@ -59,7 +67,7 @@
 
   function getMushafScript() {
     try {
-      var s = localStorage.getItem("mushaf_script");
+      var s = store.get("mushaf_script");
       return MUSHAF_SCRIPTS.indexOf(s) >= 0 ? s : "indopak";
     } catch (e) {
       return "indopak";
@@ -68,7 +76,7 @@
 
   function setMushafScript(script) {
     try {
-      if (MUSHAF_SCRIPTS.indexOf(script) >= 0) localStorage.setItem("mushaf_script", script);
+      if (MUSHAF_SCRIPTS.indexOf(script) >= 0) store.set("mushaf_script", script);
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -299,11 +307,11 @@
   var ADMIN_PASSWORD = "484215";
 
   function getRole() {
-    return localStorage.getItem("app_role") || "user";
+    return store.get("app_role") || "user";
   }
 
   function setRole(role) {
-    localStorage.setItem("app_role", role);
+    store.set("app_role", role);
   }
 
   function isAdmin() {
@@ -311,31 +319,31 @@
   }
 
   function getPlaybackMode() {
-    var v = localStorage.getItem("playback_mode");
+    var v = store.get("playback_mode");
     return (v === "loop" || v === "next") ? v : "none";
   }
   function setPlaybackMode(val) {
-    localStorage.setItem("playback_mode", val);
+    store.set("playback_mode", val);
   }
   /** How many times each ayah plays before the next one: 1 is plain playback. */
   function getAyahRepeat() {
-    var v = parseInt(localStorage.getItem("ayah_repeat"), 10);
+    var v = parseInt(store.get("ayah_repeat"), 10);
     return v > 1 ? v : 1;
   }
   function setAyahRepeat(val) {
-    localStorage.setItem("ayah_repeat", String(val));
+    store.set("ayah_repeat", String(val));
   }
   function getDefaultSpeed() {
-    var v = parseFloat(localStorage.getItem("default_speed"));
+    var v = parseFloat(store.get("default_speed"));
     return isNaN(v) ? 1 : v;
   }
   function setDefaultSpeed(val) {
-    localStorage.setItem("default_speed", String(val));
+    store.set("default_speed", String(val));
   }
 
   function getPositionsMap() {
     try {
-      return JSON.parse(localStorage.getItem(POSITIONS_STORAGE_KEY) || "{}");
+      return JSON.parse(store.get(POSITIONS_STORAGE_KEY) || "{}");
     } catch (e) {
       return {};
     }
@@ -361,7 +369,7 @@
       map[key] = { t: currentTime };
     }
     try {
-      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(map));
+      store.set(POSITIONS_STORAGE_KEY, JSON.stringify(map));
     } catch (e) { /* quota */ }
   }
 
@@ -370,7 +378,7 @@
     var map = getPositionsMap();
     delete map[String(globalIndex)];
     try {
-      localStorage.setItem(POSITIONS_STORAGE_KEY, JSON.stringify(map));
+      store.set(POSITIONS_STORAGE_KEY, JSON.stringify(map));
     } catch (e) { /* ignore */ }
   }
 
@@ -385,7 +393,7 @@
 
   function readPlaybackPersist() {
     try {
-      var raw = localStorage.getItem(PLAYBACK_STORAGE_KEY);
+      var raw = store.get(PLAYBACK_STORAGE_KEY);
       if (!raw) return null;
       var o = JSON.parse(raw);
       if (o.globalIndex == null) return null;
@@ -404,7 +412,7 @@
 
   function clearPlaybackPersist() {
     try {
-      localStorage.removeItem(PLAYBACK_STORAGE_KEY);
+      store.remove(PLAYBACK_STORAGE_KEY);
     } catch (e) { /* ignore */ }
   }
 
@@ -413,7 +421,7 @@
     var a = mqPlayback.el;
     var gi = mqPlayback.activeGlobalIndex;
     try {
-      localStorage.setItem(PLAYBACK_STORAGE_KEY, JSON.stringify({
+      store.set(PLAYBACK_STORAGE_KEY, JSON.stringify({
         globalIndex: gi,
         currentTime: a.currentTime,
         wasPlaying: !a.paused,
@@ -435,18 +443,18 @@
   var hifzValidKeysCache = null;
 
   function getHifzEnabled() {
-    return localStorage.getItem("hifz_enabled") !== "false";
+    return store.get("hifz_enabled") !== "false";
   }
   function setHifzEnabled(on) {
-    localStorage.setItem("hifz_enabled", on ? "true" : "false");
+    store.set("hifz_enabled", on ? "true" : "false");
   }
 
   /** Whether the first-run guided walkthrough has already been shown. */
   function isGuideSeen() {
-    return localStorage.getItem("guide_seen") === "true";
+    return store.get("guide_seen") === "true";
   }
   function setGuideSeen() {
-    localStorage.setItem("guide_seen", "true");
+    store.set("guide_seen", "true");
   }
   function applyHifzEnabled(on) {
     document.documentElement.setAttribute("data-hifz", on ? "on" : "off");
@@ -458,11 +466,11 @@
   }
 
   function getHifzMap() {
-    try { return JSON.parse(localStorage.getItem(HIFZ_STORAGE_KEY) || "{}"); }
+    try { return JSON.parse(store.get(HIFZ_STORAGE_KEY) || "{}"); }
     catch (e) { return {}; }
   }
   function saveHifzMap(map) {
-    localStorage.setItem(HIFZ_STORAGE_KEY, JSON.stringify(map));
+    return store.set(HIFZ_STORAGE_KEY, JSON.stringify(map));
   }
   function hifzAllKeys() {
     if (!hifzAllKeysCache) {
@@ -672,7 +680,7 @@
       try { parsed = JSON.parse(reader.result); }
       catch (e) { setHifzIoStatus(i18n("hifz.importBadJson")); return; }
       var res = Hifz.parseAndMerge(getHifzMap(), parsed, hifzValidKeySet());
-      saveHifzMap(res.merged);
+      if (!saveHifzMap(res.merged)) { setHifzIoStatus(i18n("hifz.importSaveFailed")); return; }
       renderTable({ skipViewRestore: true });
       setHifzIoStatus(i18n("hifz.imported", { n: res.imported, skipped: res.skipped }));
     };
@@ -682,7 +690,7 @@
 
   function resetHifz() {
     if (!window.confirm(i18n("hifz.resetConfirm"))) return;
-    localStorage.removeItem(HIFZ_STORAGE_KEY);
+    store.remove(HIFZ_STORAGE_KEY);
     renderTable({ skipViewRestore: true });
     setHifzIoStatus(i18n("hifz.resetDone"));
   }
@@ -875,7 +883,7 @@
 
   function wordMeaningsEnabled() {
     try {
-      return isAdmin() && localStorage.getItem(WORD_MEANINGS_PREF_KEY) === "true";
+      return isAdmin() && store.get(WORD_MEANINGS_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -883,7 +891,7 @@
 
   function setWordMeaningsEnabled(on) {
     try {
-      localStorage.setItem(WORD_MEANINGS_PREF_KEY, on ? "true" : "false");
+      store.set(WORD_MEANINGS_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
     if (!on) hideWordPopover();
   }
@@ -896,7 +904,7 @@
 
   function wordMeaningsSimple() {
     try {
-      return localStorage.getItem(WORD_DETAIL_PREF_KEY) === "simple";
+      return store.get(WORD_DETAIL_PREF_KEY) === "simple";
     } catch (e) {
       return false;
     }
@@ -904,7 +912,7 @@
 
   function setWordMeaningsSimple(on) {
     try {
-      localStorage.setItem(WORD_DETAIL_PREF_KEY, on ? "simple" : "grammar");
+      store.set(WORD_DETAIL_PREF_KEY, on ? "simple" : "grammar");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -917,7 +925,7 @@
 
   function wordGlossEnabled() {
     try {
-      return isAdmin() && localStorage.getItem(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
+      return isAdmin() && store.get(WORD_GLOSS_PREF_KEY) === "true" && !wordTableEnabled();
     } catch (e) {
       return false;
     }
@@ -925,7 +933,7 @@
 
   function setWordGlossEnabled(on) {
     try {
-      localStorage.setItem(WORD_GLOSS_PREF_KEY, on ? "true" : "false");
+      store.set(WORD_GLOSS_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -937,7 +945,7 @@
 
   function ayahGlossSwitchEnabled() {
     try {
-      return isAdmin() && localStorage.getItem(AYAH_GLOSS_SWITCH_PREF_KEY) === "true";
+      return isAdmin() && store.get(AYAH_GLOSS_SWITCH_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -945,7 +953,7 @@
 
   function setAyahGlossSwitchEnabled(on) {
     try {
-      localStorage.setItem(AYAH_GLOSS_SWITCH_PREF_KEY, on ? "true" : "false");
+      store.set(AYAH_GLOSS_SWITCH_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -957,7 +965,7 @@
 
   function aiPromptEnabled() {
     try {
-      return isAdmin() && localStorage.getItem(AI_PROMPT_PREF_KEY) === "true";
+      return isAdmin() && store.get(AI_PROMPT_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -965,7 +973,7 @@
 
   function setAiPromptEnabled(on) {
     try {
-      localStorage.setItem(AI_PROMPT_PREF_KEY, on ? "true" : "false");
+      store.set(AI_PROMPT_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -977,7 +985,7 @@
 
   function wordTableEnabled() {
     try {
-      return isAdmin() && localStorage.getItem(WORD_TABLE_PREF_KEY) === "true";
+      return isAdmin() && store.get(WORD_TABLE_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -985,7 +993,7 @@
 
   function setWordTableEnabled(on) {
     try {
-      localStorage.setItem(WORD_TABLE_PREF_KEY, on ? "true" : "false");
+      store.set(WORD_TABLE_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -1109,7 +1117,7 @@
 
   function reportFlagEnabled() {
     try {
-      return localStorage.getItem(REPORT_FLAG_PREF_KEY) !== "false";
+      return store.get(REPORT_FLAG_PREF_KEY) !== "false";
     } catch (e) {
       return true;
     }
@@ -1117,7 +1125,7 @@
 
   function setReportFlagEnabled(on) {
     try {
-      localStorage.setItem(REPORT_FLAG_PREF_KEY, on ? "true" : "false");
+      store.set(REPORT_FLAG_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -1126,7 +1134,7 @@
 
   function translationEnabled() {
     try {
-      return localStorage.getItem(TRANSLATION_PREF_KEY) === "true";
+      return store.get(TRANSLATION_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -1134,7 +1142,7 @@
 
   function setTranslationEnabled(on) {
     try {
-      localStorage.setItem(TRANSLATION_PREF_KEY, on ? "true" : "false");
+      store.set(TRANSLATION_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -1414,7 +1422,7 @@
 
   function timingEditorEnabled() {
     try {
-      return timingEditorAvailable() && localStorage.getItem(TIMING_EDITOR_PREF_KEY) === "true";
+      return timingEditorAvailable() && store.get(TIMING_EDITOR_PREF_KEY) === "true";
     } catch (e) {
       return false;
     }
@@ -1422,7 +1430,7 @@
 
   function setTimingEditorEnabled(on) {
     try {
-      localStorage.setItem(TIMING_EDITOR_PREF_KEY, on ? "true" : "false");
+      store.set(TIMING_EDITOR_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -1433,7 +1441,7 @@
   function getTimingEdits() {
     if (timingEditsCache) return timingEditsCache;
     try {
-      timingEditsCache = JSON.parse(localStorage.getItem(TIMING_EDITS_KEY) || "{}") || {};
+      timingEditsCache = JSON.parse(store.get(TIMING_EDITS_KEY) || "{}") || {};
     } catch (e) {
       timingEditsCache = {};
     }
@@ -1443,7 +1451,7 @@
   function saveTimingEdits(all) {
     timingEditsCache = all;
     try {
-      localStorage.setItem(TIMING_EDITS_KEY, JSON.stringify(all));
+      store.set(TIMING_EDITS_KEY, JSON.stringify(all));
     } catch (e) { /* private mode */ }
   }
 
@@ -1744,13 +1752,13 @@
 
   function getRowPins() {
     try {
-      var pins = JSON.parse(localStorage.getItem(ROW_PINS_KEY));
+      var pins = JSON.parse(store.get(ROW_PINS_KEY));
       if (Array.isArray(pins)) return pins;
     } catch (e) { /* private window or bad JSON: the default */ }
     return ROW_PINS_DEFAULT.slice();
   }
   function setRowPins(pins) {
-    try { localStorage.setItem(ROW_PINS_KEY, JSON.stringify(pins)); } catch (e) { /* pins last this visit only */ }
+    try { store.set(ROW_PINS_KEY, JSON.stringify(pins)); } catch (e) { /* pins last this visit only */ }
   }
   function paintRowPins(scope) {
     var pins = getRowPins();
@@ -4332,7 +4340,7 @@
 
   function wordSoundOnTap() {
     try {
-      return localStorage.getItem(WORD_SOUND_PREF_KEY) !== "false";
+      return store.get(WORD_SOUND_PREF_KEY) !== "false";
     } catch (e) {
       return true;
     }
@@ -4340,7 +4348,7 @@
 
   function setWordSoundOnTap(on) {
     try {
-      localStorage.setItem(WORD_SOUND_PREF_KEY, on ? "true" : "false");
+      store.set(WORD_SOUND_PREF_KEY, on ? "true" : "false");
     } catch (e) { /* private mode: the setting just will not stick */ }
   }
 
@@ -4773,13 +4781,13 @@
   var MEDIA_NOTIF_PREF_KEY = "mq_pref_media_notif";
 
   function getPersistentMediaNotifPref() {
-    return localStorage.getItem(MEDIA_NOTIF_PREF_KEY) === "true";
+    return store.get(MEDIA_NOTIF_PREF_KEY) === "true";
   }
 
   function setPersistentMediaNotifPref(on) {
-    if (on) localStorage.setItem(MEDIA_NOTIF_PREF_KEY, "true");
+    if (on) store.set(MEDIA_NOTIF_PREF_KEY, "true");
     else {
-      localStorage.setItem(MEDIA_NOTIF_PREF_KEY, "false");
+      store.set(MEDIA_NOTIF_PREF_KEY, "false");
       closePersistentMediaNotification();
     }
   }
@@ -4963,7 +4971,7 @@
 
   // Recordings were once uploaded from here with a GitHub token kept in localStorage; the
   // feature is gone, so a token left behind by it is cleared rather than kept lying around.
-  try { localStorage.removeItem("gh_token"); } catch (e) { /* storage blocked: nothing kept */ }
+  try { store.remove("gh_token"); } catch (e) { /* storage blocked: nothing kept */ }
 
   // Settings modal
   var settingsModal = document.getElementById("settings-modal");
@@ -5607,7 +5615,7 @@
     var preserve = {};
     var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", "mushaf_script", HIFZ_STORAGE_KEY, "guide_seen"];
     keepKeys.forEach(function (k) {
-      var v = localStorage.getItem(k);
+      var v = store.get(k);
       if (v !== null) preserve[k] = v;
     });
 
@@ -5627,7 +5635,7 @@
     try { localStorage.clear(); } catch (e) {}
     try { sessionStorage.clear(); } catch (e) {}
     Object.keys(preserve).forEach(function (k) {
-      localStorage.setItem(k, preserve[k]);
+      store.set(k, preserve[k]);
     });
 
     // 4. Clear IndexedDB databases

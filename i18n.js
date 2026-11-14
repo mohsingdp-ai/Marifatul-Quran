@@ -114,6 +114,7 @@
       "hifz.importBadJson": "Import failed: that file isn't valid JSON.",
       "hifz.imported": "Imported {n}, skipped {skipped} unknown.",
       "hifz.importUnreadable": "Import failed: couldn't read the file.",
+      "hifz.importSaveFailed": "Import failed: this browser won't let the app save. Nothing was imported.",
       "hifz.resetConfirm": "Reset all memorization progress? This cannot be undone.",
       "hifz.resetDone": "Progress reset.",
 
@@ -423,6 +424,7 @@
       "hifz.importBadJson": "امپورٹ نہیں ہو سکا: یہ فائل درست JSON نہیں ہے۔",
       "hifz.imported": "{n} امپورٹ ہوئے، {skipped} نامعلوم چھوڑ دیے۔",
       "hifz.importUnreadable": "امپورٹ نہیں ہو سکا: فائل پڑھی نہیں جا سکی۔",
+      "hifz.importSaveFailed": "امپورٹ نہیں ہو سکا: یہ براؤزر ایپ کو محفوظ کرنے نہیں دیتا۔ کچھ امپورٹ نہیں ہوا۔",
       "hifz.resetConfirm": "حفظ کی ساری پیش رفت صاف کریں؟ اسے واپس نہیں لایا جا سکے گا۔",
       "hifz.resetDone": "پیش رفت صاف ہو گئی۔",
 
