@@ -328,14 +328,16 @@
   /** How many times each ayah plays before the next one: 1 is plain playback. */
   function getAyahRepeat() {
     var v = parseInt(store.get("ayah_repeat"), 10);
-    return v > 1 ? v : 1;
+    return [2, 3, 5].indexOf(v) >= 0 ? v : 1;
   }
   function setAyahRepeat(val) {
     store.set("ayah_repeat", String(val));
   }
+  /** The speeds the player and Settings offer; anything else saved (0, -1, 99) reads as 1x. */
+  var SPEEDS = [0.75, 1, 1.25, 1.5, 1.75, 2];
   function getDefaultSpeed() {
     var v = parseFloat(store.get("default_speed"));
-    return isNaN(v) ? 1 : v;
+    return SPEEDS.indexOf(v) >= 0 ? v : 1;
   }
   function setDefaultSpeed(val) {
     store.set("default_speed", String(val));
@@ -403,7 +405,7 @@
         globalIndex: String(gi),
         currentTime: typeof o.currentTime === "number" ? o.currentTime : 0,
         wasPlaying: !!o.wasPlaying,
-        playbackRate: typeof o.playbackRate === "number" ? o.playbackRate : 1
+        playbackRate: SPEEDS.indexOf(o.playbackRate) >= 0 ? o.playbackRate : 1
       };
     } catch (e) {
       return null;
@@ -2185,7 +2187,7 @@
     timeDuration.className = "audio-time audio-time-duration";
     timeDuration.textContent = "0:00";
 
-    var speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
+    var speeds = SPEEDS;
     var defaultSpeed = getDefaultSpeed();
     var currentSpeedIndex = speeds.indexOf(defaultSpeed);
     if (currentSpeedIndex === -1) currentSpeedIndex = 1;
