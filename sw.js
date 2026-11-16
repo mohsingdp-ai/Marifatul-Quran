@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v45";
+const CACHE = "mq-v46";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -77,7 +77,8 @@ self.addEventListener("notificationclick", function (event) {
     })
   );
 });
-const AUDIO_CACHE = "mq-audio";
+// v2: every recording was re-cleaned in place (AI noise removal); the old store is dropped on activate.
+const AUDIO_CACHE = "mq-audio-v2";
 
 /**
  * Cached audio is always a full 200 body, but media elements ask for byte ranges when
