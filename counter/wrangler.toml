@@ -1,0 +1,9 @@
+name = "mq-users"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+account_id = "96d644eafeb7bdc31cd7b11f9903468c"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "mq-users"
+database_id = "c55fdfc0-63e4-414c-b19b-5df8f1cdd648"

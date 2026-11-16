@@ -6405,6 +6405,19 @@
   if (!isGuideSeen()) {
     requestAnimationFrame(function () { requestAnimationFrame(showGuide); });
   }
+
+  // Unique users: a random id kept on this phone is sent at most once a day (counter/ worker).
+  // Live site only, so testing on localhost or ngrok is not counted.
+  (function countUser() {
+    var today = new Date().toISOString().slice(0, 10);
+    if (location.hostname !== "mohsingdp-ai.github.io" || store.get("user_count_day") === today) return;
+    var id = store.get("user_count_id");
+    if (!id) {
+      id = crypto.randomUUID();
+      if (!store.set("user_count_id", id)) return; // storage blocked: every visit would look like a new phone
+    }
+    if (navigator.sendBeacon("https://mq-users.omarchy-noop.workers.dev/hit", id)) store.set("user_count_day", today);
+  })();
 })();
 
 

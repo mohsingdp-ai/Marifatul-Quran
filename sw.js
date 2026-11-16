@@ -251,6 +251,7 @@ self.addEventListener("fetch", function (e) {
 
   // Never intercept GitHub API calls, visit counts, or the dev server's live-reload stream (it never ends).
   if (url.includes("api.github.com") || url.includes("cloudflareinsights.com") ||
+      url.includes("mq-users.omarchy-noop.workers.dev") ||
       url.includes("/__live")) return;
 
   // A tapped word's sound from quran.com, ~45 KB each. There are ~77k of them, so none is
