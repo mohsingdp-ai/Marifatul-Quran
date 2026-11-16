@@ -460,6 +460,20 @@
           </div>
         </div>
 
+        <!-- Analytics (admin only) -->
+        <div class="settings-group" id="user-stats-row" hidden>
+          <div class="settings-group-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>
+            <span data-i18n="settings.analytics">Analytics</span>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="settings.userStats">Unique users (phones)</label>
+            <p class="settings-hint" id="user-stats" aria-live="polite"></p>
+            <!-- Visits, countries, devices: Cloudflare's own page (needs the owner's Cloudflare login) -->
+            <a class="btn btn-sm" href="https://dash.cloudflare.com/96d644eafeb7bdc31cd7b11f9903468c/web-analytics/overview/visits?excludeBots=Yes" target="_blank" rel="noopener" data-i18n="settings.cfAnalytics">Cloudflare analytics</a>
+          </div>
+        </div>
+
       </div>
       <div class="settings-actions">
         <button type="button" class="btn btn-sm btn-danger" id="clear-cache-btn" data-i18n="settings.clearCache">Clear Cache</button>

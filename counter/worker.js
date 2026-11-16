@@ -28,7 +28,10 @@ export default {
         allTime: await users("-100 years"),
         byDay: days.results,
       };
-      return new Response(JSON.stringify(body, null, 2), { headers: { "Content-Type": "application/json" } });
+      // Counts only, nothing personal, so any page may read them (the app's admin panel does).
+      return new Response(JSON.stringify(body, null, 2), {
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
     return new Response("Not found", { status: 404 });

@@ -4554,3 +4554,6 @@ tr.playing.audio-paused .audio-play-btn {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* Admin user stats: one line per day */
+#user-stats { white-space: pre-line; }

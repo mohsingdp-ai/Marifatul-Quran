@@ -305,6 +305,7 @@
   }
 
   var ADMIN_PASSWORD = "484215";
+  var USER_COUNTER = "https://mq-users.omarchy-noop.workers.dev";
 
   function getRole() {
     return store.get("app_role") || "user";
@@ -4984,6 +4985,35 @@
   var roleAdminBtn = document.getElementById("role-admin-btn");
   var roleBadge = document.getElementById("role-badge");
   var wordMeaningsRow = document.getElementById("word-meanings-row");
+  var userStatsRow = document.getElementById("user-stats-row");
+  var userStatsEl = document.getElementById("user-stats");
+  var userStats = null; // last /stats reply, redrawn on language switch
+
+  function renderUserStats() {
+    if (!userStats) return;
+    var lines = [i18n("settings.userStatsTotals", {
+      today: userStats.today, week: userStats.last7days, month: userStats.last30days, all: userStats.allTime
+    })];
+    userStats.byDay.slice(0, 7).forEach(function (d) {
+      lines.push(i18n("settings.userStatsDay", { day: d.day, n: d.users }));
+    });
+    userStatsEl.textContent = lines.join("\n");
+  }
+
+  /** Admin only: unique users from the counter (see countUser at the end). */
+  function loadUserStats() {
+    userStatsEl.textContent = i18n("settings.userStatsLoading");
+    fetch(USER_COUNTER + "/stats").then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (s) {
+      userStats = s;
+      renderUserStats();
+    }).catch(function () {
+      userStats = null;
+      userStatsEl.textContent = i18n("settings.userStatsFailed");
+    });
+  }
   var glossSwitchRow = document.getElementById("gloss-switch-row");
   var prefMediaNotif = document.getElementById("pref-media-notification");
   var wordMeaningsGroup = document.getElementById("word-meanings-group");
@@ -5139,7 +5169,8 @@
         updateShareFileModal();
       },
       function () { if (paraMenu && !paraMenu.hidden) openParaMenu(); },
-      function () { if (guideRerender) guideRerender(); }
+      function () { if (guideRerender) guideRerender(); },
+      renderUserStats
     ].forEach(function (step) {
       try { step(); } catch (e) { console.error("Language switch: a redraw step failed", e); }
     });
@@ -5162,6 +5193,8 @@
     roleBadge.textContent = i18n(admin ? "settings.roleAdmin" : "settings.roleUser");
     roleBadge.className = "settings-role-badge" + (admin ? " admin" : "");
     wordMeaningsRow.hidden = !admin;
+    userStatsRow.hidden = !admin;
+    if (admin) loadUserStats();
     glossSwitchRow.hidden = !admin;
     if (aiPromptRow) aiPromptRow.hidden = !admin;
     if (timingEditorRow) timingEditorRow.hidden = !timingEditorAvailable();
@@ -6416,7 +6449,7 @@
       id = crypto.randomUUID();
       if (!store.set("user_count_id", id)) return; // storage blocked: every visit would look like a new phone
     }
-    if (navigator.sendBeacon("https://mq-users.omarchy-noop.workers.dev/hit", id)) store.set("user_count_day", today);
+    if (navigator.sendBeacon(USER_COUNTER + "/hit", id)) store.set("user_count_day", today);
   })();
 })();
 
