@@ -6440,10 +6440,10 @@
   }
 
   // Unique users: a random id kept on this phone is sent at most once a day (counter/ worker).
-  // Live site only, so testing on localhost or ngrok is not counted.
+  // Live site only, so testing on localhost or ngrok is not counted; Admin mode (the owner) neither.
   (function countUser() {
     var today = new Date().toISOString().slice(0, 10);
-    if (location.hostname !== "mohsingdp-ai.github.io" || store.get("user_count_day") === today) return;
+    if (location.hostname !== "mohsingdp-ai.github.io" || isAdmin() || store.get("user_count_day") === today) return;
     var id = store.get("user_count_id");
     if (!id) {
       id = crypto.randomUUID();

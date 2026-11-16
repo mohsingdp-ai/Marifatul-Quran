@@ -192,8 +192,19 @@ try{if(localStorage.getItem("ui_lang")==="ur"){var d=document.documentElement;d.
 
   .no-markers { font-size: 12px; color: var(--dark); font-family: 'JetBrains Mono', monospace; text-align: center; padding: 12px 0; letter-spacing: 0.1em; }
 </style>
-  <!-- Visit counts, no cookies: Cloudflare Web Analytics -->
-  <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "cf2c916f87704fc8b809212d8be5a02e"}'></script>
+  <!-- Visit counts, no cookies: Cloudflare Web Analytics. Live site only, so localhost and the ngrok phone link are not counted;
+       Admin mode (the owner's own phone) is not counted either. -->
+  <script>
+    var cfAdmin = false;
+    try { cfAdmin = localStorage.getItem("app_role") === "admin"; } catch (e) { /* storage blocked: count it */ }
+    if (location.hostname === "mohsingdp-ai.github.io" && !cfAdmin) {
+      var cf = document.createElement("script");
+      cf.type = "module";
+      cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
+      cf.setAttribute("data-cf-beacon", '{"token": "cf2c916f87704fc8b809212d8be5a02e"}');
+      document.head.appendChild(cf);
+    }
+  </script>
 </head>
 <body>
 <div class="wrap">
