@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v47";
+const CACHE = "mq-v48";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -141,8 +141,7 @@ const STATIC = [
   "./sarf.js",
   "./asset/sarf-counts.json",
   "./data.js",
-  "./verses.js",
-  "./verses-indopak.js",
+  "./verses.js", // the quiz's; the app reads asset/verses/para-*.json
   "./indopak-plain.js",
   "./asset/fonts/indopak-nastaleeq.woff2",
   "./asset/fonts/noto-sans-arabic-400.woff2",
@@ -152,6 +151,8 @@ const STATIC = [
   "./icon-192.png",
   "./icon-512.png"
 ];
+// Each para's ayah text: the app shell, needed to read any para offline.
+for (let p = 1; p <= 30; p++) STATIC.push("./asset/verses/para-" + p + ".json");
 
 /** Every para's word meanings and translation, so the quiz works offline on any para (~5.7 MB). */
 const QUIZ_DATA = [];

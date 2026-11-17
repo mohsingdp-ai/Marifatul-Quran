@@ -19,18 +19,20 @@
         d.classList.add("i18n-pending");
         setTimeout(function () { d.classList.remove("i18n-pending"); }, 3000);
       }
-      // The Indo-Pak mushaf (the default): fetch its text and font early; app.js switches once
-      // both are in. Uthmani readers skip them here (the service worker still keeps a copy).
-      if (get("mushaf_script") !== "uthmani") {
-        [["asset/fonts/indopak-nastaleeq.woff2", "font"], ["verses-indopak.js", "script"]].forEach(function (f) {
-          var l = document.createElement("link");
-          l.rel = "preload";
-          l.href = f[0];
-          l.as = f[1];
-          if (f[1] === "font") { l.type = "font/woff2"; l.crossOrigin = "anonymous"; }
-          document.head.appendChild(l);
-        });
+      function preload(href, as) {
+        var l = document.createElement("link");
+        l.rel = "preload";
+        l.href = href;
+        l.as = as;
+        l.crossOrigin = "anonymous"; // fonts and fetch() both ask this way; a mismatch fetches twice
+        document.head.appendChild(l);
       }
+      // The Indo-Pak mushaf (the default): fetch its font early; app.js switches once it is in.
+      // Uthmani readers skip it here (the service worker still keeps a copy).
+      if (get("mushaf_script") !== "uthmani") preload("asset/fonts/indopak-nastaleeq.woff2", "font");
+      // The linked para's verses, which the first draw of the list waits for.
+      var para = parseInt(new URLSearchParams(location.search).get("para"), 10);
+      if (para >= 1 && para <= 30) preload("asset/verses/para-" + para + ".json", "fetch");
     })();
   </script>
   <meta charset="UTF-8">
@@ -562,7 +564,6 @@
 
   <script src="i18n.js"></script>
   <script src="data.js"></script>
-  <script src="verses.js"></script>
   <script src="timings.js"></script>
   <script src="hifz.js"></script>
   <script src="download.js"></script>

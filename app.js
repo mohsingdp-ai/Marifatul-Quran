@@ -57,12 +57,45 @@
 
   applyFontScale(getFontScale());
 
-  /* Mushaf script: the Indo-Pak text (verses-indopak.js, preloaded by index.html when Indo-Pak
-     is the choice and run from here, so it never holds up first paint) in its Nastaleeq font
-     ("indopak", the default) or in the Uthmani-style Naskh faces ("indopak-naskh"), or v4's
-     Uthmani text (verses.js). html[data-mushaf] says which is on screen; it switches only when that text and the
-     Indo-Pak font (both faces draw its ayah ornaments) are in hand, so the ayat never show
-     one script in another's style or as empty boxes. */
+  /* Ayah text, one para at a time (asset/verses/para-<n>.json, built from verses.js and
+     verses-indopak.js by scripts/build-verse-paras.js): the Uthmani entries keyed
+     "<para>|<rukuInPara>" and the Indo-Pak text keyed "surah:ayah". Fetching the whole Quran
+     twice up front held a first visit back by seconds on a phone. */
+  var QURAN_VERSES = {};
+  var QURAN_VERSES_INDOPAK = {};
+  var paraVersesIn = {};
+  var paraVersesPending = {};
+
+  function loadParaVerses(para) {
+    para = String(para);
+    if (paraVersesIn[para]) return Promise.resolve();
+    if (!paraVersesPending[para]) {
+      paraVersesPending[para] = fetch("asset/verses/para-" + para + ".json").then(function (res) {
+        if (!res.ok) throw new Error("verses of para " + para + ": HTTP " + res.status);
+        return res.json();
+      }).then(function (file) {
+        Object.assign(QURAN_VERSES, file.uthmani);
+        Object.assign(QURAN_VERSES_INDOPAK, file.indopak);
+        paraVersesIn[para] = true;
+      });
+      // Offline and never cached: forget the failure so the next render asks again.
+      paraVersesPending[para].catch(function () { delete paraVersesPending[para]; });
+    }
+    return paraVersesPending[para];
+  }
+
+  /** The verses of every para these table items come from. */
+  function loadVersesFor(items) {
+    var paras = {};
+    items.forEach(function (it) { paras[it.row.para] = true; });
+    return Promise.all(Object.keys(paras).map(loadParaVerses));
+  }
+
+  /* Mushaf script: the Indo-Pak text in its Nastaleeq font ("indopak", the default) or in the
+     Uthmani-style Naskh faces ("indopak-naskh"), or v4's Uthmani text. html[data-mushaf] says
+     which is on screen; it switches only when the Indo-Pak font (both faces draw its ayah
+     ornaments) is in hand, so the ayat never show one script in another's style or as empty
+     boxes. Both texts come in each para's verse file. */
   var MUSHAF_SCRIPTS = ["uthmani", "indopak", "indopak-naskh"];
 
   function getMushafScript() {
@@ -88,21 +121,9 @@
   var indoPakReady = null;
   var indoPakFace = null;
 
-  /** The Indo-Pak text and font, loaded once; a failed load is tried again on the next call. */
+  /** The Indo-Pak font, loaded once; a failed load is tried again on the next call. */
   function loadIndoPak() {
     if (indoPakReady) return indoPakReady;
-    var text = typeof QURAN_VERSES_INDOPAK !== "undefined" ? null : new Promise(function (ok, no) {
-      var s = document.createElement("script");
-      s.src = "verses-indopak.js";
-      // A cut-off file loads without defining the text; drop it so the next try fetches again.
-      s.onload = function () {
-        if (typeof QURAN_VERSES_INDOPAK !== "undefined") return ok();
-        s.remove();
-        no(new Error("verses-indopak.js loaded without its text"));
-      };
-      s.onerror = function () { s.remove(); no(new Error("verses-indopak.js failed to load")); };
-      document.head.appendChild(s);
-    });
     // Registered here rather than in style.css: a face that failed once stays failed, so a
     // retry needs a fresh one.
     if (!indoPakFace || indoPakFace.status === "error") {
@@ -112,9 +133,9 @@
     }
     // A stalled request would never settle; give up after a while so the next pick retries.
     var timeout = new Promise(function (ok, no) {
-      setTimeout(function () { no(new Error("Indo-Pak text or font took over 15 s")); }, 15000);
+      setTimeout(function () { no(new Error("Indo-Pak font took over 15 s")); }, 15000);
     });
-    indoPakReady = Promise.race([Promise.all([text, indoPakFace.load()]), timeout]);
+    indoPakReady = Promise.race([indoPakFace.load(), timeout]);
     indoPakReady.catch(function () { indoPakReady = null; });
     return indoPakReady;
   }
@@ -125,7 +146,8 @@
     if (document.documentElement.getAttribute("data-mushaf") !== script) {
       document.documentElement.setAttribute("data-mushaf", script);
       hideWordPopover(); // its word is redrawn away
-      if (render) renderTable();
+      // Before the first draw there is nothing to redraw: firstRender() draws in this script.
+      if (render && firstRenderDone) renderTable();
     }
     syncMushafScriptUI();
   }
@@ -133,7 +155,7 @@
   function applyMushafScript(render) {
     var want = getMushafScript();
     if (want !== "uthmani") {
-      // Offline before it was ever cached, a cut-off file or a failed font: stay on Uthmani
+      // Offline before the font was ever cached, or a failed font: stay on Uthmani
       // with a note; the next pick retries.
       loadIndoPak().then(function () {
         if (getMushafScript() === want) showMushafScript(want, true);
@@ -1323,6 +1345,16 @@
     tr.className = "ayat-row";
     tr.dataset.ayatFor = item.globalIndex;
     tr.hidden = !isAyatOpen(row);
+    // A closed panel stays empty until it opens (syncAyatRows): building every panel made
+    // each para switch rebuild ~4,000 hidden elements, the slowest tap in the app.
+    if (!tr.hidden) fillAyatRow(tr, item.globalIndex);
+    return tr;
+  }
+
+  function fillAyatRow(tr, globalIndex) {
+    var item = { row: data[globalIndex], globalIndex: globalIndex };
+    var row = item.row;
+    var entry = getRukuAyat(row);
 
     var td = document.createElement("td");
     td.className = "ayat-cell";
@@ -1395,7 +1427,6 @@
     // Word cards are the heaviest part of a panel (para 27 holds ~2,500), so a closed panel
     // gets them only when it opens (syncAyatRows). Building them all made the page stall.
     if (!tr.hidden) fillWordTables(td, row, entry);
-    return tr;
   }
 
   /** Push `expandedAyat` onto the rendered rows (visibility, aria, joined-card styling). */
@@ -1406,6 +1437,7 @@
       var open = isAyatOpen(data[gi]);
       ayatRows[i].hidden = !open;
       if (open) {
+        if (!ayatRows[i].firstChild) fillAyatRow(ayatRows[i], Number(gi));
         sizeGlossCells(ayatRows[i]);
         fillWordTables(ayatRows[i], data[gi], getRukuAyat(data[gi]));
       }
@@ -2193,7 +2225,22 @@
       syncToolbarTransport();
     }
     renderHifzMeter();
+
+    // Rows whose para's verses were still on the way are drawn without their ayat: draw this
+    // view once more when they land. Then fetch the paras either side, for the arrows.
+    tableHasVerses = filtered.every(function (it) { return paraVersesIn[it.row.para]; });
+    var shown = tableRenderedPara;
+    loadVersesFor(filtered).then(function () {
+      if (!tableHasVerses && tableRenderedPara === shown) renderTable({ scrollBasePara: shown });
+      if (!filtered.length) return;
+      [filtered[0].row.para - 1, filtered[filtered.length - 1].row.para + 1].forEach(function (p) {
+        if (p >= 1 && p <= 30) loadParaVerses(p).catch(function () { /* fetched when shown */ });
+      });
+    }, function () { /* offline and never cached: the rows stay without their ayat */ });
   }
+
+  /** Whether the table on screen was drawn with every one of its rows' verses. */
+  var tableHasVerses = false;
 
   function buildAudioPlayer(tr, audioCell, row, globalIndex, src, clearPlayingFn, playbackResume) {
     function ensureAudioElement() {
@@ -6591,11 +6638,26 @@
     renderStep();
   }
 
-  renderTable();
-  if (pendingRukuHighlightFromUrl) {
-    scrollTableToRukuRow(parseInt(paraSelect.value, 10), pendingRukuHighlightFromUrl);
-    pendingRukuHighlightFromUrl = null;
+  // The first draw waits for its para's verses (one small file, preloaded by index.html when
+  // the address names the para), so the list appears once, whole. A slow network gets the
+  // list without its ayat after 3 s; renderTable draws them in when they land.
+  var firstRenderDone = false;
+  function firstRender() {
+    if (firstRenderDone) return;
+    firstRenderDone = true;
+    renderTable();
+    if (pendingRukuHighlightFromUrl) {
+      scrollTableToRukuRow(parseInt(paraSelect.value, 10), pendingRukuHighlightFromUrl);
+      pendingRukuHighlightFromUrl = null;
+    }
+    // Show the guided walkthrough automatically the first time the app is opened
+    // (after the first table render so the first row's controls exist).
+    if (!isGuideSeen()) {
+      requestAnimationFrame(function () { requestAnimationFrame(showGuide); });
+    }
   }
+  loadVersesFor(getFilteredData()).then(firstRender, firstRender);
+  setTimeout(firstRender, 3000);
 
   var quizBtn = document.getElementById("quiz-btn");
   if (quizBtn) quizBtn.addEventListener("click", function () {
@@ -6605,12 +6667,6 @@
   // Replayable walkthrough via the toolbar menu.
   var showGuideBtn = document.getElementById("show-guide-btn");
   if (showGuideBtn) showGuideBtn.addEventListener("click", showGuide);
-
-  // Show the guided walkthrough automatically the first time the app is opened
-  // (after the first table render so the first row's controls exist).
-  if (!isGuideSeen()) {
-    requestAnimationFrame(function () { requestAnimationFrame(showGuide); });
-  }
 
   // Unique users: a random id kept on this phone is sent at most once a day (counter/ worker).
   // Live site only, so testing on localhost or ngrok is not counted; Admin mode (the owner) neither.
