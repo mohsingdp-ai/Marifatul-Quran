@@ -5635,13 +5635,15 @@
         item.dataset.ruku = row.rukuInPara;
         item.dataset.surah = row.surahNumber;
         item.setAttribute("aria-selected", surahMode() && row.surahNumber === currentSurah ? "true" : "false");
+        var surahNumHtml = "<span class=\"para-menu-surah-num\">" + row.surahNumber + "</span>";
         item.innerHTML =
-          // Urdu: the number sits at the far left, after the Arabic name; English: "2. Al-Baqarah".
-          "<span class=\"para-menu-num\">" + (isUrdu() ? "" : escapeHtml(row.surahNumber + ". ")) +
-          "<bdi>" + escapeHtml(row.surah) + "</bdi>" +
+          // The number sits by the Arabic name at the row's outer edge: far right in English,
+          // far left in Urdu. The name is right-to-left, so first means right.
+          "<span class=\"para-menu-num\"><bdi>" + escapeHtml(row.surah) + "</bdi>" +
           "<small>" + escapeHtml(i18n("para.menuNum", { n: row.para })) + "</small></span>" +
-          "<span class=\"para-menu-name\" lang=\"ar\">" + escapeHtml(surahArabic(row)) +
-          (isUrdu() ? "<span class=\"para-menu-surah-num\">" + row.surahNumber + "</span>" : "") + "</span>";
+          "<span class=\"para-menu-name\" lang=\"ar\">" + (isUrdu()
+            ? escapeHtml(surahArabic(row)) + " " + surahNumHtml
+            : surahNumHtml + " " + escapeHtml(surahArabic(row))) + "</span>";
         paraMenuList.appendChild(item);
       });
       if (!rows.length) {

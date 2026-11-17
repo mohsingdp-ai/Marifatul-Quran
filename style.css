@@ -597,11 +597,10 @@ button {
   opacity: 0.7;
 }
 
+/* The surah number beside the Arabic name. */
 .para-menu-surah-num {
-  margin-inline-start: 0.5rem;
   font-size: 0.85rem;
-  color: var(--md-on-surface);
-  opacity: 0.75;
+  color: var(--md-primary);
 }
 
 .para-menu-empty {
