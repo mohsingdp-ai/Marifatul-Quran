@@ -1162,14 +1162,14 @@
    * asset/translations/maududi/para-*.json ships it locally (scripts/build-translations.js);
    * quran.com is only a fallback if that file cannot be loaded.
    */
-  /* The report-a-mistake flag on each ayah: on unless turned off in settings. */
+  /* The report-a-mistake flag on each ayah: off until switched on in settings. */
   var REPORT_FLAG_PREF_KEY = "mq_pref_report_flag";
 
   function reportFlagEnabled() {
     try {
-      return store.get(REPORT_FLAG_PREF_KEY) !== "false";
+      return store.get(REPORT_FLAG_PREF_KEY) === "true";
     } catch (e) {
-      return true;
+      return false;
     }
   }
 
