@@ -530,16 +530,13 @@ button {
   z-index: 60;
   width: var(--para-menu-w);
   max-height: min(60vh, 26rem);
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* A thin bar in the list's own colours, not the platform's grey one. */
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--md-on-surface) 25%, transparent) transparent;
-  padding: 0.4rem 0;
+  /* The search box stays put; only the list under it scrolls. */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: var(--md-menu);
   border-radius: var(--md-shape-sm);
   box-shadow: var(--md-elevation-3);
-  -webkit-overflow-scrolling: touch;
   animation: md-menu-in var(--md-duration-short) var(--md-easing-emphasized);
   transform-origin: top center;
 }
@@ -548,17 +545,70 @@ button {
   display: none;
 }
 
-.para-menu::-webkit-scrollbar {
+.para-menu-list {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* A thin bar in the list's own colours, not the platform's grey one. */
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--md-on-surface) 25%, transparent) transparent;
+  padding-bottom: 0.4rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.para-menu-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.para-menu::-webkit-scrollbar-thumb {
+.para-menu-list::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--md-on-surface) 25%, transparent);
   border-radius: var(--md-shape-full);
 }
 
-.para-menu::-webkit-scrollbar-track {
+.para-menu-list::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Surah search, above the list. */
+.para-menu-search {
+  flex: none;
+  display: block;
+  width: calc(100% - 1.5rem);
+  margin: 0.6rem 0.75rem 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--md-on-surface) 25%, transparent);
+  border-radius: var(--md-shape-sm);
+  background: var(--md-menu);
+  color: var(--md-on-surface);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.para-menu-search:focus-visible {
+  outline: none;
+  border-color: var(--md-primary);
+}
+
+.para-menu-surah small {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.para-menu-surah-num {
+  margin-inline-start: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--md-on-surface);
+  opacity: 0.75;
+}
+
+.para-menu-empty {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  color: var(--md-on-surface);
+  opacity: 0.7;
 }
 
 .para-menu-item {

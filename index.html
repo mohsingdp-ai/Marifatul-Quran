@@ -164,7 +164,10 @@
             <span class="para-picker-num" id="para-picker-num">Para 1</span>
             <span class="para-picker-name" id="para-picker-name" lang="ar"></span>
           </button>
-          <div class="para-menu" id="para-menu" role="listbox" aria-label="Choose a para" data-i18n-aria="para.choose" hidden></div>
+          <div class="para-menu" id="para-menu" hidden>
+            <input type="search" class="para-menu-search" id="para-menu-search" autocomplete="off" spellcheck="false" placeholder="Search surah" aria-label="Search surah" data-i18n-placeholder="para.searchSurah" data-i18n-aria="para.searchSurah">
+            <div class="para-menu-list" id="para-menu-list" role="listbox" aria-label="Choose a para" data-i18n-aria="para.choose"></div>
+          </div>
           </div>
           <button type="button" class="btn-para-step" id="para-next" aria-label="Next Para" title="Next Para" data-i18n-aria="para.next" data-i18n-title="para.next">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
@@ -279,6 +282,13 @@
             <div class="settings-role-group">
               <button type="button" class="btn btn-sm settings-role-btn active" id="role-user-btn" data-i18n="settings.user">User</button>
               <button type="button" class="btn btn-sm settings-role-btn" id="role-admin-btn" data-i18n="settings.admin">Admin</button>
+            </div>
+          </div>
+          <div class="settings-row">
+            <label data-i18n="settings.browseBy">List by</label>
+            <div class="settings-role-group" id="browse-by-group">
+              <button type="button" class="btn btn-sm settings-role-btn active" data-browse-by="para" data-i18n="settings.byPara">Para</button>
+              <button type="button" class="btn btn-sm settings-role-btn" data-browse-by="surah" data-i18n="settings.bySurah">Surah</button>
             </div>
           </div>
           <div class="settings-row">

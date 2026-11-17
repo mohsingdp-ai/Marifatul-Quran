@@ -209,13 +209,15 @@
     var name = document.getElementById("para-picker-name");
     if (!num || !name) return;
     var n = paraSelect.value;
-    num.textContent = i18n("para.pickerNum", { n: n });
-    name.textContent = paraName(n)[0];
+    var first = surahMode() && surahItems(currentSurah)[0];
+    var label = first ? [surahArabic(first.row), first.row.surah] : paraName(n);
+    num.textContent = first ? i18n("para.pickerSurah", { n: currentSurah }) : i18n("para.pickerNum", { n: n });
+    name.textContent = label[0];
     var meterName = document.getElementById("hifz-meter-name");
-    if (meterName) meterName.textContent = paraName(n)[0];
+    if (meterName) meterName.textContent = label[0];
     // The transliteration helps an English reader; in Urdu the Arabic name says it all.
     if (isUrdu()) name.removeAttribute("title");
-    else name.title = paraName(n)[1];
+    else name.title = label[1];
   }
 
   // The native list shows the names too.
@@ -226,7 +228,14 @@
     });
   }
   labelParaOptions();
-  /** Para that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
+  /** Settings: list one surah at a time instead of one para (the default). */
+  function surahMode() { return store.get("browse_by") === "surah"; }
+  /** The surah shown in surah mode. `paraSelect` then holds the para it starts in, so the
+      para-based tools (download, share, quiz) still have a para to work on. */
+  var currentSurah = 1;
+  /** What the table shows: the para number, or "s<surah>" in surah mode. */
+  function viewKey() { return surahMode() ? "s" + currentSurah : String(paraSelect.value); }
+  /** View that `tbody` currently reflects (fixes scroll restore when the dropdown changes). */
   var tableRenderedPara = paraSelect ? String(paraSelect.value) : "1";
   /** When opening `?para=&ruku=`, scroll to that ruku after the first table render. */
   var pendingRukuHighlightFromUrl = null;
@@ -242,11 +251,18 @@
    * left. The first sync passes false so a shared ?para=&ruku= link survives being opened.
    */
   function syncParaInUrl(dropRuku) {
-    paraInUrl = String(paraSelect.value);
+    paraInUrl = viewKey();
     if (!window.history || !history.replaceState) return;
     try {
       var u = new URL(window.location.href);
-      u.searchParams.set("para", paraInUrl);
+      if (surahMode()) {
+        u.searchParams.set("surah", String(currentSurah));
+        u.searchParams.delete("para");
+        u.searchParams.delete("ruku"); // a ruku label only means something next to its para
+      } else {
+        u.searchParams.set("para", paraInUrl);
+        u.searchParams.delete("surah");
+      }
       if (dropRuku) u.searchParams.delete("ruku");
       history.replaceState(history.state, "", u.pathname + u.search + u.hash);
     } catch (err) {
@@ -300,8 +316,34 @@
   }
 
   function getFilteredData() {
-    var para = parseInt(paraSelect.value, 10);
-    return indexedData[para] || [];
+    return surahMode() ? surahItems(currentSurah) : getFilteredDataForPara(paraSelect.value);
+  }
+
+  function getFilteredDataForPara(para) {
+    return indexedData[parseInt(para, 10)] || [];
+  }
+
+  function surahItems(n) {
+    var out = [];
+    data.forEach(function (row, gi) { if (row.surahNumber === n) out.push({ row: row, globalIndex: gi }); });
+    return out;
+  }
+
+  /** Each surah that has a recording, once: its first recorded ruku. */
+  function surahFirstRows() {
+    var seen = {};
+    return data.filter(function (row, gi) {
+      if (seen[row.surahNumber] || !hasRecording({ row: row, globalIndex: gi })) return false;
+      seen[row.surahNumber] = true;
+      return true;
+    });
+  }
+
+  /** Show surah `n` (surah mode); the select follows to the para its first recording is in. */
+  function setSurah(n) {
+    currentSurah = Number(n);
+    var first = surahFirstRows().filter(function (r) { return r.surahNumber === currentSurah; })[0];
+    if (first) paraSelect.value = String(first.para);
   }
 
   var ADMIN_PASSWORD = "484215";
@@ -630,9 +672,14 @@
   function renderHifzMeter() {
     var meter = document.getElementById("hifz-meter");
     if (!meter) return;
-    var para = parseInt(paraSelect.value, 10);
     var map = getHifzMap();
-    var p = Hifz.computeParaProgress(map, para, rukusForPara(para));
+    var p = { memorized: 0, listened: 0, total: 0 };
+    getFilteredData().forEach(function (it) {
+      var q = Hifz.computeParaProgress(map, it.row.para, [it.row.rukuInPara]);
+      p.memorized += q.memorized;
+      p.listened += q.listened;
+      p.total++;
+    });
     var overall = Hifz.computeOverall(map, hifzAllKeys());
 
     document.getElementById("hifz-meter-para").textContent =
@@ -1990,7 +2037,7 @@
     var wrap = document.querySelector(".table-wrapper");
     if (!wrap) return null;
     var state = {
-      para: scrollBasePara != null ? String(scrollBasePara) : String(paraSelect.value),
+      para: scrollBasePara != null ? String(scrollBasePara) : viewKey(),
       scrollTop: wrap.scrollTop
     };
     var rows = tbody.querySelectorAll("tr[data-global-index]");
@@ -2009,7 +2056,7 @@
 
   function restoreTableViewState(state) {
     if (!state) return;
-    if (state.para !== paraSelect.value) return;
+    if (state.para !== viewKey()) return;
     var wrap = document.querySelector(".table-wrapper");
     if (!wrap) return;
     requestAnimationFrame(function () {
@@ -2029,7 +2076,7 @@
     });
   }
 
-  function scrollTableToRukuRow(paraNum, rukuLabel) {
+  function scrollTableToRukuRow(paraNum, rukuLabel, behavior) {
     if (rukuLabel == null || String(rukuLabel).trim() === "") return;
     var items = indexedData[paraNum] || [];
     var foundGi = null;
@@ -2044,7 +2091,7 @@
       requestAnimationFrame(function () {
         var tr = tbody.querySelector('tr[data-global-index="' + foundGi + '"]');
         if (!tr) return;
-        tr.scrollIntoView({ block: "center", behavior: "smooth" });
+        tr.scrollIntoView({ block: "center", behavior: behavior || "smooth" });
       });
     });
   }
@@ -2126,7 +2173,7 @@
 
     tbody.appendChild(fragment);
     restoreTableViewState(viewState);
-    tableRenderedPara = String(paraSelect.value);
+    tableRenderedPara = viewKey();
     syncParaFace();
     if (paraInUrl !== null && paraInUrl !== tableRenderedPara) syncParaInUrl(true);
     syncParaStepButtons();
@@ -4879,21 +4926,27 @@
   var paraPrevBtn = document.getElementById("para-prev");
   var paraNextBtn = document.getElementById("para-next");
 
+  /** The paras, or in surah mode the surahs, the arrows walk through. */
+  function stepValues() {
+    return surahMode()
+      ? surahFirstRows().map(function (r) { return String(r.surahNumber); })
+      : Array.prototype.map.call(paraSelect.options, function (o) { return o.value; });
+  }
+
   function syncParaStepButtons() {
     if (!paraPrevBtn || !paraNextBtn) return;
-    var opts = Array.prototype.slice.call(paraSelect.options);
-    var at = opts.findIndex(function (o) { return o.value === paraSelect.value; });
+    var vals = stepValues();
+    var at = vals.indexOf(surahMode() ? String(currentSurah) : paraSelect.value);
     paraPrevBtn.disabled = at <= 0;
-    paraNextBtn.disabled = at < 0 || at >= opts.length - 1;
+    paraNextBtn.disabled = at < 0 || at >= vals.length - 1;
   }
 
   function stepPara(delta) {
-    var opts = Array.prototype.slice.call(paraSelect.options);
-    var at = opts.findIndex(function (o) { return o.value === paraSelect.value; });
-    var next = opts[at + delta];
+    var vals = stepValues();
+    var next = vals[vals.indexOf(surahMode() ? String(currentSurah) : paraSelect.value) + delta];
     if (!next) return;
     var basePara = tableRenderedPara;
-    paraSelect.value = next.value;
+    if (surahMode()) setSurah(next); else paraSelect.value = next;
     renderTable({ scrollBasePara: basePara });
     syncParaStepButtons();
   }
@@ -5051,6 +5104,36 @@
       btn.removeAttribute("aria-busy");
     });
   }
+
+  /** Settings: list by para or by surah. The ruku at the top of the screen stays in view. */
+  var browseByGroup = document.getElementById("browse-by-group");
+  function syncBrowseByUI() {
+    if (!browseByGroup) return;
+    browseByGroup.querySelectorAll("[data-browse-by]").forEach(function (btn) {
+      btn.classList.toggle("active", btn.dataset.browseBy === (surahMode() ? "surah" : "para"));
+    });
+  }
+  syncBrowseByUI();
+  if (browseByGroup) browseByGroup.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-browse-by]");
+    if (!btn || btn.dataset.browseBy === (surahMode() ? "surah" : "para")) return;
+    // The ruku being read: the one crossing the upper third of the screen, not one barely peeking in.
+    var onScreen = Array.prototype.find.call(tbody.querySelectorAll("tr[data-global-index]"), function (tr) {
+      return tr.getBoundingClientRect().bottom > window.innerHeight / 3;
+    });
+    var anchor = onScreen ? data[onScreen.dataset.globalIndex] : null;
+    store.set("browse_by", btn.dataset.browseBy);
+    if (anchor) {
+      if (surahMode()) setSurah(anchor.surahNumber);
+      else paraSelect.value = String(anchor.para);
+    } else if (surahMode()) {
+      setSurah(getFilteredDataForPara(paraSelect.value).filter(hasRecording)[0].row.surahNumber);
+    }
+    syncBrowseByUI();
+    renderTable({ skipViewRestore: true });
+    syncParaInUrl(true);
+    if (anchor) scrollTableToRukuRow(anchor.para, anchor.rukuInPara, "auto");
+  });
 
   if (mushafScriptGroup) mushafScriptGroup.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-mushaf-script]");
@@ -5236,8 +5319,8 @@
     var gi = mqPlayback.activeGlobalIndex;
     if (gi == null || !data[gi]) return;
     var r = data[gi];
-    if (parseInt(paraSelect.value, 10) !== r.para) {
-      paraSelect.value = String(r.para);
+    if (surahMode() ? currentSurah !== r.surahNumber : parseInt(paraSelect.value, 10) !== r.para) {
+      if (surahMode()) setSurah(r.surahNumber); else paraSelect.value = String(r.para);
       renderTable({ scrollBasePara: tableRenderedPara });
     }
     requestAnimationFrame(function () {
@@ -5513,32 +5596,101 @@
     if (paraPickerBtn) paraPickerBtn.setAttribute("aria-expanded", "false");
   }
 
-  function openParaMenu() {
-    if (!paraMenu) return;
-    paraMenu.textContent = "";
+  var paraMenuList = document.getElementById("para-menu-list");
+  var paraMenuSearch = document.getElementById("para-menu-search");
+
+  /** Folds case, harakat, hamza forms and Arabic/Urdu letter variants, and drops spaces and
+      punctuation, so "al baqara", "Baqarah", "البقرہ" and "ٱلْبَقَرَة" all meet. */
+  function surahSearchKey(s) {
+    return String(s).toLowerCase()
+      .replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+      .replace(/[ٱأإآ]/g, "ا").replace(/[يى]/g, "ی").replace(/ك/g, "ک").replace(/[ةۃ]/g, "ه").replace(/ہ/g, "ه")
+      .replace(/[^a-z0-9\u0600-\u06FF]/g, "");
+  }
+
+  function surahMatches(query) {
+    var q = surahSearchKey(query);
+    return surahFirstRows().filter(function (row) {
+      return String(row.surahNumber) === q ||
+        [row.surah, row.surahArabic, surahArabic(row)].some(function (n) { return surahSearchKey(n).indexOf(q) !== -1; });
+    });
+  }
+
+  function menuItem(className) {
+    var item = document.createElement("button");
+    item.type = "button";
+    item.className = "para-menu-item " + className;
+    item.setAttribute("role", "option");
+    return item;
+  }
+
+  function fillParaMenu() {
+    paraMenuList.textContent = "";
+    var query = paraMenuSearch.value.trim();
+    if (query || surahMode()) {
+      var rows = query ? surahMatches(query) : surahFirstRows();
+      rows.forEach(function (row) {
+        var item = menuItem("para-menu-surah");
+        item.dataset.para = row.para;
+        item.dataset.ruku = row.rukuInPara;
+        item.dataset.surah = row.surahNumber;
+        item.setAttribute("aria-selected", surahMode() && row.surahNumber === currentSurah ? "true" : "false");
+        item.innerHTML =
+          // Urdu: the number sits at the far left, after the Arabic name; English: "2. Al-Baqarah".
+          "<span class=\"para-menu-num\">" + (isUrdu() ? "" : escapeHtml(row.surahNumber + ". ")) +
+          "<bdi>" + escapeHtml(row.surah) + "</bdi>" +
+          "<small>" + escapeHtml(i18n("para.menuNum", { n: row.para })) + "</small></span>" +
+          "<span class=\"para-menu-name\" lang=\"ar\">" + escapeHtml(surahArabic(row)) +
+          (isUrdu() ? "<span class=\"para-menu-surah-num\">" + row.surahNumber + "</span>" : "") + "</span>";
+        paraMenuList.appendChild(item);
+      });
+      if (!rows.length) {
+        var none = document.createElement("p");
+        none.className = "para-menu-empty";
+        none.textContent = i18n("para.noSurah");
+        paraMenuList.appendChild(none);
+      }
+      return;
+    }
     var current = paraSelect.value;
     Array.prototype.forEach.call(paraSelect.options, function (opt) {
       var n = opt.value;
-      var item = document.createElement("button");
-      item.type = "button";
-      item.className = "para-menu-item";
-      item.setAttribute("role", "option");
+      var item = menuItem("");
       item.dataset.value = n;
-      var selected = n === current;
-      item.setAttribute("aria-selected", selected ? "true" : "false");
+      item.setAttribute("aria-selected", n === current ? "true" : "false");
       item.innerHTML =
         "<span class=\"para-menu-num\">" + escapeHtml(i18n("para.menuNum", { n: n })) + "</span>" +
         "<span class=\"para-menu-name\" lang=\"ar\">" + escapeHtml(paraName(n)[0]) + "</span>";
-      paraMenu.appendChild(item);
+      paraMenuList.appendChild(item);
     });
+  }
+
+  function openParaMenu() {
+    if (!paraMenu) return;
+    paraMenuSearch.value = "";
+    fillParaMenu();
     paraMenu.hidden = false;
     paraPickerBtn.setAttribute("aria-expanded", "true");
-    var sel = paraMenu.querySelector('[aria-selected="true"]') || paraMenu.firstElementChild;
+    var sel = paraMenuList.querySelector('[aria-selected="true"]') || paraMenuList.firstElementChild;
     if (sel) {
       sel.focus({ preventScroll: true });
       // Scroll the list itself, never the page: scrollIntoView would also drag the document.
-      paraMenu.scrollTop = sel.offsetTop - (paraMenu.clientHeight - sel.offsetHeight) / 2;
+      paraMenuList.scrollTop = sel.offsetTop - (paraMenuList.clientHeight - sel.offsetHeight) / 2;
     }
+  }
+
+  function chooseSurahFromMenu(item) {
+    if (surahMode()) {
+      closeParaMenu();
+      var base = tableRenderedPara;
+      setSurah(item.dataset.surah);
+      renderTable({ scrollBasePara: base });
+      if (paraPickerBtn) paraPickerBtn.focus({ preventScroll: true });
+    } else {
+      chooseParaFromMenu(item.dataset.para);
+    }
+    // Instant, not smooth: mid-glide, following a playing recitation would pull the page back.
+    scrollTableToRukuRow(parseInt(item.dataset.para, 10), item.dataset.ruku, "auto");
   }
 
   function chooseParaFromMenu(value) {
@@ -5558,12 +5710,19 @@
     paraMenu.addEventListener("click", function (e) {
       e.stopPropagation();
       var item = e.target.closest ? e.target.closest(".para-menu-item") : null;
-      if (item) chooseParaFromMenu(item.dataset.value);
+      if (!item) return;
+      if (item.dataset.ruku) chooseSurahFromMenu(item); else chooseParaFromMenu(item.dataset.value);
     });
+    paraMenuSearch.addEventListener("input", function () { fillParaMenu(); paraMenuList.scrollTop = 0; });
     paraMenu.addEventListener("keydown", function (e) {
-      var items = Array.prototype.slice.call(paraMenu.querySelectorAll(".para-menu-item"));
+      var items = Array.prototype.slice.call(paraMenuList.querySelectorAll(".para-menu-item"));
       var at = items.indexOf(document.activeElement);
-      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (e.target === paraMenuSearch && e.key === "Enter") {
+        e.preventDefault();
+        if (items[0]) items[0].click();
+      } else if (e.target === paraMenuSearch && e.key !== "ArrowDown" && e.key !== "Escape") {
+        return; // typing keys (Home, End, ArrowUp...) belong to the box
+      } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         e.preventDefault();
         var next = items[Math.min(items.length - 1, Math.max(0, at + (e.key === "ArrowDown" ? 1 : -1)))];
         if (next) next.focus();
@@ -5648,7 +5807,7 @@
 
     // Preserve current track and essential settings
     var preserve = {};
-    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", "mushaf_script", HIFZ_STORAGE_KEY, "guide_seen"];
+    var keepKeys = [PLAYBACK_STORAGE_KEY, POSITIONS_STORAGE_KEY, "ui_theme", "mushaf_scale", "mushaf_script", "browse_by", HIFZ_STORAGE_KEY, "guide_seen"];
     keepKeys.forEach(function (k) {
       var v = store.get(k);
       if (v !== null) preserve[k] = v;
@@ -6221,6 +6380,18 @@
           paraSelect.value = String(data[gi].para);
         }
       }
+    }
+    // Surah mode: ?surah=, else the surah of the linked ruku, else the one the para opens with.
+    var urlSurah = parseInt(qp.get("surah"), 10);
+    var linked = data.filter(function (r) {
+      return String(r.para) === paraSelect.value && r.rukuInPara === pendingRukuHighlightFromUrl;
+    })[0];
+    var opening = getFilteredDataForPara(paraSelect.value).filter(hasRecording)[0];
+    currentSurah = urlSurah >= 1 && urlSurah <= 114 ? urlSurah
+      : linked ? linked.surahNumber : opening ? opening.row.surahNumber : 1;
+    if (surahMode()) {
+      setSurah(currentSurah);
+      if (linked) paraSelect.value = String(linked.para); // the link's ruku is looked up in its para
     }
     syncParaInUrl(false);
     var ti = document.getElementById("toolbar-transport-icon");
