@@ -1158,7 +1158,7 @@
   }
 
   /*
-   * Maududi's Urdu translation under each ayah. Off until switched on in settings.
+   * Maududi's Urdu translation under each ayah. On unless switched off in settings.
    * asset/translations/maududi/para-*.json ships it locally (scripts/build-translations.js);
    * quran.com is only a fallback if that file cannot be loaded.
    */
@@ -1184,9 +1184,9 @@
 
   function translationEnabled() {
     try {
-      return store.get(TRANSLATION_PREF_KEY) === "true";
+      return store.get(TRANSLATION_PREF_KEY) !== "false";
     } catch (e) {
-      return false;
+      return true;
     }
   }
 
