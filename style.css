@@ -1979,7 +1979,7 @@ html[data-theme="dark"] .share-bulk-links-tile.is-selected::after {
 .ayat-translation {
   display: block;
   font-family: "Noto Nastaliq Urdu", var(--md-font-arabic);
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 2.1;
   color: var(--md-primary);
   text-align: right;
