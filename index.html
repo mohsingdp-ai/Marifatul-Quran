@@ -59,17 +59,25 @@
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <link rel="stylesheet" href="style.css">
-  <!-- Visit counts, no cookies: Cloudflare Web Analytics. Live site only, so localhost and the ngrok phone link are not counted;
-       Admin mode (the owner's own phone) is not counted either. -->
+  <!-- Visit stats: Cloudflare Web Analytics (no cookies) and Google Analytics (sets cookies). Live site only, so localhost
+       and the ngrok phone link are not counted; Admin mode (the owner's own phone) is not counted either. -->
   <script>
-    var cfAdmin = false;
-    try { cfAdmin = localStorage.getItem("app_role") === "admin"; } catch (e) { /* storage blocked: count it */ }
-    if (location.hostname === "mohsingdp-ai.github.io" && !cfAdmin) {
+    var statsAdmin = false;
+    try { statsAdmin = localStorage.getItem("app_role") === "admin"; } catch (e) { /* storage blocked: count it */ }
+    if (location.hostname === "mohsingdp-ai.github.io" && !statsAdmin) {
       var cf = document.createElement("script");
       cf.type = "module";
       cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
       cf.setAttribute("data-cf-beacon", '{"token": "cf2c916f87704fc8b809212d8be5a02e"}');
       document.head.appendChild(cf);
+      var ga = document.createElement("script");
+      ga.async = true;
+      ga.src = "https://www.googletagmanager.com/gtag/js?id=G-MSRC1NKQJH";
+      document.head.appendChild(ga);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag("js", new Date());
+      gtag("config", "G-MSRC1NKQJH");
     }
   </script>
 </head>
@@ -501,7 +509,8 @@
           <div class="settings-row">
             <label data-i18n="settings.userStats">Unique users (phones)</label>
             <p class="settings-hint" id="user-stats" aria-live="polite"></p>
-            <!-- Visits, countries, devices: Cloudflare's own page (needs the owner's Cloudflare login) -->
+            <!-- Visits, countries, devices: each service's own page (needs the owner's Google / Cloudflare login) -->
+            <a class="btn btn-sm" href="https://analytics.google.com/analytics/web/#/a208842887p565315062/reports/intelligenthome" target="_blank" rel="noopener" data-i18n="settings.gaAnalytics">Google Analytics</a>
             <a class="btn btn-sm" href="https://dash.cloudflare.com/96d644eafeb7bdc31cd7b11f9903468c/web-analytics/overview/visits?excludeBots=Yes" target="_blank" rel="noopener" data-i18n="settings.cfAnalytics">Cloudflare analytics</a>
           </div>
         </div>

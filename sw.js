@@ -1,6 +1,6 @@
 /* Marifatul Quran — Service Worker */
 
-const CACHE = "mq-v47";
+const CACHE = "mq-v48";
 const MEDIA_NOTIF_TAG = "mq-media";
 
 function mediaNotifIconUrl() {
@@ -251,6 +251,7 @@ self.addEventListener("fetch", function (e) {
 
   // Never intercept GitHub API calls, visit counts, or the dev server's live-reload stream (it never ends).
   if (url.includes("api.github.com") || url.includes("cloudflareinsights.com") ||
+      url.includes("googletagmanager.com") || url.includes("google-analytics.com") ||
       url.includes("mq-users.omarchy-noop.workers.dev") ||
       url.includes("/__live")) return;
 

@@ -115,17 +115,25 @@ main { max-width: 560px; margin: 0 auto; padding: 16px; }
 .missed .ar { font-size: 24px; }
 [hidden] { display: none !important; }
 </style>
-  <!-- Visit counts, no cookies: Cloudflare Web Analytics. Live site only, so localhost and the ngrok phone link are not counted;
-       Admin mode (the owner's own phone) is not counted either. -->
+  <!-- Visit stats: Cloudflare Web Analytics (no cookies) and Google Analytics (sets cookies). Live site only, so localhost
+       and the ngrok phone link are not counted; Admin mode (the owner's own phone) is not counted either. -->
   <script>
-    var cfAdmin = false;
-    try { cfAdmin = localStorage.getItem("app_role") === "admin"; } catch (e) { /* storage blocked: count it */ }
-    if (location.hostname === "mohsingdp-ai.github.io" && !cfAdmin) {
+    var statsAdmin = false;
+    try { statsAdmin = localStorage.getItem("app_role") === "admin"; } catch (e) { /* storage blocked: count it */ }
+    if (location.hostname === "mohsingdp-ai.github.io" && !statsAdmin) {
       var cf = document.createElement("script");
       cf.type = "module";
       cf.src = "https://static.cloudflareinsights.com/beacon.min.js";
       cf.setAttribute("data-cf-beacon", '{"token": "cf2c916f87704fc8b809212d8be5a02e"}');
       document.head.appendChild(cf);
+      var ga = document.createElement("script");
+      ga.async = true;
+      ga.src = "https://www.googletagmanager.com/gtag/js?id=G-MSRC1NKQJH";
+      document.head.appendChild(ga);
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () { dataLayer.push(arguments); };
+      gtag("js", new Date());
+      gtag("config", "G-MSRC1NKQJH");
     }
   </script>
 </head>
